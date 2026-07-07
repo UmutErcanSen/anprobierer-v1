@@ -324,6 +324,30 @@ function setProgress(pct, label) {
   if (label) progressLabel.textContent = label;
 }
 
+let lottieAnim = null;
+
+function showLoading() {
+  const container = document.getElementById('loadingAnim');
+  container.style.display = 'flex';
+  if (!lottieAnim && typeof lottie !== 'undefined') {
+    lottieAnim = lottie.loadAnimation({
+      container: container,
+      renderer: 'svg',
+      loop: true,
+      autoplay: true,
+      path: 'https://assets4.lottiefiles.com/packages/lf20_vpbloexe.json',
+    });
+  } else if (lottieAnim) {
+    lottieAnim.play();
+  }
+}
+
+function hideLoading() {
+  const container = document.getElementById('loadingAnim');
+  container.style.display = 'none';
+  if (lottieAnim) lottieAnim.stop();
+}
+
 generateBtn.addEventListener('click', async () => {
   if (state.isGenerating) return;
   if (!state.apiKey || !validateApiKey(state.apiKey)) {
@@ -343,6 +367,7 @@ generateBtn.addEventListener('click', async () => {
   document.getElementById('saleTextBox').textContent = '';
   state.generationDone = false;
   $('#step4Next').disabled = true;
+  showLoading();
 
   const items = state.clothingItems;
   const mode = state.generationMode;
@@ -396,16 +421,14 @@ generateBtn.addEventListener('click', async () => {
             failCount++;
             break;
           } else if (err.name === 'TimeoutError' || err.name === 'AbortError') {
-            addLog(`⏱ Zeitüberschreitung bei "${item.name}" (180s).`, 'error');
-            showToast(`⏱ Zeitüberschreitung. Internet prüfen oder Bild verkleinern.`, 'error');
+            addLog(`⏱ Zeitüberschreitung bei "${item.name}" (180s). Nächster Versuch...`, 'warn');
+            showToast(`⏱ "${item.name}" Zeitüberschreitung, übersprungen.`, 'warning');
             failCount++;
-            break;
           } else {
             console.error(`Fehler "${item.name}":`, err);
             addLog(`❌ ${err.message}`, 'error');
-            showToast(`❌ ${err.message}`, 'error');
+            showToast(`❌ "${item.name}" fehlgeschlagen: ${err.message.slice(0, 80)}`, 'error');
             failCount++;
-            break;
           }
         }
         setProgress(((i + 1) / totalCalls) * 100, `Bild ${i+1} von ${totalCalls} - ${successCount} OK`);
@@ -462,20 +485,25 @@ generateBtn.addEventListener('click', async () => {
       }
     }
 
-    setProgress(100, successCount > 0 ? '✅ Generierung abgeschlossen!' : '❌ Generierung fehlgeschlagen.');
+    const resultMsg = successCount > 0
+      ? `✅ ${successCount}/${totalCalls} Bilder erfolgreich`
+      : '❌ Alle Generierungen fehlgeschlagen.';
+    setProgress(100, resultMsg);
+    addLog(resultMsg, successCount > 0 ? 'success' : 'error');
 
     if (successCount > 0) {
       state.generationDone = true;
       $('#step4Next').disabled = false;
-      showToast(`${successCount} Bild${successCount > 1 ? 'er' : ''} erfolgreich generiert`, 'success');
+      showToast(`${successCount} von ${totalCalls} Bild${totalCalls > 1 ? 'ern' : ''} erfolgreich`, successCount === totalCalls ? 'success' : 'warning');
     }
     if (failCount > 0) {
-      showToast(`${failCount} Generierung${failCount > 1 ? 'en' : ''} fehlgeschlagen. Details im Log.`, 'error');
+      showToast(`${failCount} ${failCount === 1 ? 'Bild' : 'Bilder'} fehlgeschlagen. Details im Log.`, 'error');
     }
   } catch (err) {
     addLog(`❌ Unerwarteter Fehler: ${err.message}`, 'error');
     showToast('Ein unerwarteter Fehler ist aufgetreten.', 'error');
   } finally {
+    hideLoading();
     state.isGenerating = false;
     generateBtn.disabled = false;
   }

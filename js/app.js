@@ -335,7 +335,7 @@ function showLoading() {
       renderer: 'svg',
       loop: true,
       autoplay: true,
-      path: 'https://assets4.lottiefiles.com/packages/lf20_vpbloexe.json',
+      path: 'js/loading.json',
     });
   } else if (lottieAnim) {
     lottieAnim.play();

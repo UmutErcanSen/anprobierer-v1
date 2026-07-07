@@ -32,7 +32,7 @@ const COMBINED_PROMPT = `Virtually dress this person (image 1) with all the prov
 
 function buildSalePrompt(size) {
   const sizeInfo = size ? `Size: ${size}. ` : '';
-  return `Write a compelling German Vinted sales listing for this clothing item based on the photo shown. ${sizeInfo}Include: item name, condition (sehr gut), size, material guess, fit description, style tips, and a suggested price in EUR. Use an engaging, friendly tone with appropriate emojis and clear sections (Überschrift, Beschreibung, Zustand, Größe, Preisvorstellung). Max 180 words.`;
+  return `Write a German Vinted sales listing for this clothing item based on the photo shown. ${sizeInfo}The title must be SEO-optimized for second-hand fashion on Vinted. Do NOT guess the material. Do NOT suggest a price. Include: an SEO-optimized headline (max 80 characters with emojis), condition (sehr gut), size, fit description, and style tips. Structure: Überschrift, Beschreibung, Zustand, Größe, Passform & Styling-Tipps. Use an engaging tone with emojis. Max 180 words.`;
 }
 
 async function callImageEdit({ personPhoto, clothingItems, prompt, apiKey, signal, size, quality }) {

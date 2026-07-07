@@ -4,7 +4,6 @@ const state = {
   clothingItems: [],
   generationMode: 'single',
   generatedImages: [],
-  saleText: '',
   currentStep: 1,
   generationDone: false,
   isGenerating: false,
@@ -363,8 +362,6 @@ generateBtn.addEventListener('click', async () => {
   logArea.classList.add('visible');
   logArea.innerHTML = '';
   document.getElementById('resultsGrid').innerHTML = '';
-  document.getElementById('saleTextBox').classList.remove('visible');
-  document.getElementById('saleTextBox').textContent = '';
   state.generationDone = false;
   $('#step4Next').disabled = true;
   showLoading();
@@ -406,6 +403,7 @@ generateBtn.addEventListener('click', async () => {
             clothingType: item.type,
             clothingName: item.name,
             size: item.size,
+            saleText: '',
           });
           successCount++;
           addLog(`✅ "${item.name}" erfolgreich generiert`, 'success');
@@ -459,6 +457,7 @@ generateBtn.addEventListener('click', async () => {
           name: `Kombiniert_${formatDate()}.png`,
           clothingType: 'combined',
           clothingName: 'Alle Kleidungsstücke',
+          saleText: '',
         });
         successCount++;
         addLog(`✅ Kombiniertes Bild erfolgreich generiert`, 'success');
@@ -514,101 +513,192 @@ $('#step4Next').addEventListener('click', () => {
   if (state.generatedImages.length > 0) {
     renderResults();
     goToStep(5);
+    generateAllSaleTexts();
   }
 });
 
 // ============ STEP 5: RESULTS + SALE TEXT ============
 
 const resultsGrid = $('#resultsGrid');
-const saleImageSelect = $('#saleImageSelect');
-const saleTextBox = $('#saleTextBox');
-const saleTextBtn = $('#saleTextBtn');
 
 function renderResults() {
   if (state.generatedImages.length === 0) return;
   resultsGrid.innerHTML = state.generatedImages.map((img, idx) => `
-    <div class="result-card">
-      <img src="${base64ToDataUrl(img.base64, img.mimeType)}" alt="${img.name}">
+    <div class="result-card" data-idx="${idx}">
+      <img src="${base64ToDataUrl(img.base64, img.mimeType)}" alt="${escapeHtml(img.name)}">
       <div class="result-info">
-        <strong>${img.clothingName}</strong><br>
+        <strong>${escapeHtml(img.clothingName)}</strong><br>
         <span style="color:var(--text-3)">${img.clothingType === 'combined' ? 'Kombiniert' : TYPE_LABELS[img.clothingType]}</span><br>
-        <span style="font-size:.7rem;color:var(--text-3)">${(getImageSize(img.base64))} MB</span>
+        <span style="font-size:.7rem;color:var(--text-3)">${getImageSize(img.base64)} MB</span>
+      </div>
+      <div class="result-card-actions">
+        <button class="btn btn-sm btn-outline download-btn">⬇ Herunterladen</button>
+      </div>
+      <div class="result-sale-text${img.saleText ? '' : ' generating'}">
+        <div class="sale-text-content"></div>
       </div>
     </div>
   `).join('');
 
-  saleImageSelect.innerHTML = '<option value="">– Bild auswählen –</option>' +
-    state.generatedImages.map((img, idx) =>
-      `<option value="${idx}">${img.clothingName} (${img.clothingType === 'combined' ? 'Kombiniert' : TYPE_LABELS[img.clothingType]})</option>`
-    ).join('');
-
-  resultsGrid.querySelectorAll('.result-card img').forEach((imgEl, idx) => {
+  resultsGrid.querySelectorAll('.result-card').forEach((card, idx) => {
+    const img = state.generatedImages[idx];
+    const imgEl = card.querySelector('img');
     imgEl.style.cursor = 'pointer';
-    imgEl.addEventListener('click', () => openLightbox(state.generatedImages[idx]));
+    imgEl.addEventListener('click', () => openLightbox(img));
+    card.querySelector('.download-btn').addEventListener('click', () => downloadSingleImage(idx));
+    if (img.saleText) {
+      const contentDiv = card.querySelector('.sale-text-content');
+      if (contentDiv) contentDiv.textContent = img.saleText;
+      const copyBtn = document.createElement('button');
+      copyBtn.className = 'btn btn-sm btn-outline copy-text-btn';
+      copyBtn.textContent = '📋 Kopieren';
+      copyBtn.addEventListener('click', () => copySaleText(idx));
+      card.querySelector('.result-sale-text').appendChild(copyBtn);
+    }
   });
 }
 
-saleTextBtn.addEventListener('click', async () => {
-  const idx = parseInt(saleImageSelect.value, 10);
-  if (isNaN(idx) || !state.generatedImages[idx]) {
-    showToast('Bitte zuerst ein Bild auswählen.', 'warning');
-    return;
-  }
-  if (!state.apiKey || !validateApiKey(state.apiKey)) {
-    showToast('Bitte gültigen OpenAI API-Key eingeben.', 'error');
-    return;
-  }
+async function generateAllSaleTexts() {
+  for (let i = 0; i < state.generatedImages.length; i++) {
+    const img = state.generatedImages[i];
+    if (img.saleText) continue;
 
+    const card = document.querySelector(`.result-card[data-idx="${i}"]`);
+    const textArea = card?.querySelector('.result-sale-text');
+    if (!textArea) continue;
+
+    textArea.classList.add('generating');
+    textArea.innerHTML = '<span class="spinner"></span> Generiere Verkaufstext...';
+
+    try {
+      addLog(`Generiere Vinted-Verkaufstext für "${img.clothingName}"...`);
+      const text = await generateSaleTextForImage(img);
+      if (text) {
+        img.saleText = text;
+        textArea.classList.remove('generating');
+        textArea.innerHTML = '';
+        const pre = document.createElement('div');
+        pre.className = 'sale-text-content';
+        pre.textContent = text;
+        textArea.appendChild(pre);
+        const copyBtn = document.createElement('button');
+        copyBtn.className = 'btn btn-sm btn-outline copy-text-btn';
+        copyBtn.textContent = '📋 Kopieren';
+        copyBtn.addEventListener('click', () => copySaleText(i));
+        textArea.appendChild(copyBtn);
+        addLog(`✅ Verkaufstext für "${img.clothingName}" generiert`, 'success');
+      }
+    } catch (err) {
+      if (err instanceof OpenAIError && (err.status === 401 || err.status === 403)) {
+        addLog('🔑 API-Key ungültig.', 'error');
+      } else {
+        addLog(`❌ Fehler bei "${img.clothingName}": ${err.message}`, 'error');
+      }
+      textArea.classList.remove('generating');
+      textArea.innerHTML = '<span style="color:var(--error);font-size:.8rem">❌ Textgenerierung fehlgeschlagen</span>';
+    }
+  }
+}
+
+async function generateSaleTextForImage(img) {
+  const data = await callChatCompletion({
+    messages: [
+      {
+        role: 'user',
+        content: [
+          { type: 'image_url', image_url: { url: base64ToDataUrl(img.base64, img.mimeType) } },
+          { type: 'text', text: buildSalePrompt(img.size) },
+        ],
+      },
+    ],
+    apiKey: state.apiKey,
+    signal: AbortSignal.timeout(30000),
+  });
+  return data.choices?.[0]?.message?.content || '';
+}
+
+function downloadSingleImage(idx) {
   const img = state.generatedImages[idx];
-  saleTextBtn.disabled = true;
-  saleTextBtn.textContent = '⏳ Generiere...';
-  saleTextBox.classList.remove('visible');
-  saleTextBox.textContent = '';
+  if (!img) return;
+  const a = document.createElement('a');
+  a.href = base64ToDataUrl(img.base64, img.mimeType);
+  a.download = img.name;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  showToast(`⬇ ${img.clothingName} wird heruntergeladen`, 'success');
+}
+
+function copySaleText(idx) {
+  const text = state.generatedImages[idx]?.saleText;
+  if (!text) { showToast('Kein Verkaufstext vorhanden.', 'warning'); return }
+  navigator.clipboard.writeText(text).then(() => {
+    showToast('📋 Verkaufstext kopiert!', 'success');
+  }).catch(() => {
+    showToast('❌ Kopieren fehlgeschlagen.', 'error');
+  });
+}
+
+async function downloadAllAsZip(title) {
+  title = title || 'VirtualTryOn';
+  const dateStr = formatDate();
+  const folder = `${title}_${dateStr}`;
+
+  if (state.generatedImages.length === 0) {
+    showToast('Keine Daten zum Herunterladen.', 'warning');
+    return;
+  }
 
   try {
-    addLog('Generiere Vinted-Verkaufstext...');
+    const zip = new JSZip();
 
-    const data = await callChatCompletion({
-      messages: [
-        {
-          role: 'user',
-          content: [
-            { type: 'image_url', image_url: { url: base64ToDataUrl(img.base64, img.mimeType) } },
-            { type: 'text', text: buildSalePrompt(img.size) },
-          ],
-        },
-      ],
-      apiKey: state.apiKey,
-      signal: AbortSignal.timeout(30000),
-    });
-
-    const text = data.choices?.[0]?.message?.content || '';
-    if (!text) throw new Error('Leere Antwort erhalten.');
-    state.saleText = text;
-    saleTextBox.textContent = text;
-    saleTextBox.classList.add('visible');
-    addLog('✅ Verkaufstext generiert', 'success');
-    showToast('Verkaufstext erfolgreich generiert', 'success');
-  } catch (err) {
-    if (err instanceof OpenAIError && err.type === 'insufficient_quota') {
-      addLog('💰 Guthaben aufgebraucht.', 'error');
-      showToast('💰 OpenAI-Guthaben aufgebraucht.', 'error');
-    } else if (err instanceof OpenAIError && (err.status === 401 || err.status === 403)) {
-      addLog('🔑 API-Key ungültig.', 'error');
-      showToast('🔑 API-Key ungültig.', 'error');
-    } else if (err.name === 'TimeoutError' || err.name === 'AbortError') {
-      addLog('⏱ Zeitüberschreitung (30s).', 'error');
-      showToast('⏱ Zeitüberschreitung. Internet prüfen.', 'error');
-    } else {
-      console.error('Fehler bei Text-Generierung:', err);
-      addLog(`❌ ${err.message}`, 'error');
-      showToast(`❌ ${err.message}`, 'error');
+    if (state.generatedImages.length > 0) {
+      const imgFolder = zip.folder(`${folder}/Bilder`);
+      for (const img of state.generatedImages) {
+        const safeName = img.name.replace(/[<>:"/\\|?*]/g, '_');
+        imgFolder.file(safeName, img.base64, { base64: true });
+      }
     }
-  } finally {
-    saleTextBtn.disabled = false;
-    saleTextBtn.textContent = '📄 Text generieren';
+
+    const textCount = state.generatedImages.filter(i => i.saleText).length;
+    if (textCount > 0) {
+      const textFolder = zip.folder(`${folder}/Verkaufsanzeige Texte`);
+      state.generatedImages.forEach((img) => {
+        if (img.saleText) {
+          const safeName = img.clothingName.replace(/[<>:"/\\|?*]/g, '_');
+          textFolder.file(`anzeige_${safeName}.txt`, img.saleText);
+        }
+      });
+    }
+
+    const summary = [
+      `Session: ${title}`,
+      `Datum: ${dateStr}`,
+      `Generierte Bilder: ${state.generatedImages.length}`,
+      `Kleidungsstücke: ${state.clothingItems.map(i => `${i.name} (${TYPE_LABELS[i.type]})`).join(', ')}`,
+      `Modus: ${state.generationMode === 'single' ? 'Einzeln' : 'Alle zusammen'}`,
+      textCount > 0 ? `\n--- Verkaufstexte ---\n${state.generatedImages.filter(i => i.saleText).map(i => `${i.clothingName}:\n${i.saleText}`).join('\n---\n')}` : '',
+    ].join('\n');
+    zip.file(`${folder}/zusammenfassung.txt`, summary);
+
+    const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${folder}.zip`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    const size = (blob.size / 1024 / 1024).toFixed(2);
+    showToast(`📦 ${folder}.zip erfolgreich heruntergeladen (${size} MB)`, 'success');
+    return true;
+  } catch (err) {
+    showToast(`Fehler beim ZIP-Erstellen: ${err.message}`, 'error');
+    return false;
   }
-});
+}
 
 window.openLightbox = function (img) {
   const lb = document.getElementById('lightbox');
@@ -635,6 +725,7 @@ document.addEventListener('keydown', e => {
 });
 
 $('#step5Back').addEventListener('click', () => goToStep(4));
+$('#downloadAllBtn').addEventListener('click', () => downloadAllAsZip('VirtualTryOn'));
 $('#step5Next').addEventListener('click', () => {
   renderZipPreview();
   goToStep(6);
@@ -650,68 +741,18 @@ const zipPreview = $('#zipPreview');
 function renderZipPreview() {
   const title = sessionTitle.value.trim() || 'VirtualTryOn';
   const imgCount = state.generatedImages.length;
-  const hasText = state.saleText ? true : false;
-  zipPreview.textContent = `📦 ${imgCount} Bild${imgCount > 1 ? 'er' : ''} ${hasText ? '+ 1 Verkaufstext' : ''} · Bereit zum Download als "${title}_${formatDate()}.zip"`;
+  const textCount = state.generatedImages.filter(i => i.saleText).length;
+  zipPreview.textContent = `📦 ${imgCount} Bild${imgCount > 1 ? 'er' : ''}${textCount > 0 ? ` + ${textCount} Verkaufstext${textCount > 1 ? 'e' : ''}` : ''} · Bereit zum Download als "${title}_${formatDate()}.zip"`;
 }
 
 downloadZipBtn.addEventListener('click', async () => {
   const title = sessionTitle.value.trim() || 'VirtualTryOn';
-  const dateStr = formatDate();
-  const folder = `${title}_${dateStr}`;
-
-  if (state.generatedImages.length === 0 && !state.saleText) {
-    showToast('Keine Daten zum Herunterladen.', 'warning');
-    return;
-  }
-
-  try {
-    downloadZipBtn.disabled = true;
-    downloadZipBtn.textContent = '⏳ Packe ZIP...';
-
-    const zip = new JSZip();
-
-    if (state.generatedImages.length > 0) {
-      const imgFolder = zip.folder(`${folder}/Bilder`);
-      for (const img of state.generatedImages) {
-        const safeName = img.name.replace(/[<>:"/\\|?*]/g, '_');
-        imgFolder.file(safeName, img.base64, { base64: true });
-      }
-    }
-
-    if (state.saleText) {
-      const textFolder = zip.folder(`${folder}/Verkaufsanzeige Text`);
-      textFolder.file('anzeige.txt', state.saleText);
-    }
-
-    const summary = [
-      `Session: ${title}`,
-      `Datum: ${dateStr}`,
-      `Generierte Bilder: ${state.generatedImages.length}`,
-      `Kleidungsstücke: ${state.clothingItems.map(i => `${i.name} (${TYPE_LABELS[i.type]})`).join(', ')}`,
-      `Modus: ${state.generationMode === 'single' ? 'Einzeln' : 'Alle zusammen'}`,
-      state.saleText ? `\n--- Verkaufstext ---\n${state.saleText}` : '',
-    ].join('\n');
-    zip.file(`${folder}/zusammenfassung.txt`, summary);
-
-    const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${folder}.zip`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-
-    const size = (blob.size / 1024 / 1024).toFixed(2);
-    zipPreview.textContent = `✅ ZIP erstellt: ${folder}.zip (${size} MB) · ${state.generatedImages.length} Bild${state.generatedImages.length > 1 ? 'er' : ''} ${state.saleText ? '+ 1 Verkaufstext' : ''}`;
-    showToast(`📦 ${folder}.zip erfolgreich heruntergeladen`, 'success');
-  } catch (err) {
-    showToast(`Fehler beim ZIP-Erstellen: ${err.message}`, 'error');
-  } finally {
-    downloadZipBtn.disabled = false;
-    downloadZipBtn.textContent = '📦 ZIP herunterladen';
-  }
+  downloadZipBtn.disabled = true;
+  downloadZipBtn.textContent = '⏳ Packe ZIP...';
+  await downloadAllAsZip(title);
+  downloadZipBtn.disabled = false;
+  downloadZipBtn.textContent = '📦 ZIP herunterladen';
+  renderZipPreview();
 });
 
 resetBtn.addEventListener('click', () => {
@@ -719,7 +760,6 @@ resetBtn.addEventListener('click', () => {
   state.personPhoto = null;
   state.clothingItems = [];
   state.generatedImages = [];
-  state.saleText = '';
   state.generationDone = false;
   state.currentStep = 1;
   state.isGenerating = false;
@@ -730,9 +770,6 @@ resetBtn.addEventListener('click', () => {
   clothingPreviewGrid.innerHTML = '';
   noClothingHint.style.display = 'block';
   resultsGrid.innerHTML = '';
-  saleTextBox.classList.remove('visible');
-  saleTextBox.textContent = '';
-  saleImageSelect.innerHTML = '<option value="">– Bild auswählen –</option>';
   logArea.classList.remove('visible');
   logArea.innerHTML = '';
   progressWrap.style.display = 'none';

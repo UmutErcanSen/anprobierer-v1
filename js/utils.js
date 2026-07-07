@@ -143,3 +143,9 @@ function convertImageToStandard(file) {
     img.src = url;
   });
 }
+
+function escapeHtml(str) {
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}

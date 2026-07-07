@@ -234,51 +234,12 @@
       <section id="step5" class="step-section">
         <div class="card">
           <h2>🖼️ Generierte Anprobebilder</h2>
+          <p>Jedes Bild hat einen eigenen Download-Button. Verkaufstexte werden automatisch generiert.</p>
           <div class="results-grid" id="resultsGrid"></div>
-          <p
-            id="noResultsHint"
-            style="
-              color: var(--text-3);
-              font-size: 0.85rem;
-              margin-top: 0.75rem;
-              display: none;
-            "
-          >
-            Noch keine Bilder generiert.
-          </p>
-        </div>
-        <div class="card">
-          <h2>📝 Vinted-Verkaufstext generieren</h2>
-          <p>
-            Wähle ein generiertes Bild aus und lass dazu einen passenden
-            Verkaufstext für Vinted erstellen.
-          </p>
-          <div
-            style="
-              display: flex;
-              gap: 0.75rem;
-              flex-wrap: wrap;
-              align-items: center;
-            "
-          >
-            <select
-              id="saleImageSelect"
-              class="btn btn-outline"
-              style="
-                padding: 0.5rem;
-                border-radius: var(--radius-sm);
-                background: var(--surface-2);
-                border: 1px solid var(--surface-3);
-                min-width: 200px;
-              "
-            >
-              <option value="">– Bild auswählen –</option>
-            </select>
-            <button class="btn btn-success" id="saleTextBtn">
-              📄 Text generieren
-            </button>
+          <p id="noResultsHint" style="color:var(--text-3);font-size:.85rem;margin-top:.75rem;display:none">Noch keine Bilder generiert.</p>
+          <div id="step5ZipArea" style="margin-top:1rem;display:flex;gap:.75rem;flex-wrap:wrap;align-items:center">
+            <button class="btn btn-success" id="downloadAllBtn">📦 Alle herunterladen (ZIP)</button>
           </div>
-          <div class="sale-text-box" id="saleTextBox"></div>
         </div>
         <div class="step-nav">
           <button class="btn btn-outline" id="step5Back">← Zurück</button>

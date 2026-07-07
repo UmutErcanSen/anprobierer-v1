@@ -154,12 +154,19 @@ header h1 span{color:var(--primary)}
 .preview-card .remove{
   position:absolute;top:4px;right:4px;
   width:24px;height:24px;border-radius:50%;
-  background:rgba(0,0,0,.6);border:none;
+  background:rgba(0,0,0,.7);border:none;
   color:#fff;font-size:1rem;line-height:1;
   cursor:pointer;display:flex;align-items:center;justify-content:center;
-  opacity:0;transition:var(--transition);
 }
-.preview-card:hover .remove{opacity:1}
+.preview-card .remove:hover{background:rgba(239,68,68,.8)}
+.remove-person-btn{
+  position:absolute;top:4px;right:4px;
+  width:24px;height:24px;border-radius:50%;
+  background:rgba(0,0,0,.7);border:none;
+  color:#fff;font-size:1rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+}
+.remove-person-btn:hover{background:rgba(239,68,68,.8)}
 
 .item-select{
   width:100%;padding:.5rem .6rem;font-size:.75rem;

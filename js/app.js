@@ -130,7 +130,17 @@ function renderPersonPreview() {
   }
   personDropZone.classList.add('has-file');
   personPreview.style.display = 'block';
-  personPreview.innerHTML = `<img src="${base64ToDataUrl(state.personPhoto.base64, state.personPhoto.mimeType)}" alt="Person">`;
+  personPreview.innerHTML = `<div style="position:relative;display:inline-block">
+    <img src="${base64ToDataUrl(state.personPhoto.base64, state.personPhoto.mimeType)}" alt="Person">
+    <button class="remove-person-btn" id="removePersonBtn">×</button>
+  </div>`;
+  document.getElementById('removePersonBtn')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    state.personPhoto = null;
+    personPreview.style.display = 'none';
+    personDropZone.classList.remove('has-file');
+    personFileInput.value = '';
+  });
 }
 
 personDropZone.addEventListener('dragover', e => { e.preventDefault(); personDropZone.classList.add('drag-over') });

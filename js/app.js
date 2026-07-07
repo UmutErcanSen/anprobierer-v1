@@ -345,7 +345,7 @@ generateBtn.addEventListener('click', async () => {
             clothingItems: [item],
             prompt: buildTryOnPrompt(item.type),
             apiKey: state.apiKey,
-            signal: AbortSignal.timeout(90000),
+            signal: AbortSignal.timeout(180000),
             size: state.selectedSize,
             quality: state.selectedQuality,
           });
@@ -400,7 +400,7 @@ generateBtn.addEventListener('click', async () => {
           clothingItems: items,
           prompt: COMBINED_PROMPT,
           apiKey: state.apiKey,
-          signal: AbortSignal.timeout(120000),
+          signal: AbortSignal.timeout(300000),
           size: state.selectedSize,
           quality: state.selectedQuality,
         });

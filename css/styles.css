@@ -245,20 +245,21 @@ header h1 span{color:var(--primary)}
 .log-entry.error{color:var(--error)}
 .log-entry.warn{color:var(--warning)}
 
-.results-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem;margin-top:1rem}
+.results-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1rem;margin-top:1rem}
+@media(min-width:1000px){.results-grid{grid-template-columns:repeat(3,1fr)}}
 .result-card{
   background:var(--surface-2);border-radius:var(--radius-sm);
   overflow:hidden;border:1px solid var(--surface-3);
 }
 .result-card-header{
-  display:flex;align-items:center;gap:.6rem;
-  padding:.5rem .6rem;cursor:pointer;user-select:none;
+  display:flex;align-items:center;gap:.75rem;
+  padding:.65rem .75rem;cursor:pointer;user-select:none;
 }
 .result-card-header:hover{background:var(--surface-3)}
-.result-card-thumb{width:36px;height:36px;object-fit:cover;border-radius:4px;flex-shrink:0}
+.result-card-thumb{width:48px;height:48px;object-fit:cover;border-radius:6px;flex-shrink:0}
 .result-card-info{flex:1;min-width:0}
-.result-card-info strong{display:block;font-size:.8rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.result-card-info span{font-size:.7rem;color:var(--text-3)}
+.result-card-info strong{display:block;font-size:.85rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.result-card-info span{font-size:.72rem;color:var(--text-3)}
 .collapse-toggle{
   background:none;border:none;color:var(--text-3);font-size:.75rem;
   cursor:pointer;padding:4px;transition:transform .2s;flex-shrink:0;

@@ -625,7 +625,7 @@ async function generateSaleTextForImage(img) {
         role: 'user',
         content: [
           { type: 'image_url', image_url: { url: base64ToDataUrl(img.base64, img.mimeType) } },
-          { type: 'text', text: buildSalePrompt(img.size) },
+          { type: 'text', text: buildSalePrompt(TYPE_LABELS[img.clothingType] || img.clothingType, img.size) },
         ],
       },
     ],

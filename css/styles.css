@@ -111,8 +111,8 @@ header h1 span{color:var(--primary)}
 .btn-primary{background:var(--primary);color:#fff}
 .btn-primary:hover{background:var(--primary-hover);transform:translateY(-1px)}
 .btn-primary:disabled{opacity:.4;cursor:not-allowed;transform:none}
-.btn-secondary{background:var(--surface-2);color:var(--text)}
-.btn-secondary:hover{background:var(--surface-3)}
+.btn-secondary{background:var(--surface-3);color:var(--text)}
+.btn-secondary:hover{background:var(--text-3)}
 .btn-success{background:var(--success);color:#fff}
 .btn-success:hover{opacity:.9;transform:translateY(-1px)}
 .btn-danger{background:var(--error);color:#fff}
@@ -241,10 +241,23 @@ header h1 span{color:var(--primary)}
   background:var(--surface-2);border-radius:var(--radius-sm);
   overflow:hidden;border:1px solid var(--surface-3);
 }
-.result-card img{width:100%;height:auto;display:block}
-.result-card .result-info{padding:.6rem .75rem;font-size:.8rem;color:var(--text-2)}
-.result-card .result-info strong{color:var(--text)}
-
+.result-card-header{
+  display:flex;align-items:center;gap:.6rem;
+  padding:.5rem .6rem;cursor:pointer;user-select:none;
+}
+.result-card-header:hover{background:var(--surface-3)}
+.result-card-thumb{width:36px;height:36px;object-fit:cover;border-radius:4px;flex-shrink:0}
+.result-card-info{flex:1;min-width:0}
+.result-card-info strong{display:block;font-size:.8rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.result-card-info span{font-size:.7rem;color:var(--text-3)}
+.collapse-toggle{
+  background:none;border:none;color:var(--text-3);font-size:.75rem;
+  cursor:pointer;padding:4px;transition:transform .2s;flex-shrink:0;
+  width:28px;height:28px;display:flex;align-items:center;justify-content:center;
+}
+.result-card.collapsed .collapse-toggle{transform:rotate(-90deg)}
+.result-card.collapsed .result-card-body{display:none}
+.result-card .result-card-body > img{width:100%;height:auto;display:block;cursor:pointer}
 .result-card-actions{
   padding:.4rem .6rem;display:flex;gap:.5rem;
   border-top:1px solid var(--surface-3);

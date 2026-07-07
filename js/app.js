@@ -525,32 +525,40 @@ function renderResults() {
   if (state.generatedImages.length === 0) return;
   resultsGrid.innerHTML = state.generatedImages.map((img, idx) => `
     <div class="result-card" data-idx="${idx}">
-      <img src="${base64ToDataUrl(img.base64, img.mimeType)}" alt="${escapeHtml(img.name)}">
-      <div class="result-info">
-        <strong>${escapeHtml(img.clothingName)}</strong><br>
-        <span style="color:var(--text-3)">${img.clothingType === 'combined' ? 'Kombiniert' : TYPE_LABELS[img.clothingType]}</span><br>
-        <span style="font-size:.7rem;color:var(--text-3)">${getImageSize(img.base64)} MB</span>
+      <div class="result-card-header">
+        <img class="result-card-thumb" src="${base64ToDataUrl(img.base64, img.mimeType)}" alt="">
+        <div class="result-card-info">
+          <strong>${escapeHtml(img.clothingName)}</strong>
+          <span>${img.clothingType === 'combined' ? 'Kombiniert' : TYPE_LABELS[img.clothingType]} · ${getImageSize(img.base64)} MB</span>
+        </div>
+        <button class="collapse-toggle" aria-label="Ein-/ausklappen">▼</button>
       </div>
-      <div class="result-card-actions">
-        <button class="btn btn-sm btn-outline download-btn">⬇ Herunterladen</button>
-      </div>
-      <div class="result-sale-text${img.saleText ? '' : ' generating'}">
-        <div class="sale-text-content"></div>
+      <div class="result-card-body">
+        <img src="${base64ToDataUrl(img.base64, img.mimeType)}" alt="${escapeHtml(img.name)}">
+        <div class="result-card-actions">
+          <button class="btn btn-sm btn-primary download-btn">⬇ Herunterladen</button>
+        </div>
+        <div class="result-sale-text${img.saleText ? '' : ' generating'}">
+          <div class="sale-text-content"></div>
+        </div>
       </div>
     </div>
   `).join('');
 
   resultsGrid.querySelectorAll('.result-card').forEach((card, idx) => {
     const img = state.generatedImages[idx];
-    const imgEl = card.querySelector('img');
-    imgEl.style.cursor = 'pointer';
-    imgEl.addEventListener('click', () => openLightbox(img));
+    const bodyImg = card.querySelector('.result-card-body > img');
+    bodyImg.addEventListener('click', () => openLightbox(img));
     card.querySelector('.download-btn').addEventListener('click', () => downloadSingleImage(idx));
+    card.querySelector('.result-card-header').addEventListener('click', (e) => {
+      if (e.target.closest('.download-btn') || e.target.closest('.copy-text-btn')) return;
+      card.classList.toggle('collapsed');
+    });
     if (img.saleText) {
       const contentDiv = card.querySelector('.sale-text-content');
       if (contentDiv) contentDiv.textContent = img.saleText;
       const copyBtn = document.createElement('button');
-      copyBtn.className = 'btn btn-sm btn-outline copy-text-btn';
+      copyBtn.className = 'btn btn-sm btn-secondary copy-text-btn';
       copyBtn.textContent = '📋 Kopieren';
       copyBtn.addEventListener('click', () => copySaleText(idx));
       card.querySelector('.result-sale-text').appendChild(copyBtn);
@@ -582,7 +590,7 @@ async function generateAllSaleTexts() {
         pre.textContent = text;
         textArea.appendChild(pre);
         const copyBtn = document.createElement('button');
-        copyBtn.className = 'btn btn-sm btn-outline copy-text-btn';
+        copyBtn.className = 'btn btn-sm btn-secondary copy-text-btn';
         copyBtn.textContent = '📋 Kopieren';
         copyBtn.addEventListener('click', () => copySaleText(i));
         textArea.appendChild(copyBtn);

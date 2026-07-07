@@ -176,7 +176,7 @@ async function handleClothingFiles(files) {
     if (!f.type.startsWith('image/')) continue;
     if (f.size > maxSize) { showToast(`${f.name} ist zu groß (max 20 MB). Übersprungen.`, 'warning'); continue }
     promises.push(convertImageToStandard(f).then(converted => fileToBase64(converted)).then(data => {
-      state.clothingItems.push({ id: generateId(), ...data, type: 'top_tshirt', size: 'M (38/10)' });
+      state.clothingItems.push({ id: generateId(), ...data, type: 'top_tshirt', size: 'M (38/10)', colors: [] });
     }));
   }
   if (!promises.length) return;
@@ -189,6 +189,18 @@ async function handleClothingFiles(files) {
   }
 }
 
+function getColorHex(value) {
+  const c = COLORS.find(c => c.value === value);
+  return c ? c.hex : '';
+}
+
+function getColorLabel(value) {
+  const c = COLORS.find(c => c.value === value);
+  return c ? c.label : '';
+}
+
+function isMobile() { return window.innerWidth < 640 }
+
 function renderClothingPreviews() {
   if (state.clothingItems.length === 0) {
     clothingPreviewGrid.innerHTML = '';
@@ -196,43 +208,176 @@ function renderClothingPreviews() {
     return;
   }
   noClothingHint.style.display = 'none';
+
+  function sel(id, field, options, labelKey, current) {
+    const html = `<select class="item-select ${field}" data-id="${id}">${options.map(o => `<option value="${o.value}"${o.value===current?' selected':''}>${o.label||o.value}</option>`).join('')}</select>`;
+    const label = options.find(o => o.value === current);
+    const lbl = label ? (label.label || label) : options[0]?.label || '';
+    const trigger = `<button class="mobile-select-trigger" data-id="${id}" data-field="${field}"><span class="trigger-label">${lbl}</span><span class="trigger-chevron">▼</span></button>`;
+    return html + trigger;
+  }
+
+  function colorSel(id, idx, val) {
+    const hex = getColorHex(val);
+    const label = getColorLabel(val) || 'Keine Angabe';
+    const dash = val ? '' : ' empty';
+    const hidden = idx === 1 ? '' : ''; /* always render, visibility via CSS */
+    const selH = `<select class="item-select color-select" data-id="${id}" data-idx="${idx}">${COLORS.map(c => `<option value="${c.value}"${c.value===val?' selected':''}>${c.label}</option>`).join('')}</select>`;
+    const trig = `<button class="mobile-select-trigger color-trigger" data-id="${id}" data-field="color_${idx}"><span class="color-dot${dash}" style="background:${hex||'transparent'}"></span><span class="trigger-label">${label}</span><span class="trigger-chevron">▼</span></button>`;
+    return selH + trig;
+  }
+
   clothingPreviewGrid.innerHTML = state.clothingItems.map(item => `
     <div class="preview-card" data-id="${item.id}">
       <img src="${base64ToDataUrl(item.base64, item.mimeType)}" alt="${item.name}">
       <div class="info">
-        <div style="font-size:.7rem;margin-bottom:.3rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${item.name}</div>
-        <select class="item-select type-select" data-id="${item.id}">
-          ${Object.entries(TYPE_LABELS).map(([key, label]) =>
-            `<option value="${key}" ${item.type === key ? 'selected' : ''}>${label}</option>`
-          ).join('')}
-        </select>
-        <select class="item-select size-select" data-id="${item.id}" style="margin-top:.3rem">
-          ${SIZES.map(s =>
-            `<option value="${s}" ${item.size === s ? 'selected' : ''}>${s}</option>`
-          ).join('')}
-        </select>
+        <div class="item-name">${escapeHtml(item.name)}</div>
+        ${sel(item.id, 'type-select', Object.entries(TYPE_LABELS).map(([v,l])=>({value:v,label:l})), 'type', item.type)}
+        ${sel(item.id, 'size-select', SIZES.map(s=>({value:s,label:s})), 'size', item.size)}
+        <div class="color-section">
+          ${colorSel(item.id, 0, item.colors[0] || '')}
+          <div class="color-row-2"${item.colors.length > 0 && item.colors[0] ? '' : ' style="display:none"'}>
+            ${colorSel(item.id, 1, item.colors[1] || '')}
+            <button class="color-remove" data-id="${item.id}" data-idx="1">×</button>
+          </div>
+        </div>
       </div>
       <button class="remove" data-id="${item.id}">×</button>
     </div>
   `).join('');
 
+  /* Native select change handlers */
   clothingPreviewGrid.querySelectorAll('.type-select').forEach(sel => {
     sel.addEventListener('change', e => {
       e.stopPropagation();
-      const id = sel.closest('[data-id]').dataset.id;
+      const id = sel.dataset.id;
       const item = state.clothingItems.find(i => i.id === id);
       if (!item) return;
       item.type = sel.value;
+      const trig = document.querySelector(`.mobile-select-trigger[data-id="${id}"][data-field="type-select"] .trigger-label`);
+      if (trig) trig.textContent = TYPE_LABELS[sel.value];
     });
   });
 
   clothingPreviewGrid.querySelectorAll('.size-select').forEach(sel => {
     sel.addEventListener('change', e => {
       e.stopPropagation();
-      const id = sel.closest('[data-id]').dataset.id;
+      const id = sel.dataset.id;
       const item = state.clothingItems.find(i => i.id === id);
       if (!item) return;
       item.size = sel.value;
+      const trig = document.querySelector(`.mobile-select-trigger[data-id="${id}"][data-field="size-select"] .trigger-label`);
+      if (trig) trig.textContent = sel.value;
+    });
+  });
+
+  clothingPreviewGrid.querySelectorAll('.color-select').forEach(sel => {
+    sel.addEventListener('change', e => {
+      e.stopPropagation();
+      const id = sel.dataset.id;
+      const item = state.clothingItems.find(i => i.id === id);
+      if (!item) return;
+      const idx = parseInt(sel.dataset.idx, 10);
+      item.colors[idx] = sel.value;
+      if (idx === 0) {
+        if (sel.value) {
+          item.colors[1] = item.colors[1] || '';
+          renderClothingPreviews();
+          return;
+        } else {
+          item.colors = [];
+          renderClothingPreviews();
+          return;
+        }
+      }
+      /* update trigger + dot */
+      const trig = document.querySelector(`.mobile-select-trigger[data-id="${id}"][data-field="color_${idx}"]`);
+      if (trig) {
+        trig.querySelector('.trigger-label').textContent = getColorLabel(sel.value) || 'Keine Angabe';
+        const dot = trig.querySelector('.color-dot');
+        const hex = getColorHex(sel.value);
+        if (dot) {
+          dot.style.background = hex || 'transparent';
+          if (sel.value) dot.classList.remove('empty'); else dot.classList.add('empty');
+        }
+      }
+    });
+  });
+
+  clothingPreviewGrid.querySelectorAll('.color-remove').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const id = btn.dataset.id;
+      const item = state.clothingItems.find(i => i.id === id);
+      if (!item) return;
+      item.colors.pop();
+      renderClothingPreviews();
+    });
+  });
+
+  /* Mobile trigger handlers */
+  clothingPreviewGrid.querySelectorAll('.mobile-select-trigger').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const id = btn.dataset.id;
+      const item = state.clothingItems.find(i => i.id === id);
+      if (!item) return;
+      const field = btn.dataset.field;
+      let title, options, currentValue, showDots, getDot;
+
+      if (field === 'type-select') {
+        title = 'Kleidungstyp auswählen';
+        options = Object.entries(TYPE_LABELS).map(([v,l]) => ({ value: v, label: l }));
+        currentValue = item.type;
+        showDots = false;
+      } else if (field === 'size-select') {
+        title = 'Größe wählen';
+        options = SIZES.map(s => ({ value: s, label: s }));
+        currentValue = item.size;
+        showDots = false;
+      } else if (field.startsWith('color_')) {
+        title = 'Farbe auswählen';
+        options = COLORS.map(c => ({ value: c.value, label: c.label }));
+        const ci = parseInt(field.split('_')[1], 10);
+        currentValue = item.colors[ci] || '';
+        showDots = true;
+        getDot = (v) => getColorHex(v);
+      }
+
+      openSelectOverlay({
+        title, options, currentValue,
+        showDots,
+        getDotColor: getDot,
+        onChange: (val) => {
+          if (field === 'type-select') {
+            item.type = val;
+            const ns = document.querySelector(`.type-select[data-id="${id}"]`);
+            if (ns) ns.value = val;
+            const tl = document.querySelector(`.mobile-select-trigger[data-id="${id}"][data-field="type-select"] .trigger-label`);
+            if (tl) tl.textContent = TYPE_LABELS[val];
+          } else if (field === 'size-select') {
+            item.size = val;
+            const ns = document.querySelector(`.size-select[data-id="${id}"]`);
+            if (ns) ns.value = val;
+            const tl = document.querySelector(`.mobile-select-trigger[data-id="${id}"][data-field="size-select"] .trigger-label`);
+            if (tl) tl.textContent = val;
+          } else if (field.startsWith('color_')) {
+            const ci = parseInt(field.split('_')[1], 10);
+            item.colors[ci] = val;
+            const ns = document.querySelector(`.color-select[data-id="${id}"][data-idx="${ci}"]`);
+            if (ns) ns.value = val;
+            if (ci === 0) { renderClothingPreviews(); return; }
+            const trig = document.querySelector(`.mobile-select-trigger[data-id="${id}"][data-field="color_${ci}"]`);
+            if (trig) {
+              trig.querySelector('.trigger-label').textContent = getColorLabel(val) || 'Keine Angabe';
+              const dot = trig.querySelector('.color-dot');
+              const hex = getColorHex(val);
+              dot.style.background = hex || 'transparent';
+              if (val) dot.classList.remove('empty'); else dot.classList.add('empty');
+            }
+          }
+        },
+      });
     });
   });
 
@@ -296,6 +441,7 @@ $('#qualitySelect').addEventListener('change', () => {
 });
 $('#sizeSelect').addEventListener('change', () => {
   state.selectedSize = $('#sizeSelect').value;
+  updateGenSummary();
 });
 
 function updateGenSummary() {
@@ -303,8 +449,14 @@ function updateGenSummary() {
   const mode = state.generationMode === 'single' ? 'Einzeln' : 'Alle zusammen';
   const est = estimateCost(count, state.generationMode, state.selectedQuality);
   const sizeLabel = IMAGE_SIZES[state.selectedSize] || state.selectedSize;
-  document.getElementById('genSummary').textContent =
-    `${count} Kleidungsstück${count > 1 ? 'e' : ''} · Modus: ${mode} · ${est.calls} API-Aufruf${est.calls > 1 ? 'e' : ''} · ${sizeLabel}`;
+  const items = [
+    { icon: '📸', label: 'Kleidungsstücke', val: count },
+    { icon: '⚙️', label: 'Modus', val: mode },
+    { icon: '🌐', label: 'API-Aufrufe', val: est.calls },
+    { icon: '📐', label: 'Größe', val: sizeLabel },
+  ];
+  document.getElementById('genSummary').innerHTML =
+    `<div class="gen-info-filled">${items.map(i => `<div class="gen-info-item"><span class="gen-info-icon">${i.icon}</span><span><strong>${i.val}</strong> <span class="gen-info-label">${i.label}</span></span></div>`).join('')}</div>`;
 
   const costEl = document.getElementById('costEstimate');
   costEl.style.display = 'block';
@@ -320,7 +472,6 @@ const progressLabel = $('#progressLabel');
 const logArea = $('#logArea');
 
 function addLog(msg, type = 'info') {
-  logArea.classList.add('visible');
   const el = document.createElement('div');
   el.className = `log-entry ${type}`;
   el.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
@@ -368,8 +519,7 @@ generateBtn.addEventListener('click', async () => {
   state.generatedImages = [];
   state.isGenerating = true;
   generateBtn.disabled = true;
-  progressWrap.style.display = 'block';
-  logArea.classList.add('visible');
+  progressWrap.style.display = 'flex';
   logArea.innerHTML = '';
   document.getElementById('resultsGrid').innerHTML = '';
   state.generationDone = false;
@@ -413,6 +563,7 @@ generateBtn.addEventListener('click', async () => {
             clothingType: item.type,
             clothingName: item.name,
             size: item.size,
+            colors: [...(item.colors || [])],
             saleText: '',
           });
           successCount++;
@@ -625,7 +776,7 @@ async function generateSaleTextForImage(img) {
         role: 'user',
         content: [
           { type: 'image_url', image_url: { url: base64ToDataUrl(img.base64, img.mimeType) } },
-          { type: 'text', text: buildSalePrompt(TYPE_LABELS[img.clothingType] || img.clothingType, img.size) },
+          { type: 'text', text: buildSalePrompt(TYPE_LABELS[img.clothingType] || img.clothingType, img.size, img.colors || []) },
         ],
       },
     ],
@@ -718,6 +869,34 @@ async function downloadAllAsZip(title) {
   }
 }
 
+window.toggleLog = function () {
+  const area = document.getElementById('logArea');
+  area.classList.toggle('visible');
+  const btn = document.querySelector('.log-toggle');
+  if (btn) btn.textContent = area.classList.contains('visible') ? '📂 Ausblenden' : '📂 Details';
+};
+
+window.openSelectOverlay = function ({ title, options, currentValue, onChange, showDots, getDotColor }) {
+  const overlay = document.getElementById('selectOverlay');
+  document.getElementById('selectOverlayTitle').textContent = title;
+  const list = document.getElementById('selectOverlayList');
+  list.innerHTML = options.map(opt => {
+    const selected = opt.value === currentValue;
+    const dot = showDots && getDotColor ? `<span class="select-overlay-dot" style="background:${getDotColor(opt.value)||'transparent'}"></span>` : '';
+    return `<button class="select-overlay-option${selected?' selected':''}" data-value="${opt.value}">${dot}<span>${opt.label}</span>${selected?'<span class=\"select-overlay-check\">✓</span>':''}</button>`;
+  }).join('');
+  list.querySelectorAll('.select-overlay-option').forEach(btn => {
+    btn.addEventListener('click', () => { onChange(btn.dataset.value); closeSelectOverlay(); });
+  });
+  overlay.classList.add('visible');
+  document.body.style.overflow = 'hidden';
+};
+
+window.closeSelectOverlay = function () {
+  document.getElementById('selectOverlay').classList.remove('visible');
+  document.body.style.overflow = '';
+};
+
 window.toggleSettings = function () {
   const m = document.getElementById('settingsModal');
   m.classList.toggle('visible');
@@ -765,6 +944,8 @@ document.addEventListener('keydown', e => {
     if (pg.classList.contains('visible')) closePhotoGuide();
     const sm = document.getElementById('settingsModal');
     if (sm.classList.contains('visible')) closeSettings();
+    const so = document.getElementById('selectOverlay');
+    if (so.classList.contains('visible')) closeSelectOverlay();
   }
 });
 

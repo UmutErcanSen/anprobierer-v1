@@ -178,31 +178,29 @@
       <section id="step4" class="step-section">
         <div class="card">
           <h2>🚀 Bilder generieren</h2>
-          <p id="genSummary">
-            Klicke auf "Generieren", um die virtuelle Anprobe zu starten.
-          </p>
-          <div
-            class="cost-estimate"
-            id="costEstimate"
-            style="display: none"
-          ></div>
-          <button
-            class="btn btn-primary"
-            id="generateBtn"
-            style="font-size: 1rem; padding: 0.8rem 2rem"
-          >
-            ✨ Generieren
-          </button>
-          <div class="progress-wrap" id="progressWrap" style="display: none">
-            <div class="progress-bar">
-              <div class="fill" id="progressFill"></div>
-            </div>
-            <div class="progress-label" id="progressLabel">
-              Initialisiere...
+          <div class="gen-info" id="genSummary">
+            <div class="gen-info-empty">
+              <span class="gen-info-icon">✨</span>
+              <span>Klicke auf <strong>Generieren</strong>, um die virtuelle Anprobe zu starten.</span>
             </div>
           </div>
-          <div id="loadingAnim" class="loading-anim hidden"></div>
-          <div class="log-area" id="logArea"></div>
+          <div class="cost-estimate" id="costEstimate" style="display: none"></div>
+          <div class="gen-action">
+            <button class="btn btn-primary gen-btn" id="generateBtn">✨ Generieren</button>
+          </div>
+          <div class="gen-progress" id="progressWrap" style="display: none">
+            <div id="loadingAnim" class="loading-anim"></div>
+            <div class="progress-wrap">
+              <div class="progress-bar">
+                <div class="fill" id="progressFill"></div>
+              </div>
+              <div class="progress-label" id="progressLabel">Initialisiere...</div>
+            </div>
+          </div>
+          <div class="log-footer">
+            <button class="log-toggle" onclick="toggleLog()">📂 Details</button>
+            <div class="log-area" id="logArea"></div>
+          </div>
         </div>
         <div class="step-nav">
           <button class="btn btn-outline" id="step4Back">← Zurück</button>
@@ -313,6 +311,16 @@
             </ul>
           </div>
         </div>
+      </div>
+    </div>
+
+    <div class="select-overlay" id="selectOverlay" onclick="if(event.target===this)closeSelectOverlay()">
+      <div class="select-overlay-content" onclick="event.stopPropagation()">
+        <div class="select-overlay-header">
+          <span class="select-overlay-title" id="selectOverlayTitle"></span>
+          <button class="select-overlay-close" onclick="closeSelectOverlay()">&times;</button>
+        </div>
+        <div class="select-overlay-list" id="selectOverlayList"></div>
       </div>
     </div>
 

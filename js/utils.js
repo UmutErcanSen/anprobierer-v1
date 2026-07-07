@@ -34,6 +34,29 @@ const TYPE_EN = {
   costume: 'costume or special outfit',
 };
 
+const COLORS = [
+  { label: 'Keine Angabe', value: '', hex: '' },
+  { label: 'Schwarz', value: 'schwarz', hex: '#000000' },
+  { label: 'Weiß', value: 'weiss', hex: '#f5f5f5' },
+  { label: 'Grau', value: 'grau', hex: '#808080' },
+  { label: 'Rot', value: 'rot', hex: '#e53935' },
+  { label: 'Blau', value: 'blau', hex: '#1e88e5' },
+  { label: 'Grün', value: 'gruen', hex: '#43a047' },
+  { label: 'Gelb', value: 'gelb', hex: '#fdd835' },
+  { label: 'Pink', value: 'pink', hex: '#ec407a' },
+  { label: 'Lila', value: 'lila', hex: '#8e24aa' },
+  { label: 'Orange', value: 'orange', hex: '#fb8c00' },
+  { label: 'Braun', value: 'braun', hex: '#8d6e63' },
+  { label: 'Beige', value: 'beige', hex: '#d7ccc8' },
+  { label: 'Navy', value: 'navy', hex: '#1a237e' },
+  { label: 'Türkis', value: 'tuerkis', hex: '#00acc1' },
+  { label: 'Bordeaux', value: 'bordeaux', hex: '#880e4f' },
+  { label: 'Silber', value: 'silber', hex: '#bdbdbd' },
+  { label: 'Gold', value: 'gold', hex: '#f9a825' },
+  { label: 'Denim', value: 'denim', hex: '#1565c0' },
+  { label: 'Mehrfarbig', value: 'mehrfarbig', hex: '' },
+];
+
 const SIZES = [
   'XXS (30/2)',
   'XS (34/6)',

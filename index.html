@@ -12,47 +12,7 @@
     <header>
       <div class="header-inner">
         <h1><span>✦</span> Virtual Try-On</h1>
-        <div class="api-row">
-          <label>OpenAI API-Key</label>
-          <input
-            type="text"
-            id="apiKeyInput"
-            placeholder="sk-..."
-            spellcheck="false"
-            autocomplete="off"
-          />
-          <span
-            class="status-dot"
-            id="apiStatusDot"
-            title="API-Key Status"
-          ></span>
-          <button
-            class="btn btn-sm btn-outline"
-            id="testKeyBtn"
-            onclick="testApiKey()"
-            style="font-size: 0.75rem; padding: 0.3rem 0.6rem"
-          >
-            🔍 Testen
-          </button>
-        </div>
-        <div
-          style="
-            font-size: 0.7rem;
-            color: var(--text-3);
-            width: 100%;
-            text-align: right;
-            margin-top: 2px;
-          "
-        >
-          Key unter
-          <a
-            href="https://platform.openai.com/api-keys"
-            target="_blank"
-            style="color: var(--primary)"
-            >platform.openai.com/api-keys</a
-          >
-          · Guthaben erforderlich
-        </div>
+        <button class="settings-btn" id="settingsBtn" onclick="toggleSettings()" title="Einstellungen">⚙️</button>
       </div>
     </header>
 
@@ -101,6 +61,23 @@
             id="personPreview"
             style="display: none"
           ></div>
+        </div>
+        <div class="feature-highlights">
+          <div class="feature-card">
+            <div class="feature-icon">📸</div>
+            <strong>Foto hochladen</strong>
+            <span>Person + Kleidungsstücke</span>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">🤖</div>
+            <strong>KI-Generierung</strong>
+            <span>Virtuelle Anprobe in Sekunden</span>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">📦</div>
+            <strong>Fertige Anzeige</strong>
+            <span>Bilder + Vinted-Texte</span>
+          </div>
         </div>
         <div class="step-nav">
           <span></span>
@@ -332,6 +309,25 @@
             </ul>
           </div>
         </div>
+      </div>
+    </div>
+
+    <div class="settings-modal" id="settingsModal" onclick="if(event.target===this)closeSettings()">
+      <div class="settings-content" onclick="event.stopPropagation()">
+        <button class="settings-close" onclick="closeSettings()">&times;</button>
+        <h2>⚙️ Einstellungen</h2>
+        <div class="settings-api-row">
+          <label for="apiKeyInput">OpenAI API-Key</label>
+          <div class="settings-input-row">
+            <input type="text" id="apiKeyInput" placeholder="sk-..." spellcheck="false" autocomplete="off" />
+            <span class="status-dot" id="apiStatusDot" title="API-Key Status"></span>
+            <button class="btn btn-sm btn-outline" id="testKeyBtn" onclick="testApiKey()">🔍 Testen</button>
+          </div>
+        </div>
+        <p class="settings-hint">
+          Key unter <a href="https://platform.openai.com/api-keys" target="_blank">platform.openai.com/api-keys</a>
+          · Guthaben erforderlich · Key liegt nur in deinem localStorage
+        </p>
       </div>
     </div>
 

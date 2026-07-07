@@ -176,7 +176,7 @@ async function handleClothingFiles(files) {
     if (!f.type.startsWith('image/')) continue;
     if (f.size > maxSize) { showToast(`${f.name} ist zu groß (max 20 MB). Übersprungen.`, 'warning'); continue }
     promises.push(convertImageToStandard(f).then(converted => fileToBase64(converted)).then(data => {
-      state.clothingItems.push({ id: generateId(), ...data, type: 'top_tshirt', size: 'M (38/10)', colors: [] });
+      state.clothingItems.push({ id: generateId(), ...data, type: '', size: '', colors: [] });
     }));
   }
   if (!promises.length) return;
@@ -201,6 +201,17 @@ function getColorLabel(value) {
 
 function isMobile() { return window.innerWidth < 640 }
 
+function buildColorTrigger(item) {
+  const colors = item.colors || [];
+  if (colors.length === 0) return '<span class="trigger-label">Farbe wählen</span>';
+  const dots = colors.map(c => {
+    const hex = getColorHex(c);
+    return `<span class="color-dot" style="background:${hex||'transparent'}"></span>`;
+  });
+  const labels = colors.map(c => getColorLabel(c)).join(', ');
+  return `<span class="color-dots">${dots.join('')}</span><span class="trigger-label">${escapeHtml(labels)}</span>`;
+}
+
 function renderClothingPreviews() {
   if (state.clothingItems.length === 0) {
     clothingPreviewGrid.innerHTML = '';
@@ -209,37 +220,28 @@ function renderClothingPreviews() {
   }
   noClothingHint.style.display = 'none';
 
-  function sel(id, field, options, labelKey, current) {
+  function sel(id, field, options, current) {
     const html = `<select class="item-select ${field}" data-id="${id}">${options.map(o => `<option value="${o.value}"${o.value===current?' selected':''}>${o.label||o.value}</option>`).join('')}</select>`;
-    const label = options.find(o => o.value === current);
-    const lbl = label ? (label.label || label) : options[0]?.label || '';
+    const match = options.find(o => o.value === current);
+    const lbl = match ? (match.label || match.value) : (options[0]?.label || '');
     const trigger = `<button class="mobile-select-trigger" data-id="${id}" data-field="${field}"><span class="trigger-label">${lbl}</span><span class="trigger-chevron">▼</span></button>`;
     return html + trigger;
   }
 
-  function colorSel(id, idx, val) {
-    const hex = getColorHex(val);
-    const label = getColorLabel(val) || 'Keine Angabe';
-    const dash = val ? '' : ' empty';
-    const hidden = idx === 1 ? '' : ''; /* always render, visibility via CSS */
-    const selH = `<select class="item-select color-select" data-id="${id}" data-idx="${idx}">${COLORS.map(c => `<option value="${c.value}"${c.value===val?' selected':''}>${c.label}</option>`).join('')}</select>`;
-    const trig = `<button class="mobile-select-trigger color-trigger" data-id="${id}" data-field="color_${idx}"><span class="color-dot${dash}" style="background:${hex||'transparent'}"></span><span class="trigger-label">${label}</span><span class="trigger-chevron">▼</span></button>`;
-    return selH + trig;
-  }
+  const typeOpts = [{value:'',label:'Typ wählen'}].concat(Object.entries(TYPE_LABELS).map(([v,l])=>({value:v,label:l})));
+  const sizeOpts = [{value:'',label:'Größe wählen'}].concat(SIZES.map(s=>({value:s,label:s})));
 
   clothingPreviewGrid.innerHTML = state.clothingItems.map(item => `
     <div class="preview-card" data-id="${item.id}">
       <img src="${base64ToDataUrl(item.base64, item.mimeType)}" alt="${item.name}">
       <div class="info">
         <div class="item-name">${escapeHtml(item.name)}</div>
-        ${sel(item.id, 'type-select', Object.entries(TYPE_LABELS).map(([v,l])=>({value:v,label:l})), 'type', item.type)}
-        ${sel(item.id, 'size-select', SIZES.map(s=>({value:s,label:s})), 'size', item.size)}
+        ${sel(item.id, 'type-select', typeOpts, item.type)}
+        ${sel(item.id, 'size-select', sizeOpts, item.size)}
         <div class="color-section">
-          ${colorSel(item.id, 0, item.colors[0] || '')}
-          <div class="color-row-2"${item.colors.length > 0 && item.colors[0] ? '' : ' style="display:none"'}>
-            ${colorSel(item.id, 1, item.colors[1] || '')}
-            <button class="color-remove" data-id="${item.id}" data-idx="1">×</button>
-          </div>
+          <button class="mobile-select-trigger color-trigger" data-id="${item.id}" data-field="color">
+            ${buildColorTrigger(item)}
+          </button>
         </div>
       </div>
       <button class="remove" data-id="${item.id}">×</button>
@@ -255,7 +257,7 @@ function renderClothingPreviews() {
       if (!item) return;
       item.type = sel.value;
       const trig = document.querySelector(`.mobile-select-trigger[data-id="${id}"][data-field="type-select"] .trigger-label`);
-      if (trig) trig.textContent = TYPE_LABELS[sel.value];
+      if (trig) trig.textContent = sel.value ? TYPE_LABELS[sel.value] : 'Typ wählen';
     });
   });
 
@@ -267,51 +269,7 @@ function renderClothingPreviews() {
       if (!item) return;
       item.size = sel.value;
       const trig = document.querySelector(`.mobile-select-trigger[data-id="${id}"][data-field="size-select"] .trigger-label`);
-      if (trig) trig.textContent = sel.value;
-    });
-  });
-
-  clothingPreviewGrid.querySelectorAll('.color-select').forEach(sel => {
-    sel.addEventListener('change', e => {
-      e.stopPropagation();
-      const id = sel.dataset.id;
-      const item = state.clothingItems.find(i => i.id === id);
-      if (!item) return;
-      const idx = parseInt(sel.dataset.idx, 10);
-      item.colors[idx] = sel.value;
-      if (idx === 0) {
-        if (sel.value) {
-          item.colors[1] = item.colors[1] || '';
-          renderClothingPreviews();
-          return;
-        } else {
-          item.colors = [];
-          renderClothingPreviews();
-          return;
-        }
-      }
-      /* update trigger + dot */
-      const trig = document.querySelector(`.mobile-select-trigger[data-id="${id}"][data-field="color_${idx}"]`);
-      if (trig) {
-        trig.querySelector('.trigger-label').textContent = getColorLabel(sel.value) || 'Keine Angabe';
-        const dot = trig.querySelector('.color-dot');
-        const hex = getColorHex(sel.value);
-        if (dot) {
-          dot.style.background = hex || 'transparent';
-          if (sel.value) dot.classList.remove('empty'); else dot.classList.add('empty');
-        }
-      }
-    });
-  });
-
-  clothingPreviewGrid.querySelectorAll('.color-remove').forEach(btn => {
-    btn.addEventListener('click', e => {
-      e.stopPropagation();
-      const id = btn.dataset.id;
-      const item = state.clothingItems.find(i => i.id === id);
-      if (!item) return;
-      item.colors.pop();
-      renderClothingPreviews();
+      if (trig) trig.textContent = sel.value || 'Größe wählen';
     });
   });
 
@@ -323,58 +281,50 @@ function renderClothingPreviews() {
       const item = state.clothingItems.find(i => i.id === id);
       if (!item) return;
       const field = btn.dataset.field;
-      let title, options, currentValue, showDots, getDot;
+      let title, options, currentValue, currentValues, showDots, getDot, multi;
 
       if (field === 'type-select') {
         title = 'Kleidungstyp auswählen';
-        options = Object.entries(TYPE_LABELS).map(([v,l]) => ({ value: v, label: l }));
+        options = typeOpts;
         currentValue = item.type;
         showDots = false;
+        multi = false;
       } else if (field === 'size-select') {
         title = 'Größe wählen';
-        options = SIZES.map(s => ({ value: s, label: s }));
+        options = sizeOpts;
         currentValue = item.size;
         showDots = false;
-      } else if (field.startsWith('color_')) {
-        title = 'Farbe auswählen';
-        options = COLORS.map(c => ({ value: c.value, label: c.label }));
-        const ci = parseInt(field.split('_')[1], 10);
-        currentValue = item.colors[ci] || '';
+        multi = false;
+      } else if (field === 'color') {
+        title = 'Farbe auswählen (max. 2)';
+        options = COLORS.filter(c => c.value).map(c => ({ value: c.value, label: c.label }));
+        currentValues = [...(item.colors || [])];
         showDots = true;
         getDot = (v) => getColorHex(v);
+        multi = true;
       }
 
       openSelectOverlay({
-        title, options, currentValue,
+        title, options, currentValue, currentValues,
         showDots,
         getDotColor: getDot,
+        multi,
         onChange: (val) => {
           if (field === 'type-select') {
             item.type = val;
             const ns = document.querySelector(`.type-select[data-id="${id}"]`);
             if (ns) ns.value = val;
             const tl = document.querySelector(`.mobile-select-trigger[data-id="${id}"][data-field="type-select"] .trigger-label`);
-            if (tl) tl.textContent = TYPE_LABELS[val];
+            if (tl) tl.textContent = val ? TYPE_LABELS[val] : 'Typ wählen';
           } else if (field === 'size-select') {
             item.size = val;
             const ns = document.querySelector(`.size-select[data-id="${id}"]`);
             if (ns) ns.value = val;
             const tl = document.querySelector(`.mobile-select-trigger[data-id="${id}"][data-field="size-select"] .trigger-label`);
-            if (tl) tl.textContent = val;
-          } else if (field.startsWith('color_')) {
-            const ci = parseInt(field.split('_')[1], 10);
-            item.colors[ci] = val;
-            const ns = document.querySelector(`.color-select[data-id="${id}"][data-idx="${ci}"]`);
-            if (ns) ns.value = val;
-            if (ci === 0) { renderClothingPreviews(); return; }
-            const trig = document.querySelector(`.mobile-select-trigger[data-id="${id}"][data-field="color_${ci}"]`);
-            if (trig) {
-              trig.querySelector('.trigger-label').textContent = getColorLabel(val) || 'Keine Angabe';
-              const dot = trig.querySelector('.color-dot');
-              const hex = getColorHex(val);
-              dot.style.background = hex || 'transparent';
-              if (val) dot.classList.remove('empty'); else dot.classList.add('empty');
-            }
+            if (tl) tl.textContent = val || 'Größe wählen';
+          } else if (field === 'color') {
+            item.colors = val || [];
+            renderClothingPreviews();
           }
         },
       });
@@ -429,6 +379,11 @@ $('#step3Back').addEventListener('click', () => goToStep(2));
 $('#step3Next').addEventListener('click', () => {
   if (state.generationMode === 'combined' && state.clothingItems.length > 9) {
     showToast('Im kombinierten Modus werden max. 9 Kleidungsstücke unterstützt.', 'warning');
+    return;
+  }
+  const missing = state.clothingItems.filter(i => !i.type || !i.size);
+  if (missing.length > 0) {
+    showToast(`Bitte für ${missing.length} Kleidungsstück${missing.length>1?'e':''} Typ und Größe wählen.`, 'warning');
     return;
   }
   goToStep(4);
@@ -876,18 +831,53 @@ window.toggleLog = function () {
   if (btn) btn.textContent = area.classList.contains('visible') ? '📂 Ausblenden' : '📂 Details';
 };
 
-window.openSelectOverlay = function ({ title, options, currentValue, onChange, showDots, getDotColor }) {
+window.openSelectOverlay = function ({ title, options, currentValue, currentValues, onChange, showDots, getDotColor, multi }) {
   const overlay = document.getElementById('selectOverlay');
   document.getElementById('selectOverlayTitle').textContent = title;
   const list = document.getElementById('selectOverlayList');
-  list.innerHTML = options.map(opt => {
-    const selected = opt.value === currentValue;
-    const dot = showDots && getDotColor ? `<span class="select-overlay-dot" style="background:${getDotColor(opt.value)||'transparent'}"></span>` : '';
-    return `<button class="select-overlay-option${selected?' selected':''}" data-value="${opt.value}">${dot}<span>${opt.label}</span>${selected?'<span class=\"select-overlay-check\">✓</span>':''}</button>`;
-  }).join('');
-  list.querySelectorAll('.select-overlay-option').forEach(btn => {
-    btn.addEventListener('click', () => { onChange(btn.dataset.value); closeSelectOverlay(); });
-  });
+
+  if (multi) {
+    const selected = [...(currentValues || [])];
+    list.innerHTML = options.map(opt => {
+      const isSelected = selected.includes(opt.value);
+      const dot = showDots && getDotColor ? `<span class="select-overlay-dot" style="background:${getDotColor(opt.value)||'transparent'}"></span>` : '';
+      return `<button class="select-overlay-option${isSelected?' multi-selected':''}" data-value="${opt.value}">${dot}<span class="multi-indicator"></span><span>${opt.label}</span></button>`;
+    }).join('') + '<button class="select-overlay-confirm">✓ Bestätigen</button>';
+
+    list.querySelectorAll('.select-overlay-option').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const val = btn.dataset.value;
+        if (!val) return;
+        const idx = selected.indexOf(val);
+        if (idx >= 0) {
+          selected.splice(idx, 1);
+          btn.classList.remove('multi-selected');
+        } else {
+          if (selected.length >= 2) {
+            showToast('Maximal 2 Farben auswählbar.', 'warning');
+            return;
+          }
+          selected.push(val);
+          btn.classList.add('multi-selected');
+        }
+      });
+    });
+
+    list.querySelector('.select-overlay-confirm').addEventListener('click', () => {
+      onChange(selected);
+      closeSelectOverlay();
+    });
+  } else {
+    list.innerHTML = options.map(opt => {
+      const sel = opt.value === currentValue;
+      const dot = showDots && getDotColor ? `<span class="select-overlay-dot" style="background:${getDotColor(opt.value)||'transparent'}"></span>` : '';
+      return `<button class="select-overlay-option${sel?' selected':''}" data-value="${opt.value}">${dot}<span>${opt.label}</span>${sel?'<span class=\"select-overlay-check\">✓</span>':''}</button>`;
+    }).join('');
+    list.querySelectorAll('.select-overlay-option').forEach(btn => {
+      btn.addEventListener('click', () => { onChange(btn.dataset.value); closeSelectOverlay(); });
+    });
+  }
+
   overlay.classList.add('visible');
   document.body.style.overflow = 'hidden';
 };

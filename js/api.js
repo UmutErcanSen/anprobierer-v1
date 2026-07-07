@@ -22,15 +22,17 @@ const IMAGE_SIZES = {
   '1536x1024': 'Querformat (1536×1024)',
 };
 
-function buildTryOnPrompt(clothingType) {
+function buildTryOnPrompt(clothingType, size) {
   const t = TYPE_EN[clothingType] || 'clothing item';
-  return `Virtually try on this ${t} (shown in image 2) onto the person in image 1. The ${t} should fit naturally and realistically, matching the person's pose and body shape. Keep the person's original background, face, hairstyle, and all other clothing items unchanged. The result must look like a realistic photograph.`;
+  const sizeHint = size ? ` It should correspond to size ${size}.` : '';
+  return `Virtually try on this ${t} (shown in image 2) onto the person in image 1. The ${t} should fit naturally and realistically, matching the person's pose and body shape.${sizeHint} Keep the person's original background, face, hairstyle, and all other clothing items unchanged. The result must look like a realistic photograph.`;
 }
 
-const COMBINED_PROMPT = `Virtually dress this person (image 1) with all the provided clothing items (images 2+). Put each item on the correct body part. Make everything fit naturally and realistically. Keep the person's original background, face, and hairstyle. The result must look like a realistic full-body outfit photograph.`;
+const COMBINED_PROMPT = `Virtually dress this person (image 1) with all the provided clothing items (images 2+). Put each item on the correct body part (top on upper body, bottoms on lower body, shoes on feet, etc.). Make everything fit naturally and realistically. Keep the person's original background, face, and hairstyle. The result must look like a realistic full-body outfit photograph.`;
 
-function buildSalePrompt() {
-  return `Write a compelling German Vinted sales listing for this clothing item based on the photo shown. Include: item name, condition (sehr gut), size (use common German sizing), material guess, fit description, style tips, and a suggested price in EUR. Use an engaging, friendly tone with appropriate emojis and clear sections (Überschrift, Beschreibung, Zustand, Größe, Preisvorstellung). Max 180 words.`;
+function buildSalePrompt(size) {
+  const sizeInfo = size ? `Size: ${size}. ` : '';
+  return `Write a compelling German Vinted sales listing for this clothing item based on the photo shown. ${sizeInfo}Include: item name, condition (sehr gut), size, material guess, fit description, style tips, and a suggested price in EUR. Use an engaging, friendly tone with appropriate emojis and clear sections (Überschrift, Beschreibung, Zustand, Größe, Preisvorstellung). Max 180 words.`;
 }
 
 async function callImageEdit({ personPhoto, clothingItems, prompt, apiKey, signal, size, quality }) {

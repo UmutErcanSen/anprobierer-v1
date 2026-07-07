@@ -105,18 +105,22 @@ const personDropZone = $('#personDropZone');
 const personFileInput = $('#personFileInput');
 const personPreview = $('#personPreview');
 
-function handlePersonFile(file) {
+async function handlePersonFile(file) {
   if (!file) return;
-  const maxSize = 7 * 1024 * 1024;
+  const maxSize = 20 * 1024 * 1024;
   if (file.size > maxSize) {
-    showToast('Das Foto ist zu groß. Maximal 7 MB erlaubt.', 'error');
+    showToast('Das Foto ist zu groß. Maximal 20 MB erlaubt.', 'error');
     return;
   }
-  fileToBase64(file).then(data => {
+  try {
+    const converted = await convertImageToStandard(file);
+    const data = await fileToBase64(converted);
     state.personPhoto = data;
     renderPersonPreview();
     showToast('Personenfoto erfolgreich geladen', 'success');
-  }).catch(err => showToast(err.message, 'error'));
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
 }
 
 function renderPersonPreview() {
@@ -156,21 +160,24 @@ const clothingFileInput = $('#clothingFileInput');
 const clothingPreviewGrid = $('#clothingPreviewGrid');
 const noClothingHint = $('#noClothingHint');
 
-function handleClothingFiles(files) {
-  const maxSize = 7 * 1024 * 1024;
+async function handleClothingFiles(files) {
+  const maxSize = 20 * 1024 * 1024;
   const promises = [];
   for (const f of files) {
     if (!f.type.startsWith('image/')) continue;
-    if (f.size > maxSize) { showToast(`${f.name} ist zu groß (max 7 MB). Übersprungen.`, 'warning'); continue }
-    promises.push(fileToBase64(f).then(data => {
-      state.clothingItems.push({ id: generateId(), ...data, type: 'top' });
+    if (f.size > maxSize) { showToast(`${f.name} ist zu groß (max 20 MB). Übersprungen.`, 'warning'); continue }
+    promises.push(convertImageToStandard(f).then(converted => fileToBase64(converted)).then(data => {
+      state.clothingItems.push({ id: generateId(), ...data, type: 'top_tshirt', size: 'M (38/10)' });
     }));
   }
   if (!promises.length) return;
-  Promise.all(promises).then(() => {
+  try {
+    await Promise.all(promises);
     renderClothingPreviews();
     showToast(`${promises.length} Kleidungsstück${promises.length > 1 ? 'e' : ''} hinzugefügt`, 'success');
-  });
+  } catch (err) {
+    showToast('Fehler beim Verarbeiten der Bilder.', 'error');
+  }
 }
 
 function renderClothingPreviews() {
@@ -184,27 +191,39 @@ function renderClothingPreviews() {
     <div class="preview-card" data-id="${item.id}">
       <img src="${base64ToDataUrl(item.base64, item.mimeType)}" alt="${item.name}">
       <div class="info">
-        <div>${item.name}</div>
-        <span class="type-badge ${item.type}">${TYPE_LABELS[item.type] || item.type}</span>
-        <div class="type-selector" data-id="${item.id}">
-          <button class="type-btn${item.type === 'top' ? ' selected top' : ''}" data-type="top">Oberteil</button>
-          <button class="type-btn${item.type === 'bottom' ? ' selected bottom' : ''}" data-type="bottom">Unterteil</button>
-          <button class="type-btn${item.type === 'shoes' ? ' selected shoes' : ''}" data-type="shoes">Schuhe</button>
-        </div>
+        <div style="font-size:.7rem;margin-bottom:.3rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${item.name}</div>
+        <select class="item-select type-select" data-id="${item.id}">
+          ${Object.entries(TYPE_LABELS).map(([key, label]) =>
+            `<option value="${key}" ${item.type === key ? 'selected' : ''}>${label}</option>`
+          ).join('')}
+        </select>
+        <select class="item-select size-select" data-id="${item.id}" style="margin-top:.3rem">
+          ${SIZES.map(s =>
+            `<option value="${s}" ${item.size === s ? 'selected' : ''}>${s}</option>`
+          ).join('')}
+        </select>
       </div>
       <button class="remove" data-id="${item.id}">×</button>
     </div>
   `).join('');
 
-  clothingPreviewGrid.querySelectorAll('.type-btn').forEach(btn => {
-    btn.addEventListener('click', e => {
+  clothingPreviewGrid.querySelectorAll('.type-select').forEach(sel => {
+    sel.addEventListener('change', e => {
       e.stopPropagation();
-      const id = btn.closest('[data-id]').dataset.id;
-      const type = btn.dataset.type;
+      const id = sel.closest('[data-id]').dataset.id;
       const item = state.clothingItems.find(i => i.id === id);
       if (!item) return;
-      item.type = type;
-      renderClothingPreviews();
+      item.type = sel.value;
+    });
+  });
+
+  clothingPreviewGrid.querySelectorAll('.size-select').forEach(sel => {
+    sel.addEventListener('change', e => {
+      e.stopPropagation();
+      const id = sel.closest('[data-id]').dataset.id;
+      const item = state.clothingItems.find(i => i.id === id);
+      if (!item) return;
+      item.size = sel.value;
     });
   });
 
@@ -343,7 +362,7 @@ generateBtn.addEventListener('click', async () => {
           const data = await callImageEdit({
             personPhoto: state.personPhoto,
             clothingItems: [item],
-            prompt: buildTryOnPrompt(item.type),
+            prompt: buildTryOnPrompt(item.type, item.size),
             apiKey: state.apiKey,
             signal: AbortSignal.timeout(180000),
             size: state.selectedSize,
@@ -361,6 +380,7 @@ generateBtn.addEventListener('click', async () => {
             name: `${TYPE_LABELS[item.type]}_${item.name.replace(/\.[^.]+$/, '')}.png`,
             clothingType: item.type,
             clothingName: item.name,
+            size: item.size,
           });
           successCount++;
           addLog(`✅ "${item.name}" erfolgreich generiert`, 'success');
@@ -376,7 +396,7 @@ generateBtn.addEventListener('click', async () => {
             failCount++;
             break;
           } else if (err.name === 'TimeoutError' || err.name === 'AbortError') {
-            addLog(`⏱ Zeitüberschreitung bei "${item.name}" (90s).`, 'error');
+            addLog(`⏱ Zeitüberschreitung bei "${item.name}" (180s).`, 'error');
             showToast(`⏱ Zeitüberschreitung. Internet prüfen oder Bild verkleinern.`, 'error');
             failCount++;
             break;
@@ -430,7 +450,7 @@ generateBtn.addEventListener('click', async () => {
           showToast('🔑 API-Key ungültig.', 'error');
           failCount++;
         } else if (err.name === 'TimeoutError' || err.name === 'AbortError') {
-          addLog(`⏱ Zeitüberschreitung (120s).`, 'error');
+          addLog(`⏱ Zeitüberschreitung (300s).`, 'error');
           showToast(`⏱ Zeitüberschreitung. Internet prüfen.`, 'error');
           failCount++;
         } else {
@@ -493,6 +513,11 @@ function renderResults() {
     state.generatedImages.map((img, idx) =>
       `<option value="${idx}">${img.clothingName} (${img.clothingType === 'combined' ? 'Kombiniert' : TYPE_LABELS[img.clothingType]})</option>`
     ).join('');
+
+  resultsGrid.querySelectorAll('.result-card img').forEach((imgEl, idx) => {
+    imgEl.style.cursor = 'pointer';
+    imgEl.addEventListener('click', () => openLightbox(state.generatedImages[idx]));
+  });
 }
 
 saleTextBtn.addEventListener('click', async () => {
@@ -521,7 +546,7 @@ saleTextBtn.addEventListener('click', async () => {
           role: 'user',
           content: [
             { type: 'image_url', image_url: { url: base64ToDataUrl(img.base64, img.mimeType) } },
-            { type: 'text', text: buildSalePrompt() },
+            { type: 'text', text: buildSalePrompt(img.size) },
           ],
         },
       ],
@@ -554,6 +579,30 @@ saleTextBtn.addEventListener('click', async () => {
   } finally {
     saleTextBtn.disabled = false;
     saleTextBtn.textContent = '📄 Text generieren';
+  }
+});
+
+window.openLightbox = function (img) {
+  const lb = document.getElementById('lightbox');
+  const lbImg = document.getElementById('lightboxImg');
+  const lbInfo = document.getElementById('lightboxInfo');
+  lbImg.src = base64ToDataUrl(img.base64, img.mimeType);
+  lbInfo.textContent = `${img.clothingName} · ${img.clothingType === 'combined' ? 'Kombiniert' : TYPE_LABELS[img.clothingType]}`;
+  lb.classList.add('visible');
+  document.body.style.overflow = 'hidden';
+};
+
+window.closeLightbox = function (e) {
+  if (e && e.target !== e.currentTarget) return;
+  const lb = document.getElementById('lightbox');
+  lb.classList.remove('visible');
+  document.body.style.overflow = '';
+};
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    const lb = document.getElementById('lightbox');
+    if (lb.classList.contains('visible')) closeLightbox();
   }
 });
 

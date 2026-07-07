@@ -1,5 +1,51 @@
-const TYPE_LABELS = { top: 'Oberteil', bottom: 'Unterteil', shoes: 'Schuhe' };
-const TYPE_EN = { top: 'top', bottom: 'bottoms', shoes: 'shoes' };
+const TYPE_LABELS = {
+  jacket_coat: 'Jacken & Mäntel',
+  sweater: 'Pullover & Strickpullover',
+  blazer_suit: 'Blazer & Anzüge',
+  dress: 'Kleider',
+  skirt: 'Röcke',
+  skort: 'Skorts',
+  top_tshirt: 'Tops & T-Shirts',
+  jeans: 'Jeans',
+  pants_leggings: 'Hosen & Leggings',
+  shorts: 'Shorts',
+  jumpsuit: 'Jumpsuits & Playsuits',
+  swimwear: 'Bademode',
+  underwear: 'Unterwäsche & Nachtwäsche',
+  activewear: 'Activewear',
+  costume: 'Kostüme & Besonderes',
+};
+
+const TYPE_EN = {
+  jacket_coat: 'jacket or coat',
+  sweater: 'sweater or pullover',
+  blazer_suit: 'blazer or suit',
+  dress: 'dress',
+  skirt: 'skirt',
+  skort: 'skort',
+  top_tshirt: 'top or t-shirt',
+  jeans: 'jeans',
+  pants_leggings: 'pants or leggings',
+  shorts: 'shorts',
+  jumpsuit: 'jumpsuit or playsuit',
+  swimwear: 'swimwear',
+  underwear: 'underwear or loungewear',
+  activewear: 'activewear',
+  costume: 'costume or special outfit',
+};
+
+const SIZES = [
+  'XXS (30/2)',
+  'XS (34/6)',
+  'S (36/8)',
+  'M (38/10)',
+  'L (40/12)',
+  'XL (42/14)',
+  'XXL (44/16)',
+  '3XL (46/18)',
+  '4XL (48/20)',
+  '5XL (50/22)',
+];
 
 const $ = s => document.querySelector(s);
 const $$ = s => document.querySelectorAll(s);
@@ -59,4 +105,41 @@ function showToast(message, type = 'info', duration = 6000) {
   el.innerHTML = `<span class="toast-icon">${icons[type] || 'ℹ️'}</span><span class="toast-msg">${message}</span><button class="toast-close" onclick="this.parentElement.remove()">×</button>`;
   container.appendChild(el);
   setTimeout(() => { if (el.parentElement) el.remove() }, duration);
+}
+
+function convertImageToStandard(file) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      let w = img.naturalWidth;
+      let h = img.naturalHeight;
+      const maxDim = 2048;
+      if (w > maxDim || h > maxDim) {
+        const ratio = Math.min(maxDim / w, maxDim / h);
+        w = Math.round(w * ratio);
+        h = Math.round(h * ratio);
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+      canvas.toBlob(blob => {
+        if (blob) {
+          const name = file.name.replace(/\.[^.]+$/, '') + '.jpg';
+          const jpegFile = new File([blob], name, { type: 'image/jpeg' });
+          resolve(jpegFile);
+        } else {
+          reject(new Error('Konvertierung fehlgeschlagen.'));
+        }
+      }, 'image/jpeg', 0.92);
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error('Bild konnte nicht geladen werden.'));
+    };
+    img.src = url;
+  });
 }

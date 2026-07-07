@@ -88,11 +88,11 @@
           <div class="upload-zone" id="personDropZone">
             <div class="icon">☝️</div>
             <strong>Foto hier ablegen oder klicken zum Auswählen</strong>
-            <div class="hint">Unterstützt: JPG, PNG, WEBP (max. 7 MB)</div>
+            <div class="hint">Unterstützt: JPG, PNG, WEBP · iOS Fotos werden automatisch konvertiert (max. 20 MB)</div>
             <input
               type="file"
               id="personFileInput"
-              accept="image/jpeg,image/png,image/webp"
+              accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
             />
           </div>
           <div
@@ -117,11 +117,11 @@
           <div class="upload-zone" id="clothingDropZone">
             <div class="icon">👔</div>
             <strong>Kleidungsfotos hier ablegen oder klicken</strong>
-            <div class="hint">JPG, PNG, WEBP · Mehrere Dateien auswählbar</div>
+            <div class="hint">JPG, PNG, WEBP · iOS Fotos kompatibel · Mehrere Dateien auswählbar</div>
             <input
               type="file"
               id="clothingFileInput"
-              accept="image/jpeg,image/png,image/webp"
+              accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
               multiple
             />
           </div>
@@ -341,6 +341,12 @@
       Virtual Try-On · Nutzt OpenAI GPT Image 2 · Alle Verarbeitung im Browser ·
       API-Key liegt nur in deinem localStorage
     </footer>
+
+    <div class="lightbox" id="lightbox" onclick="closeLightbox(event)">
+      <span class="lightbox-close" onclick="event.stopPropagation(); closeLightbox()">&times;</span>
+      <img class="lightbox-img" id="lightboxImg" alt="" onclick="event.stopPropagation()">
+      <div class="lightbox-info" id="lightboxInfo" onclick="event.stopPropagation()"></div>
+    </div>
 
     <div class="toast-container" id="toastContainer"></div>
 

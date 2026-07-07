@@ -119,6 +119,8 @@ header h1 span{color:var(--primary)}
 .btn-outline{background:transparent;border:1px solid var(--surface-3);color:var(--text-2)}
 .btn-outline:hover{border-color:var(--primary);color:var(--primary)}
 .btn-sm{padding:.4rem .85rem;font-size:.8rem}
+.info-btn{color:var(--primary);border-color:var(--primary)}
+.info-btn:hover{background:var(--primary-dim)}
 
 .upload-zone{
   border:2px dashed var(--surface-3);

@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 320" width="220" height="320">
+  <rect width="220" height="320" rx="8" fill="#fef2f2"/>
+  <rect x="10" y="10" width="200" height="300" rx="6" fill="#fee2e2"/>
+  <!-- Cluttered background: noise circles -->
+  <circle cx="35" cy="45" r="8" fill="#fecaca" opacity="0.7"/>
+  <circle cx="180" cy="80" r="12" fill="#fecaca" opacity="0.6"/>
+  <circle cx="50" cy="130" r="6" fill="#fecaca" opacity="0.5"/>
+  <circle cx="170" cy="160" r="10" fill="#fecaca" opacity="0.7"/>
+  <circle cx="30" cy="200" r="7" fill="#fecaca" opacity="0.5"/>
+  <circle cx="190" cy="230" r="9" fill="#fecaca" opacity="0.6"/>
+  <!-- Dark overlay gradient -->
+  <rect x="10" y="10" width="200" height="300" rx="6" fill="rgba(0,0,0,0.12)"/>
+  <!-- Floor line -->
+  <line x1="10" y1="260" x2="210" y2="260" stroke="#fca5a5" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <!-- Person silhouette: head -->
+  <circle cx="110" cy="65" r="22" fill="#ef4444"/>
+  <!-- Person: cut off torso (only upper body) -->
+  <path d="M92 95 L128 95 L125 170 L95 170 Z" fill="#ef4444"/>
+  <!-- Person: arms -->
+  <path d="M92 100 L62 140 L64 142 L95 145 Z" fill="#ef4444"/>
+  <path d="M128 100 L158 140 L156 142 L125 145 Z" fill="#ef4444"/>
+  <!-- Cut-off line -->
+  <line x1="60" y1="170" x2="160" y2="170" stroke="#dc2626" stroke-width="2.5" stroke-dasharray="6,4"/>
+  <text x="110" y="185" text-anchor="middle" font-family="sans-serif" font-size="8" fill="#dc2626" font-weight="700">ABGESCHNITTEN</text>
+  <!-- Bad cross -->
+  <circle cx="195" cy="25" r="14" fill="#ef4444"/>
+  <path d="M189 19 L201 31 M201 19 L189 31" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- Dimming on lower half hint -->
+  <rect x="10" y="240" width="200" height="70" rx="6" fill="rgba(0,0,0,0.08)"/>
+  <!-- Text label -->
+  <text x="110" y="296" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#dc2626" font-weight="600">Angeschnitten</text>
+  <text x="110" y="310" text-anchor="middle" font-family="sans-serif" font-size="9" fill="#dc2626">Unruhiger Hintergrund · zu dunkel</text>
+</svg>

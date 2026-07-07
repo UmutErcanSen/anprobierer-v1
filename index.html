@@ -80,7 +80,7 @@
 
       <section id="step1" class="step-section visible">
         <div class="card">
-          <h2>📸 Personenfoto hochladen</h2>
+          <h2>📸 Personenfoto hochladen <button class="btn btn-sm btn-outline info-btn" onclick="openPhotoGuide()" style="padding:.25rem .5rem;font-size:.8rem;vertical-align:middle">🛈</button></h2>
           <p>
             Lade ein Foto der Person hoch, die die Kleidung anprobieren soll. Am
             besten Ganzkörper- oder Halbkörperaufnahme vor neutralem
@@ -304,6 +304,36 @@
       Virtual Try-On · Nutzt OpenAI GPT Image 2 · Alle Verarbeitung im Browser ·
       API-Key liegt nur in deinem localStorage
     </footer>
+
+    <div class="photo-guide-modal" id="photoGuide" onclick="closePhotoGuide(event)">
+      <div class="photo-guide-content" onclick="event.stopPropagation()">
+        <button class="photo-guide-close" onclick="closePhotoGuide()">&times;</button>
+        <h2>📸 So sollte dein Personenfoto aussehen</h2>
+        <p>Für beste Ergebnisse mit der KI-Anprobe beachte diese Tipps:</p>
+        <div class="guide-images">
+          <div class="guide-image good">
+            <img src="assets/guide-good.svg" alt="Gutes Beispiel">
+            <span class="guide-label">✅ Gutes Beispiel</span>
+            <ul>
+              <li>Ganzkörperaufnahme</li>
+              <li>Neutraler Hintergrund</li>
+              <li>Gut beleuchtet</li>
+              <li>Arme leicht vom Körper</li>
+            </ul>
+          </div>
+          <div class="guide-image bad">
+            <img src="assets/guide-bad.svg" alt="Schlechtes Beispiel">
+            <span class="guide-label">❌ Schlechtes Beispiel</span>
+            <ul>
+              <li>Angeschnitten (Knie fehlen)</li>
+              <li>Unruhiger Hintergrund</li>
+              <li>Zu dunkel</li>
+              <li>Arme am Körper verdeckt</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <div class="lightbox" id="lightbox" onclick="closeLightbox(event)">
       <span class="lightbox-close" onclick="event.stopPropagation(); closeLightbox()">&times;</span>

@@ -718,6 +718,17 @@ async function downloadAllAsZip(title) {
   }
 }
 
+window.openPhotoGuide = function () {
+  document.getElementById('photoGuide').classList.add('visible');
+  document.body.style.overflow = 'hidden';
+};
+
+window.closePhotoGuide = function (e) {
+  if (e && e.target !== e.currentTarget) return;
+  document.getElementById('photoGuide').classList.remove('visible');
+  document.body.style.overflow = '';
+};
+
 window.openLightbox = function (img) {
   const lb = document.getElementById('lightbox');
   const lbImg = document.getElementById('lightboxImg');
@@ -739,6 +750,8 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
     const lb = document.getElementById('lightbox');
     if (lb.classList.contains('visible')) closeLightbox();
+    const pg = document.getElementById('photoGuide');
+    if (pg.classList.contains('visible')) closePhotoGuide();
   }
 });
 

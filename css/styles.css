@@ -70,14 +70,16 @@ header h1 span{color:var(--primary)}
 .step-tab:first-child{border-radius:var(--radius) 0 0 var(--radius)}
 .step-tab:last-child{border-radius:0 var(--radius) var(--radius) 0}
 .step-tab{
-  flex:1;text-align:center;padding:.7rem .3rem;
+  flex:1;padding:.75rem .3rem .65rem;
   font-size:.75rem;font-weight:600;color:var(--text-3);
   background:transparent;border:none;cursor:pointer;
   transition:var(--transition);position:relative;
-  user-select:none;
+  user-select:none;display:flex;flex-direction:column;
+  align-items:center;gap:.2rem;
 }
 .step-tab:not(:last-child)::before{
-  content:'';position:absolute;top:50%;left:50%;
+  content:'';position:absolute;
+  top:calc(.75rem + 11px);left:50%;
   width:100%;height:3px;background:var(--surface-3);
   transform:translateY(-50%);transition:background .3s ease;
   z-index:0;border-radius:2px;pointer-events:none;
@@ -87,8 +89,9 @@ header h1 span{color:var(--primary)}
   display:inline-block;width:22px;height:22px;line-height:22px;
   text-align:center;border-radius:50%;
   background:var(--surface-2);color:var(--text-3);
-  font-size:.7rem;font-weight:700;margin-right:5px;
+  font-size:.7rem;font-weight:700;
   transition:var(--transition);position:relative;z-index:1;
+  flex-shrink:0;
 }
 .step-tab.active{color:var(--primary);background:var(--primary-dim)}
 .step-tab.active .num{background:var(--primary);color:#fff}
@@ -105,7 +108,8 @@ header h1 span{color:var(--primary)}
 .step-tab:not(.active):not(.done){cursor:default}
 @media(max-width:640px){
   .step-tab .label-text{display:none}
-  .step-tab{padding:.6rem .2rem}
+  .step-tab{padding:.65rem .2rem .6rem;gap:0}
+  .step-tab:not(:last-child)::before{top:calc(.65rem + 11px)}
 }
 
 .card{
@@ -117,6 +121,10 @@ header h1 span{color:var(--primary)}
 }
 .card h2{font-size:1.15rem;margin-bottom:.75rem}
 .card p{color:var(--text-2);font-size:.9rem;margin-bottom:1rem}
+
+.hero-heading{text-align:center;margin:1.5rem 0 0}
+.hero-heading h2{font-size:1.35rem;font-weight:700}
+.hero-heading p{color:var(--text-2);font-size:.9rem;margin-top:.3rem}
 
 .feature-highlights{
   display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;

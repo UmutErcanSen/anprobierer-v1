@@ -1,194 +1,351 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="de">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Virtual Try-On – KI Anzeigen Erstellung</title>
-<link rel="stylesheet" href="css/styles.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-</head>
-<body>
-
-<header>
-  <div class="header-inner">
-    <h1><span>✦</span> Virtual Try-On</h1>
-    <div class="api-row">
-      <label>OpenAI API-Key</label>
-      <input type="text" id="apiKeyInput" placeholder="sk-..." spellcheck="false" autocomplete="off">
-      <span class="status-dot" id="apiStatusDot" title="API-Key Status"></span>
-      <button class="btn btn-sm btn-outline" id="testKeyBtn" onclick="testApiKey()" style="font-size:.75rem;padding:.3rem .6rem">🔍 Testen</button>
-    </div>
-    <div style="font-size:.7rem;color:var(--text-3);width:100%;text-align:right;margin-top:2px">
-      Key unter <a href="https://platform.openai.com/api-keys" target="_blank" style="color:var(--primary)">platform.openai.com/api-keys</a> · Guthaben erforderlich
-    </div>
-  </div>
-</header>
-
-<div class="container">
-
-  <div class="steps-bar" id="stepsBar">
-    <button class="step-tab active" data-step="1"><span class="num">1</span><span class="label-text">Foto</span></button>
-    <button class="step-tab" data-step="2"><span class="num">2</span><span class="label-text">Kleidung</span></button>
-    <button class="step-tab" data-step="3"><span class="num">3</span><span class="label-text">Modus</span></button>
-    <button class="step-tab" data-step="4"><span class="num">4</span><span class="label-text">Generieren</span></button>
-    <button class="step-tab" data-step="5"><span class="num">5</span><span class="label-text">Ergebnisse</span></button>
-    <button class="step-tab" data-step="6"><span class="num">6</span><span class="label-text">Download</span></button>
-  </div>
-
-  <section id="step1" class="step-section visible">
-    <div class="card">
-      <h2>📸 Personenfoto hochladen</h2>
-      <p>Lade ein Foto der Person hoch, die die Kleidung anprobieren soll. Am besten Ganzkörper- oder Halbkörperaufnahme vor neutralem Hintergrund.</p>
-      <div class="upload-zone" id="personDropZone">
-        <div class="icon">☝️</div>
-        <strong>Foto hier ablegen oder klicken zum Auswählen</strong>
-        <div class="hint">Unterstützt: JPG, PNG, WEBP (max. 7 MB)</div>
-        <input type="file" id="personFileInput" accept="image/jpeg,image/png,image/webp">
-      </div>
-      <div class="person-preview" id="personPreview" style="display:none"></div>
-    </div>
-    <div class="step-nav">
-      <span></span>
-      <button class="btn btn-primary" id="step1Next">Weiter →</button>
-    </div>
-  </section>
-
-  <section id="step2" class="step-section">
-    <div class="card">
-      <h2>👕 Kleidungsstücke hochladen</h2>
-      <p>Lade die Kleidungsstücke hoch, die anprobiert werden sollen. Wähle für jedes den Typ aus.</p>
-      <div class="upload-zone" id="clothingDropZone">
-        <div class="icon">👔</div>
-        <strong>Kleidungsfotos hier ablegen oder klicken</strong>
-        <div class="hint">JPG, PNG, WEBP · Mehrere Dateien auswählbar</div>
-        <input type="file" id="clothingFileInput" accept="image/jpeg,image/png,image/webp" multiple>
-      </div>
-      <div class="preview-grid" id="clothingPreviewGrid"></div>
-      <p id="noClothingHint" style="color:var(--text-3);font-size:.85rem;margin-top:.75rem">Noch keine Kleidungsstücke hinzugefügt.</p>
-    </div>
-    <div class="step-nav">
-      <button class="btn btn-outline" id="step2Back">← Zurück</button>
-      <button class="btn btn-primary" id="step2Next">Weiter →</button>
-    </div>
-  </section>
-
-  <section id="step3" class="step-section">
-    <div class="card">
-      <h2>⚙️ Generierungs-Modus</h2>
-      <p>Wähle, wie die Bilder generiert werden sollen.</p>
-      <div class="mode-grid">
-        <div class="mode-card selected" data-mode="single" id="modeSingle">
-          <div class="mode-icon">🪞</div>
-          <div class="mode-title">Einzeln</div>
-          <div class="mode-desc">Pro Kleidungsstück ein separates Anprobebild</div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>v1 Virtual Try-On – KI Anzeigen Erstellung</title>
+    <link rel="stylesheet" href="css/styles.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  </head>
+  <body>
+    <header>
+      <div class="header-inner">
+        <h1><span>✦</span> Virtual Try-On</h1>
+        <div class="api-row">
+          <label>OpenAI API-Key</label>
+          <input
+            type="text"
+            id="apiKeyInput"
+            placeholder="sk-..."
+            spellcheck="false"
+            autocomplete="off"
+          />
+          <span
+            class="status-dot"
+            id="apiStatusDot"
+            title="API-Key Status"
+          ></span>
+          <button
+            class="btn btn-sm btn-outline"
+            id="testKeyBtn"
+            onclick="testApiKey()"
+            style="font-size: 0.75rem; padding: 0.3rem 0.6rem"
+          >
+            🔍 Testen
+          </button>
         </div>
-        <div class="mode-card" data-mode="combined" id="modeCombined">
-          <div class="mode-icon">👤</div>
-          <div class="mode-title">Alle zusammen</div>
-          <div class="mode-desc">Ein Bild mit allen Kleidungsstücken kombiniert</div>
+        <div
+          style="
+            font-size: 0.7rem;
+            color: var(--text-3);
+            width: 100%;
+            text-align: right;
+            margin-top: 2px;
+          "
+        >
+          Key unter
+          <a
+            href="https://platform.openai.com/api-keys"
+            target="_blank"
+            style="color: var(--primary)"
+            >platform.openai.com/api-keys</a
+          >
+          · Guthaben erforderlich
         </div>
       </div>
-    </div>
-    <div class="card">
-      <h2>🎨 Qualität & Größe</h2>
-      <div class="options-grid">
-        <div class="option-group">
-          <label for="qualitySelect">Bildqualität</label>
-          <select id="qualitySelect">
-            <option value="low">Niedrig (~$0.006/Bild)</option>
-            <option value="medium" selected>Mittel (~$0.041/Bild)</option>
-            <option value="high">Hoch (~$0.165/Bild)</option>
-          </select>
+    </header>
+
+    <div class="container">
+      <div class="steps-bar" id="stepsBar">
+        <button class="step-tab active" data-step="1">
+          <span class="num">1</span><span class="label-text">Foto</span>
+        </button>
+        <button class="step-tab" data-step="2">
+          <span class="num">2</span><span class="label-text">Kleidung</span>
+        </button>
+        <button class="step-tab" data-step="3">
+          <span class="num">3</span><span class="label-text">Modus</span>
+        </button>
+        <button class="step-tab" data-step="4">
+          <span class="num">4</span><span class="label-text">Generieren</span>
+        </button>
+        <button class="step-tab" data-step="5">
+          <span class="num">5</span><span class="label-text">Ergebnisse</span>
+        </button>
+        <button class="step-tab" data-step="6">
+          <span class="num">6</span><span class="label-text">Download</span>
+        </button>
+      </div>
+
+      <section id="step1" class="step-section visible">
+        <div class="card">
+          <h2>📸 Personenfoto hochladen</h2>
+          <p>
+            Lade ein Foto der Person hoch, die die Kleidung anprobieren soll. Am
+            besten Ganzkörper- oder Halbkörperaufnahme vor neutralem
+            Hintergrund.
+          </p>
+          <div class="upload-zone" id="personDropZone">
+            <div class="icon">☝️</div>
+            <strong>Foto hier ablegen oder klicken zum Auswählen</strong>
+            <div class="hint">Unterstützt: JPG, PNG, WEBP (max. 7 MB)</div>
+            <input
+              type="file"
+              id="personFileInput"
+              accept="image/jpeg,image/png,image/webp"
+            />
+          </div>
+          <div
+            class="person-preview"
+            id="personPreview"
+            style="display: none"
+          ></div>
         </div>
-        <div class="option-group">
-          <label for="sizeSelect">Bildgröße</label>
-          <select id="sizeSelect">
-            <option value="1024x1536" selected>Hochformat (1024×1536)</option>
-            <option value="1024x1024">Quadrat (1024×1024)</option>
-            <option value="1536x1024">Querformat (1536×1024)</option>
-          </select>
+        <div class="step-nav">
+          <span></span>
+          <button class="btn btn-primary" id="step1Next">Weiter →</button>
         </div>
-      </div>
-    </div>
-    <div class="step-nav">
-      <button class="btn btn-outline" id="step3Back">← Zurück</button>
-      <button class="btn btn-primary" id="step3Next">Weiter →</button>
-    </div>
-  </section>
+      </section>
 
-  <section id="step4" class="step-section">
-    <div class="card">
-      <h2>🚀 Bilder generieren</h2>
-      <p id="genSummary">Klicke auf "Generieren", um die virtuelle Anprobe zu starten.</p>
-      <div class="cost-estimate" id="costEstimate" style="display:none"></div>
-      <button class="btn btn-primary" id="generateBtn" style="font-size:1rem;padding:.8rem 2rem">
-        ✨ Generieren
-      </button>
-      <div class="progress-wrap" id="progressWrap" style="display:none">
-        <div class="progress-bar"><div class="fill" id="progressFill"></div></div>
-        <div class="progress-label" id="progressLabel">Initialisiere...</div>
-      </div>
-      <div class="log-area" id="logArea"></div>
-    </div>
-    <div class="step-nav">
-      <button class="btn btn-outline" id="step4Back">← Zurück</button>
-      <button class="btn btn-primary" id="step4Next" disabled>Weiter zu Ergebnissen →</button>
-    </div>
-  </section>
+      <section id="step2" class="step-section">
+        <div class="card">
+          <h2>👕 Kleidungsstücke hochladen</h2>
+          <p>
+            Lade die Kleidungsstücke hoch, die anprobiert werden sollen. Wähle
+            für jedes den Typ aus.
+          </p>
+          <div class="upload-zone" id="clothingDropZone">
+            <div class="icon">👔</div>
+            <strong>Kleidungsfotos hier ablegen oder klicken</strong>
+            <div class="hint">JPG, PNG, WEBP · Mehrere Dateien auswählbar</div>
+            <input
+              type="file"
+              id="clothingFileInput"
+              accept="image/jpeg,image/png,image/webp"
+              multiple
+            />
+          </div>
+          <div class="preview-grid" id="clothingPreviewGrid"></div>
+          <p
+            id="noClothingHint"
+            style="
+              color: var(--text-3);
+              font-size: 0.85rem;
+              margin-top: 0.75rem;
+            "
+          >
+            Noch keine Kleidungsstücke hinzugefügt.
+          </p>
+        </div>
+        <div class="step-nav">
+          <button class="btn btn-outline" id="step2Back">← Zurück</button>
+          <button class="btn btn-primary" id="step2Next">Weiter →</button>
+        </div>
+      </section>
 
-  <section id="step5" class="step-section">
-    <div class="card">
-      <h2>🖼️ Generierte Anprobebilder</h2>
-      <div class="results-grid" id="resultsGrid"></div>
-      <p id="noResultsHint" style="color:var(--text-3);font-size:.85rem;margin-top:.75rem;display:none">Noch keine Bilder generiert.</p>
-    </div>
-    <div class="card">
-      <h2>📝 Vinted-Verkaufstext generieren</h2>
-      <p>Wähle ein generiertes Bild aus und lass dazu einen passenden Verkaufstext für Vinted erstellen.</p>
-      <div style="display:flex;gap:.75rem;flex-wrap:wrap;align-items:center">
-        <select id="saleImageSelect" class="btn btn-outline" style="padding:.5rem;border-radius:var(--radius-sm);background:var(--surface-2);border:1px solid var(--surface-3);min-width:200px">
-          <option value="">– Bild auswählen –</option>
-        </select>
-        <button class="btn btn-success" id="saleTextBtn">📄 Text generieren</button>
-      </div>
-      <div class="sale-text-box" id="saleTextBox"></div>
-    </div>
-    <div class="step-nav">
-      <button class="btn btn-outline" id="step5Back">← Zurück</button>
-      <button class="btn btn-primary" id="step5Next">Weiter zu Download →</button>
-    </div>
-  </section>
+      <section id="step3" class="step-section">
+        <div class="card">
+          <h2>⚙️ Generierungs-Modus</h2>
+          <p>Wähle, wie die Bilder generiert werden sollen.</p>
+          <div class="mode-grid">
+            <div class="mode-card selected" data-mode="single" id="modeSingle">
+              <div class="mode-icon">🪞</div>
+              <div class="mode-title">Einzeln</div>
+              <div class="mode-desc">
+                Pro Kleidungsstück ein separates Anprobebild
+              </div>
+            </div>
+            <div class="mode-card" data-mode="combined" id="modeCombined">
+              <div class="mode-icon">👤</div>
+              <div class="mode-title">Alle zusammen</div>
+              <div class="mode-desc">
+                Ein Bild mit allen Kleidungsstücken kombiniert
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <h2>🎨 Qualität & Größe</h2>
+          <div class="options-grid">
+            <div class="option-group">
+              <label for="qualitySelect">Bildqualität</label>
+              <select id="qualitySelect">
+                <option value="low">Niedrig (~$0.006/Bild)</option>
+                <option value="medium" selected>Mittel (~$0.041/Bild)</option>
+                <option value="high">Hoch (~$0.165/Bild)</option>
+              </select>
+            </div>
+            <div class="option-group">
+              <label for="sizeSelect">Bildgröße</label>
+              <select id="sizeSelect">
+                <option value="1024x1536" selected>
+                  Hochformat (1024×1536)
+                </option>
+                <option value="1024x1024">Quadrat (1024×1024)</option>
+                <option value="1536x1024">Querformat (1536×1024)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="step-nav">
+          <button class="btn btn-outline" id="step3Back">← Zurück</button>
+          <button class="btn btn-primary" id="step3Next">Weiter →</button>
+        </div>
+      </section>
 
-  <section id="step6" class="step-section">
-    <div class="card">
-      <h2>📦 Session speichern</h2>
-      <p>Lade alle generierten Bilder und Verkaufstexte als ZIP-Archiv herunter.</p>
-      <div style="margin-bottom:1rem">
-        <label style="font-size:.9rem;color:var(--text-2);display:block;margin-bottom:.3rem">Session-Titel</label>
-        <input type="text" id="sessionTitle" value="VirtualTryOn" style="background:var(--bg);border:1px solid var(--surface-3);padding:.5rem .75rem;border-radius:var(--radius-sm);width:100%;max-width:400px">
-      </div>
-      <div style="display:flex;gap:.75rem;flex-wrap:wrap">
-        <button class="btn btn-success" id="downloadZipBtn">📦 ZIP herunterladen</button>
-        <button class="btn btn-outline" id="resetBtn">🔄 Neue Session</button>
-      </div>
-      <div id="zipPreview" style="margin-top:1rem;font-size:.85rem;color:var(--text-2)"></div>
+      <section id="step4" class="step-section">
+        <div class="card">
+          <h2>🚀 Bilder generieren</h2>
+          <p id="genSummary">
+            Klicke auf "Generieren", um die virtuelle Anprobe zu starten.
+          </p>
+          <div
+            class="cost-estimate"
+            id="costEstimate"
+            style="display: none"
+          ></div>
+          <button
+            class="btn btn-primary"
+            id="generateBtn"
+            style="font-size: 1rem; padding: 0.8rem 2rem"
+          >
+            ✨ Generieren
+          </button>
+          <div class="progress-wrap" id="progressWrap" style="display: none">
+            <div class="progress-bar">
+              <div class="fill" id="progressFill"></div>
+            </div>
+            <div class="progress-label" id="progressLabel">
+              Initialisiere...
+            </div>
+          </div>
+          <div class="log-area" id="logArea"></div>
+        </div>
+        <div class="step-nav">
+          <button class="btn btn-outline" id="step4Back">← Zurück</button>
+          <button class="btn btn-primary" id="step4Next" disabled>
+            Weiter zu Ergebnissen →
+          </button>
+        </div>
+      </section>
+
+      <section id="step5" class="step-section">
+        <div class="card">
+          <h2>🖼️ Generierte Anprobebilder</h2>
+          <div class="results-grid" id="resultsGrid"></div>
+          <p
+            id="noResultsHint"
+            style="
+              color: var(--text-3);
+              font-size: 0.85rem;
+              margin-top: 0.75rem;
+              display: none;
+            "
+          >
+            Noch keine Bilder generiert.
+          </p>
+        </div>
+        <div class="card">
+          <h2>📝 Vinted-Verkaufstext generieren</h2>
+          <p>
+            Wähle ein generiertes Bild aus und lass dazu einen passenden
+            Verkaufstext für Vinted erstellen.
+          </p>
+          <div
+            style="
+              display: flex;
+              gap: 0.75rem;
+              flex-wrap: wrap;
+              align-items: center;
+            "
+          >
+            <select
+              id="saleImageSelect"
+              class="btn btn-outline"
+              style="
+                padding: 0.5rem;
+                border-radius: var(--radius-sm);
+                background: var(--surface-2);
+                border: 1px solid var(--surface-3);
+                min-width: 200px;
+              "
+            >
+              <option value="">– Bild auswählen –</option>
+            </select>
+            <button class="btn btn-success" id="saleTextBtn">
+              📄 Text generieren
+            </button>
+          </div>
+          <div class="sale-text-box" id="saleTextBox"></div>
+        </div>
+        <div class="step-nav">
+          <button class="btn btn-outline" id="step5Back">← Zurück</button>
+          <button class="btn btn-primary" id="step5Next">
+            Weiter zu Download →
+          </button>
+        </div>
+      </section>
+
+      <section id="step6" class="step-section">
+        <div class="card">
+          <h2>📦 Session speichern</h2>
+          <p>
+            Lade alle generierten Bilder und Verkaufstexte als ZIP-Archiv
+            herunter.
+          </p>
+          <div style="margin-bottom: 1rem">
+            <label
+              style="
+                font-size: 0.9rem;
+                color: var(--text-2);
+                display: block;
+                margin-bottom: 0.3rem;
+              "
+              >Session-Titel</label
+            >
+            <input
+              type="text"
+              id="sessionTitle"
+              value="VirtualTryOn"
+              style="
+                background: var(--bg);
+                border: 1px solid var(--surface-3);
+                padding: 0.5rem 0.75rem;
+                border-radius: var(--radius-sm);
+                width: 100%;
+                max-width: 400px;
+              "
+            />
+          </div>
+          <div style="display: flex; gap: 0.75rem; flex-wrap: wrap">
+            <button class="btn btn-success" id="downloadZipBtn">
+              📦 ZIP herunterladen
+            </button>
+            <button class="btn btn-outline" id="resetBtn">
+              🔄 Neue Session
+            </button>
+          </div>
+          <div
+            id="zipPreview"
+            style="margin-top: 1rem; font-size: 0.85rem; color: var(--text-2)"
+          ></div>
+        </div>
+        <div class="step-nav">
+          <button class="btn btn-outline" id="step6Back">← Zurück</button>
+          <span></span>
+        </div>
+      </section>
     </div>
-    <div class="step-nav">
-      <button class="btn btn-outline" id="step6Back">← Zurück</button>
-      <span></span>
-    </div>
-  </section>
 
-</div>
+    <footer>
+      Virtual Try-On · Nutzt OpenAI GPT Image 2 · Alle Verarbeitung im Browser ·
+      API-Key liegt nur in deinem localStorage
+    </footer>
 
-<footer>
-  Virtual Try-On · Nutzt OpenAI GPT Image 2 · Alle Verarbeitung im Browser · API-Key liegt nur in deinem localStorage
-</footer>
+    <div class="toast-container" id="toastContainer"></div>
 
-<div class="toast-container" id="toastContainer"></div>
-
-<script src="js/utils.js"></script>
-<script src="js/api.js"></script>
-<script src="js/app.js"></script>
-</body>
+    <script src="js/utils.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/app.js"></script>
+  </body>
 </html>

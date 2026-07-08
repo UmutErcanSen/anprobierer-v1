@@ -539,6 +539,46 @@ footer{text-align:center;padding:2rem;color:var(--text-3);font-size:.8rem;border
 }
 .settings-btn:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-dim)}
 
+.user-modal{
+  display:none;position:fixed;z-index:9997;left:0;top:0;
+  width:100%;height:100%;background:rgba(0,0,0,0.8);
+  align-items:center;justify-content:center;cursor:pointer;
+}
+.user-modal.visible{display:flex}
+.user-content{
+  background:var(--surface);border:1px solid var(--surface-2);
+  border-radius:var(--radius);padding:2rem;
+  max-width:440px;width:92%;cursor:default;position:relative;
+  box-shadow:0 8px 40px rgba(0,0,0,0.5);
+}
+.user-content h2{font-size:1.2rem;margin-bottom:1.25rem}
+.user-close{
+  position:absolute;top:.75rem;right:1rem;
+  color:var(--text-3);font-size:2rem;cursor:pointer;
+  background:none;border:none;line-height:1;
+  width:40px;height:40px;display:flex;
+  align-items:center;justify-content:center;
+}
+.user-close:hover{color:var(--text)}
+.user-placeholder{display:flex;flex-direction:column;gap:1rem}
+.user-field label{display:block;font-size:.82rem;color:var(--text-2);margin-bottom:.3rem;font-weight:600}
+.user-field-box{
+  background:var(--bg);border:1px solid var(--surface-3);
+  border-radius:var(--radius-sm);padding:.6rem .75rem;
+  font-size:.85rem;color:var(--text-3);
+}
+.user-plan-row{display:flex;align-items:center;gap:.75rem}
+.user-plan-badge{
+  display:inline-block;padding:.25rem .75rem;
+  background:var(--primary-dim);color:var(--primary);
+  border-radius:999px;font-size:.8rem;font-weight:600;
+}
+.user-usage-bar-wrap{display:flex;align-items:center;gap:.6rem}
+.user-usage-bar{flex:1;height:8px;background:var(--bg);border-radius:99px;overflow:hidden}
+.user-usage-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--primary),var(--accent))}
+.user-usage-label{font-size:.78rem;color:var(--text-3);white-space:nowrap}
+.user-hint{font-size:.78rem;color:var(--text-3);margin-top:.5rem;text-align:center}
+
 .select-overlay{
   display:none;position:fixed;z-index:9999;left:0;top:0;
   width:100%;height:100%;background:rgba(0,0,0,0.82);
@@ -660,7 +700,14 @@ footer{text-align:center;padding:2rem;color:var(--text-3);font-size:.8rem;border
 /* Hero section */
 .hero-section{
   text-align:center;
-  padding:2.5rem 1rem 1rem;
+  padding:3.5rem 1rem 1rem;
+  transition:opacity .4s ease,transform .4s ease,max-height .4s ease,margin .4s ease,padding .4s ease;
+  overflow:hidden;max-height:500px;
+}
+.hero-section.hero-hidden{
+  opacity:0;transform:translateY(-20px);
+  max-height:0;padding:0;margin:0;overflow:hidden;
+  pointer-events:none;
 }
 .hero-label{
   font-size:1rem;
@@ -671,9 +718,9 @@ footer{text-align:center;padding:2rem;color:var(--text-3);font-size:.8rem;border
   margin-bottom:.15rem;
 }
 .hero-rotating-wrap{
-  font-size:3.2rem;
+  font-size:4rem;
   font-weight:800;
-  min-height:4rem;
+  min-height:5rem;
   display:flex;
   align-items:center;
   justify-content:center;
@@ -691,17 +738,16 @@ footer{text-align:center;padding:2rem;color:var(--text-3);font-size:.8rem;border
 .hero-sub{
   font-size:1.02rem;
   color:var(--text-2);
-  margin-bottom:1.2rem;
+  margin-bottom:1.5rem;
   font-weight:400;
 }
-.hero-sub .btn{padding:.2rem .5rem;font-size:.72rem}
 
 .btn-gradient{
   display:inline-flex;align-items:center;gap:.6rem;
   background:linear-gradient(135deg,var(--primary),var(--accent));
-  color:#fff;font-weight:700;padding:.85rem 2.5rem;
+  color:#fff;font-weight:700;padding:1rem 3rem;
   border-radius:999px;border:none;cursor:pointer;
-  font-size:1.05rem;text-decoration:none;
+  font-size:1.2rem;text-decoration:none;
   box-shadow:0 4px 24px rgba(108,99,255,.3);
   transition:all .3s ease;
 }
@@ -711,11 +757,24 @@ footer{text-align:center;padding:2rem;color:var(--text-3);font-size:.8rem;border
 }
 .btn-gradient:active{transform:scale(.97)}
 
+.hidden-zone{display:none}
+
+.upload-zone.fade-in{
+  animation:fadeUp .4s ease;
+}
+.after-upload-content.fade-in{
+  animation:fadeUp .4s ease;
+}
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(12px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
 @media(max-width:480px){
-  .hero-rotating-wrap{font-size:2rem;min-height:2.6rem}
+  .hero-rotating-wrap{font-size:2.4rem;min-height:3rem}
   .hero-label{font-size:.85rem}
   .hero-sub{font-size:.9rem}
-  .btn-gradient{padding:.7rem 1.8rem;font-size:.95rem}
+  .btn-gradient{padding:.8rem 2rem;font-size:1rem}
 }
 
 /* Steps bar hidden/show */

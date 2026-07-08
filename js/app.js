@@ -117,6 +117,9 @@ async function handlePersonFile(file) {
     state.personPhoto = data;
     renderPersonPreview();
     document.getElementById('stepsBar').classList.replace('hidden', 'show');
+    const afterContent = document.getElementById('afterUploadContent');
+    afterContent.classList.remove('hidden-zone');
+    afterContent.classList.add('fade-in');
     showToast('Personenfoto erfolgreich geladen', 'success');
   } catch (err) {
     showToast(err.message, 'error');
@@ -142,6 +145,7 @@ function renderPersonPreview() {
     personDropZone.classList.remove('has-file');
     personFileInput.value = '';
     document.getElementById('stepsBar').classList.replace('show', 'hidden');
+    document.getElementById('afterUploadContent').classList.add('hidden-zone');
   });
 }
 
@@ -158,7 +162,13 @@ personFileInput.addEventListener('change', () => {
   if (personFileInput.files[0]) handlePersonFile(personFileInput.files[0]);
 });
 
-$('#step1StartBtn').addEventListener('click', () => personFileInput.click());
+$('#step1StartBtn').addEventListener('click', () => {
+  document.getElementById('heroSection').classList.add('hero-hidden');
+  const dz = document.getElementById('personDropZone');
+  dz.classList.remove('hidden-zone');
+  dz.classList.add('fade-in');
+  document.getElementById('step1StartBtn').disabled = true;
+});
 
 $('#step1Next').addEventListener('click', () => {
   if (!state.personPhoto) { showToast('Bitte zuerst ein Personenfoto hochladen.', 'warning'); return }
@@ -1015,6 +1025,17 @@ window.closeSettings = function () {
   document.body.style.overflow = '';
 };
 
+window.toggleUserModal = function () {
+  const m = document.getElementById('userModal');
+  m.classList.toggle('visible');
+  document.body.style.overflow = m.classList.contains('visible') ? 'hidden' : '';
+};
+
+window.closeUserModal = function () {
+  document.getElementById('userModal').classList.remove('visible');
+  document.body.style.overflow = '';
+};
+
 window.openPhotoGuide = function () {
   document.getElementById('photoGuide').classList.add('visible');
   document.body.style.overflow = 'hidden';
@@ -1051,6 +1072,8 @@ document.addEventListener('keydown', e => {
     if (pg.classList.contains('visible')) closePhotoGuide();
     const sm = document.getElementById('settingsModal');
     if (sm.classList.contains('visible')) closeSettings();
+    const um = document.getElementById('userModal');
+    if (um.classList.contains('visible')) closeUserModal();
     const so = document.getElementById('selectOverlay');
     if (so.classList.contains('visible')) closeSelectOverlay();
   }

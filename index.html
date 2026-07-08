@@ -15,7 +15,10 @@
     <header>
       <div class="header-inner">
         <h1><span class="gradient-text">✦</span> <span class="gradient-text">Virtual Try-On</span></h1>
-        <button class="settings-btn" id="settingsBtn" onclick="toggleSettings()" title="Einstellungen">⚙️</button>
+        <div style="display:flex;gap:.5rem;margin-left:auto">
+          <button class="settings-btn" id="userBtn" onclick="toggleUserModal()" title="Benutzerbereich">👤</button>
+          <button class="settings-btn" id="settingsBtn" onclick="toggleSettings()" title="Einstellungen">⚙️</button>
+        </div>
       </div>
     </header>
 
@@ -42,50 +45,53 @@
       </div>
 
       <section id="step1" class="step-section visible">
-        <div class="hero-section">
+        <!-- Zustand 1: Hero + Starten -->
+        <div class="hero-section" id="heroSection">
           <div class="hero-label">Virtual Try On</div>
           <div class="hero-rotating-wrap">
             <span class="hero-word gradient-text" id="heroRotatingWord">Anprobieren</span>
           </div>
-          <p class="hero-sub">
-            mit KI für deine Vinted-Anzeigen
-            <button class="btn btn-sm btn-outline info-btn" onclick="openPhotoGuide()" style="padding:.2rem .45rem;font-size:.7rem;margin-left:.3rem;vertical-align:middle" title="Tipps für das perfekte Foto">🛈</button>
-          </p>
+          <p class="hero-sub">mit KI für deine Vinted-Anzeigen</p>
           <button class="btn btn-gradient" id="step1StartBtn">✨ Starten</button>
         </div>
 
-        <div class="upload-zone" id="personDropZone">
+        <!-- Zustand 2: Upload-Zone (nach Starten) -->
+        <div class="upload-zone hidden-zone" id="personDropZone">
           <div class="icon">📸</div>
           <strong>Foto hier ablegen oder klicken zum Auswählen</strong>
+          <button class="btn btn-sm btn-outline info-btn" onclick="openPhotoGuide()" style="position:absolute;top:.5rem;right:.5rem;padding:.2rem .5rem;font-size:.75rem" title="Tipps für das perfekte Foto">🛈</button>
           <div class="hint">Unterstützt: JPG, PNG, WEBP · iOS Fotos werden automatisch konvertiert (max. 20 MB)</div>
           <input type="file" id="personFileInput" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" />
         </div>
         <div class="person-preview" id="personPreview" style="display:none"></div>
 
-        <div class="hero-heading">
-          <h2>So einfach geht's</h2>
-          <p>Drei Schritte zur fertigen Vinted-Anzeige mit KI</p>
-        </div>
-        <div class="feature-highlights">
-          <div class="feature-card">
-            <div class="feature-icon">📸</div>
-            <strong>Foto hochladen</strong>
-            <span>Person + Kleidungsstücke</span>
+        <!-- Zustand 3: Nach Upload -->
+        <div class="after-upload-content hidden-zone" id="afterUploadContent">
+          <div class="step-nav" style="margin-top:0">
+            <span></span>
+            <button class="btn btn-primary" id="step1Next">Weiter →</button>
           </div>
-          <div class="feature-card">
-            <div class="feature-icon">🤖</div>
-            <strong>KI-Generierung</strong>
-            <span>Virtuelle Anprobe in Sekunden</span>
+          <div class="hero-heading">
+            <h2>So einfach geht's</h2>
+            <p>Drei Schritte zur fertigen Vinted-Anzeige mit KI</p>
           </div>
-          <div class="feature-card">
-            <div class="feature-icon">📦</div>
-            <strong>Fertige Anzeige</strong>
-            <span>Bilder + Vinted-Texte</span>
+          <div class="feature-highlights">
+            <div class="feature-card">
+              <div class="feature-icon">📸</div>
+              <strong>Foto hochladen</strong>
+              <span>Person + Kleidungsstücke</span>
+            </div>
+            <div class="feature-card">
+              <div class="feature-icon">🤖</div>
+              <strong>KI-Generierung</strong>
+              <span>Virtuelle Anprobe in Sekunden</span>
+            </div>
+            <div class="feature-card">
+              <div class="feature-icon">📦</div>
+              <strong>Fertige Anzeige</strong>
+              <span>Bilder + Vinted-Texte</span>
+            </div>
           </div>
-        </div>
-        <div class="step-nav">
-          <span></span>
-          <button class="btn btn-primary" id="step1Next">Weiter →</button>
         </div>
       </section>
 
@@ -335,6 +341,38 @@
           Key unter <a href="https://platform.openai.com/api-keys" target="_blank">platform.openai.com/api-keys</a>
           · Guthaben erforderlich · Key liegt nur in deinem localStorage
         </p>
+      </div>
+    </div>
+
+    <div class="user-modal" id="userModal" onclick="if(event.target===this)closeUserModal()">
+      <div class="user-content" onclick="event.stopPropagation()">
+        <button class="user-close" onclick="closeUserModal()">&times;</button>
+        <h2>👤 Benutzerbereich</h2>
+        <div class="user-placeholder">
+          <div class="user-field">
+            <label>Name</label>
+            <div class="user-field-box">Noch nicht verfügbar</div>
+          </div>
+          <div class="user-field">
+            <label>E-Mail</label>
+            <div class="user-field-box">Noch nicht verfügbar</div>
+          </div>
+          <div class="user-field">
+            <label>Plan</label>
+            <div class="user-plan-row">
+              <span class="user-plan-badge">Gratis</span>
+              <button class="btn btn-sm btn-outline" disabled>Upgrade → bald</button>
+            </div>
+          </div>
+          <div class="user-field">
+            <label>Nutzung (dieser Monat)</label>
+            <div class="user-usage-bar-wrap">
+              <div class="user-usage-bar"><div class="user-usage-fill" style="width:25%"></div></div>
+              <span class="user-usage-label">5 / 20 Generierungen</span>
+            </div>
+          </div>
+          <p class="user-hint">Weitere Funktionen folgen mit dem Benutzerkonto.</p>
+        </div>
       </div>
     </div>
 

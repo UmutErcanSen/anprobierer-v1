@@ -16,7 +16,12 @@
       <div class="header-inner">
         <h1><span class="gradient-text">✦</span> <span class="gradient-text">Virtual Try-On</span></h1>
         <div style="display:flex;gap:.5rem;margin-left:auto">
-          <button class="settings-btn" id="userBtn" onclick="toggleUserModal()" title="Benutzerbereich">👤</button>
+          <button class="settings-btn" id="userBtn" onclick="toggleUserModal()" title="Benutzerbereich">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="8" r="4"/>
+              <path d="M4 21c0-4 3.5-7 8-7s8 3 8 7"/>
+            </svg>
+          </button>
           <button class="settings-btn" id="settingsBtn" onclick="toggleSettings()" title="Einstellungen">⚙️</button>
         </div>
       </div>
@@ -65,11 +70,11 @@
         </div>
         <div class="person-preview" id="personPreview" style="display:none"></div>
 
-        <!-- Zustand 3: Nach Upload -->
-        <div class="after-upload-content hidden-zone" id="afterUploadContent">
+        <!-- Sichtbar initial + nach Upload; unsichtbar nach Starten-Klick -->
+        <div id="step1MiddleSection">
           <div class="step-nav" style="margin-top:0">
             <span></span>
-            <button class="btn btn-primary" id="step1Next">Weiter →</button>
+            <button class="btn btn-primary" id="step1Next" style="display:none">Weiter →</button>
           </div>
           <div class="hero-heading">
             <h2>So einfach geht's</h2>

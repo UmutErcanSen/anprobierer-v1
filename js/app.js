@@ -117,9 +117,10 @@ async function handlePersonFile(file) {
     state.personPhoto = data;
     renderPersonPreview();
     document.getElementById('stepsBar').classList.replace('hidden', 'show');
-    const afterContent = document.getElementById('afterUploadContent');
-    afterContent.classList.remove('hidden-zone');
-    afterContent.classList.add('fade-in');
+    const middle = document.getElementById('step1MiddleSection');
+    middle.classList.remove('hidden-zone');
+    middle.classList.add('fade-in');
+    document.getElementById('step1Next').style.display = 'inline-flex';
     showToast('Personenfoto erfolgreich geladen', 'success');
   } catch (err) {
     showToast(err.message, 'error');
@@ -145,7 +146,8 @@ function renderPersonPreview() {
     personDropZone.classList.remove('has-file');
     personFileInput.value = '';
     document.getElementById('stepsBar').classList.replace('show', 'hidden');
-    document.getElementById('afterUploadContent').classList.add('hidden-zone');
+    document.getElementById('step1MiddleSection').classList.add('hidden-zone');
+    document.getElementById('step1Next').style.display = 'none';
   });
 }
 
@@ -164,6 +166,7 @@ personFileInput.addEventListener('change', () => {
 
 $('#step1StartBtn').addEventListener('click', () => {
   document.getElementById('heroSection').classList.add('hero-hidden');
+  document.getElementById('step1MiddleSection').classList.add('hidden-zone');
   const dz = document.getElementById('personDropZone');
   dz.classList.remove('hidden-zone');
   dz.classList.add('fade-in');

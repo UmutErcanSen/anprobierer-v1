@@ -422,8 +422,7 @@ function updateGenSummary() {
 
 const generateBtn = $('#generateBtn');
 const progressWrap = $('#progressWrap');
-const progressFill = $('#progressFill');
-const progressLabel = $('#progressLabel');
+
 const logArea = $('#logArea');
 
 function addLog(msg, type = 'info') {
@@ -434,33 +433,58 @@ function addLog(msg, type = 'info') {
   logArea.scrollTop = logArea.scrollHeight;
 }
 
-function setProgress(pct, label) {
-  progressFill.style.width = `${Math.min(100, Math.max(0, pct))}%`;
-  if (label) progressLabel.textContent = label;
-}
-
-let lottieAnim = null;
-
-function showLoading() {
-  const container = document.getElementById('loadingAnim');
-  container.style.display = 'flex';
-  if (!lottieAnim && typeof lottie !== 'undefined') {
-    lottieAnim = lottie.loadAnimation({
-      container: container,
-      renderer: 'svg',
-      loop: true,
-      autoplay: true,
-      path: 'js/loading.json',
-    });
-  } else if (lottieAnim) {
-    lottieAnim.play();
+function showProgressItems(mode, items) {
+  const container = document.getElementById('progressItems');
+  if (mode === 'combined') {
+    container.innerHTML = `
+      <div class="progress-item" data-idx="0">
+        <img class="progress-item-thumb" src="${base64ToDataUrl(items[0].base64, items[0].mimeType)}" alt="">
+        <div class="progress-item-info">
+          <div class="progress-item-name">Alle Kleidungsstücke (kombiniert)</div>
+          <div class="progress-item-type">${items.length} Kleidungsstücke</div>
+        </div>
+        <div class="progress-item-bar-wrap">
+          <div class="progress-item-bar"><div class="progress-item-fill"></div></div>
+          <div class="progress-item-pct">0%</div>
+        </div>
+        <div class="progress-item-status">⏳</div>
+      </div>`;
+  } else {
+    container.innerHTML = items.map((item, i) => `
+      <div class="progress-item" data-idx="${i}">
+        <img class="progress-item-thumb" src="${base64ToDataUrl(item.base64, item.mimeType)}" alt="">
+        <div class="progress-item-info">
+          <div class="progress-item-name">${escapeHtml(item.name)}</div>
+          <div class="progress-item-type">${TYPE_LABELS[item.type] || item.type}</div>
+        </div>
+        <div class="progress-item-bar-wrap">
+          <div class="progress-item-bar"><div class="progress-item-fill"></div></div>
+          <div class="progress-item-pct">0%</div>
+        </div>
+        <div class="progress-item-status">⏳</div>
+      </div>
+    `).join('');
   }
 }
 
-function hideLoading() {
-  const container = document.getElementById('loadingAnim');
-  container.style.display = 'none';
-  if (lottieAnim) lottieAnim.stop();
+function updateProgressItem(idx, pct, status) {
+  const card = document.querySelector(`.progress-item[data-idx="${idx}"]`);
+  if (!card) return;
+  const fill = card.querySelector('.progress-item-fill');
+  const pctEl = card.querySelector('.progress-item-pct');
+  const statusEl = card.querySelector('.progress-item-status');
+  if (fill) fill.style.width = `${Math.min(100, Math.max(0, pct))}%`;
+  if (pctEl) pctEl.textContent = `${Math.round(pct)}%`;
+  card.classList.remove('done', 'error');
+  if (status === 'done') { card.classList.add('done'); statusEl.textContent = '✅'; }
+  else if (status === 'error') { card.classList.add('error'); statusEl.textContent = '❌'; }
+  else if (status === 'generating') { statusEl.textContent = '⏳'; }
+  else { statusEl.textContent = '⏳'; }
+}
+
+function setProgressOverall(current, total) {
+  const el = document.getElementById('progressOverall');
+  if (el) el.textContent = `Generiere Bild ${current} von ${total}...`;
 }
 
 generateBtn.addEventListener('click', async () => {
@@ -479,7 +503,6 @@ generateBtn.addEventListener('click', async () => {
   document.getElementById('resultsGrid').innerHTML = '';
   state.generationDone = false;
   $('#step4Next').disabled = true;
-  showLoading();
 
   const items = state.clothingItems;
   const mode = state.generationMode;
@@ -487,12 +510,16 @@ generateBtn.addEventListener('click', async () => {
   let successCount = 0;
   let failCount = 0;
 
+  showProgressItems(mode, items);
+  if (totalCalls > 1) setProgressOverall(1, totalCalls);
+
   try {
     if (mode === 'single') {
       for (let i = 0; i < items.length; i++) {
         const item = items[i];
         addLog(`Generiere Anprobebild für "${item.name}" (${TYPE_LABELS[item.type]})...`);
-        setProgress((i / totalCalls) * 100, `Bild ${i+1} von ${totalCalls} wird generiert...`);
+        updateProgressItem(i, 0, 'generating');
+        setProgressOverall(i + 1, totalCalls);
 
         try {
           addLog(`Sende API-Request für "${item.name}"...`);
@@ -522,34 +549,38 @@ generateBtn.addEventListener('click', async () => {
             saleText: '',
           });
           successCount++;
+          updateProgressItem(i, 100, 'done');
           addLog(`✅ "${item.name}" erfolgreich generiert`, 'success');
         } catch (err) {
           if (err instanceof OpenAIError && err.type === 'insufficient_quota') {
             addLog(`💰 Guthaben aufgebraucht. Bitte Guthaben aufladen.`, 'error');
             showToast('💰 OpenAI-Guthaben aufgebraucht. Lade Guthaben auf platform.openai.com/account/billing', 'error');
+            updateProgressItem(i, 0, 'error');
             failCount++;
             break;
           } else if (err instanceof OpenAIError && (err.status === 401 || err.status === 403)) {
             addLog(`🔑 API-Key ungültig oder keine Berechtigung.`, 'error');
             showToast('🔑 API-Key ungültig. Prüfe den Key.', 'error');
+            updateProgressItem(i, 0, 'error');
             failCount++;
             break;
           } else if (err.name === 'TimeoutError' || err.name === 'AbortError') {
             addLog(`⏱ Zeitüberschreitung bei "${item.name}" (180s). Nächster Versuch...`, 'warn');
             showToast(`⏱ "${item.name}" Zeitüberschreitung, übersprungen.`, 'warning');
+            updateProgressItem(i, 0, 'error');
             failCount++;
           } else {
             console.error(`Fehler "${item.name}":`, err);
             addLog(`❌ ${err.message}`, 'error');
             showToast(`❌ "${item.name}" fehlgeschlagen: ${err.message.slice(0, 80)}`, 'error');
+            updateProgressItem(i, 0, 'error');
             failCount++;
           }
         }
-        setProgress(((i + 1) / totalCalls) * 100, `Bild ${i+1} von ${totalCalls} - ${successCount} OK`);
       }
     } else {
       addLog(`Generiere kombiniertes Anprobebild (${items.length} Kleidungsstücke)...`);
-      setProgress(30, 'Generiere kombiniertes Bild...');
+      updateProgressItem(0, 0, 'generating');
 
       try {
         const data = await callImageEdit({
@@ -576,8 +607,8 @@ generateBtn.addEventListener('click', async () => {
           saleText: '',
         });
         successCount++;
+        updateProgressItem(0, 100, 'done');
         addLog(`✅ Kombiniertes Bild erfolgreich generiert`, 'success');
-        setProgress(100, '✅ Generierung abgeschlossen!');
       } catch (err) {
         if (err instanceof OpenAIError && err.type === 'insufficient_quota') {
           addLog(`💰 Guthaben aufgebraucht.`, 'error');
@@ -597,13 +628,14 @@ generateBtn.addEventListener('click', async () => {
           showToast(`❌ ${err.message}`, 'error');
           failCount++;
         }
+        updateProgressItem(0, 0, 'error');
       }
     }
 
     const resultMsg = successCount > 0
       ? `✅ ${successCount}/${totalCalls} Bilder erfolgreich`
       : '❌ Alle Generierungen fehlgeschlagen.';
-    setProgress(100, resultMsg);
+    document.getElementById('progressOverall').textContent = resultMsg;
     addLog(resultMsg, successCount > 0 ? 'success' : 'error');
 
     if (successCount > 0) {
@@ -618,7 +650,6 @@ generateBtn.addEventListener('click', async () => {
     addLog(`❌ Unerwarteter Fehler: ${err.message}`, 'error');
     showToast('Ein unerwarteter Fehler ist aufgetreten.', 'error');
   } finally {
-    hideLoading();
     state.isGenerating = false;
     generateBtn.disabled = false;
   }
@@ -988,7 +1019,8 @@ resetBtn.addEventListener('click', () => {
   logArea.classList.remove('visible');
   logArea.innerHTML = '';
   progressWrap.style.display = 'none';
-  progressFill.style.width = '0%';
+  document.getElementById('progressItems').innerHTML = '';
+  document.getElementById('progressOverall').textContent = '';
   $('#step4Next').disabled = true;
   zipPreview.textContent = '';
   document.getElementById('costEstimate').style.display = 'none';

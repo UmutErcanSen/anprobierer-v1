@@ -424,6 +424,7 @@ const generateBtn = $('#generateBtn');
 const progressWrap = $('#progressWrap');
 
 const logArea = $('#logArea');
+const progressTimers = {};
 
 function addLog(msg, type = 'info') {
   const el = document.createElement('div');
@@ -447,7 +448,7 @@ function showProgressItems(mode, items) {
           <div class="progress-item-bar"><div class="progress-item-fill"></div></div>
           <div class="progress-item-pct">0%</div>
         </div>
-        <div class="progress-item-status">⏳</div>
+        <div class="progress-item-status" title="Wartet...">⏳</div>
       </div>`;
   } else {
     container.innerHTML = items.map((item, i) => `
@@ -461,7 +462,7 @@ function showProgressItems(mode, items) {
           <div class="progress-item-bar"><div class="progress-item-fill"></div></div>
           <div class="progress-item-pct">0%</div>
         </div>
-        <div class="progress-item-status">⏳</div>
+        <div class="progress-item-status" title="Wartet...">⏳</div>
       </div>
     `).join('');
   }
@@ -476,15 +477,51 @@ function updateProgressItem(idx, pct, status) {
   if (fill) fill.style.width = `${Math.min(100, Math.max(0, pct))}%`;
   if (pctEl) pctEl.textContent = `${Math.round(pct)}%`;
   card.classList.remove('done', 'error');
-  if (status === 'done') { card.classList.add('done'); statusEl.textContent = '✅'; }
-  else if (status === 'error') { card.classList.add('error'); statusEl.textContent = '❌'; }
-  else if (status === 'generating') { statusEl.textContent = '⏳'; }
-  else { statusEl.textContent = '⏳'; }
+  if (status === 'done') { card.classList.add('done'); statusEl.textContent = '✅'; statusEl.title = 'Fertig'; }
+  else if (status === 'error') { card.classList.add('error'); statusEl.textContent = '❌'; statusEl.title = 'Fehlgeschlagen'; }
+  else if (status === 'generating') { statusEl.textContent = '⏳'; statusEl.title = 'Wird erstellt...'; }
+  else { statusEl.textContent = '⏳'; statusEl.title = 'Wartet...'; }
 }
 
 function setProgressOverall(current, total) {
   const el = document.getElementById('progressOverall');
   if (el) el.textContent = `Generiere Bild ${current} von ${total}...`;
+}
+
+function startItemProgress(idx) {
+  stopItemProgress(idx);
+  let pct = 5;
+  const start = Date.now();
+  progressTimers[idx] = setInterval(() => {
+    const elapsed = (Date.now() - start) / 1000;
+    if (elapsed < 3) {
+      pct = 5 + (elapsed / 3) * 20;
+    } else {
+      pct = Math.min(85, 25 + (elapsed - 3) * 0.2);
+    }
+    const card = document.querySelector(`.progress-item[data-idx="${idx}"]`);
+    if (card) {
+      const fill = card.querySelector('.progress-item-fill');
+      const pctEl = card.querySelector('.progress-item-pct');
+      if (fill) fill.style.width = `${pct}%`;
+      if (pctEl) pctEl.textContent = `${Math.round(pct)}%`;
+    }
+  }, 400);
+}
+
+function stopItemProgress(idx, success) {
+  if (progressTimers[idx]) {
+    clearInterval(progressTimers[idx]);
+    delete progressTimers[idx];
+  }
+  if (success === true) {
+    updateProgressItem(idx, 100, 'done');
+  } else if (success === false) {
+    const card = document.querySelector(`.progress-item[data-idx="${idx}"]`);
+    const pctEl = card?.querySelector('.progress-item-pct');
+    const currentPct = pctEl ? parseInt(pctEl.textContent) || 0 : 0;
+    updateProgressItem(idx, currentPct, 'error');
+  }
 }
 
 generateBtn.addEventListener('click', async () => {
@@ -519,6 +556,7 @@ generateBtn.addEventListener('click', async () => {
         const item = items[i];
         addLog(`Generiere Anprobebild für "${item.name}" (${TYPE_LABELS[item.type]})...`);
         updateProgressItem(i, 0, 'generating');
+        startItemProgress(i);
         setProgressOverall(i + 1, totalCalls);
 
         try {
@@ -549,31 +587,31 @@ generateBtn.addEventListener('click', async () => {
             saleText: '',
           });
           successCount++;
-          updateProgressItem(i, 100, 'done');
+          stopItemProgress(i, true);
           addLog(`✅ "${item.name}" erfolgreich generiert`, 'success');
         } catch (err) {
           if (err instanceof OpenAIError && err.type === 'insufficient_quota') {
             addLog(`💰 Guthaben aufgebraucht. Bitte Guthaben aufladen.`, 'error');
             showToast('💰 OpenAI-Guthaben aufgebraucht. Lade Guthaben auf platform.openai.com/account/billing', 'error');
-            updateProgressItem(i, 0, 'error');
+            stopItemProgress(i, false);
             failCount++;
             break;
           } else if (err instanceof OpenAIError && (err.status === 401 || err.status === 403)) {
             addLog(`🔑 API-Key ungültig oder keine Berechtigung.`, 'error');
             showToast('🔑 API-Key ungültig. Prüfe den Key.', 'error');
-            updateProgressItem(i, 0, 'error');
+            stopItemProgress(i, false);
             failCount++;
             break;
           } else if (err.name === 'TimeoutError' || err.name === 'AbortError') {
             addLog(`⏱ Zeitüberschreitung bei "${item.name}" (180s). Nächster Versuch...`, 'warn');
             showToast(`⏱ "${item.name}" Zeitüberschreitung, übersprungen.`, 'warning');
-            updateProgressItem(i, 0, 'error');
+            stopItemProgress(i, false);
             failCount++;
           } else {
             console.error(`Fehler "${item.name}":`, err);
             addLog(`❌ ${err.message}`, 'error');
             showToast(`❌ "${item.name}" fehlgeschlagen: ${err.message.slice(0, 80)}`, 'error');
-            updateProgressItem(i, 0, 'error');
+            stopItemProgress(i, false);
             failCount++;
           }
         }
@@ -581,6 +619,7 @@ generateBtn.addEventListener('click', async () => {
     } else {
       addLog(`Generiere kombiniertes Anprobebild (${items.length} Kleidungsstücke)...`);
       updateProgressItem(0, 0, 'generating');
+      startItemProgress(0);
 
       try {
         const data = await callImageEdit({
@@ -607,7 +646,7 @@ generateBtn.addEventListener('click', async () => {
           saleText: '',
         });
         successCount++;
-        updateProgressItem(0, 100, 'done');
+        stopItemProgress(0, true);
         addLog(`✅ Kombiniertes Bild erfolgreich generiert`, 'success');
       } catch (err) {
         if (err instanceof OpenAIError && err.type === 'insufficient_quota') {
@@ -628,7 +667,7 @@ generateBtn.addEventListener('click', async () => {
           showToast(`❌ ${err.message}`, 'error');
           failCount++;
         }
-        updateProgressItem(0, 0, 'error');
+        stopItemProgress(0, false);
       }
     }
 
@@ -650,6 +689,7 @@ generateBtn.addEventListener('click', async () => {
     addLog(`❌ Unerwarteter Fehler: ${err.message}`, 'error');
     showToast('Ein unerwarteter Fehler ist aufgetreten.', 'error');
   } finally {
+    Object.keys(progressTimers).forEach(k => stopItemProgress(k));
     state.isGenerating = false;
     generateBtn.disabled = false;
   }
@@ -1018,6 +1058,7 @@ resetBtn.addEventListener('click', () => {
   resultsGrid.innerHTML = '';
   logArea.classList.remove('visible');
   logArea.innerHTML = '';
+  Object.keys(progressTimers).forEach(k => stopItemProgress(k));
   progressWrap.style.display = 'none';
   document.getElementById('progressItems').innerHTML = '';
   document.getElementById('progressOverall').textContent = '';

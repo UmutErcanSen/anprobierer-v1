@@ -585,16 +585,17 @@ generateBtn.addEventListener('click', async () => {
   let failCount = 0;
 
   showProgressItems(mode, items);
-  if (totalCalls > 1) setProgressOverall(1, totalCalls);
+  const progressOverallEl = document.getElementById('progressOverall');
+  if (totalCalls > 1) progressOverallEl.textContent = `Generiere Bilder... (0/${totalCalls} fertig)`;
 
   try {
     if (mode === 'single') {
-      for (let i = 0; i < items.length; i++) {
-        const item = items[i];
+      let doneCount = 0;
+
+      const promises = items.map(async (item, i) => {
         addLog(`Generiere Anprobebild für "${item.name}" (${TYPE_LABELS[item.type]})...`);
         updateProgressItem(i, 0, 'generating');
         startItemProgress(i);
-        setProgressOverall(i + 1, totalCalls);
 
         try {
           addLog(`Sende API-Request für "${item.name}"...`);
@@ -629,18 +630,16 @@ generateBtn.addEventListener('click', async () => {
         } catch (err) {
           if (err instanceof OpenAIError && err.type === 'insufficient_quota') {
             addLog(`💰 Guthaben aufgebraucht. Bitte Guthaben aufladen.`, 'error');
-            showToast('💰 OpenAI-Guthaben aufgebraucht. Lade Guthaben auf platform.openai.com/account/billing', 'error');
+            showToast('💰 OpenAI-Guthaben aufgebraucht.', 'error');
             stopItemProgress(i, false);
             failCount++;
-            break;
           } else if (err instanceof OpenAIError && (err.status === 401 || err.status === 403)) {
             addLog(`🔑 API-Key ungültig oder keine Berechtigung.`, 'error');
             showToast('🔑 API-Key ungültig. Prüfe den Key.', 'error');
             stopItemProgress(i, false);
             failCount++;
-            break;
           } else if (err.name === 'TimeoutError' || err.name === 'AbortError') {
-            addLog(`⏱ Zeitüberschreitung bei "${item.name}" (180s). Nächster Versuch...`, 'warn');
+            addLog(`⏱ Zeitüberschreitung bei "${item.name}" (180s).`, 'warn');
             showToast(`⏱ "${item.name}" Zeitüberschreitung, übersprungen.`, 'warning');
             stopItemProgress(i, false);
             failCount++;
@@ -652,7 +651,12 @@ generateBtn.addEventListener('click', async () => {
             failCount++;
           }
         }
-      }
+
+        doneCount++;
+        progressOverallEl.textContent = `Generiere Bilder... (${doneCount}/${totalCalls} fertig)`;
+      });
+
+      await Promise.allSettled(promises);
     } else {
       addLog(`Generiere kombiniertes Anprobebild (${items.length} Kleidungsstücke)...`);
       updateProgressItem(0, 0, 'generating');

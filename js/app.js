@@ -116,6 +116,7 @@ async function handlePersonFile(file) {
     const data = await fileToBase64(converted);
     state.personPhoto = data;
     renderPersonPreview();
+    document.getElementById('stepsBar').classList.replace('hidden', 'show');
     showToast('Personenfoto erfolgreich geladen', 'success');
   } catch (err) {
     showToast(err.message, 'error');
@@ -140,6 +141,7 @@ function renderPersonPreview() {
     personPreview.style.display = 'none';
     personDropZone.classList.remove('has-file');
     personFileInput.value = '';
+    document.getElementById('stepsBar').classList.replace('show', 'hidden');
   });
 }
 
@@ -155,6 +157,8 @@ personDropZone.addEventListener('drop', e => {
 personFileInput.addEventListener('change', () => {
   if (personFileInput.files[0]) handlePersonFile(personFileInput.files[0]);
 });
+
+$('#step1StartBtn').addEventListener('click', () => personFileInput.click());
 
 $('#step1Next').addEventListener('click', () => {
   if (!state.personPhoto) { showToast('Bitte zuerst ein Personenfoto hochladen.', 'warning'); return }

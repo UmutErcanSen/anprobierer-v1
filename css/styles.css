@@ -662,10 +662,18 @@ footer{text-align:center;padding:2rem;color:var(--text-3);font-size:.8rem;border
   text-align:center;
   padding:2.5rem 1rem 1rem;
 }
+.hero-label{
+  font-size:1rem;
+  font-weight:700;
+  color:var(--text-3);
+  text-transform:uppercase;
+  letter-spacing:.12em;
+  margin-bottom:.15rem;
+}
 .hero-rotating-wrap{
-  font-size:2.4rem;
+  font-size:3.2rem;
   font-weight:800;
-  min-height:3.2rem;
+  min-height:4rem;
   display:flex;
   align-items:center;
   justify-content:center;
@@ -683,12 +691,42 @@ footer{text-align:center;padding:2rem;color:var(--text-3);font-size:.8rem;border
 .hero-sub{
   font-size:1.02rem;
   color:var(--text-2);
-  margin-bottom:1.8rem;
+  margin-bottom:1.2rem;
   font-weight:400;
 }
+.hero-sub .btn{padding:.2rem .5rem;font-size:.72rem}
+
+.btn-gradient{
+  display:inline-flex;align-items:center;gap:.6rem;
+  background:linear-gradient(135deg,var(--primary),var(--accent));
+  color:#fff;font-weight:700;padding:.85rem 2.5rem;
+  border-radius:999px;border:none;cursor:pointer;
+  font-size:1.05rem;text-decoration:none;
+  box-shadow:0 4px 24px rgba(108,99,255,.3);
+  transition:all .3s ease;
+}
+.btn-gradient:hover{
+  transform:translateY(-3px) scale(1.02);
+  box-shadow:0 8px 32px rgba(108,99,255,.45);
+}
+.btn-gradient:active{transform:scale(.97)}
+
 @media(max-width:480px){
-  .hero-rotating-wrap{font-size:1.7rem;min-height:2.4rem}
+  .hero-rotating-wrap{font-size:2rem;min-height:2.6rem}
+  .hero-label{font-size:.85rem}
   .hero-sub{font-size:.9rem}
+  .btn-gradient{padding:.7rem 1.8rem;font-size:.95rem}
+}
+
+/* Steps bar hidden/show */
+.steps-bar.hidden{display:none}
+.steps-bar.show{
+  display:flex;
+  animation:slideDown .4s ease;
+}
+@keyframes slideDown{
+  from{opacity:0;transform:translateY(-10px)}
+  to{opacity:1;transform:translateY(0)}
 }
 
 /* Noise overlay */

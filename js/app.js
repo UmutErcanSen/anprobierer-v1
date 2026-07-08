@@ -1123,6 +1123,21 @@ $('#step6Back').addEventListener('click', () => goToStep(5));
 
 loadApiKey();
 
+// Word rotation
+const heroWords = ['Anprobieren', 'Fotografieren', 'Verkaufen'];
+let wordIdx = 0;
+const heroWordEl = document.getElementById('heroRotatingWord');
+if (heroWordEl) {
+  setInterval(() => {
+    heroWordEl.classList.add('fade-out');
+    setTimeout(() => {
+      wordIdx = (wordIdx + 1) % heroWords.length;
+      heroWordEl.textContent = heroWords[wordIdx];
+      heroWordEl.classList.remove('fade-out');
+    }, 300);
+  }, 3000);
+}
+
 document.addEventListener('keydown', e => {
   if (e.key === 'Enter') {
     const active = document.activeElement;

@@ -3,7 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>v1 Virtual Try-On – KI Anzeigen Erstellung</title>
+    <title>Virtual Try-On – KI Anzeigen Erstellung</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="css/styles.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
@@ -11,7 +14,7 @@
   <body>
     <header>
       <div class="header-inner">
-        <h1><span>✦</span> Virtual Try-On</h1>
+        <h1><span class="gradient-text">✦</span> <span class="gradient-text">Virtual Try-On</span></h1>
         <button class="settings-btn" id="settingsBtn" onclick="toggleSettings()" title="Einstellungen">⚙️</button>
       </div>
     </header>
@@ -39,29 +42,24 @@
       </div>
 
       <section id="step1" class="step-section visible">
-        <div class="card">
-          <h2>📸 Personenfoto hochladen <button class="btn btn-sm btn-outline info-btn" onclick="openPhotoGuide()" style="padding:.25rem .5rem;font-size:.8rem;vertical-align:middle">🛈</button></h2>
-          <p>
-            Lade ein Foto der Person hoch, die die Kleidung anprobieren soll. Am
-            besten Ganzkörper- oder Halbkörperaufnahme vor neutralem
-            Hintergrund.
-          </p>
-          <div class="upload-zone" id="personDropZone">
-            <div class="icon">☝️</div>
-            <strong>Foto hier ablegen oder klicken zum Auswählen</strong>
-            <div class="hint">Unterstützt: JPG, PNG, WEBP · iOS Fotos werden automatisch konvertiert (max. 20 MB)</div>
-            <input
-              type="file"
-              id="personFileInput"
-              accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
-            />
+        <div class="hero-section">
+          <div class="hero-rotating-wrap">
+            <span class="hero-word gradient-text" id="heroRotatingWord">Anprobieren</span>
           </div>
-          <div
-            class="person-preview"
-            id="personPreview"
-            style="display: none"
-          ></div>
+          <p class="hero-sub">
+            mit KI für deine Vinted-Anzeigen
+            <button class="btn btn-sm btn-outline info-btn" onclick="openPhotoGuide()" style="padding:.2rem .45rem;font-size:.7rem;margin-left:.3rem;vertical-align:middle" title="Tipps für das perfekte Foto">🛈</button>
+          </p>
         </div>
+
+        <div class="upload-zone" id="personDropZone">
+          <div class="icon">📸</div>
+          <strong>Foto hier ablegen oder klicken zum Auswählen</strong>
+          <div class="hint">Unterstützt: JPG, PNG, WEBP · iOS Fotos werden automatisch konvertiert (max. 20 MB)</div>
+          <input type="file" id="personFileInput" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" />
+        </div>
+        <div class="person-preview" id="personPreview" style="display:none"></div>
+
         <div class="hero-heading">
           <h2>So einfach geht's</h2>
           <p>Drei Schritte zur fertigen Vinted-Anzeige mit KI</p>

@@ -425,6 +425,7 @@ const progressWrap = $('#progressWrap');
 
 const logArea = $('#logArea');
 const progressTimers = {};
+let activeLottie = null;
 
 function addLog(msg, type = 'info') {
   const el = document.createElement('div');
@@ -432,6 +433,16 @@ function addLog(msg, type = 'info') {
   el.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
   logArea.appendChild(el);
   logArea.scrollTop = logArea.scrollHeight;
+}
+
+function statusIcon(type) {
+  if (type === 'done') {
+    return '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" opacity=".2" stroke="#10b981"/><polyline points="8 12 11 15 16 9"/></svg>';
+  }
+  if (type === 'error') {
+    return '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" opacity=".2" stroke="#ef4444"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>';
+  }
+  return '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#71717a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
 }
 
 function showProgressItems(mode, items) {
@@ -448,7 +459,7 @@ function showProgressItems(mode, items) {
           <div class="progress-item-bar"><div class="progress-item-fill"></div></div>
           <div class="progress-item-pct">0%</div>
         </div>
-        <div class="progress-item-status" title="Wartet...">⏳</div>
+        <div class="progress-item-status" title="Wartet...">${statusIcon('')}</div>
       </div>`;
   } else {
     container.innerHTML = items.map((item, i) => `
@@ -462,7 +473,7 @@ function showProgressItems(mode, items) {
           <div class="progress-item-bar"><div class="progress-item-fill"></div></div>
           <div class="progress-item-pct">0%</div>
         </div>
-        <div class="progress-item-status" title="Wartet...">⏳</div>
+        <div class="progress-item-status" title="Wartet...">${statusIcon('')}</div>
       </div>
     `).join('');
   }
@@ -477,10 +488,36 @@ function updateProgressItem(idx, pct, status) {
   if (fill) fill.style.width = `${Math.min(100, Math.max(0, pct))}%`;
   if (pctEl) pctEl.textContent = `${Math.round(pct)}%`;
   card.classList.remove('done', 'error');
-  if (status === 'done') { card.classList.add('done'); statusEl.textContent = '✅'; statusEl.title = 'Fertig'; }
-  else if (status === 'error') { card.classList.add('error'); statusEl.textContent = '❌'; statusEl.title = 'Fehlgeschlagen'; }
-  else if (status === 'generating') { statusEl.textContent = '⏳'; statusEl.title = 'Wird erstellt...'; }
-  else { statusEl.textContent = '⏳'; statusEl.title = 'Wartet...'; }
+
+  if (activeLottie) { activeLottie.instance.destroy(); activeLottie = null; }
+
+  if (status === 'done') {
+    card.classList.add('done');
+    statusEl.innerHTML = statusIcon('done');
+    statusEl.title = 'Fertig';
+  } else if (status === 'error') {
+    card.classList.add('error');
+    statusEl.innerHTML = statusIcon('error');
+    statusEl.title = 'Fehlgeschlagen';
+  } else if (status === 'generating') {
+    statusEl.innerHTML = '<div class="status-lottie"></div>';
+    statusEl.title = 'Wird erstellt...';
+    if (typeof lottie !== 'undefined') {
+      activeLottie = {
+        idx,
+        instance: lottie.loadAnimation({
+          container: statusEl.querySelector('.status-lottie'),
+          renderer: 'svg',
+          loop: true,
+          autoplay: true,
+          path: 'js/loading.json',
+        }),
+      };
+    }
+  } else {
+    statusEl.innerHTML = statusIcon('');
+    statusEl.title = 'Wartet...';
+  }
 }
 
 function setProgressOverall(current, total) {
@@ -690,6 +727,7 @@ generateBtn.addEventListener('click', async () => {
     showToast('Ein unerwarteter Fehler ist aufgetreten.', 'error');
   } finally {
     Object.keys(progressTimers).forEach(k => stopItemProgress(k));
+    if (activeLottie) { activeLottie.instance.destroy(); activeLottie = null; }
     state.isGenerating = false;
     generateBtn.disabled = false;
   }
@@ -1059,6 +1097,7 @@ resetBtn.addEventListener('click', () => {
   logArea.classList.remove('visible');
   logArea.innerHTML = '';
   Object.keys(progressTimers).forEach(k => stopItemProgress(k));
+  if (activeLottie) { activeLottie.instance.destroy(); activeLottie = null; }
   progressWrap.style.display = 'none';
   document.getElementById('progressItems').innerHTML = '';
   document.getElementById('progressOverall').textContent = '';

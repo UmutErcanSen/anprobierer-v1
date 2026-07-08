@@ -331,7 +331,9 @@ header h1 span{color:var(--primary)}
 .progress-item-bar{flex:1;height:6px;background:var(--bg);border-radius:99px;overflow:hidden}
 .progress-item-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--primary),var(--accent));border-radius:99px;transition:width .4s ease}
 .progress-item-pct{font-size:.65rem;color:var(--text-3);min-width:2.2em;text-align:right}
-.progress-item-status{font-size:1.1rem;width:22px;text-align:center;flex-shrink:0}
+.progress-item-status{display:flex;align-items:center;justify-content:center;width:24px;flex-shrink:0;min-height:24px}
+.progress-item-status svg{display:block;width:20px;height:20px}
+.progress-item-status .status-lottie{width:20px;height:20px}
 .progress-item.done{border-color:rgba(16,185,129,.3);background:rgba(16,185,129,.06)}
 .progress-item.done .progress-item-fill{background:linear-gradient(90deg,var(--success),#34d399)}
 .progress-item.error{border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.06)}

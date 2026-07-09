@@ -29,24 +29,37 @@
 
     <div class="container">
       <div class="steps-bar hidden" id="stepsBar">
-        <button class="step-tab active" data-step="1">
-          <span class="num">1</span><span class="label-text">Foto</span>
-        </button>
-        <button class="step-tab" data-step="2">
-          <span class="num">2</span><span class="label-text">Kleidung</span>
-        </button>
-        <button class="step-tab" data-step="3">
-          <span class="num">3</span><span class="label-text">Modus</span>
-        </button>
-        <button class="step-tab" data-step="4">
-          <span class="num">4</span><span class="label-text">Generieren</span>
-        </button>
-        <button class="step-tab" data-step="5">
-          <span class="num">5</span><span class="label-text">Ergebnisse</span>
-        </button>
-        <button class="step-tab" data-step="6">
-          <span class="num">6</span><span class="label-text">Download</span>
-        </button>
+        <div class="step-progress">
+          <div class="step-node active" data-step="1">
+            <div class="step-circle"><span>1</span></div>
+            <span class="step-label">Foto</span>
+          </div>
+          <div class="step-connector"></div>
+          <div class="step-node" data-step="2">
+            <div class="step-circle"><span>2</span></div>
+            <span class="step-label">Kleidung</span>
+          </div>
+          <div class="step-connector"></div>
+          <div class="step-node" data-step="3">
+            <div class="step-circle"><span>3</span></div>
+            <span class="step-label">Modus</span>
+          </div>
+          <div class="step-connector"></div>
+          <div class="step-node" data-step="4">
+            <div class="step-circle"><span>4</span></div>
+            <span class="step-label">Generieren</span>
+          </div>
+          <div class="step-connector"></div>
+          <div class="step-node" data-step="5">
+            <div class="step-circle"><span>5</span></div>
+            <span class="step-label">Ergebnisse</span>
+          </div>
+          <div class="step-connector"></div>
+          <div class="step-node" data-step="6">
+            <div class="step-circle"><span>6</span></div>
+            <span class="step-label">Download</span>
+          </div>
+        </div>
       </div>
 
       <section id="step1" class="step-section visible">
@@ -76,47 +89,43 @@
             <span></span>
             <button class="btn btn-primary" id="step1Next" style="display:none">Weiter →</button>
           </div>
-          <div class="how-it-works">
+          <div class="how-it-works reveal">
             <div class="how-left">
               <span class="how-badge">So einfach geht's</span>
               <h2 class="how-title">Drei Schritte zur<br><span class="gradient-text">perfekten</span><br>Vinted-Anzeige</h2>
               <p class="how-desc">Lade dein Foto hoch, wähle Kleidungsstücke aus und lass die KI in Sekunden professionelle Anprobierbilder für deine Vinted-Anzeige erstellen.</p>
             </div>
             <div class="how-right">
-              <div class="phone-mockup">
-                <div class="phone-island"></div>
-                <div class="phone-screen">
-                  <img class="phone-img" src="assets/phone-preview.png" alt="" onerror="this.style.display='none'">
-                  <div class="phone-fallback">
-                    <div class="phone-card"><span>✨</span><div><strong>Vintage Lederjacke</strong><span>Gr. M · KI Generiert</span></div></div>
-                    <div class="phone-card"><span>✨</span><div><strong>Cargo Hose Beige</strong><span>Gr. L · KI Generiert</span></div></div>
-                    <div class="phone-card"><span>✨</span><div><strong>Sneaker White</strong><span>Gr. 42 · KI Generiert</span></div></div>
-                  </div>
-                </div>
-              </div>
+              <img class="phone-img-raw" src="assets/phone-preview.png" alt="Vorschau" onerror="this.style.display='none'">
             </div>
           </div>
-          <div class="feature-highlights">
+          <div class="feature-highlights reveal">
             <div class="feature-card">
-              <span class="step-badge">1</span>
-              <img class="feature-card-img" src="assets/feature-upload.svg" alt="" onerror="this.style.display='none'">
-              <div class="feature-icon">📸</div>
-              <strong>Foto hochladen</strong>
-              <span>Person + Kleidungsstücke</span>
+              <div class="fc-media">
+                <img class="fc-img" src="assets/card-upload.png" alt="" onerror="this.style.display='none'">
+              </div>
+              <div class="fc-body">
+                <h3 class="fc-title">Foto hochladen</h3>
+                <p class="fc-desc">Person + Kleidungsstücke</p>
+              </div>
             </div>
             <div class="feature-card">
-              <span class="step-badge">2</span>
-              <img class="feature-card-img" src="assets/feature-ai.svg" alt="" onerror="this.style.display='none'">
-              <div class="feature-icon">🤖</div>
-              <strong>KI-Generierung</strong>
-              <span>Virtuelle Anprobe in Sekunden</span>
+              <div class="fc-media">
+                <img class="fc-img" src="assets/card-ai.png" alt="" onerror="this.style.display='none'">
+              </div>
+              <div class="fc-body">
+                <h3 class="fc-title">KI-Generierung</h3>
+                <p class="fc-desc">Virtuelle Anprobe in Sekunden</p>
+              </div>
             </div>
             <div class="feature-card">
-              <span class="step-badge">3</span>
-              <img class="feature-card-img" src="assets/feature-results.svg" alt="" onerror="this.style.display='none'">
-              <div class="feature-icon">📦</div>
-              <strong>Fertige Anzeige</strong>
-              <span>Bilder + Vinted-Texte</span>
+              <div class="fc-media">
+                <img class="fc-img" src="assets/card-results.png" alt="" onerror="this.style.display='none'">
+              </div>
+              <div class="fc-body">
+                <h3 class="fc-title">Fertige Anzeige</h3>
+                <p class="fc-desc">Bilder + Vinted-Texte</p>
+              </div>
             </div>
           </div>
         </div>
@@ -356,18 +365,31 @@
       <div class="settings-content" onclick="event.stopPropagation()">
         <button class="settings-close" onclick="closeSettings()">&times;</button>
         <h2>⚙️ Einstellungen</h2>
-        <div class="settings-api-row">
-          <label for="apiKeyInput">OpenAI API-Key</label>
-          <div class="settings-input-row">
-            <input type="text" id="apiKeyInput" placeholder="sk-..." spellcheck="false" autocomplete="off" />
-            <span class="status-dot" id="apiStatusDot" title="API-Key Status"></span>
-            <button class="btn btn-sm btn-outline" id="testKeyBtn" onclick="testApiKey()">🔍 Testen</button>
-          </div>
+        <div class="settings-tabs">
+          <button class="settings-tab active" data-panel="api">API-Key</button>
+          <button class="settings-tab" data-panel="about">Über</button>
         </div>
-        <p class="settings-hint">
-          Key unter <a href="https://platform.openai.com/api-keys" target="_blank">platform.openai.com/api-keys</a>
-          · Guthaben erforderlich · Key liegt nur in deinem localStorage
-        </p>
+        <div class="settings-panel visible" data-panel="api">
+          <div class="settings-api-row">
+            <label for="apiKeyInput">OpenAI API-Key</label>
+            <div class="settings-input-row">
+              <input type="password" id="apiKeyInput" placeholder="sk-..." spellcheck="false" autocomplete="off" />
+              <button class="key-toggle-btn" id="keyToggleBtn" onclick="toggleKeyVisibility()" title="Key anzeigen/verstecken">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+              <span class="status-dot" id="apiStatusDot" title="API-Key Status"></span>
+              <button class="btn btn-sm btn-outline" id="testKeyBtn" onclick="testApiKey()">🔍 Testen</button>
+            </div>
+          </div>
+          <p class="settings-hint">
+            Key unter <a href="https://platform.openai.com/api-keys" target="_blank">platform.openai.com/api-keys</a>
+            · Guthaben erforderlich · Key liegt nur in deinem localStorage
+          </p>
+        </div>
+        <div class="settings-panel" data-panel="about">
+          <p style="font-size:.85rem;color:var(--text-2);line-height:1.7;margin-bottom:.5rem">✦ <strong>Virtual Try-On</strong> nutzt <strong>OpenAI GPT Image 2</strong> für fotorealistische Anprobebilder und <strong>GPT-4o-mini</strong> für Vinted-Verkaufstexte.</p>
+          <p style="font-size:.85rem;color:var(--text-2);line-height:1.7">Alle Bildverarbeitung läuft lokal im Browser. Dein API-Key wird ausschließlich in deinem <strong>localStorage</strong> gespeichert.</p>
+        </div>
       </div>
     </div>
 
@@ -405,7 +427,9 @@
 
     <div class="lightbox" id="lightbox" onclick="closeLightbox(event)">
       <span class="lightbox-close" onclick="event.stopPropagation(); closeLightbox()">&times;</span>
+      <button class="lightbox-nav prev" id="lightboxPrev" onclick="event.stopPropagation(); navigateLightbox(-1)">‹</button>
       <img class="lightbox-img" id="lightboxImg" alt="" onclick="event.stopPropagation()">
+      <button class="lightbox-nav next" id="lightboxNext" onclick="event.stopPropagation(); navigateLightbox(1)">›</button>
       <div class="lightbox-info" id="lightboxInfo" onclick="event.stopPropagation()"></div>
     </div>
 

@@ -144,7 +144,7 @@ header h1 span{color:var(--primary)}
   border-color:var(--primary);
 }
 .feature-card .feature-icon{font-size:2.8rem;margin-bottom:.75rem;display:block}
-.feature-card strong{display:block;font-size:1.05rem;margin-bottom:.4rem;font-weight:700}
+.feature-card strong{display:block;font-size:1.05rem;margin-bottom:.4rem;font-weight:700;color:var(--text-2)}
 .feature-card span{font-size:.85rem;color:var(--text-3);display:block;line-height:1.5;max-width:200px;margin:0 auto}
 
 /* How it works section */
@@ -239,6 +239,7 @@ header h1 span{color:var(--primary)}
 @media(max-width:768px){
   .how-it-works{grid-template-columns:1fr;gap:2rem}
   .how-title{font-size:1.5rem}
+  .how-left{text-align:center}
   .how-right{order:-1}
   .phone-mockup{width:200px;height:410px;border-radius:32px;padding:10px}
   .phone-screen{border-radius:23px}
@@ -246,6 +247,7 @@ header h1 span{color:var(--primary)}
   .phone-fallback{padding:2.4rem .6rem .6rem}
 }
 @media(max-width:480px){
+  .step-badge{width:28px;height:28px;font-size:.8rem;line-height:28px}
   .phone-mockup{width:170px;height:350px;border-radius:26px;padding:8px}
   .phone-screen{border-radius:18px}
   .phone-island{width:70px;height:20px;top:12px;border-radius:12px}

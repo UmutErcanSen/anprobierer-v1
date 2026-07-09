@@ -147,6 +147,115 @@ header h1 span{color:var(--primary)}
 .feature-card strong{display:block;font-size:1.05rem;margin-bottom:.4rem;font-weight:700}
 .feature-card span{font-size:.85rem;color:var(--text-3);display:block;line-height:1.5;max-width:200px;margin:0 auto}
 
+/* How it works section */
+.how-it-works{
+  display:grid;grid-template-columns:1fr 1fr;gap:3rem;
+  align-items:center;margin:2.5rem 0 1.5rem;
+}
+.how-right{
+  display:flex;align-items:center;justify-content:center;
+}
+.how-badge{
+  display:inline-block;padding:.2rem .85rem;
+  background:rgba(6,182,212,.15);color:var(--tertiary);
+  border-radius:999px;font-size:.8rem;font-weight:700;
+  text-transform:uppercase;letter-spacing:.05em;
+  margin-bottom:.75rem;
+}
+.how-title{
+  font-size:2rem;font-weight:800;line-height:1.2;
+  margin-bottom:1rem;
+}
+.how-desc{
+  font-size:.95rem;color:var(--text-2);line-height:1.7;
+}
+
+/* Phone mockup */
+.phone-mockup{
+  width:240px;height:490px;
+  background:var(--surface-3);
+  border-radius:38px;padding:12px;
+  position:relative;flex-shrink:0;
+  box-shadow:0 0 0 1px rgba(255,255,255,.06),0 20px 60px rgba(0,0,0,.5),0 0 40px rgba(108,99,255,.08);
+}
+.phone-island{
+  position:absolute;top:18px;left:50%;
+  transform:translateX(-50%);
+  width:100px;height:26px;
+  background:#000;border-radius:16px;z-index:3;
+}
+.phone-screen{
+  width:100%;height:100%;
+  background:var(--bg);
+  border-radius:28px;overflow:hidden;position:relative;
+}
+.phone-screen .phone-img{
+  position:absolute;inset:0;
+  width:100%;height:100%;
+  object-fit:cover;z-index:2;display:block;
+}
+.phone-fallback{
+  display:flex;flex-direction:column;gap:.5rem;
+  padding:2.8rem .7rem .7rem;position:relative;z-index:1;
+}
+.phone-card{
+  display:flex;align-items:center;gap:.5rem;
+  padding:.5rem .55rem;
+  background:var(--surface-2);border:1px solid var(--surface-3);
+  border-radius:var(--radius-sm);
+}
+.phone-card > span:first-child{
+  width:36px;height:36px;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1rem;flex-shrink:0;
+  background:rgba(108,99,255,.15);
+}
+.phone-card > div{flex:1;min-width:0}
+.phone-card strong{
+  display:block;font-size:.73rem;font-weight:600;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.phone-card > div > span{font-size:.62rem;color:var(--text-3)}
+
+/* Step badges on feature cards */
+.step-badge{
+  position:absolute;top:.6rem;left:.6rem;
+  width:22px;height:22px;border-radius:50%;
+  background:var(--primary);color:#fff;
+  font-size:.7rem;font-weight:700;line-height:22px;
+  text-align:center;z-index:3;
+}
+
+/* Feature card image (replaces emoji) */
+.feature-card{position:relative}
+.feature-card-img{
+  display:inline-block;width:2.8rem;height:2.8rem;
+  object-fit:contain;border-radius:var(--radius-sm);
+  margin-bottom:.75rem;
+}
+.feature-card .feature-card-img + .feature-icon{display:none}
+.feature-card .feature-card-img[style*="none"] + .feature-icon{display:block}
+
+@media(max-width:768px){
+  .how-it-works{grid-template-columns:1fr;gap:2rem}
+  .how-title{font-size:1.5rem}
+  .how-right{order:-1}
+  .phone-mockup{width:200px;height:410px;border-radius:32px;padding:10px}
+  .phone-screen{border-radius:23px}
+  .phone-island{width:80px;height:22px;top:15px;border-radius:14px}
+  .phone-fallback{padding:2.4rem .6rem .6rem}
+}
+@media(max-width:480px){
+  .phone-mockup{width:170px;height:350px;border-radius:26px;padding:8px}
+  .phone-screen{border-radius:18px}
+  .phone-island{width:70px;height:20px;top:12px;border-radius:12px}
+  .phone-fallback{padding:2rem .5rem .5rem}
+  .phone-card{padding:.35rem .45rem}
+  .phone-card > span:first-child{width:28px;height:28px;font-size:.8rem;border-radius:6px}
+  .phone-card strong{font-size:.65rem}
+  .phone-card > div > span{font-size:.55rem}
+}
+
 .btn{
   display:inline-flex;align-items:center;gap:.5rem;
   padding:.6rem 1.25rem;border-radius:var(--radius-sm);

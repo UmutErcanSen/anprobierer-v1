@@ -31,8 +31,8 @@ body{
   font-family:var(--font);
   background:var(--bg);
   background-image:
-    radial-gradient(ellipse at 30% 0, rgba(108,99,255,.07) 0, transparent 60%),
-    radial-gradient(ellipse at 70% 100%, rgba(244,63,94,.05) 0, transparent 50%);
+    radial-gradient(ellipse 800px at 30% 0, rgba(108,99,255,.07) 0, transparent 60%),
+    radial-gradient(ellipse 800px at 70% 100%, rgba(244,63,94,.05) 0, transparent 50%);
   color:var(--text);
   min-height:100vh;
   line-height:1.6;
@@ -44,8 +44,9 @@ header{
   border-bottom:1px solid rgba(255,255,255,.06);
   padding:1rem 1.5rem;
   position:sticky;top:0;z-index:100;
-  backdrop-filter:blur(24px);
-  -webkit-backdrop-filter:blur(24px);
+  backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);
+  will-change:transform;
 }
 .header-inner{
   max-width:1200px;margin:0 auto;
@@ -971,10 +972,8 @@ input:hover,select:hover{border-color:var(--primary)!important}
 }
 
 /* === HEADER SHRINK === */
-header{transition:padding .3s ease,box-shadow .3s ease}
-header.header-compact{padding:.5rem 1.5rem;box-shadow:0 2px 20px rgba(0,0,0,.4)}
-header.header-compact h1{font-size:1.05rem}
-.header-compact .gradient-text{background-size:200% 200%}
+header{transition:box-shadow .3s ease}
+header.header-compact{box-shadow:0 2px 24px rgba(0,0,0,.45)}
 
 /* === FADE-IN ON SCROLL === */
 .reveal{opacity:0;transform:translateY(20px);transition:opacity .5s ease,transform .5s ease}
@@ -991,12 +990,5 @@ header.header-compact h1{font-size:1.05rem}
   .step-label{display:block}
 }
 
-/* Noise overlay */
-body::after{
-  content:'';
-  position:fixed;inset:0;z-index:999999;
-  pointer-events:none;opacity:.025;
-  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  background-repeat:repeat;
-  background-size:256px 256px;
-}
+/* Content-visibility for paint culling */
+.step-section,.card,.feature-highlights,.how-it-works{content-visibility:auto;contain-intrinsic-size:1px 200px}

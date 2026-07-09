@@ -1226,13 +1226,18 @@ document.querySelectorAll('.settings-tab').forEach(tab => {
   });
 });
 
-// Header shrink on scroll
-let headerTimer = null;
+// Header shrink on scroll (RAF-throttled)
+let headerRafPending = false;
 window.addEventListener('scroll', () => {
-  const header = document.querySelector('header');
-  if (!header) return;
-  if (window.scrollY > 50) header.classList.add('header-compact');
-  else header.classList.remove('header-compact');
+  if (headerRafPending) return;
+  headerRafPending = true;
+  requestAnimationFrame(() => {
+    const header = document.querySelector('header');
+    if (header) {
+      header.classList.toggle('header-compact', window.scrollY > 50);
+    }
+    headerRafPending = false;
+  });
 }, { passive: true });
 
 // Reveal animation on scroll (Intersection Observer)

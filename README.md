@@ -14,7 +14,20 @@ cmd /c "npm run dev"
 
 → http://localhost:5173
 
-Im `.env` ist `VITE_DEV_MODE=true` → kein Login nötig, eigener API-Key aus localStorage.
+Im `.env` ist `VITE_DEV_MODE=true` → kein Login nötig.
+
+### API-Key automatisch hinterlegen (optional)
+
+Damit du den Key nicht jedes Mal manuell eintragen musst:
+
+1. Erstelle `src/../.env.local` (wird nicht committed)
+2. Trag deinen Key ein:
+
+```
+VITE_DEV_API_KEY=sk-dein-wirklicher-key
+```
+
+Beim nächsten `cmd /c "npm run dev"` wird der Key automatisch geladen.
 
 ---
 

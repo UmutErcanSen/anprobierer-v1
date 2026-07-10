@@ -156,6 +156,14 @@ const apiKeyInput = $('#apiKeyInput');
 const apiStatusDot = $('#apiStatusDot');
 
 function loadApiKey() {
+  const devKey = import.meta.env.VITE_DEV_API_KEY;
+  if (DEV_MODE && devKey) {
+    apiKeyInput.value = devKey;
+    state.apiKey = devKey;
+    updateApiStatus(true);
+    updateGenerateBtnState();
+    return;
+  }
   const saved = localStorage.getItem('openai_api_key');
   if (saved) {
     apiKeyInput.value = saved;

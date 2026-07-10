@@ -265,7 +265,7 @@ async function handleClothingFiles(files) {
     if (!f.type.startsWith('image/')) continue;
     if (f.size > maxSize) { showToast(`${f.name} ist zu groß (max 20 MB). Übersprungen.`, 'warning'); continue }
     promises.push(convertImageToStandard(f).then(converted => fileToBase64(converted)).then(data => {
-      state.clothingItems.push({ id: generateId(), ...data, type: '', size: '', colors: [], selected: true });
+      state.clothingItems.push({ id: generateId(), ...data, type: '', size: '', colors: [] });
     }));
   }
   if (!promises.length) return;
@@ -330,10 +330,6 @@ function renderClothingPreviews() {
 
   clothingPreviewGrid.innerHTML = state.clothingItems.map(item => `
     <div class="preview-card" data-id="${item.id}">
-      <label class="item-select-checkbox">
-        <input type="checkbox" class="item-gen-checkbox" data-id="${item.id}" ${item.selected !== false ? 'checked' : ''}>
-        <span class="checkbox-label">generieren</span>
-      </label>
       <img src="${base64ToDataUrl(item.base64, item.mimeType)}" alt="${item.name}">
       <div class="info">
         <div class="item-name">${escapeHtml(item.name)}</div>
@@ -348,15 +344,6 @@ function renderClothingPreviews() {
       <button class="remove" data-id="${item.id}">×</button>
     </div>
   `).join('');
-
-  /* Checkbox toggle */
-  clothingPreviewGrid.querySelectorAll('.item-gen-checkbox').forEach(cb => {
-    cb.addEventListener('change', () => {
-      const item = state.clothingItems.find(i => i.id === cb.dataset.id);
-      if (item) item.selected = cb.checked;
-      updateGenSummary();
-    });
-  });
 
   /* Native select change handlers */
   clothingPreviewGrid.querySelectorAll('.type-select').forEach(sel => {
@@ -497,13 +484,13 @@ $('#sizeSelect').addEventListener('change', () => {
 });
 
 function updateGenSummary() {
-  const count = state.clothingItems.length;
+  const totalCount = state.clothingItems.length;
+  const activeCount = state.generationMode === 'single' ? totalCount : 1;
   const mode = state.generationMode === 'single' ? 'Einzeln' : 'Alle zusammen';
-  const est = estimateCost(count, state.generationMode, state.selectedQuality);
+  const est = estimateCost(activeCount, state.generationMode, state.selectedQuality);
   const sizeLabel = IMAGE_SIZES[state.selectedSize] || state.selectedSize;
-  const selectedCount = state.clothingItems.filter(i => i.selected !== false).length;
   const items = [
-    { icon: '📸', label: 'Kleidungsstücke', val: `${selectedCount}/${count} ausgewählt` },
+    { icon: '📸', label: 'Kleidungsstücke', val: `${totalCount}` },
     { icon: '⚙️', label: 'Modus', val: mode },
     { icon: '🌐', label: 'API-Aufrufe', val: est.calls },
     { icon: '📐', label: 'Größe', val: sizeLabel },
@@ -693,10 +680,6 @@ generateBtn.addEventListener('click', async () => {
   if (state.clothingItems.length === 0) { showToast('Keine Kleidungsstücke vorhanden.', 'error'); return }
 
   let items = state.clothingItems;
-  if (state.generationMode === 'single') {
-    items = items.filter(i => i.selected !== false);
-    if (items.length === 0) { showToast('Bitte mindestens ein Kleidungsstück zum Generieren auswählen.', 'warning'); return }
-  }
 
   if (state.generationMode === 'combined' && items.length > 9) {
     showToast('Im kombinierten Modus werden max. 9 Kleidungsstücke unterstützt.', 'warning'); return;

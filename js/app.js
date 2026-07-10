@@ -138,8 +138,6 @@ async function handlePersonFile(file) {
     const data = await fileToBase64(converted);
     state.personPhoto = data;
     renderPersonPreview();
-    const stepsBar = document.getElementById('stepsBar');
-    if (stepsBar) stepsBar.classList.replace('hidden', 'show');
     const middle = document.getElementById('step1MiddleSection');
     if (middle) { middle.classList.remove('hidden-zone'); middle.classList.add('fade-in'); }
     const initView = document.getElementById('step1InitialView');
@@ -205,6 +203,8 @@ $('#step1StartBtn').addEventListener('click', () => {
   document.getElementById('step1StartBtn').disabled = true;
   const tipRow = document.getElementById('photoTipRow');
   if (tipRow) tipRow.style.display = 'block';
+  const stepsBar = document.getElementById('stepsBar');
+  if (stepsBar) stepsBar.classList.replace('hidden', 'show');
 });
 
 $('#step1Next').addEventListener('click', () => {
@@ -1080,6 +1080,17 @@ window.closePhotoGuide = function (e) {
   document.body.style.overflow = '';
 };
 
+window.openClothingGuide = function () {
+  document.getElementById('clothingGuide').classList.add('visible');
+  document.body.style.overflow = 'hidden';
+};
+
+window.closeClothingGuide = function (e) {
+  if (e && e.target !== e.currentTarget) return;
+  document.getElementById('clothingGuide').classList.remove('visible');
+  document.body.style.overflow = '';
+};
+
 let lightboxIdx = 0;
 
 window.openLightbox = function (img, idx) {
@@ -1124,6 +1135,8 @@ document.addEventListener('keydown', e => {
     if (lb.classList.contains('visible')) closeLightbox();
     const pg = document.getElementById('photoGuide');
     if (pg.classList.contains('visible')) closePhotoGuide();
+    const cg = document.getElementById('clothingGuide');
+    if (cg.classList.contains('visible')) closeClothingGuide();
     const sm = document.getElementById('settingsModal');
     if (sm.classList.contains('visible')) closeSettings();
     const um = document.getElementById('userModal');
@@ -1170,6 +1183,8 @@ resetBtn.addEventListener('click', () => {
   if (initView) initView.style.display = '';
   const tipRow = document.getElementById('photoTipRow');
   if (tipRow) tipRow.style.display = 'none';
+  const stepsBar = document.getElementById('stepsBar');
+  if (stepsBar) stepsBar.classList.replace('show', 'hidden');
   const hero = document.getElementById('heroSection');
   if (hero) hero.classList.remove('hero-hidden');
   const startBtn = document.getElementById('step1StartBtn');

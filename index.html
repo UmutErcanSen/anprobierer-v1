@@ -72,7 +72,7 @@
         </div>
         <div class="person-preview" id="personPreview" style="display:none"></div>
         <div class="photo-tip-row" id="photoTipRow" style="display:none;text-align:center;margin-top:.5rem">
-          <button class="btn btn-sm btn-outline" onclick="openPhotoGuide()" style="font-size:.8rem">🛈 Tipps für das perfekte Foto</button>
+          <button class="btn btn-sm btn-outline info-btn" onclick="openPhotoGuide()" style="font-size:.8rem">🛈 Tipps für das perfekte Foto</button>
         </div>
 
         <!-- Sichtbar initial + nach Upload; unsichtbar nach Starten-Klick -->
@@ -124,8 +124,6 @@
             </div>
           </div>
         </div>
-          </div>
-        </div>
       </section>
 
       <section id="step2" class="step-section">
@@ -145,6 +143,9 @@
               accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
               multiple
             />
+          </div>
+          <div class="photo-tip-row" style="text-align:center;margin-top:.5rem">
+            <button class="btn btn-sm btn-outline info-btn" onclick="openClothingGuide()" style="font-size:.8rem">🛈 Tipps für Kleidungsfotos</button>
           </div>
           <div class="preview-grid" id="clothingPreviewGrid"></div>
           <p
@@ -279,6 +280,36 @@
               <li>Unruhiger Hintergrund</li>
               <li>Zu dunkel</li>
               <li>Arme am Körper verdeckt</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="photo-guide-modal" id="clothingGuide" onclick="closeClothingGuide(event)">
+      <div class="photo-guide-content" onclick="event.stopPropagation()">
+        <button class="photo-guide-close" onclick="closeClothingGuide()">&times;</button>
+        <h2>👕 So sollten deine Kleidungsfotos aussehen</h2>
+        <p>Für beste Ergebnisse mit der KI-Anprobe beachte diese Tipps:</p>
+        <div class="guide-images">
+          <div class="guide-image good">
+            <img src="assets/gut.png" alt="Gutes Beispiel">
+            <span class="guide-label">✅ Gutes Beispiel</span>
+            <ul>
+              <li>Einzelnes Kleidungsstück</li>
+              <li>Flach ausgebreitet, glatt</li>
+              <li>Neutraler Hintergrund</li>
+              <li>Gut beleuchtet, nah herangezoomt</li>
+            </ul>
+          </div>
+          <div class="guide-image bad">
+            <img src="assets/schlecht.jpg" alt="Schlechtes Beispiel">
+            <span class="guide-label">❌ Schlechtes Beispiel</span>
+            <ul>
+              <li>Mehrere Teile durcheinander</li>
+              <li>Gefaltet oder zerknittert</li>
+              <li>Unruhiger Hintergrund</li>
+              <li>Zu weit weg oder schlecht beleuchtet</li>
             </ul>
           </div>
         </div>

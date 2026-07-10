@@ -13,6 +13,11 @@ import {
   callChatCompletion, testApiKey, estimateCost,
 } from './api.js';
 
+import { currentUser, userProfile } from './auth.js';
+import { checkGenerationAllowed, incrementGenerationsUsed, saveGeneration } from './firestore.js';
+
+const DEV_MODE = import.meta.env.VITE_DEV_MODE === 'true';
+
 const state = {
   apiKey: '',
   personPhoto: null,
@@ -756,6 +761,13 @@ generateBtn.addEventListener('click', async () => {
     showToast(`Bitte für ${missing.length} Kleidungsstück${missing.length>1?'e':''} Typ und Größe wählen.`, 'warning'); return;
   }
 
+  if (!DEV_MODE) {
+    const allowed = await checkGenerationAllowed(currentUser?.uid);
+    if (!allowed) {
+      showToast('🔒 Limit erreicht. Upgrade dein Abo für mehr Generierungen.', 'error'); return;
+    }
+  }
+
   state.generatedImages = [];
   state.isGenerating = true;
   generationCancelled = false;
@@ -925,6 +937,10 @@ generateBtn.addEventListener('click', async () => {
       renderZipPreview();
       generateAllSaleTexts();
       saveSession();
+      if (!DEV_MODE && currentUser) {
+        incrementGenerationsUsed(currentUser.uid);
+        saveGeneration(currentUser.uid, { mode, quality: state.selectedQuality, itemCount: items.length, notes: state.extraNotes, imageCount: successCount });
+      }
       addHistoryEntry(items.length, mode, successCount, state.extraNotes);
       document.getElementById('step4')?.classList.remove('hidden-zone');
       document.getElementById('step4')?.scrollIntoView({ behavior: 'smooth', block: 'start' });

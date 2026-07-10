@@ -378,31 +378,35 @@
     <div class="user-modal" id="userModal" onclick="if(event.target===this)closeUserModal()">
       <div class="user-content" onclick="event.stopPropagation()">
         <button class="user-close" onclick="closeUserModal()">&times;</button>
-        <h2>👤 Benutzerbereich</h2>
-        <div class="user-placeholder">
-          <div class="user-field">
-            <label>Name</label>
-            <div class="user-field-box">Noch nicht verfügbar</div>
-          </div>
+        <h2>👤 Mein Konto</h2>
+        <div class="user-profile" id="userProfile">
           <div class="user-field">
             <label>E-Mail</label>
-            <div class="user-field-box">Noch nicht verfügbar</div>
+            <div class="user-field-box" id="userEmail">–</div>
           </div>
           <div class="user-field">
-            <label>Plan</label>
+            <label>💰 Abo</label>
             <div class="user-plan-row">
-              <span class="user-plan-badge">Gratis</span>
-              <button class="btn btn-sm btn-outline" disabled>Upgrade → bald</button>
+              <span class="user-plan-badge" id="userPlanBadge">Gratis</span>
             </div>
           </div>
           <div class="user-field">
-            <label>Nutzung (dieser Monat)</label>
+            <label>📊 Verbrauch</label>
             <div class="user-usage-bar-wrap">
-              <div class="user-usage-bar"><div class="user-usage-fill" style="width:25%"></div></div>
-              <span class="user-usage-label">5 / 20 Generierungen</span>
+              <div class="user-usage-bar"><div class="user-usage-fill" id="userUsageBar" style="width:0%"></div></div>
+              <span class="user-usage-label" id="userUsageLabel">0 / 5 Generierungen</span>
             </div>
           </div>
-          <p class="user-hint">Weitere Funktionen folgen mit dem Benutzerkonto.</p>
+          <div class="user-field">
+            <label>📋 Meine Anzeigen</label>
+            <div class="user-history-list" id="userHistoryList">
+              <div class="user-history-empty">Lade...</div>
+            </div>
+          </div>
+          <button class="btn btn-sm btn-outline user-logout-btn" id="userLogoutBtn">🚪 Ausloggen</button>
+        </div>
+        <div class="user-placeholder" id="userPlaceholder" style="display:none">
+          <p class="user-hint">Bitte einloggen</p>
         </div>
       </div>
     </div>

@@ -7,10 +7,12 @@ import {
   signOut,
 } from 'firebase/auth';
 import { auth } from './firebase.js';
+import { createUserProfile, getUserProfile } from './firestore.js';
 
 const DEV_MODE = import.meta.env.VITE_DEV_MODE === 'true';
 
 export let currentUser = null;
+export let userProfile = null;
 
 const authListeners = [];
 
@@ -18,8 +20,32 @@ export function onAuthChange(fn) {
   authListeners.push(fn);
 }
 
-function notifyListeners(user) {
-  authListeners.forEach(fn => fn(user));
+function notifyListeners(user, profile) {
+  authListeners.forEach(fn => fn(user, profile));
+}
+
+async function onUserLoggedIn(user) {
+  currentUser = user;
+  userProfile = await getUserProfile(user.uid);
+  if (!userProfile) {
+    await createUserProfile(user.uid, user.email, user.displayName);
+    userProfile = await getUserProfile(user.uid);
+  }
+  notifyListeners(user, userProfile);
+}
+
+function onUserLoggedOut() {
+  currentUser = null;
+  userProfile = null;
+  notifyListeners(null, null);
+}
+
+export async function refreshUserProfile() {
+  if (currentUser) {
+    userProfile = await getUserProfile(currentUser.uid);
+    notifyListeners(currentUser, userProfile);
+  }
+  return userProfile;
 }
 
 export function initAuthGuard() {
@@ -37,16 +63,16 @@ export function initAuthGuard() {
     return;
   }
 
-  onAuthStateChanged(auth, user => {
-    currentUser = user;
+  onAuthStateChanged(auth, async user => {
     if (user) {
+      await onUserLoggedIn(user);
       appContainer.classList.remove('auth-hidden');
       loginOverlay.style.display = 'none';
     } else {
+      onUserLoggedOut();
       appContainer.classList.add('auth-hidden');
       loginOverlay.style.display = 'flex';
     }
-    notifyListeners(user);
   });
 }
 

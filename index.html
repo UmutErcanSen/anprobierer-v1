@@ -28,31 +28,8 @@
     </header>
 
     <div class="container">
-      <div class="steps-bar hidden" id="stepsBar">
-        <div class="step-progress">
-          <div class="step-node active" data-step="1">
-            <div class="step-circle"><span>1</span></div>
-            <span class="step-label">Foto</span>
-          </div>
-          <div class="step-connector"></div>
-          <div class="step-node" data-step="2">
-            <div class="step-circle"><span>2</span></div>
-            <span class="step-label">Kleidung</span>
-          </div>
-          <div class="step-connector"></div>
-          <div class="step-node" data-step="3">
-            <div class="step-circle"><span>3</span></div>
-            <span class="step-label">Generieren</span>
-          </div>
-          <div class="step-connector"></div>
-          <div class="step-node" data-step="4">
-            <div class="step-circle"><span>4</span></div>
-            <span class="step-label">Ergebnisse</span>
-          </div>
-        </div>
-      </div>
 
-      <section id="step1" class="step-section visible">
+      <section id="step1" class="step-section">
         <!-- Zustand 1: Hero + Starten -->
         <div class="hero-section" id="heroSection">
           <div class="hero-label">Virtual Try On</div>
@@ -77,10 +54,7 @@
 
         <!-- Sichtbar initial + nach Upload; unsichtbar nach Starten-Klick -->
         <div id="step1MiddleSection">
-          <div class="step-nav" style="margin-top:0">
-            <span></span>
-            <button class="btn btn-primary" id="step1Next" style="display:none">Weiter →</button>
-          </div>
+
           <!-- Initial view (before upload) -->
           <div id="step1InitialView">
             <div class="how-it-works reveal">
@@ -159,10 +133,6 @@
             Noch keine Kleidungsstücke hinzugefügt.
           </p>
         </div>
-        <div class="step-nav">
-          <button class="btn btn-outline" id="step2Back">← Zurück</button>
-          <button class="btn btn-primary" id="step2Next">Weiter →</button>
-        </div>
       </section>
 
       <section id="step3" class="step-section">
@@ -218,10 +188,6 @@
             <div class="log-area" id="logArea"></div>
           </div>
         </div>
-        <div class="step-nav">
-          <button class="btn btn-outline" id="step3Back">← Zurück</button>
-          <span></span>
-        </div>
       </section>
 
       <section id="step4" class="step-section">
@@ -229,7 +195,7 @@
           <h2>🖼️ Ergebnisse & Download</h2>
           <p>Deine generierten Anprobebilder mit Verkaufstexten. Lade alles als ZIP herunter oder speichere einzelne Bilder.</p>
           <div class="results-grid" id="resultsGrid"></div>
-          <p id="noResultsHint" style="color:var(--text-3);font-size:.85rem;margin-top:.75rem;display:none">Noch keine Bilder generiert.</p>
+          <p id="noResultsHint" style="color:var(--text-3);font-size:.85rem;margin-top:.75rem">Noch keine Bilder generiert.</p>
           <div class="download-section">
             <div class="download-row">
               <div style="flex:1;min-width:200px">
@@ -243,10 +209,6 @@
             </div>
             <div id="zipPreview" style="margin-top:.75rem;font-size:.85rem;color:var(--text-2)"></div>
           </div>
-        </div>
-        <div class="step-nav">
-          <button class="btn btn-outline" id="step4Back">← Zurück</button>
-          <span></span>
         </div>
       </section>
     </div>

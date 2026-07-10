@@ -4,7 +4,6 @@ const state = {
   clothingItems: [],
   generationMode: 'single',
   generatedImages: [],
-  currentStep: 1,
   generationDone: false,
   isGenerating: false,
   selectedQuality: 'medium',
@@ -23,7 +22,6 @@ function saveSession() {
       generationDone: state.generationDone,
       selectedQuality: state.selectedQuality,
       selectedSize: state.selectedSize,
-      currentStep: state.currentStep,
     };
     localStorage.setItem(SESSION_KEY, JSON.stringify(data));
   } catch (e) {
@@ -38,39 +36,66 @@ function loadSession() {
     const raw = localStorage.getItem(SESSION_KEY);
     if (!raw) return;
     const data = JSON.parse(raw);
+
+    // restore person photo
     if (data.personPhoto) {
       state.personPhoto = data.personPhoto;
+      const dz = document.getElementById('personDropZone');
+      if (dz) dz.classList.remove('hidden-zone');
       renderPersonPreview();
-      const stepsBar = document.getElementById('stepsBar');
-      if (stepsBar) stepsBar.classList.replace('hidden', 'show');
+      const hero = document.getElementById('heroSection');
+      if (hero) hero.classList.add('hero-hidden');
       const middle = document.getElementById('step1MiddleSection');
       if (middle) { middle.classList.remove('hidden-zone'); middle.classList.add('fade-in'); }
       const initView = document.getElementById('step1InitialView');
       if (initView) initView.style.display = 'none';
-      const nextBtn = document.getElementById('step1Next');
-      if (nextBtn) nextBtn.style.display = 'inline-flex';
+      const startBtn = document.getElementById('step1StartBtn');
+      if (startBtn) startBtn.disabled = true;
+      const tipRow = document.getElementById('photoTipRow');
+      if (tipRow) tipRow.style.display = 'block';
     }
+
+    // restore clothing items
     if (data.clothingItems && data.clothingItems.length > 0) {
       state.clothingItems = data.clothingItems;
       renderClothingPreviews();
     }
-    if (data.generationMode) state.generationMode = data.generationMode;
+
+    // restore mode, quality, size
+    if (data.generationMode) {
+      state.generationMode = data.generationMode;
+      const single = document.getElementById('modeSingle');
+      const combined = document.getElementById('modeCombined');
+      if (data.generationMode === 'combined') {
+        single?.classList.remove('selected');
+        combined?.classList.add('selected');
+      } else {
+        single?.classList.add('selected');
+        combined?.classList.remove('selected');
+      }
+    }
+    if (data.selectedQuality) state.selectedQuality = data.selectedQuality;
+    if (data.selectedSize) state.selectedSize = data.selectedSize;
+    const qs = document.getElementById('qualitySelect');
+    if (qs) qs.value = state.selectedQuality;
+    const ss = document.getElementById('sizeSelect');
+    if (ss) ss.value = state.selectedSize;
+
+    // restore generated images
     if (data.generatedImages && data.generatedImages.length > 0) {
       state.generatedImages = data.generatedImages;
     }
     if (data.generationDone !== undefined) state.generationDone = data.generationDone;
-    if (data.selectedQuality) state.selectedQuality = data.selectedQuality;
-    if (data.selectedSize) state.selectedSize = data.selectedSize;
-    if (data.currentStep) {
-      state.currentStep = data.currentStep;
-    }
     if (data.generatedImages && data.generatedImages.length > 0) {
       renderResults();
       renderZipPreview();
     }
-    if (data.currentStep && data.currentStep > 1) {
-      goToStep(data.currentStep);
+
+    // update gen summary if clothing exists
+    if (state.clothingItems.length > 0) {
+      updateGenSummary();
     }
+
     showToast('💾 Session wiederhergestellt', 'info');
   } catch (_) {}
 }
@@ -147,48 +172,7 @@ window.testApiKey = async function () {
   }
 };
 
-// ============ STEP NAVIGATION ============
-
-function goToStep(n) {
-  const prev = state.currentStep;
-  state.currentStep = n;
-
-  const currentSec = document.getElementById(`step${prev}`);
-  const nextSec = document.getElementById(`step${n}`);
-
-  if (currentSec && currentSec !== nextSec) {
-    currentSec.classList.remove('visible');
-    currentSec.classList.add(n > prev ? 'exit-left' : 'exit-right');
-    setTimeout(() => currentSec.classList.remove('exit-left', 'exit-right'), 350);
-  }
-
-  if (nextSec) {
-    nextSec.classList.remove('visible');
-    nextSec.classList.add(n > prev ? 'enter-right' : 'enter-left');
-    nextSec.classList.add('visible');
-    setTimeout(() => nextSec.classList.remove('enter-right', 'enter-left'), 350);
-  }
-
-  $$('.step-node').forEach(t => {
-    t.classList.remove('active');
-    const sn = parseInt(t.dataset.step, 10);
-    if (sn === n) t.classList.add('active');
-    else if (sn < n) t.classList.add('done');
-    else t.classList.remove('done');
-  });
-
-  $$('.step-connector').forEach(c => {
-    const prevNode = c.previousElementSibling;
-    if (prevNode) {
-      const sn = parseInt(prevNode.dataset.step, 10);
-      c.classList.toggle('done', sn < n);
-    }
-  });
-
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-// ============ STEP 1: PERSON PHOTO ============
+// ============ PERSON PHOTO ============
 
 const personDropZone = $('#personDropZone');
 const personFileInput = $('#personFileInput');
@@ -210,8 +194,6 @@ async function handlePersonFile(file) {
     if (middle) { middle.classList.remove('hidden-zone'); middle.classList.add('fade-in'); }
     const initView = document.getElementById('step1InitialView');
     if (initView) initView.style.display = 'none';
-    const nextBtn = document.getElementById('step1Next');
-    if (nextBtn) nextBtn.style.display = 'inline-flex';
     saveSession();
     showToast('Personenfoto erfolgreich geladen', 'success');
   } catch (err) {
@@ -237,16 +219,10 @@ function renderPersonPreview() {
     personPreview.style.display = 'none';
     personDropZone.classList.remove('has-file');
     personFileInput.value = '';
-    const stepsBar = document.getElementById('stepsBar');
-    if (stepsBar) stepsBar.classList.replace('show', 'hidden');
     const middle = document.getElementById('step1MiddleSection');
     if (middle) middle.classList.add('hidden-zone');
     const initView = document.getElementById('step1InitialView');
     if (initView) initView.style.display = '';
-    const nextBtn = document.getElementById('step1Next');
-    if (nextBtn) nextBtn.style.display = 'none';
-    const tipRow = document.getElementById('photoTipRow');
-    if (tipRow) tipRow.style.display = 'none';
     saveSession();
   });
 }
@@ -273,17 +249,9 @@ $('#step1StartBtn').addEventListener('click', () => {
   document.getElementById('step1StartBtn').disabled = true;
   const tipRow = document.getElementById('photoTipRow');
   if (tipRow) tipRow.style.display = 'block';
-  const stepsBar = document.getElementById('stepsBar');
-  if (stepsBar) stepsBar.classList.replace('hidden', 'show');
 });
 
-$('#step1Next').addEventListener('click', () => {
-  if (!state.personPhoto) { showToast('Bitte zuerst ein Personenfoto hochladen.', 'warning'); return }
-  if (!state.apiKey || !validateApiKey(state.apiKey)) { showToast('Bitte gültigen OpenAI API-Key eingeben.', 'warning'); return }
-  goToStep(2);
-});
-
-// ============ STEP 2: CLOTHING ITEMS ============
+// ============ CLOTHING ITEMS ============
 
 const clothingDropZone = $('#clothingDropZone');
 const clothingFileInput = $('#clothingFileInput');
@@ -304,6 +272,7 @@ async function handleClothingFiles(files) {
   try {
     await Promise.all(promises);
     renderClothingPreviews();
+    updateGenSummary();
     const count = state.clothingItems.length;
     clothingDropZone.querySelector('.upload-count')?.remove();
     const badge = document.createElement('div');
@@ -385,6 +354,7 @@ function renderClothingPreviews() {
     cb.addEventListener('change', () => {
       const item = state.clothingItems.find(i => i.id === cb.dataset.id);
       if (item) item.selected = cb.checked;
+      updateGenSummary();
     });
   });
 
@@ -478,10 +448,11 @@ function renderClothingPreviews() {
     btn.addEventListener('click', e => {
       e.stopPropagation();
       state.clothingItems = state.clothingItems.filter(i => i.id !== btn.dataset.id);
-      if (state.generationDone && state.currentStep === 4) {
+      if (state.generationDone) {
         state.generationDone = false;
       }
       renderClothingPreviews();
+      updateGenSummary();
       saveSession();
     });
   });
@@ -499,13 +470,7 @@ clothingFileInput.addEventListener('change', () => {
   clothingFileInput.value = '';
 });
 
-$('#step2Back').addEventListener('click', () => goToStep(1));
-$('#step2Next').addEventListener('click', () => {
-  if (state.clothingItems.length === 0) { showToast('Bitte mindestens ein Kleidungsstück hochladen.', 'warning'); return }
-  goToStep(3);
-});
-
-// ============ STEP 3: MODE & GENERATE ============
+// ============ MODE & GENERATE ============
 
 $('#modeSingle').addEventListener('click', () => {
   state.generationMode = 'single';
@@ -519,8 +484,6 @@ $('#modeCombined').addEventListener('click', () => {
   $('#modeSingle').classList.remove('selected');
   saveSession();
 });
-
-$('#step3Back').addEventListener('click', () => goToStep(2));
 
 $('#qualitySelect').addEventListener('change', () => {
   state.selectedQuality = $('#qualitySelect').value;
@@ -553,7 +516,7 @@ function updateGenSummary() {
   costEl.innerHTML = `<strong>💰 Geschätzte Kosten:</strong> ${est.calls} × $${est.perImage} = <strong>~$${est.total.toFixed(3)}</strong> (Qualität: ${QUALITY_PRICES[state.selectedQuality]?.label || 'Mittel'})<br><span style="font-size:.75rem;color:var(--text-3)">OpenAI hat keinen Free Tier. Dir wird der Betrag von deinem Guthaben abgezogen.</span>`;
 }
 
-// ============ STEP 4: GENERATE ============
+// ============ GENERATE ============
 
 const generateBtn = $('#generateBtn');
 const progressWrap = $('#progressWrap');
@@ -714,9 +677,10 @@ function cancelGeneration() {
   document.getElementById('cancelGenBtn')?.remove();
   if (state.generatedImages.length > 0) {
     state.generationDone = true;
+    saveSession();
     renderResults();
-    goToStep(4);
     renderZipPreview();
+    document.getElementById('step4')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 }
 
@@ -908,11 +872,11 @@ generateBtn.addEventListener('click', async () => {
     if (successCount > 0) {
       state.generationDone = true;
       renderResults();
-      goToStep(4);
       renderZipPreview();
       generateAllSaleTexts();
       saveSession();
       addHistoryEntry(items.length, mode, successCount);
+      document.getElementById('step4')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       showToast(`${successCount} von ${totalCalls} Bild${totalCalls > 1 ? 'ern' : ''} erfolgreich`, successCount === totalCalls ? 'success' : 'warning');
     }
     if (failCount > 0) {
@@ -929,14 +893,14 @@ generateBtn.addEventListener('click', async () => {
   }
 });
 
-$('#step4Back').addEventListener('click', () => goToStep(3));
-
-// ============ STEP 4: RESULTS + SALE TEXT ============
+// ============ RESULTS + SALE TEXT ============
 
 const resultsGrid = $('#resultsGrid');
 
 function renderResults() {
-  if (state.generatedImages.length === 0) return;
+  const hint = document.getElementById('noResultsHint');
+  if (state.generatedImages.length === 0) { if (hint) hint.style.display = 'block'; return }
+  if (hint) hint.style.display = 'none';
   resultsGrid.innerHTML = state.generatedImages.map((img, idx) => `
     <div class="result-card" data-idx="${idx}">
       <div class="result-card-header">
@@ -1311,7 +1275,6 @@ resetBtn.addEventListener('click', () => {
   state.clothingItems = [];
   state.generatedImages = [];
   state.generationDone = false;
-  state.currentStep = 1;
   state.isGenerating = false;
   state.generationMode = 'single';
 
@@ -1323,8 +1286,6 @@ resetBtn.addEventListener('click', () => {
   if (initView) initView.style.display = '';
   const tipRow = document.getElementById('photoTipRow');
   if (tipRow) tipRow.style.display = 'none';
-  const stepsBar = document.getElementById('stepsBar');
-  if (stepsBar) stepsBar.classList.replace('show', 'hidden');
   const hero = document.getElementById('heroSection');
   if (hero) hero.classList.remove('hero-hidden');
   const startBtn = document.getElementById('step1StartBtn');
@@ -1332,6 +1293,8 @@ resetBtn.addEventListener('click', () => {
   clothingPreviewGrid.innerHTML = '';
   noClothingHint.style.display = 'block';
   resultsGrid.innerHTML = '';
+  const noResultsHint = document.getElementById('noResultsHint');
+  if (noResultsHint) noResultsHint.style.display = 'block';
   logArea.classList.remove('visible');
   logArea.innerHTML = '';
   Object.keys(progressTimers).forEach(k => stopItemProgress(k));
@@ -1347,7 +1310,7 @@ resetBtn.addEventListener('click', () => {
   personFileInput.value = '';
   clothingFileInput.value = '';
   clearSession();
-  goToStep(1);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
   showToast('Session zurückgesetzt', 'info');
 });
 

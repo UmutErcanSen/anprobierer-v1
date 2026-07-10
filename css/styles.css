@@ -64,55 +64,7 @@ header h1 span{color:var(--primary)}
 
 .container{max-width:1200px;margin:0 auto;padding:1.5rem}
 
-/* Progress bar */
-.step-progress{
-  display:flex;align-items:flex-start;gap:0;
-  margin-bottom:2rem;width:100%;
-}
-.step-node{
-  display:flex;flex-direction:column;align-items:center;
-  flex:1;cursor:pointer;position:relative;
-  user-select:none;
-}
-.step-node:not(.active):not(.done){cursor:default}
-.step-circle{
-  width:32px;height:32px;border-radius:50%;
-  display:flex;align-items:center;justify-content:center;
-  background:var(--surface-2);border:2px solid var(--surface-3);
-  color:var(--text-3);font-size:.75rem;font-weight:700;
-  transition:all .3s ease;position:relative;z-index:2;
-  flex-shrink:0;
-}
-.step-node.active .step-circle{
-  background:var(--primary);border-color:var(--primary);
-  color:#fff;box-shadow:0 0 0 4px var(--primary-dim),0 0 20px rgba(108,99,255,.3);
-}
-.step-node.done .step-circle{
-  background:var(--success);border-color:var(--success);
-  color:#fff;
-}
-.step-node.done .step-circle::after{
-  content:'✓';font-size:.85rem;font-weight:700;
-}
-.step-node.done .step-circle span{display:none}
-.step-label{
-  font-size:.65rem;font-weight:600;color:var(--text-3);
-  margin-top:.35rem;text-align:center;transition:color .3s;
-  line-height:1.2;
-}
-.step-node.active .step-label{color:var(--primary)}
-.step-node.done .step-label{color:var(--success)}
-.step-connector{
-  flex:0 0 1.5rem;height:2px;
-  background:var(--surface-3);margin-top:15px;
-  transition:background .3s ease;position:relative;z-index:1;
-}
-.step-connector.done{background:var(--success)}
-@media(max-width:640px){
-  .step-circle{width:28px;height:28px;font-size:.7rem}
-  .step-label{font-size:.6rem}
-  .step-connector{flex:0 0 .75rem;margin-top:13px}
-}
+
 
 .card{
   background:var(--surface);
@@ -498,11 +450,10 @@ header h1 span{color:var(--primary)}
 .toast .toast-close{background:none;border:none;color:var(--text-3);cursor:pointer;font-size:1.1rem;padding:0 0 0 .5rem}
 @keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
 
-.step-section{display:none;animation:fadeIn .35s ease;width:100%}
-.step-section.visible{display:block}
+.step-section{display:block;width:100%;margin-bottom:1.5rem;contain:layout style paint}
 @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 
-.step-nav{display:flex;justify-content:space-between;margin-top:1.5rem;gap:.75rem;flex-wrap:wrap}
+
 
 .person-preview{max-width:200px;margin:.75rem 0;border-radius:var(--radius-sm);overflow:hidden}
 .person-preview img{width:100%;height:auto;display:block}
@@ -830,26 +781,7 @@ footer{text-align:center;padding:2rem;color:var(--text-3);font-size:.8rem;border
   .btn-gradient{padding:clamp(.7rem,3vw,.9rem) clamp(1.5rem,6vw,2.2rem);font-size:clamp(.85rem,3.5vw,1rem)}
 }
 
-/* Steps bar hidden/show */
-.steps-bar{display:flex;margin-bottom:2rem}
-.steps-bar.hidden{display:none}
-.steps-bar.show{
-  display:flex;animation:slideDown .4s ease;
-}
-@keyframes slideDown{
-  from{opacity:0;transform:translateY(-10px)}
-  to{opacity:1;transform:translateY(0)}
-}
 
-/* === STEP TRANSITIONS === */
-.step-section.exit-left{animation:slideOutLeft .3s ease forwards}
-.step-section.exit-right{animation:slideOutRight .3s ease forwards}
-.step-section.enter-right{animation:slideInRight .35s ease forwards}
-.step-section.enter-left{animation:slideInLeft .35s ease forwards}
-@keyframes slideOutLeft{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(-30px)}}
-@keyframes slideOutRight{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(30px)}}
-@keyframes slideInRight{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:translateX(0)}}
-@keyframes slideInLeft{from{opacity:0;transform:translateX(-30px)}to{opacity:1;transform:translateX(0)}}
 
 /* === CARD HOVER GLOW === */
 .card{transition:box-shadow .3s ease,border-color .3s ease}
@@ -987,14 +919,8 @@ header.header-compact{box-shadow:0 2px 24px rgba(0,0,0,.45)}
 .empty-state .empty-title{font-size:.95rem;font-weight:600;color:var(--text-3)}
 .empty-state .empty-desc{font-size:.82rem;color:var(--text-3);max-width:300px;line-height:1.5}
 
-/* === RESPONSIVE STEP LABEL SHOW === */
-@media(min-width:641px){
-  .step-label{display:block}
-}
-
 /* Content-visibility for paint culling */
 .card,.feature-highlights,.how-it-works{content-visibility:auto;contain-intrinsic-size:1px 200px}
-.step-section{contain:layout style paint}
 
 /* === AFTER UPLOAD SUCCESS === */
 

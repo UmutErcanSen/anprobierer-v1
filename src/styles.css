@@ -996,8 +996,7 @@ header.header-compact{box-shadow:0 2px 24px rgba(0,0,0,.45)}
 .gen-btn-icon--left{animation-delay:0s}
 .gen-btn-icon--right{animation-delay:1.2s}
 @keyframes gen-icon-breathe{0%,100%{transform:scale(1) rotate(0deg);opacity:.6}50%{transform:scale(1.3) rotate(25deg);opacity:1}}
-.gen-btn .gradient-text{background:linear-gradient(135deg,#fff,#e0d7ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.gen-btn:disabled .gradient-text{background:linear-gradient(135deg,rgba(255,255,255,.5),rgba(224,215,255,.4));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+
 
 /* === TOOLTIP === */
 [title]:not(.no-tip){position:relative;cursor:pointer}

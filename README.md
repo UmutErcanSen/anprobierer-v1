@@ -6,8 +6,10 @@ KI-gestützte Anprobebilder für Vinted-Anzeigen.
 
 ## 🚀 Lokal entwickeln
 
+PowerShell blockiert `.ps1`-Skripte. Darum immer **`cmd /c`** vor jedem Befehl:
+
 ```bash
-npm run dev
+cmd /c "npm run dev"
 ```
 
 → http://localhost:5173
@@ -41,9 +43,8 @@ Live unter: https://virtual-try-on-6d197.web.app
 ## 💾 Code sichern (optional)
 
 ```bash
-git add -A
-git commit -m "Was geändert wurde"
-git push
+git add -A && git commit -m "Was geändert wurde"
+cmd /c "git push"
 ```
 
 ---
@@ -87,7 +88,7 @@ firebase.json        Firebase Hosting Config
 
 | Befehl | Beschreibung |
 |--------|-------------|
-| `npm run dev` | Lokaler Dev-Server |
-| `npm run build` | Nur bauen (ohne deploy) |
-| `npm run preview` | Gebaute `dist/` lokal testen |
+| `cmd /c "npm run dev"` | Lokaler Dev-Server |
+| `cmd /c "npm run build"` | Nur bauen (ohne deploy) |
+| `cmd /c "npm run preview"` | Gebaute `dist/` lokal testen |
 | `cmd /c "npm run deploy"` | Bauen + live schalten |

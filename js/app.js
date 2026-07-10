@@ -59,6 +59,7 @@ function loadSession() {
     if (data.clothingItems && data.clothingItems.length > 0) {
       state.clothingItems = data.clothingItems;
       renderClothingPreviews();
+      updateClothingBadge();
     }
 
     // restore mode, quality, size
@@ -102,6 +103,24 @@ function loadSession() {
 
 function clearSession() {
   localStorage.removeItem(SESSION_KEY);
+}
+
+function updateClothingBadge() {
+  const existing = clothingDropZone.querySelector('.upload-count');
+  if (state.clothingItems.length === 0) {
+    existing?.remove();
+    return;
+  }
+  if (!existing) {
+    const badge = document.createElement('div');
+    badge.className = 'upload-count';
+    clothingDropZone.after(badge);
+  }
+  const badge = clothingDropZone.nextElementSibling;
+  if (badge?.className === 'upload-count') {
+    const count = state.clothingItems.length;
+    badge.textContent = `${count} Kleidungsstück${count > 1 ? 'e' : ''} hochgeladen`;
+  }
 }
 
 // ============ API KEY ============
@@ -273,12 +292,7 @@ async function handleClothingFiles(files) {
     await Promise.all(promises);
     renderClothingPreviews();
     updateGenSummary();
-    const count = state.clothingItems.length;
-    clothingDropZone.querySelector('.upload-count')?.remove();
-    const badge = document.createElement('div');
-    badge.className = 'upload-count';
-    badge.textContent = `${count} Kleidungsstück${count > 1 ? 'e' : ''} hochgeladen`;
-    clothingDropZone.after(badge);
+    updateClothingBadge();
     saveSession();
     showToast(`${promises.length} Kleidungsstück${promises.length > 1 ? 'e' : ''} hinzugefügt`, 'success');
   } catch (err) {
@@ -440,6 +454,7 @@ function renderClothingPreviews() {
       }
       renderClothingPreviews();
       updateGenSummary();
+      updateClothingBadge();
       saveSession();
     });
   });
@@ -1277,6 +1292,7 @@ resetBtn.addEventListener('click', () => {
   if (startBtn) startBtn.disabled = false;
   clothingPreviewGrid.innerHTML = '';
   noClothingHint.style.display = 'block';
+  updateClothingBadge();
   resultsGrid.innerHTML = '';
   const noResultsHint = document.getElementById('noResultsHint');
   if (noResultsHint) noResultsHint.style.display = 'block';

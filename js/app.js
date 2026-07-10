@@ -463,12 +463,14 @@ $('#modeSingle').addEventListener('click', () => {
   state.generationMode = 'single';
   $('#modeSingle').classList.add('selected');
   $('#modeCombined').classList.remove('selected');
+  updateGenSummary();
   saveSession();
 });
 $('#modeCombined').addEventListener('click', () => {
   state.generationMode = 'combined';
   $('#modeCombined').classList.add('selected');
   $('#modeSingle').classList.remove('selected');
+  updateGenSummary();
   saveSession();
 });
 
@@ -485,7 +487,7 @@ $('#sizeSelect').addEventListener('change', () => {
 
 function updateGenSummary() {
   const totalCount = state.clothingItems.length;
-  const activeCount = state.generationMode === 'single' ? totalCount : 1;
+  const activeCount = totalCount === 0 ? 0 : state.generationMode === 'single' ? totalCount : 1;
   const mode = state.generationMode === 'single' ? 'Einzeln' : 'Alle zusammen';
   const est = estimateCost(activeCount, state.generationMode, state.selectedQuality);
   const sizeLabel = IMAGE_SIZES[state.selectedSize] || state.selectedSize;

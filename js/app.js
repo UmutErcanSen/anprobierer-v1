@@ -1506,10 +1506,5 @@ document.addEventListener('keydown', e => {
   }
 });
 
-// Auto-test API key on load if present
-if (state.apiKey) {
-  setTimeout(() => testApiKey(), 1000);
-}
-
 console.log('✦ Virtual Try-On App (OpenAI) geladen');
 console.log(`API-Key ${state.apiKey ? '✓ vorhanden' : '✗ fehlt'}`);

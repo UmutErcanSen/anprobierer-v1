@@ -960,7 +960,7 @@ header.header-compact{box-shadow:0 2px 24px rgba(0,0,0,.45)}
 .upload-count{display:inline-flex;align-items:center;gap:.35rem;padding:.35rem .75rem;background:var(--primary-dim);color:var(--primary);border-radius:999px;font-size:.8rem;font-weight:600;margin-top:.5rem;animation:fadeIn .3s ease}
 
 /* === GEN BUTTON FULL WIDTH === */
-.gen-btn{background:rgba(26,26,46,.85);width:100%;padding:1rem!important;font-size:1.1rem!important;border-radius:var(--radius)!important;position:relative;overflow:hidden;border:none;font-weight:700;cursor:pointer;transition:all .3s ease;box-shadow:0 4px 24px rgba(108,99,255,.25)}
+.gen-btn{background:rgba(26,26,46,.85);min-width:320px;max-width:100%;padding:1rem 2rem!important;font-size:1.1rem!important;border-radius:var(--radius)!important;position:relative;overflow:hidden;border:none;font-weight:700;cursor:pointer;transition:all .3s ease;box-shadow:0 4px 24px rgba(108,99,255,.25)}
 .gen-btn:hover{filter:brightness(1.1);transform:translateY(-2px);box-shadow:0 4px 28px rgba(108,99,255,.4)}
 .gen-btn:active{transform:scale(.97)}
 .gen-btn:disabled{opacity:.4;cursor:not-allowed;transform:none;filter:none;box-shadow:none}

@@ -57,6 +57,7 @@ function loadSession() {
       if (tipRow) tipRow.style.display = 'block';
       const stepHeader = document.getElementById('step1Header');
       if (stepHeader) stepHeader.classList.remove('hidden-zone');
+      ['step2','step3','step4'].forEach(id => document.getElementById(id)?.classList.remove('hidden-zone'));
     }
 
     // restore clothing items
@@ -273,6 +274,7 @@ $('#step1StartBtn').addEventListener('click', () => {
   document.getElementById('step1StartBtn').disabled = true;
   const tipRow = document.getElementById('photoTipRow');
   if (tipRow) tipRow.style.display = 'block';
+  ['step2','step3','step4'].forEach(id => document.getElementById(id)?.classList.remove('hidden-zone'));
 });
 
 // ============ CLOTHING ITEMS ============
@@ -1301,6 +1303,7 @@ resetBtn.addEventListener('click', () => {
   const hero = document.getElementById('heroSection');
   if (hero) hero.classList.remove('hero-hidden');
   document.getElementById('step1Header')?.classList.add('hidden-zone');
+  ['step2','step3','step4'].forEach(id => document.getElementById(id)?.classList.add('hidden-zone'));
   const startBtn = document.getElementById('step1StartBtn');
   if (startBtn) startBtn.disabled = false;
   clothingPreviewGrid.innerHTML = '';

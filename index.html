@@ -107,13 +107,15 @@
         </div>
       </section>
 
-      <section id="step2" class="step-section">
+      <section id="step2" class="step-section hidden-zone">
         <div class="card">
-          <h2>2. 👕 Kleidungsstücke hochladen</h2>
-          <p>
-            Lade die Kleidungsstücke hoch, die anprobiert werden sollen. Wähle
-            für jedes den Typ aus.
-          </p>
+          <div class="step-header">
+            <span class="step-number">2</span>
+            <div>
+              <h2>👕 Kleidungsstücke hochladen</h2>
+              <p>Wähle für jedes Kleidungsstück den Typ aus und lege Details fest</p>
+            </div>
+          </div>
           <div class="upload-zone" id="clothingDropZone">
             <div class="icon">👔</div>
             <strong>Kleidungsfotos hier ablegen oder klicken</strong>
@@ -142,10 +144,15 @@
         </div>
       </section>
 
-      <section id="step3" class="step-section">
+      <section id="step3" class="step-section hidden-zone">
         <div class="card">
-          <h2>3. ⚙️ Modus & Generierung</h2>
-          <p>Wähle den Generierungs-Modus und starte die virtuelle Anprobe.</p>
+          <div class="step-header">
+            <span class="step-number">3</span>
+            <div>
+              <h2>⚙️ Modus & Generierung</h2>
+              <p>Wähle Modus, Qualität und gib optionale Anweisungen für die KI</p>
+            </div>
+          </div>
           <div class="mode-grid">
             <div class="mode-card selected" data-mode="single" id="modeSingle">
               <div class="mode-icon">🪞</div>
@@ -183,12 +190,12 @@
           <div class="gen-info" id="genSummary">
             <div class="gen-info-empty">
               <span class="gen-info-icon">✨</span>
-              <span>Klicke auf <strong>Generieren</strong>, um die virtuelle Anprobe zu starten.</span>
+              <span>Klicke auf <strong>Anzeige erstellen</strong>, um die KI-Generierung zu starten.</span>
             </div>
           </div>
           <div class="cost-estimate" id="costEstimate" style="display: none"></div>
           <div class="gen-action">
-            <button class="btn btn-primary gen-btn" id="generateBtn"><span class="gradient-text">✨ Jetzt generieren</span></button>
+            <button class="btn btn-primary gen-btn" id="generateBtn"><span class="gradient-text">✨ Anzeige erstellen</span></button>
           </div>
           <div class="gen-progress" id="progressWrap" style="display: none">
             <div class="progress-overall" id="progressOverall">Initialisiere...</div>
@@ -201,10 +208,15 @@
         </div>
       </section>
 
-      <section id="step4" class="step-section">
+      <section id="step4" class="step-section hidden-zone">
         <div class="card">
-          <h2>4. 🖼️ Ergebnisse & Download</h2>
-          <p>Deine generierten Anprobebilder mit Verkaufstexten. Lade alles als ZIP herunter oder speichere einzelne Bilder.</p>
+          <div class="step-header">
+            <span class="step-number">4</span>
+            <div>
+              <h2>🖼️ Ergebnisse & Download</h2>
+              <p>Generierte Bilder und Verkaufstexte – einzeln oder als ZIP herunterladen</p>
+            </div>
+          </div>
           <div class="results-grid" id="resultsGrid"></div>
           <p id="noResultsHint" style="color:var(--text-3);font-size:.85rem;margin-top:.75rem">Noch keine Bilder generiert.</p>
           <div class="download-section">

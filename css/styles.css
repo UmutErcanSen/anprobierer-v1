@@ -968,6 +968,10 @@ header.header-compact{box-shadow:0 2px 24px rgba(0,0,0,.45)}
 @keyframes btn-shine{50%{transform:translateX(100%)}100%{transform:translateX(100%)}}
 .gen-btn:not(:disabled){animation:btn-pulse 2s ease-in-out infinite}
 @keyframes btn-pulse{0%,100%{box-shadow:0 4px 24px rgba(108,99,255,.3)}50%{box-shadow:0 4px 32px rgba(108,99,255,.5)}}
+.gen-btn-icon{display:inline-flex;font-size:1.15rem;animation:gen-icon-breathe 2.4s ease-in-out infinite}
+.gen-btn-icon--left{animation-delay:0s}
+.gen-btn-icon--right{animation-delay:1.2s}
+@keyframes gen-icon-breathe{0%,100%{transform:scale(1) rotate(0deg);opacity:.6}50%{transform:scale(1.3) rotate(25deg);opacity:1}}
 
 /* === TOOLTIP === */
 [title]:not(.no-tip){position:relative;cursor:pointer}

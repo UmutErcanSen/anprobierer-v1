@@ -106,21 +106,18 @@ function clearSession() {
 }
 
 function updateClothingBadge() {
-  const existing = clothingDropZone.querySelector('.upload-count');
+  let badge = clothingDropZone.parentElement.querySelector('.upload-count');
   if (state.clothingItems.length === 0) {
-    existing?.remove();
+    badge?.remove();
     return;
   }
-  if (!existing) {
-    const badge = document.createElement('div');
+  if (!badge) {
+    badge = document.createElement('div');
     badge.className = 'upload-count';
     clothingDropZone.after(badge);
   }
-  const badge = clothingDropZone.nextElementSibling;
-  if (badge?.className === 'upload-count') {
-    const count = state.clothingItems.length;
-    badge.textContent = `${count} Kleidungsstück${count > 1 ? 'e' : ''} hochgeladen`;
-  }
+  const count = state.clothingItems.length;
+  badge.textContent = `${count} Kleidungsstück${count > 1 ? 'e' : ''} hochgeladen`;
 }
 
 // ============ API KEY ============

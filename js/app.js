@@ -142,8 +142,9 @@ async function handlePersonFile(file) {
     const middle = document.getElementById('step1MiddleSection');
     middle.classList.remove('hidden-zone');
     middle.classList.add('fade-in');
+    document.getElementById('step1InitialView').style.display = 'none';
+    document.getElementById('step1AfterUpload').style.display = 'block';
     document.getElementById('step1Next').style.display = 'inline-flex';
-    observeReveal();
     showToast('Personenfoto erfolgreich geladen', 'success');
   } catch (err) {
     showToast(err.message, 'error');
@@ -170,6 +171,8 @@ function renderPersonPreview() {
     personFileInput.value = '';
     document.getElementById('stepsBar').classList.replace('show', 'hidden');
     document.getElementById('step1MiddleSection').classList.add('hidden-zone');
+    document.getElementById('step1InitialView').style.display = '';
+    document.getElementById('step1AfterUpload').style.display = 'none';
     document.getElementById('step1Next').style.display = 'none';
   });
 }
@@ -223,6 +226,12 @@ async function handleClothingFiles(files) {
   try {
     await Promise.all(promises);
     renderClothingPreviews();
+    const count = state.clothingItems.length;
+    clothingDropZone.querySelector('.upload-count')?.remove();
+    const badge = document.createElement('div');
+    badge.className = 'upload-count';
+    badge.textContent = `${count} Kleidungsstück${count > 1 ? 'e' : ''} hochgeladen`;
+    clothingDropZone.after(badge);
     showToast(`${promises.length} Kleidungsstück${promises.length > 1 ? 'e' : ''} hinzugefügt`, 'success');
   } catch (err) {
     showToast('Fehler beim Verarbeiten der Bilder.', 'error');
@@ -375,9 +384,8 @@ function renderClothingPreviews() {
     btn.addEventListener('click', e => {
       e.stopPropagation();
       state.clothingItems = state.clothingItems.filter(i => i.id !== btn.dataset.id);
-      if (state.generationDone) {
+      if (state.generationDone && state.currentStep === 4) {
         state.generationDone = false;
-        $('#step4Next').disabled = true;
       }
       renderClothingPreviews();
     });
@@ -402,7 +410,7 @@ $('#step2Next').addEventListener('click', () => {
   goToStep(3);
 });
 
-// ============ STEP 3: MODE ============
+// ============ STEP 3: MODE & GENERATE ============
 
 $('#modeSingle').addEventListener('click', () => {
   state.generationMode = 'single';
@@ -416,19 +424,6 @@ $('#modeCombined').addEventListener('click', () => {
 });
 
 $('#step3Back').addEventListener('click', () => goToStep(2));
-$('#step3Next').addEventListener('click', () => {
-  if (state.generationMode === 'combined' && state.clothingItems.length > 9) {
-    showToast('Im kombinierten Modus werden max. 9 Kleidungsstücke unterstützt.', 'warning');
-    return;
-  }
-  const missing = state.clothingItems.filter(i => !i.type || !i.size);
-  if (missing.length > 0) {
-    showToast(`Bitte für ${missing.length} Kleidungsstück${missing.length>1?'e':''} Typ und Größe wählen.`, 'warning');
-    return;
-  }
-  goToStep(4);
-  updateGenSummary();
-});
 
 $('#qualitySelect').addEventListener('change', () => {
   state.selectedQuality = $('#qualitySelect').value;
@@ -608,6 +603,13 @@ generateBtn.addEventListener('click', async () => {
   }
   if (!state.personPhoto) { showToast('Kein Personenfoto vorhanden.', 'error'); return }
   if (state.clothingItems.length === 0) { showToast('Keine Kleidungsstücke vorhanden.', 'error'); return }
+  if (state.generationMode === 'combined' && state.clothingItems.length > 9) {
+    showToast('Im kombinierten Modus werden max. 9 Kleidungsstücke unterstützt.', 'warning'); return;
+  }
+  const missing = state.clothingItems.filter(i => !i.type || !i.size);
+  if (missing.length > 0) {
+    showToast(`Bitte für ${missing.length} Kleidungsstück${missing.length>1?'e':''} Typ und Größe wählen.`, 'warning'); return;
+  }
 
   state.generatedImages = [];
   state.isGenerating = true;
@@ -616,7 +618,6 @@ generateBtn.addEventListener('click', async () => {
   logArea.innerHTML = '';
   document.getElementById('resultsGrid').innerHTML = '';
   state.generationDone = false;
-  $('#step4Next').disabled = true;
 
   const items = state.clothingItems;
   const mode = state.generationMode;
@@ -760,7 +761,10 @@ generateBtn.addEventListener('click', async () => {
 
     if (successCount > 0) {
       state.generationDone = true;
-      $('#step4Next').disabled = false;
+      renderResults();
+      goToStep(4);
+      renderZipPreview();
+      generateAllSaleTexts();
       showToast(`${successCount} von ${totalCalls} Bild${totalCalls > 1 ? 'ern' : ''} erfolgreich`, successCount === totalCalls ? 'success' : 'warning');
     }
     if (failCount > 0) {
@@ -778,15 +782,8 @@ generateBtn.addEventListener('click', async () => {
 });
 
 $('#step4Back').addEventListener('click', () => goToStep(3));
-$('#step4Next').addEventListener('click', () => {
-  if (state.generatedImages.length > 0) {
-    renderResults();
-    goToStep(5);
-    generateAllSaleTexts();
-  }
-});
 
-// ============ STEP 5: RESULTS + SALE TEXT ============
+// ============ STEP 4: RESULTS + SALE TEXT ============
 
 const resultsGrid = $('#resultsGrid');
 
@@ -910,6 +907,8 @@ function copySaleText(idx) {
   const text = state.generatedImages[idx]?.saleText;
   if (!text) { showToast('Kein Verkaufstext vorhanden.', 'warning'); return }
   navigator.clipboard.writeText(text).then(() => {
+    const btn = document.querySelector(`.result-card[data-idx="${idx}"] .copy-text-btn`);
+    if (btn) { btn.classList.add('copied'); btn.textContent = '✓ Kopiert'; setTimeout(() => { btn.classList.remove('copied'); btn.textContent = '📋 Kopieren'; }, 2000); }
     showToast('📋 Verkaufstext kopiert!', 'success');
   }).catch(() => {
     showToast('❌ Kopieren fehlgeschlagen.', 'error');
@@ -1134,17 +1133,7 @@ document.addEventListener('keydown', e => {
   }
 });
 
-$('#step5Back').addEventListener('click', () => goToStep(4));
-$('#downloadAllBtn').addEventListener('click', () => downloadAllAsZip('VirtualTryOn'));
-$('#step5Next').addEventListener('click', () => {
-  renderZipPreview();
-  goToStep(6);
-});
-
-// ============ STEP 6: DOWNLOAD ============
-
-const sessionTitle = $('#sessionTitle');
-const downloadZipBtn = $('#downloadZipBtn');
+$('#downloadAllBtn').addEventListener('click', () => downloadAllAsZip(sessionTitle.value.trim() || 'VirtualTryOn'));
 const resetBtn = $('#resetBtn');
 const zipPreview = $('#zipPreview');
 
@@ -1154,16 +1143,6 @@ function renderZipPreview() {
   const textCount = state.generatedImages.filter(i => i.saleText).length;
   zipPreview.textContent = `📦 ${imgCount} Bild${imgCount > 1 ? 'er' : ''}${textCount > 0 ? ` + ${textCount} Verkaufstext${textCount > 1 ? 'e' : ''}` : ''} · Bereit zum Download als "${title}_${formatDate()}.zip"`;
 }
-
-downloadZipBtn.addEventListener('click', async () => {
-  const title = sessionTitle.value.trim() || 'VirtualTryOn';
-  downloadZipBtn.disabled = true;
-  downloadZipBtn.textContent = '⏳ Packe ZIP...';
-  await downloadAllAsZip(title);
-  downloadZipBtn.disabled = false;
-  downloadZipBtn.textContent = '📦 ZIP herunterladen';
-  renderZipPreview();
-});
 
 resetBtn.addEventListener('click', () => {
   if (state.generatedImages.length > 0 && !confirm('Wirklich zurücksetzen? Alle generierten Bilder gehen verloren.')) return;
@@ -1177,6 +1156,11 @@ resetBtn.addEventListener('click', () => {
 
   document.getElementById('personPreview').style.display = 'none';
   document.getElementById('personDropZone').classList.remove('has-file');
+  document.getElementById('step1InitialView').style.display = '';
+  document.getElementById('step1AfterUpload').style.display = 'none';
+  document.getElementById('personDropZone').classList.add('hidden-zone');
+  document.getElementById('heroSection').classList.remove('hero-hidden');
+  document.getElementById('step1StartBtn').disabled = false;
   clothingPreviewGrid.innerHTML = '';
   noClothingHint.style.display = 'block';
   resultsGrid.innerHTML = '';
@@ -1187,7 +1171,6 @@ resetBtn.addEventListener('click', () => {
   progressWrap.style.display = 'none';
   document.getElementById('progressItems').innerHTML = '';
   document.getElementById('progressOverall').textContent = '';
-  $('#step4Next').disabled = true;
   zipPreview.textContent = '';
   document.getElementById('costEstimate').style.display = 'none';
   $('#modeSingle').classList.add('selected');
@@ -1198,8 +1181,6 @@ resetBtn.addEventListener('click', () => {
   goToStep(1);
   showToast('Session zurückgesetzt', 'info');
 });
-
-$('#step6Back').addEventListener('click', () => goToStep(5));
 
 window.toggleKeyVisibility = function () {
   const input = document.getElementById('apiKeyInput');
@@ -1259,6 +1240,14 @@ const origOpenLightbox = window.openLightbox;
 window.openLightbox = function (img, idx) {
   origOpenLightbox(img, idx);
 };
+
+// beforeunload warning on unsaved state
+window.addEventListener('beforeunload', (e) => {
+  if (state.generatedImages.length > 0 && !state.generationDone) {
+    e.preventDefault();
+    e.returnValue = '';
+  }
+});
 
 // ============ INIT ============
 

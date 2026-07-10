@@ -244,7 +244,8 @@ header h1 span{color:var(--primary)}
   animation:bounce-icon .6s ease infinite;
 }
 .upload-zone.has-file{border-color:var(--success);border-style:solid}
-.upload-zone .icon{font-size:2.5rem;margin-bottom:.5rem;opacity:.5;display:inline-block}
+.upload-zone .icon{font-size:2.5rem;margin-bottom:.5rem;opacity:.6;display:inline-block;transition:transform .3s,opacity .3s}
+.upload-zone:hover .icon{transform:scale(1.15);opacity:.9}
 .upload-zone .hint{font-size:.8rem;color:var(--text-3);margin-top:.3rem}
 .upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer}
 
@@ -991,4 +992,47 @@ header.header-compact{box-shadow:0 2px 24px rgba(0,0,0,.45)}
 }
 
 /* Content-visibility for paint culling */
-.step-section,.card,.feature-highlights,.how-it-works{content-visibility:auto;contain-intrinsic-size:1px 200px}
+.card,.feature-highlights,.how-it-works{content-visibility:auto;contain-intrinsic-size:1px 200px}
+.step-section{contain:layout style paint}
+
+/* === AFTER UPLOAD SUCCESS === */
+.upload-success{text-align:center;padding:2rem 1rem;animation:fadeIn .4s ease}
+.upload-success-icon{font-size:3rem;margin-bottom:.5rem}
+.upload-success-text{font-size:1rem;color:var(--text-2);line-height:1.6}
+.upload-success-text strong{color:var(--text)}
+
+/* === MERGED OPTIONS ROW === */
+.options-row{display:flex;gap:1rem;margin-bottom:1rem}
+.options-row .option-group{flex:1}
+@media(max-width:480px){.options-row{flex-direction:column}}
+
+/* === DOWNLOAD SECTION === */
+.download-section{border-top:1px solid var(--surface-3);padding-top:1.25rem;margin-top:1rem}
+.download-row{display:flex;align-items:flex-end;gap:1rem;flex-wrap:wrap}
+.download-btns{display:flex;gap:.75rem;flex-wrap:wrap}
+.session-input{background:var(--bg);border:1px solid var(--surface-3);padding:.5rem .75rem;border-radius:var(--radius-sm);width:100%;font-size:.9rem;color:var(--text);transition:border-color .2s}
+.session-input:focus{outline:none;border-color:var(--primary)}
+@media(max-width:480px){.download-row{flex-direction:column;align-items:stretch}}
+
+/* === UPLOAD COUNT BADGE === */
+.upload-count{display:inline-flex;align-items:center;gap:.35rem;padding:.35rem .75rem;background:var(--primary-dim);color:var(--primary);border-radius:999px;font-size:.8rem;font-weight:600;margin-top:.5rem;animation:fadeIn .3s ease}
+
+/* === GEN BUTTON FULL WIDTH === */
+.gen-btn{width:100%;padding:1rem!important;font-size:1.1rem!important;border-radius:var(--radius)!important;position:relative;overflow:hidden}
+.gen-btn:not(:disabled)::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.1),transparent);transform:translateX(-100%);animation:btn-shine 2.5s ease infinite}
+@keyframes btn-shine{50%{transform:translateX(100%)}100%{transform:translateX(100%)}}
+.gen-btn:not(:disabled){animation:btn-pulse 2s ease-in-out infinite}
+@keyframes btn-pulse{0%,100%{box-shadow:0 4px 24px rgba(108,99,255,.3)}50%{box-shadow:0 4px 32px rgba(108,99,255,.5)}}
+
+/* === TOOLTIP === */
+[title]:not(.no-tip){position:relative;cursor:pointer}
+[title]:not(.no-tip):hover::after{content:attr(title);position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:var(--surface);color:var(--text);padding:.35rem .65rem;border-radius:6px;font-size:.72rem;white-space:nowrap;pointer-events:none;z-index:999;box-shadow:0 4px 12px rgba(0,0,0,.4);border:1px solid var(--surface-3);font-weight:400}
+
+/* === COPY FEEDBACK === */
+.copy-text-btn.copied{background:var(--success)!important;color:#fff!important;border-color:var(--success)!important;transition:background .15s}
+
+/* === EMPTY STATE === */
+.empty-state{display:flex;flex-direction:column;align-items:center;gap:.75rem;padding:2.5rem 1.5rem;text-align:center}
+.empty-state .empty-icon{font-size:3rem;opacity:.25}
+.empty-state .empty-title{font-size:1.05rem;font-weight:600;color:var(--text-3)}
+.empty-state .empty-desc{font-size:.85rem;color:var(--text-3);max-width:320px;line-height:1.6}

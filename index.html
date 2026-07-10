@@ -41,6 +41,13 @@
         </div>
 
         <!-- Zustand 2: Upload-Zone (nach Starten) -->
+        <div class="step-header hidden-zone" id="step1Header">
+          <span class="step-number">1</span>
+          <div>
+            <h2>Personenfoto hochladen</h2>
+            <p>Ganzkörperaufnahme mit neutralem Hintergrund &amp; guter Beleuchtung</p>
+          </div>
+        </div>
         <div class="upload-zone hidden-zone" id="personDropZone">
           <div class="icon">📸</div>
           <strong>Foto hier ablegen oder klicken zum Auswählen</strong>
@@ -102,7 +109,7 @@
 
       <section id="step2" class="step-section">
         <div class="card">
-          <h2>👕 Kleidungsstücke hochladen</h2>
+          <h2>2. 👕 Kleidungsstücke hochladen</h2>
           <p>
             Lade die Kleidungsstücke hoch, die anprobiert werden sollen. Wähle
             für jedes den Typ aus.
@@ -137,7 +144,7 @@
 
       <section id="step3" class="step-section">
         <div class="card">
-          <h2>⚙️ Modus & Generierung</h2>
+          <h2>3. ⚙️ Modus & Generierung</h2>
           <p>Wähle den Generierungs-Modus und starte die virtuelle Anprobe.</p>
           <div class="mode-grid">
             <div class="mode-card selected" data-mode="single" id="modeSingle">
@@ -181,7 +188,7 @@
           </div>
           <div class="cost-estimate" id="costEstimate" style="display: none"></div>
           <div class="gen-action">
-            <button class="btn btn-primary gen-btn" id="generateBtn">✨ Jetzt generieren</button>
+            <button class="btn btn-primary gen-btn" id="generateBtn"><span class="gradient-text">✨ Jetzt generieren</span></button>
           </div>
           <div class="gen-progress" id="progressWrap" style="display: none">
             <div class="progress-overall" id="progressOverall">Initialisiere...</div>
@@ -196,7 +203,7 @@
 
       <section id="step4" class="step-section">
         <div class="card">
-          <h2>🖼️ Ergebnisse & Download</h2>
+          <h2>4. 🖼️ Ergebnisse & Download</h2>
           <p>Deine generierten Anprobebilder mit Verkaufstexten. Lade alles als ZIP herunter oder speichere einzelne Bilder.</p>
           <div class="results-grid" id="resultsGrid"></div>
           <p id="noResultsHint" style="color:var(--text-3);font-size:.85rem;margin-top:.75rem">Noch keine Bilder generiert.</p>

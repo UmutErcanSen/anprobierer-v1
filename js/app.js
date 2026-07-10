@@ -55,6 +55,8 @@ function loadSession() {
       if (startBtn) startBtn.disabled = true;
       const tipRow = document.getElementById('photoTipRow');
       if (tipRow) tipRow.style.display = 'block';
+      const stepHeader = document.getElementById('step1Header');
+      if (stepHeader) stepHeader.classList.remove('hidden-zone');
     }
 
     // restore clothing items
@@ -267,6 +269,7 @@ $('#step1StartBtn').addEventListener('click', () => {
   const dz = document.getElementById('personDropZone');
   dz.classList.remove('hidden-zone');
   dz.classList.add('fade-in');
+  document.getElementById('step1Header')?.classList.remove('hidden-zone');
   document.getElementById('step1StartBtn').disabled = true;
   const tipRow = document.getElementById('photoTipRow');
   if (tipRow) tipRow.style.display = 'block';
@@ -1297,6 +1300,7 @@ resetBtn.addEventListener('click', () => {
   if (tipRow) tipRow.style.display = 'none';
   const hero = document.getElementById('heroSection');
   if (hero) hero.classList.remove('hero-hidden');
+  document.getElementById('step1Header')?.classList.add('hidden-zone');
   const startBtn = document.getElementById('step1StartBtn');
   if (startBtn) startBtn.disabled = false;
   clothingPreviewGrid.innerHTML = '';

@@ -356,8 +356,8 @@ header h1 span{color:var(--primary)}
 .gen-info-label{color:var(--text-3);font-weight:400}
 .gen-action{display:flex;justify-content:center;margin:1.5rem 0}
 
-.extra-notes-row{margin-bottom:1rem}
-.extra-notes-row label{display:block;font-size:.85rem;color:var(--text-2);margin-bottom:.3rem;font-weight:600}
+.extra-notes-row{background:var(--surface-2);border-radius:var(--radius);padding:.85rem 1rem;margin-bottom:1rem;border:1px solid var(--surface-3);border-left:3px solid var(--primary)}
+.extra-notes-row label{display:block;font-size:.85rem;color:var(--primary);margin-bottom:.35rem;font-weight:700}
 .extra-notes-row textarea{
   width:100%;padding:.6rem .75rem;border-radius:var(--radius-sm);
   border:1px solid var(--surface-3);background:var(--surface-2);

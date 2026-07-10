@@ -57,7 +57,7 @@ function loadSession() {
       if (tipRow) tipRow.style.display = 'block';
       const stepHeader = document.getElementById('step1Header');
       if (stepHeader) stepHeader.classList.remove('hidden-zone');
-      ['step2','step3','step4'].forEach(id => document.getElementById(id)?.classList.remove('hidden-zone'));
+      ['step2','step3'].forEach(id => document.getElementById(id)?.classList.remove('hidden-zone'));
     }
 
     // restore clothing items
@@ -98,6 +98,7 @@ function loadSession() {
     if (data.generatedImages && data.generatedImages.length > 0) {
       renderResults();
       renderZipPreview();
+      document.getElementById('step4')?.classList.remove('hidden-zone');
     }
 
     // update gen summary if clothing exists
@@ -890,6 +891,7 @@ generateBtn.addEventListener('click', async () => {
       generateAllSaleTexts();
       saveSession();
       addHistoryEntry(items.length, mode, successCount, state.extraNotes);
+      document.getElementById('step4')?.classList.remove('hidden-zone');
       document.getElementById('step4')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       showToast(`${successCount} von ${totalCalls} Bild${totalCalls > 1 ? 'ern' : ''} erfolgreich`, successCount === totalCalls ? 'success' : 'warning');
     }

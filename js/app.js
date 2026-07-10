@@ -107,6 +107,7 @@ function loadSession() {
     }
 
     showToast('💾 Session wiederhergestellt', 'info');
+    updateGenerateBtnState();
   } catch (_) {}
 }
 
@@ -141,6 +142,7 @@ function loadApiKey() {
     state.apiKey = saved;
     updateApiStatus(true);
   }
+  updateGenerateBtnState();
 }
 
 function validateApiKey(key) {
@@ -151,6 +153,15 @@ function updateApiStatus(valid, isTesting) {
   apiStatusDot.className = 'status-dot' + (valid ? ' ready' : '') + (isTesting ? '' : '');
   if (valid) apiKeyInput.classList.add('valid');
   else apiKeyInput.classList.remove('valid');
+}
+
+function updateGenerateBtnState() {
+  if (state.isGenerating) { generateBtn.disabled = true; return }
+  const apiOk = state.apiKey && validateApiKey(state.apiKey);
+  const photoOk = state.personPhoto !== null;
+  const hasItems = state.clothingItems.length > 0;
+  const itemsComplete = state.clothingItems.every(i => i.type && i.size);
+  generateBtn.disabled = !(apiOk && photoOk && hasItems && itemsComplete);
 }
 
 apiKeyInput.addEventListener('input', () => {
@@ -167,6 +178,7 @@ apiKeyInput.addEventListener('input', () => {
     apiStatusDot.className = 'status-dot error';
     apiKeyInput.classList.remove('valid');
   }
+  updateGenerateBtnState();
 });
 
 window.testApiKey = async function () {
@@ -215,6 +227,7 @@ async function handlePersonFile(file) {
     const data = await fileToBase64(converted);
     state.personPhoto = data;
     renderPersonPreview();
+    updateGenerateBtnState();
     const middle = document.getElementById('step1MiddleSection');
     if (middle) { middle.classList.remove('hidden-zone'); middle.classList.add('fade-in'); }
     const initView = document.getElementById('step1InitialView');
@@ -248,6 +261,7 @@ function renderPersonPreview() {
     if (middle) middle.classList.add('hidden-zone');
     const initView = document.getElementById('step1InitialView');
     if (initView) initView.classList.remove('hidden');
+    updateGenerateBtnState();
     saveSession();
   });
 }
@@ -301,6 +315,7 @@ async function handleClothingFiles(files) {
     renderClothingPreviews();
     updateGenSummary();
     updateClothingBadge();
+    updateGenerateBtnState();
     saveSession();
     showToast(`${promises.length} Kleidungsstück${promises.length > 1 ? 'e' : ''} hinzugefügt`, 'success');
   } catch (err) {
@@ -378,6 +393,7 @@ function renderClothingPreviews() {
       const trig = document.querySelector(`.mobile-select-trigger[data-id="${id}"][data-field="type-select"] .trigger-label`);
       if (trig) trig.textContent = sel.value ? TYPE_LABELS[sel.value] : 'Typ wählen';
       saveSession();
+      updateGenerateBtnState();
     });
   });
 
@@ -391,6 +407,7 @@ function renderClothingPreviews() {
       const trig = document.querySelector(`.mobile-select-trigger[data-id="${id}"][data-field="size-select"] .trigger-label`);
       if (trig) trig.textContent = sel.value || 'Größe wählen';
       saveSession();
+      updateGenerateBtnState();
     });
   });
 
@@ -448,6 +465,7 @@ function renderClothingPreviews() {
             renderClothingPreviews();
           }
           saveSession();
+          updateGenerateBtnState();
         },
       });
     });
@@ -463,6 +481,7 @@ function renderClothingPreviews() {
       renderClothingPreviews();
       updateGenSummary();
       updateClothingBadge();
+      updateGenerateBtnState();
       saveSession();
     });
   });
@@ -692,7 +711,7 @@ function cancelGeneration() {
   Object.keys(progressTimers).forEach(k => stopItemProgress(k));
   if (activeLottie) { activeLottie.instance.destroy(); activeLottie = null; }
   state.isGenerating = false;
-  generateBtn.disabled = false;
+  updateGenerateBtnState();
   document.getElementById('cancelGenBtn')?.remove();
   if (state.generatedImages.length > 0) {
     state.generationDone = true;
@@ -906,7 +925,7 @@ generateBtn.addEventListener('click', async () => {
     Object.keys(progressTimers).forEach(k => stopItemProgress(k));
     if (activeLottie) { activeLottie.instance.destroy(); activeLottie = null; }
     state.isGenerating = false;
-    generateBtn.disabled = false;
+    updateGenerateBtnState();
   }
 });
 
@@ -1333,6 +1352,7 @@ resetBtn.addEventListener('click', () => {
   personFileInput.value = '';
   clothingFileInput.value = '';
   clearSession();
+  updateGenerateBtnState();
   window.scrollTo({ top: 0, behavior: 'smooth' });
   showToast('Session zurückgesetzt', 'info');
 });

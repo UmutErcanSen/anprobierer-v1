@@ -50,11 +50,11 @@ function loadSession() {
       const middle = document.getElementById('step1MiddleSection');
       if (middle) { middle.classList.remove('hidden-zone'); middle.classList.add('fade-in'); }
       const initView = document.getElementById('step1InitialView');
-      if (initView) initView.style.display = 'none';
+      if (initView) initView.classList.add('hidden');
       const startBtn = document.getElementById('step1StartBtn');
       if (startBtn) startBtn.disabled = true;
       const tipRow = document.getElementById('photoTipRow');
-      if (tipRow) tipRow.style.display = 'block';
+      if (tipRow) tipRow.classList.remove('hidden');
       const stepHeader = document.getElementById('step1Header');
       if (stepHeader) stepHeader.classList.remove('hidden-zone');
       ['step2','step3'].forEach(id => document.getElementById(id)?.classList.remove('hidden-zone'));
@@ -95,7 +95,7 @@ function loadSession() {
       state.generatedImages = data.generatedImages;
     }
     if (data.generationDone !== undefined) state.generationDone = data.generationDone;
-    if (data.generatedImages && data.generatedImages.length > 0) {
+    if (data.generatedImages && data.generatedImages.length > 0 && state.generationDone) {
       renderResults();
       renderZipPreview();
       document.getElementById('step4')?.classList.remove('hidden-zone');
@@ -218,7 +218,7 @@ async function handlePersonFile(file) {
     const middle = document.getElementById('step1MiddleSection');
     if (middle) { middle.classList.remove('hidden-zone'); middle.classList.add('fade-in'); }
     const initView = document.getElementById('step1InitialView');
-    if (initView) initView.style.display = 'none';
+    if (initView) initView.classList.add('hidden');
     saveSession();
     showToast('Personenfoto erfolgreich geladen', 'success');
   } catch (err) {
@@ -228,26 +228,26 @@ async function handlePersonFile(file) {
 
 function renderPersonPreview() {
   if (!state.personPhoto) {
-    personPreview.style.display = 'none';
+    personPreview.classList.add('hidden');
     personDropZone.classList.remove('has-file');
     return;
   }
   personDropZone.classList.add('has-file');
-  personPreview.style.display = 'block';
-  personPreview.innerHTML = `<div style="position:relative;display:inline-block">
+  personPreview.classList.remove('hidden');
+  personPreview.innerHTML = `<div class="person-preview-inner">
     <img src="${base64ToDataUrl(state.personPhoto.base64, state.personPhoto.mimeType)}" alt="Person">
     <button class="remove-person-btn" id="removePersonBtn">×</button>
   </div>`;
   document.getElementById('removePersonBtn')?.addEventListener('click', (e) => {
     e.stopPropagation();
     state.personPhoto = null;
-    personPreview.style.display = 'none';
+    personPreview.classList.add('hidden');
     personDropZone.classList.remove('has-file');
     personFileInput.value = '';
     const middle = document.getElementById('step1MiddleSection');
     if (middle) middle.classList.add('hidden-zone');
     const initView = document.getElementById('step1InitialView');
-    if (initView) initView.style.display = '';
+    if (initView) initView.classList.remove('hidden');
     saveSession();
   });
 }
@@ -274,8 +274,8 @@ $('#step1StartBtn').addEventListener('click', () => {
   document.getElementById('step1Header')?.classList.remove('hidden-zone');
   document.getElementById('step1StartBtn').disabled = true;
   const tipRow = document.getElementById('photoTipRow');
-  if (tipRow) tipRow.style.display = 'block';
-  ['step2','step3','step4'].forEach(id => document.getElementById(id)?.classList.remove('hidden-zone'));
+  if (tipRow) tipRow.classList.remove('hidden');
+  ['step2','step3'].forEach(id => document.getElementById(id)?.classList.remove('hidden-zone'));
 });
 
 // ============ CLOTHING ITEMS ============
@@ -334,10 +334,10 @@ function buildColorTrigger(item) {
 function renderClothingPreviews() {
   if (state.clothingItems.length === 0) {
     clothingPreviewGrid.innerHTML = '';
-    noClothingHint.style.display = 'block';
+    noClothingHint.classList.remove('hidden');
     return;
   }
-  noClothingHint.style.display = 'none';
+  noClothingHint.classList.add('hidden');
 
   function sel(id, field, options, current) {
     const html = `<select class="item-select ${field}" data-id="${id}">${options.map(o => `<option value="${o.value}"${o.value===current?' selected':''}>${o.label||o.value}</option>`).join('')}</select>`;
@@ -531,8 +531,8 @@ function updateGenSummary() {
     `<div class="gen-info-filled">${items.map(i => `<div class="gen-info-item"><span class="gen-info-icon">${i.icon}</span><span><strong>${i.val}</strong> <span class="gen-info-label">${i.label}</span></span></div>`).join('')}</div>`;
 
   const costEl = document.getElementById('costEstimate');
-  costEl.style.display = 'block';
-  costEl.innerHTML = `<strong>💰 Geschätzte Kosten:</strong> ${est.calls} × $${est.perImage} = <strong>~$${est.total.toFixed(3)}</strong> (Qualität: ${QUALITY_PRICES[state.selectedQuality]?.label || 'Mittel'})<br><span style="font-size:.75rem;color:var(--text-3)">OpenAI hat keinen Free Tier. Dir wird der Betrag von deinem Guthaben abgezogen.</span>`;
+  costEl.classList.remove('hidden');
+  costEl.innerHTML = `<strong>💰 Geschätzte Kosten:</strong> ${est.calls} × $${est.perImage} = <strong>~$${est.total.toFixed(3)}</strong> (Qualität: ${QUALITY_PRICES[state.selectedQuality]?.label || 'Mittel'})<br><span class="cost-hint">OpenAI hat keinen Free Tier. Dir wird der Betrag von deinem Guthaben abgezogen.</span>`;
 }
 
 // ============ GENERATE ============
@@ -565,7 +565,7 @@ function statusIcon(type) {
 
 function showProgressItems(mode, items) {
   const container = document.getElementById('progressItems');
-  const cancelBtn = '<button class="btn btn-sm btn-danger" id="cancelGenBtn" style="margin-top:.5rem">✖ Generierung abbrechen</button>';
+  const cancelBtn = '<button class="btn btn-sm btn-danger cancel-btn-spacer" id="cancelGenBtn">✖ Generierung abbrechen</button>';
   if (mode === 'combined') {
     container.innerHTML = `
       <div class="progress-item" data-idx="0">
@@ -699,6 +699,7 @@ function cancelGeneration() {
     saveSession();
     renderResults();
     renderZipPreview();
+    document.getElementById('step4')?.classList.remove('hidden-zone');
     document.getElementById('step4')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 }
@@ -725,7 +726,7 @@ generateBtn.addEventListener('click', async () => {
   state.isGenerating = true;
   generationCancelled = false;
   generateBtn.disabled = true;
-  progressWrap.style.display = 'flex';
+  progressWrap.classList.remove('hidden');
   logArea.innerHTML = '';
   document.getElementById('resultsGrid').innerHTML = '';
   state.generationDone = false;
@@ -915,8 +916,8 @@ const resultsGrid = $('#resultsGrid');
 
 function renderResults() {
   const hint = document.getElementById('noResultsHint');
-  if (state.generatedImages.length === 0) { if (hint) hint.style.display = 'block'; return }
-  if (hint) hint.style.display = 'none';
+  if (state.generatedImages.length === 0) { if (hint) hint.classList.remove('hidden'); return }
+  if (hint) hint.classList.add('hidden');
   resultsGrid.innerHTML = state.generatedImages.map((img, idx) => `
     <div class="result-card" data-idx="${idx}">
       <div class="result-card-header">
@@ -997,7 +998,7 @@ async function generateAllSaleTexts() {
         addLog(`❌ Fehler bei "${img.clothingName}": ${err.message}`, 'error');
       }
       textArea.classList.remove('generating');
-      textArea.innerHTML = '<span style="color:var(--error);font-size:.8rem">❌ Textgenerierung fehlgeschlagen</span>';
+      textArea.innerHTML = '<span class="gen-error-msg">❌ Textgenerierung fehlgeschlagen</span>';
     }
   }
 }
@@ -1231,8 +1232,8 @@ function updateLightboxContent() {
   const lbInfo = document.getElementById('lightboxInfo');
   lbImg.src = base64ToDataUrl(img.base64, img.mimeType);
   lbInfo.textContent = `${img.clothingName} · ${img.clothingType === 'combined' ? 'Kombiniert' : TYPE_LABELS[img.clothingType]} (${lightboxIdx + 1}/${state.generatedImages.length})`;
-  document.getElementById('lightboxPrev').style.display = lightboxIdx > 0 ? 'flex' : 'none';
-  document.getElementById('lightboxNext').style.display = lightboxIdx < state.generatedImages.length - 1 ? 'flex' : 'none';
+  document.getElementById('lightboxPrev').classList.toggle('hidden', lightboxIdx <= 0);
+  document.getElementById('lightboxNext').classList.toggle('hidden', lightboxIdx >= state.generatedImages.length - 1);
 }
 
 window.navigateLightbox = function (dir) {
@@ -1295,13 +1296,13 @@ resetBtn.addEventListener('click', () => {
   state.generationMode = 'single';
 
   const pv = document.getElementById('personPreview');
-  if (pv) pv.style.display = 'none';
+  if (pv) pv.classList.add('hidden');
   const dropZone = document.getElementById('personDropZone');
   if (dropZone) { dropZone.classList.remove('has-file'); dropZone.classList.add('hidden-zone'); }
   const initView = document.getElementById('step1InitialView');
-  if (initView) initView.style.display = '';
+  if (initView) initView.classList.remove('hidden');
   const tipRow = document.getElementById('photoTipRow');
-  if (tipRow) tipRow.style.display = 'none';
+  if (tipRow) tipRow.classList.remove('hidden');
   const hero = document.getElementById('heroSection');
   if (hero) hero.classList.remove('hero-hidden');
   document.getElementById('step1Header')?.classList.add('hidden-zone');
@@ -1309,20 +1310,20 @@ resetBtn.addEventListener('click', () => {
   const startBtn = document.getElementById('step1StartBtn');
   if (startBtn) startBtn.disabled = false;
   clothingPreviewGrid.innerHTML = '';
-  noClothingHint.style.display = 'block';
+  noClothingHint.classList.remove('hidden');
   updateClothingBadge();
   resultsGrid.innerHTML = '';
   const noResultsHint = document.getElementById('noResultsHint');
-  if (noResultsHint) noResultsHint.style.display = 'block';
+  if (noResultsHint) noResultsHint.classList.remove('hidden');
   logArea.classList.remove('visible');
   logArea.innerHTML = '';
   Object.keys(progressTimers).forEach(k => stopItemProgress(k));
   if (activeLottie) { activeLottie.instance.destroy(); activeLottie = null; }
-  progressWrap.style.display = 'none';
+  progressWrap.classList.add('hidden');
   document.getElementById('progressItems').innerHTML = '';
   document.getElementById('progressOverall').textContent = '';
   zipPreview.textContent = '';
-  document.getElementById('costEstimate').style.display = 'none';
+  document.getElementById('costEstimate').classList.add('hidden');
   $('#modeSingle').classList.add('selected');
   $('#modeCombined').classList.remove('selected');
   state.extraNotes = '';
@@ -1390,7 +1391,7 @@ function renderHistory() {
     const raw = localStorage.getItem(HISTORY_KEY);
     const history = raw ? JSON.parse(raw) : [];
     if (history.length === 0) {
-      container.innerHTML = '<div class="empty-state" style="padding:1rem"><span class="empty-icon">📭</span><span class="empty-desc">Noch keine abgeschlossenen Sessions.</span></div>';
+      container.innerHTML = '<div class="empty-state empty-state--compact"><span class="empty-icon">📭</span><span class="empty-desc">Noch keine abgeschlossenen Sessions.</span></div>';
       return;
     }
     container.innerHTML = history.map((h, idx) => `

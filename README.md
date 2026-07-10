@@ -1,0 +1,93 @@
+# Virtual Try-On – KI Anzeigen Erstellung
+
+KI-gestützte Anprobebilder für Vinted-Anzeigen.
+
+---
+
+## 🚀 Lokal entwickeln
+
+```bash
+npm run dev
+```
+
+→ http://localhost:5173
+
+Im `.env` ist `VITE_DEV_MODE=true` → kein Login nötig, eigener API-Key aus localStorage.
+
+---
+
+## 🔥 Live schalten (Firebase Hosting)
+
+### Einmalig: Einloggen
+
+```bash
+cmd /c "firebase login"
+```
+
+→ Browser öffnet sich → Google-Konto auswählen → fertig.
+
+### Deployen (nach jeder Änderung)
+
+```bash
+cmd /c "npm run deploy"
+```
+
+→ Baut `dist/` + lädt auf Firebase CDN hoch.
+
+Live unter: https://virtual-try-on-6d197.web.app
+
+---
+
+## 💾 Code sichern (optional)
+
+```bash
+git add -A
+git commit -m "Was geändert wurde"
+git push
+```
+
+---
+
+## 📁 Projektstruktur
+
+```
+src/
+├── main.js          Einstiegspunkt
+├── firebase.js      Firebase Init
+├── auth.js          Login/Registrierung/Google + AuthGuard
+├── user.js          Benutzer-Profil-Modal
+├── firestore.js     Firestore CRUD (Profile, Generierungen)
+├── app.js           Hauptlogik (Upload, Generierung, Ergebnisse)
+├── api.js           OpenAI API-Aufrufe
+├── utils.js         Hilfsfunktionen
+└── styles.css       Styles
+
+public/
+├── assets/          Bilder (phone-preview, gut, schlecht, …)
+└── js/loading.json   Lottie-Animation
+
+index.html           HTML-Grundgerüst
+firebase.json        Firebase Hosting Config
+.firebaserc          Firebase Projekt-Alias
+```
+
+---
+
+## 🔑 Abo-Modelle
+
+| Modell | Generierungen | Modus | Qualität |
+|--------|--------------|-------|----------|
+| Free   | 5 / Monat    | Nur Einzeln | Nur Niedrig |
+| Basic  | 50 / Monat   | Einzeln + Kombiniert | Niedrig + Mittel |
+| Pro    | Unbegrenzt   | Alle | Alle |
+
+---
+
+## 🛠 Nützliche Befehle
+
+| Befehl | Beschreibung |
+|--------|-------------|
+| `npm run dev` | Lokaler Dev-Server |
+| `npm run build` | Nur bauen (ohne deploy) |
+| `npm run preview` | Gebaute `dist/` lokal testen |
+| `cmd /c "npm run deploy"` | Bauen + live schalten |

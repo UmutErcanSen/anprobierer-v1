@@ -11,6 +11,74 @@ const state = {
   selectedSize: '1024x1536',
 };
 
+const SESSION_KEY = 'vto_session';
+
+function saveSession() {
+  try {
+    const data = {
+      personPhoto: state.personPhoto,
+      clothingItems: state.clothingItems.map(i => ({ ...i })),
+      generationMode: state.generationMode,
+      generatedImages: state.generatedImages.map(i => ({ ...i })),
+      generationDone: state.generationDone,
+      selectedQuality: state.selectedQuality,
+      selectedSize: state.selectedSize,
+      currentStep: state.currentStep,
+    };
+    localStorage.setItem(SESSION_KEY, JSON.stringify(data));
+  } catch (e) {
+    if (e.name === 'QuotaExceededError' || e.code === 22) {
+      showToast('⚠️ Session konnte nicht gespeichert werden (Speicher voll).', 'warning');
+    }
+  }
+}
+
+function loadSession() {
+  try {
+    const raw = localStorage.getItem(SESSION_KEY);
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    if (data.personPhoto) {
+      state.personPhoto = data.personPhoto;
+      renderPersonPreview();
+      const stepsBar = document.getElementById('stepsBar');
+      if (stepsBar) stepsBar.classList.replace('hidden', 'show');
+      const middle = document.getElementById('step1MiddleSection');
+      if (middle) { middle.classList.remove('hidden-zone'); middle.classList.add('fade-in'); }
+      const initView = document.getElementById('step1InitialView');
+      if (initView) initView.style.display = 'none';
+      const nextBtn = document.getElementById('step1Next');
+      if (nextBtn) nextBtn.style.display = 'inline-flex';
+    }
+    if (data.clothingItems && data.clothingItems.length > 0) {
+      state.clothingItems = data.clothingItems;
+      renderClothingPreviews();
+    }
+    if (data.generationMode) state.generationMode = data.generationMode;
+    if (data.generatedImages && data.generatedImages.length > 0) {
+      state.generatedImages = data.generatedImages;
+    }
+    if (data.generationDone !== undefined) state.generationDone = data.generationDone;
+    if (data.selectedQuality) state.selectedQuality = data.selectedQuality;
+    if (data.selectedSize) state.selectedSize = data.selectedSize;
+    if (data.currentStep) {
+      state.currentStep = data.currentStep;
+    }
+    if (data.generatedImages && data.generatedImages.length > 0) {
+      renderResults();
+      renderZipPreview();
+    }
+    if (data.currentStep && data.currentStep > 1) {
+      goToStep(data.currentStep);
+    }
+    showToast('💾 Session wiederhergestellt', 'info');
+  } catch (_) {}
+}
+
+function clearSession() {
+  localStorage.removeItem(SESSION_KEY);
+}
+
 // ============ API KEY ============
 
 const apiKeyInput = $('#apiKeyInput');
@@ -144,6 +212,7 @@ async function handlePersonFile(file) {
     if (initView) initView.style.display = 'none';
     const nextBtn = document.getElementById('step1Next');
     if (nextBtn) nextBtn.style.display = 'inline-flex';
+    saveSession();
     showToast('Personenfoto erfolgreich geladen', 'success');
   } catch (err) {
     showToast(err.message, 'error');
@@ -178,6 +247,7 @@ function renderPersonPreview() {
     if (nextBtn) nextBtn.style.display = 'none';
     const tipRow = document.getElementById('photoTipRow');
     if (tipRow) tipRow.style.display = 'none';
+    saveSession();
   });
 }
 
@@ -227,7 +297,7 @@ async function handleClothingFiles(files) {
     if (!f.type.startsWith('image/')) continue;
     if (f.size > maxSize) { showToast(`${f.name} ist zu groß (max 20 MB). Übersprungen.`, 'warning'); continue }
     promises.push(convertImageToStandard(f).then(converted => fileToBase64(converted)).then(data => {
-      state.clothingItems.push({ id: generateId(), ...data, type: '', size: '', colors: [] });
+      state.clothingItems.push({ id: generateId(), ...data, type: '', size: '', colors: [], selected: true });
     }));
   }
   if (!promises.length) return;
@@ -240,6 +310,7 @@ async function handleClothingFiles(files) {
     badge.className = 'upload-count';
     badge.textContent = `${count} Kleidungsstück${count > 1 ? 'e' : ''} hochgeladen`;
     clothingDropZone.after(badge);
+    saveSession();
     showToast(`${promises.length} Kleidungsstück${promises.length > 1 ? 'e' : ''} hinzugefügt`, 'success');
   } catch (err) {
     showToast('Fehler beim Verarbeiten der Bilder.', 'error');
@@ -290,6 +361,10 @@ function renderClothingPreviews() {
 
   clothingPreviewGrid.innerHTML = state.clothingItems.map(item => `
     <div class="preview-card" data-id="${item.id}">
+      <label class="item-select-checkbox">
+        <input type="checkbox" class="item-gen-checkbox" data-id="${item.id}" ${item.selected !== false ? 'checked' : ''}>
+        <span class="checkbox-label">generieren</span>
+      </label>
       <img src="${base64ToDataUrl(item.base64, item.mimeType)}" alt="${item.name}">
       <div class="info">
         <div class="item-name">${escapeHtml(item.name)}</div>
@@ -305,6 +380,14 @@ function renderClothingPreviews() {
     </div>
   `).join('');
 
+  /* Checkbox toggle */
+  clothingPreviewGrid.querySelectorAll('.item-gen-checkbox').forEach(cb => {
+    cb.addEventListener('change', () => {
+      const item = state.clothingItems.find(i => i.id === cb.dataset.id);
+      if (item) item.selected = cb.checked;
+    });
+  });
+
   /* Native select change handlers */
   clothingPreviewGrid.querySelectorAll('.type-select').forEach(sel => {
     sel.addEventListener('change', e => {
@@ -315,6 +398,7 @@ function renderClothingPreviews() {
       item.type = sel.value;
       const trig = document.querySelector(`.mobile-select-trigger[data-id="${id}"][data-field="type-select"] .trigger-label`);
       if (trig) trig.textContent = sel.value ? TYPE_LABELS[sel.value] : 'Typ wählen';
+      saveSession();
     });
   });
 
@@ -327,6 +411,7 @@ function renderClothingPreviews() {
       item.size = sel.value;
       const trig = document.querySelector(`.mobile-select-trigger[data-id="${id}"][data-field="size-select"] .trigger-label`);
       if (trig) trig.textContent = sel.value || 'Größe wählen';
+      saveSession();
     });
   });
 
@@ -383,6 +468,7 @@ function renderClothingPreviews() {
             item.colors = val || [];
             renderClothingPreviews();
           }
+          saveSession();
         },
       });
     });
@@ -396,6 +482,7 @@ function renderClothingPreviews() {
         state.generationDone = false;
       }
       renderClothingPreviews();
+      saveSession();
     });
   });
 }
@@ -424,11 +511,13 @@ $('#modeSingle').addEventListener('click', () => {
   state.generationMode = 'single';
   $('#modeSingle').classList.add('selected');
   $('#modeCombined').classList.remove('selected');
+  saveSession();
 });
 $('#modeCombined').addEventListener('click', () => {
   state.generationMode = 'combined';
   $('#modeCombined').classList.add('selected');
   $('#modeSingle').classList.remove('selected');
+  saveSession();
 });
 
 $('#step3Back').addEventListener('click', () => goToStep(2));
@@ -436,10 +525,12 @@ $('#step3Back').addEventListener('click', () => goToStep(2));
 $('#qualitySelect').addEventListener('change', () => {
   state.selectedQuality = $('#qualitySelect').value;
   updateGenSummary();
+  saveSession();
 });
 $('#sizeSelect').addEventListener('change', () => {
   state.selectedSize = $('#sizeSelect').value;
   updateGenSummary();
+  saveSession();
 });
 
 function updateGenSummary() {
@@ -447,8 +538,9 @@ function updateGenSummary() {
   const mode = state.generationMode === 'single' ? 'Einzeln' : 'Alle zusammen';
   const est = estimateCost(count, state.generationMode, state.selectedQuality);
   const sizeLabel = IMAGE_SIZES[state.selectedSize] || state.selectedSize;
+  const selectedCount = state.clothingItems.filter(i => i.selected !== false).length;
   const items = [
-    { icon: '📸', label: 'Kleidungsstücke', val: count },
+    { icon: '📸', label: 'Kleidungsstücke', val: `${selectedCount}/${count} ausgewählt` },
     { icon: '⚙️', label: 'Modus', val: mode },
     { icon: '🌐', label: 'API-Aufrufe', val: est.calls },
     { icon: '📐', label: 'Größe', val: sizeLabel },
@@ -469,6 +561,7 @@ const progressWrap = $('#progressWrap');
 const logArea = $('#logArea');
 const progressTimers = {};
 let activeLottie = null;
+const abortControllers = {};
 
 function addLog(msg, type = 'info') {
   const el = document.createElement('div');
@@ -490,6 +583,7 @@ function statusIcon(type) {
 
 function showProgressItems(mode, items) {
   const container = document.getElementById('progressItems');
+  const cancelBtn = '<button class="btn btn-sm btn-danger" id="cancelGenBtn" style="margin-top:.5rem">✖ Generierung abbrechen</button>';
   if (mode === 'combined') {
     container.innerHTML = `
       <div class="progress-item" data-idx="0">
@@ -503,7 +597,8 @@ function showProgressItems(mode, items) {
           <div class="progress-item-pct">0%</div>
         </div>
         <div class="progress-item-status" title="Wartet...">${statusIcon('')}</div>
-      </div>`;
+      </div>
+      ${cancelBtn}`;
   } else {
     container.innerHTML = items.map((item, i) => `
       <div class="progress-item" data-idx="${i}">
@@ -518,8 +613,9 @@ function showProgressItems(mode, items) {
         </div>
         <div class="progress-item-status" title="Wartet...">${statusIcon('')}</div>
       </div>
-    `).join('');
+    `).join('') + cancelBtn;
   }
+  document.getElementById('cancelGenBtn')?.addEventListener('click', cancelGeneration);
 }
 
 function updateProgressItem(idx, pct, status) {
@@ -604,6 +700,26 @@ function stopItemProgress(idx, success) {
   }
 }
 
+let generationCancelled = false;
+
+function cancelGeneration() {
+  generationCancelled = true;
+  Object.values(abortControllers).forEach(c => c.abort());
+  addLog('⛔ Generierung vom Benutzer abgebrochen', 'warn');
+  showToast('⛔ Generierung abgebrochen', 'warning');
+  Object.keys(progressTimers).forEach(k => stopItemProgress(k));
+  if (activeLottie) { activeLottie.instance.destroy(); activeLottie = null; }
+  state.isGenerating = false;
+  generateBtn.disabled = false;
+  document.getElementById('cancelGenBtn')?.remove();
+  if (state.generatedImages.length > 0) {
+    state.generationDone = true;
+    renderResults();
+    goToStep(4);
+    renderZipPreview();
+  }
+}
+
 generateBtn.addEventListener('click', async () => {
   if (state.isGenerating) return;
   if (!state.apiKey || !validateApiKey(state.apiKey)) {
@@ -611,23 +727,30 @@ generateBtn.addEventListener('click', async () => {
   }
   if (!state.personPhoto) { showToast('Kein Personenfoto vorhanden.', 'error'); return }
   if (state.clothingItems.length === 0) { showToast('Keine Kleidungsstücke vorhanden.', 'error'); return }
-  if (state.generationMode === 'combined' && state.clothingItems.length > 9) {
+
+  let items = state.clothingItems;
+  if (state.generationMode === 'single') {
+    items = items.filter(i => i.selected !== false);
+    if (items.length === 0) { showToast('Bitte mindestens ein Kleidungsstück zum Generieren auswählen.', 'warning'); return }
+  }
+
+  if (state.generationMode === 'combined' && items.length > 9) {
     showToast('Im kombinierten Modus werden max. 9 Kleidungsstücke unterstützt.', 'warning'); return;
   }
-  const missing = state.clothingItems.filter(i => !i.type || !i.size);
+  const missing = items.filter(i => !i.type || !i.size);
   if (missing.length > 0) {
     showToast(`Bitte für ${missing.length} Kleidungsstück${missing.length>1?'e':''} Typ und Größe wählen.`, 'warning'); return;
   }
 
   state.generatedImages = [];
   state.isGenerating = true;
+  generationCancelled = false;
   generateBtn.disabled = true;
   progressWrap.style.display = 'flex';
   logArea.innerHTML = '';
   document.getElementById('resultsGrid').innerHTML = '';
   state.generationDone = false;
 
-  const items = state.clothingItems;
   const mode = state.generationMode;
   const totalCalls = mode === 'single' ? items.length : 1;
   let successCount = 0;
@@ -642,9 +765,12 @@ generateBtn.addEventListener('click', async () => {
       let doneCount = 0;
 
       const promises = items.map(async (item, i) => {
+        if (generationCancelled) return;
         addLog(`Generiere Anprobebild für "${item.name}" (${TYPE_LABELS[item.type]})...`);
         updateProgressItem(i, 0, 'generating');
         startItemProgress(i);
+        const controller = new AbortController();
+        abortControllers[i] = controller;
 
         try {
           addLog(`Sende API-Request für "${item.name}"...`);
@@ -653,7 +779,7 @@ generateBtn.addEventListener('click', async () => {
             clothingItems: [item],
             prompt: buildTryOnPrompt(item.type, item.size),
             apiKey: state.apiKey,
-            signal: AbortSignal.timeout(180000),
+            signal: controller.signal,
             size: state.selectedSize,
             quality: state.selectedQuality,
           });
@@ -677,6 +803,7 @@ generateBtn.addEventListener('click', async () => {
           stopItemProgress(i, true);
           addLog(`✅ "${item.name}" erfolgreich generiert`, 'success');
         } catch (err) {
+          if (err.name === 'AbortError') return;
           if (err instanceof OpenAIError && err.type === 'insufficient_quota') {
             addLog(`💰 Guthaben aufgebraucht. Bitte Guthaben aufladen.`, 'error');
             showToast('💰 OpenAI-Guthaben aufgebraucht.', 'error');
@@ -699,10 +826,12 @@ generateBtn.addEventListener('click', async () => {
             stopItemProgress(i, false);
             failCount++;
           }
+        } finally {
+          delete abortControllers[i];
         }
 
         doneCount++;
-        progressOverallEl.textContent = `Generiere Bilder... (${doneCount}/${totalCalls} fertig)`;
+        if (!generationCancelled) progressOverallEl.textContent = `Generiere Bilder... (${doneCount}/${totalCalls} fertig)`;
       });
 
       await Promise.allSettled(promises);
@@ -710,6 +839,8 @@ generateBtn.addEventListener('click', async () => {
       addLog(`Generiere kombiniertes Anprobebild (${items.length} Kleidungsstücke)...`);
       updateProgressItem(0, 0, 'generating');
       startItemProgress(0);
+      const controller = new AbortController();
+      abortControllers[0] = controller;
 
       try {
         const data = await callImageEdit({
@@ -717,7 +848,7 @@ generateBtn.addEventListener('click', async () => {
           clothingItems: items,
           prompt: COMBINED_PROMPT,
           apiKey: state.apiKey,
-          signal: AbortSignal.timeout(300000),
+          signal: controller.signal,
           size: state.selectedSize,
           quality: state.selectedQuality,
         });
@@ -739,6 +870,7 @@ generateBtn.addEventListener('click', async () => {
         stopItemProgress(0, true);
         addLog(`✅ Kombiniertes Bild erfolgreich generiert`, 'success');
       } catch (err) {
+        if (err.name === 'AbortError') return;
         if (err instanceof OpenAIError && err.type === 'insufficient_quota') {
           addLog(`💰 Guthaben aufgebraucht.`, 'error');
           showToast('💰 OpenAI-Guthaben aufgebraucht.', 'error');
@@ -758,8 +890,14 @@ generateBtn.addEventListener('click', async () => {
           failCount++;
         }
         stopItemProgress(0, false);
+      } finally {
+        delete abortControllers[0];
       }
     }
+
+    document.getElementById('cancelGenBtn')?.remove();
+
+    if (generationCancelled) return;
 
     const resultMsg = successCount > 0
       ? `✅ ${successCount}/${totalCalls} Bilder erfolgreich`
@@ -773,6 +911,8 @@ generateBtn.addEventListener('click', async () => {
       goToStep(4);
       renderZipPreview();
       generateAllSaleTexts();
+      saveSession();
+      addHistoryEntry(items.length, mode, successCount);
       showToast(`${successCount} von ${totalCalls} Bild${totalCalls > 1 ? 'ern' : ''} erfolgreich`, successCount === totalCalls ? 'success' : 'warning');
     }
     if (failCount > 0) {
@@ -1206,6 +1346,7 @@ resetBtn.addEventListener('click', () => {
 
   personFileInput.value = '';
   clothingFileInput.value = '';
+  clearSession();
   goToStep(1);
   showToast('Session zurückgesetzt', 'info');
 });
@@ -1234,6 +1375,66 @@ document.querySelectorAll('.settings-tab').forEach(tab => {
     if (panel) panel.classList.add('visible');
   });
 });
+
+// ============ SESSION HISTORY ============
+
+const HISTORY_KEY = 'vto_history';
+
+function addHistoryEntry(itemCount, mode, successCount) {
+  try {
+    const raw = localStorage.getItem(HISTORY_KEY);
+    const history = raw ? JSON.parse(raw) : [];
+    history.unshift({
+      id: generateId(),
+      date: new Date().toISOString(),
+      itemCount,
+      mode,
+      successCount,
+    });
+    if (history.length > 20) history.length = 20;
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+    renderHistory();
+  } catch (_) {}
+}
+
+function renderHistory() {
+  const container = document.getElementById('historyList');
+  if (!container) return;
+  try {
+    const raw = localStorage.getItem(HISTORY_KEY);
+    const history = raw ? JSON.parse(raw) : [];
+    if (history.length === 0) {
+      container.innerHTML = '<div class="empty-state" style="padding:1rem"><span class="empty-icon">📭</span><span class="empty-desc">Noch keine abgeschlossenen Sessions.</span></div>';
+      return;
+    }
+    container.innerHTML = history.map((h, idx) => `
+      <div class="history-item">
+        <div class="history-item-info">
+          <strong>Session ${history.length - idx}</strong>
+          <span>${new Date(h.date).toLocaleDateString('de-DE')} · ${h.itemCount} Kleidungsstück${h.itemCount > 1 ? 'e' : ''} · ${h.mode === 'single' ? 'Einzeln' : 'Kombiniert'} · ${h.successCount} Bild${h.successCount > 1 ? 'er' : ''}</span>
+        </div>
+        <button class="btn btn-sm btn-outline" onclick="deleteHistoryEntry('${h.id}')" title="Eintrag löschen">✕</button>
+      </div>
+    `).join('');
+  } catch (_) {
+    container.innerHTML = '';
+  }
+}
+
+window.deleteHistoryEntry = function (id) {
+  try {
+    const raw = localStorage.getItem(HISTORY_KEY);
+    const history = raw ? JSON.parse(raw) : [];
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(history.filter(h => h.id !== id)));
+    renderHistory();
+  } catch (_) {}
+};
+
+window.clearHistory = function () {
+  if (!confirm('Gesamten Verlauf löschen?')) return;
+  localStorage.removeItem(HISTORY_KEY);
+  renderHistory();
+};
 
 // Header shrink on scroll (RAF-throttled)
 let headerRafPending = false;
@@ -1280,6 +1481,7 @@ window.addEventListener('beforeunload', (e) => {
 // ============ INIT ============
 
 loadApiKey();
+loadSession();
 observeReveal();
 
 // Word rotation
@@ -1303,6 +1505,11 @@ document.addEventListener('keydown', e => {
     if (active?.type === 'file') active.click();
   }
 });
+
+// Auto-test API key on load if present
+if (state.apiKey) {
+  setTimeout(() => testApiKey(), 1000);
+}
 
 console.log('✦ Virtual Try-On App (OpenAI) geladen');
 console.log(`API-Key ${state.apiKey ? '✓ vorhanden' : '✗ fehlt'}`);

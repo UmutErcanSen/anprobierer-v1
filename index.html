@@ -67,11 +67,13 @@
         <div class="upload-zone hidden-zone" id="personDropZone">
           <div class="icon">📸</div>
           <strong>Foto hier ablegen oder klicken zum Auswählen</strong>
-          <button class="btn btn-sm btn-outline info-btn" onclick="openPhotoGuide()" style="position:absolute;top:.5rem;right:.5rem;padding:.2rem .5rem;font-size:.75rem" title="Tipps für das perfekte Foto">🛈</button>
           <div class="hint">Unterstützt: JPG, PNG, WEBP · iOS Fotos werden automatisch konvertiert (max. 20 MB)</div>
           <input type="file" id="personFileInput" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" />
         </div>
         <div class="person-preview" id="personPreview" style="display:none"></div>
+        <div class="photo-tip-row" id="photoTipRow" style="display:none;text-align:center;margin-top:.5rem">
+          <button class="btn btn-sm btn-outline" onclick="openPhotoGuide()" style="font-size:.8rem">🛈 Tipps für das perfekte Foto</button>
+        </div>
 
         <!-- Sichtbar initial + nach Upload; unsichtbar nach Starten-Klick -->
         <div id="step1MiddleSection">
@@ -121,12 +123,7 @@
               </div>
             </div>
           </div>
-          <!-- After upload view -->
-          <div id="step1AfterUpload" style="display:none">
-            <div class="upload-success">
-              <div class="upload-success-icon">✅</div>
-              <div class="upload-success-text"><strong>Personenfoto geladen!</strong><br>Klicke auf <strong>Weiter</strong>, um Kleidungsstücke hinzuzufügen.</div>
-            </div>
+        </div>
           </div>
         </div>
       </section>

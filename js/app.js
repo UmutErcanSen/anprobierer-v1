@@ -138,13 +138,14 @@ async function handlePersonFile(file) {
     const data = await fileToBase64(converted);
     state.personPhoto = data;
     renderPersonPreview();
-    document.getElementById('stepsBar').classList.replace('hidden', 'show');
+    const stepsBar = document.getElementById('stepsBar');
+    if (stepsBar) stepsBar.classList.replace('hidden', 'show');
     const middle = document.getElementById('step1MiddleSection');
-    middle.classList.remove('hidden-zone');
-    middle.classList.add('fade-in');
-    document.getElementById('step1InitialView').style.display = 'none';
-    document.getElementById('step1AfterUpload').style.display = 'block';
-    document.getElementById('step1Next').style.display = 'inline-flex';
+    if (middle) { middle.classList.remove('hidden-zone'); middle.classList.add('fade-in'); }
+    const initView = document.getElementById('step1InitialView');
+    if (initView) initView.style.display = 'none';
+    const nextBtn = document.getElementById('step1Next');
+    if (nextBtn) nextBtn.style.display = 'inline-flex';
     showToast('Personenfoto erfolgreich geladen', 'success');
   } catch (err) {
     showToast(err.message, 'error');
@@ -169,11 +170,16 @@ function renderPersonPreview() {
     personPreview.style.display = 'none';
     personDropZone.classList.remove('has-file');
     personFileInput.value = '';
-    document.getElementById('stepsBar').classList.replace('show', 'hidden');
-    document.getElementById('step1MiddleSection').classList.add('hidden-zone');
-    document.getElementById('step1InitialView').style.display = '';
-    document.getElementById('step1AfterUpload').style.display = 'none';
-    document.getElementById('step1Next').style.display = 'none';
+    const stepsBar = document.getElementById('stepsBar');
+    if (stepsBar) stepsBar.classList.replace('show', 'hidden');
+    const middle = document.getElementById('step1MiddleSection');
+    if (middle) middle.classList.add('hidden-zone');
+    const initView = document.getElementById('step1InitialView');
+    if (initView) initView.style.display = '';
+    const nextBtn = document.getElementById('step1Next');
+    if (nextBtn) nextBtn.style.display = 'none';
+    const tipRow = document.getElementById('photoTipRow');
+    if (tipRow) tipRow.style.display = 'none';
   });
 }
 
@@ -197,6 +203,8 @@ $('#step1StartBtn').addEventListener('click', () => {
   dz.classList.remove('hidden-zone');
   dz.classList.add('fade-in');
   document.getElementById('step1StartBtn').disabled = true;
+  const tipRow = document.getElementById('photoTipRow');
+  if (tipRow) tipRow.style.display = 'block';
 });
 
 $('#step1Next').addEventListener('click', () => {
@@ -1154,13 +1162,18 @@ resetBtn.addEventListener('click', () => {
   state.isGenerating = false;
   state.generationMode = 'single';
 
-  document.getElementById('personPreview').style.display = 'none';
-  document.getElementById('personDropZone').classList.remove('has-file');
-  document.getElementById('step1InitialView').style.display = '';
-  document.getElementById('step1AfterUpload').style.display = 'none';
-  document.getElementById('personDropZone').classList.add('hidden-zone');
-  document.getElementById('heroSection').classList.remove('hero-hidden');
-  document.getElementById('step1StartBtn').disabled = false;
+  const pv = document.getElementById('personPreview');
+  if (pv) pv.style.display = 'none';
+  const dropZone = document.getElementById('personDropZone');
+  if (dropZone) { dropZone.classList.remove('has-file'); dropZone.classList.add('hidden-zone'); }
+  const initView = document.getElementById('step1InitialView');
+  if (initView) initView.style.display = '';
+  const tipRow = document.getElementById('photoTipRow');
+  if (tipRow) tipRow.style.display = 'none';
+  const hero = document.getElementById('heroSection');
+  if (hero) hero.classList.remove('hero-hidden');
+  const startBtn = document.getElementById('step1StartBtn');
+  if (startBtn) startBtn.disabled = false;
   clothingPreviewGrid.innerHTML = '';
   noClothingHint.style.display = 'block';
   resultsGrid.innerHTML = '';

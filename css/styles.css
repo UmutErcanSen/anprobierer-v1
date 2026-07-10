@@ -996,10 +996,7 @@ header.header-compact{box-shadow:0 2px 24px rgba(0,0,0,.45)}
 .step-section{contain:layout style paint}
 
 /* === AFTER UPLOAD SUCCESS === */
-.upload-success{text-align:center;padding:2rem 1rem;animation:fadeIn .4s ease}
-.upload-success-icon{font-size:3rem;margin-bottom:.5rem}
-.upload-success-text{font-size:1rem;color:var(--text-2);line-height:1.6}
-.upload-success-text strong{color:var(--text)}
+
 
 /* === MERGED OPTIONS ROW === */
 .options-row{display:flex;gap:1rem;margin-bottom:1rem}

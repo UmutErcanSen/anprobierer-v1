@@ -22,18 +22,20 @@ const IMAGE_SIZES = {
   '1536x1024': 'Querformat (1536×1024)',
 };
 
-function buildTryOnPrompt(clothingType, size) {
+function buildTryOnPrompt(clothingType, size, extraNotes) {
   const t = TYPE_EN[clothingType] || 'clothing item';
   const sizeHint = size ? ` It should correspond to size ${size}.` : '';
-  return `Virtually try on this ${t} (shown in image 2) onto the person in image 1. The ${t} should fit naturally and realistically, matching the person's pose and body shape.${sizeHint} Keep the person's original background, face, hairstyle, and all other clothing items unchanged. The result must look like a realistic photograph.`;
+  const notes = extraNotes ? `\n\nZusätzliche Anweisungen des Nutzers: ${extraNotes}` : '';
+  return `Virtually try on this ${t} (shown in image 2) onto the person in image 1. The ${t} should fit naturally and realistically, matching the person's pose and body shape.${sizeHint} Keep the person's original background, face, hairstyle, and all other clothing items unchanged. The result must look like a realistic photograph.${notes}`;
 }
 
 const COMBINED_PROMPT = `Virtually dress this person (image 1) with all the provided clothing items (images 2+). Put each item on the correct body part (top on upper body, bottoms on lower body, shoes on feet, etc.). Make everything fit naturally and realistically. Keep the person's original background, face, and hairstyle. The result must look like a realistic full-body outfit photograph.`;
 
-function buildSalePrompt(clothingType, size, colors) {
+function buildSalePrompt(clothingType, size, colors, extraNotes) {
   const typeInfo = clothingType ? ` (a ${clothingType})` : '';
   const sizeInfo = size ? `Size: ${size}. ` : '';
   const hasColor = colors && colors.length > 0 && colors[0];
+  const notes = extraNotes ? `\n\nZusätzliche Anweisungen des Nutzers: ${extraNotes}` : '';
   const colorInfo = hasColor
     ? `The item is ${colors.join(' and ')}. Use "${colors.join(' and ')}" as the color(s) in your description - do NOT guess from the photo. `
     : 'DO NOT guess or invent a color from the photo. Describe the item without mentioning a color. ';
@@ -47,7 +49,7 @@ STRICT RULES:
 - Do NOT guess the material, do NOT suggest a price
 - Do NOT include condition, fit-on-body, or style tips
 ${colorInfo}${sizeInfo}
-Structure: Überschrift (SEO, max 80 Zeichen, Emojis) | Beschreibung (nur das Kleidungsstück) | Größe. Use an engaging tone with emojis. Max 130 words.`;
+Structure: Überschrift (SEO, max 80 Zeichen, Emojis) | Beschreibung (nur das Kleidungsstück) | Größe. Use an engaging tone with emojis. Max 130 words.${notes}`;
 }
 
 async function callImageEdit({ personPhoto, clothingItems, prompt, apiKey, signal, size, quality }) {

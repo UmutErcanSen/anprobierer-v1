@@ -118,10 +118,10 @@
               multiple
             />
           </div>
-          <div class="photo-tip-row" style="text-align:center;margin-top:.5rem">
+          <div class="preview-grid" id="clothingPreviewGrid"></div>
+          <div class="photo-tip-row" style="text-align:center;margin-top:.75rem">
             <button class="btn btn-sm btn-outline info-btn" onclick="openClothingGuide()" style="font-size:.8rem">🛈 Tipps für Kleidungsfotos</button>
           </div>
-          <div class="preview-grid" id="clothingPreviewGrid"></div>
           <p
             id="noClothingHint"
             style="
@@ -168,6 +168,10 @@
                 <option value="1536x1024">Querformat (1536×1024)</option>
               </select>
             </div>
+          </div>
+          <div class="extra-notes-row">
+            <label for="extraNotes">Zusätzliche Anweisungen (optional)</label>
+            <textarea id="extraNotes" rows="2" placeholder='z. B. "Bei dieser Hose keine Taschen", "Kragen hochgestellt", …'></textarea>
           </div>
           <div class="gen-info" id="genSummary">
             <div class="gen-info-empty">

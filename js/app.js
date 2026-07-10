@@ -8,6 +8,7 @@ const state = {
   isGenerating: false,
   selectedQuality: 'medium',
   selectedSize: '1024x1536',
+  extraNotes: '',
 };
 
 const SESSION_KEY = 'vto_session';
@@ -22,6 +23,7 @@ function saveSession() {
       generationDone: state.generationDone,
       selectedQuality: state.selectedQuality,
       selectedSize: state.selectedSize,
+      extraNotes: state.extraNotes,
     };
     localStorage.setItem(SESSION_KEY, JSON.stringify(data));
   } catch (e) {
@@ -77,10 +79,13 @@ function loadSession() {
     }
     if (data.selectedQuality) state.selectedQuality = data.selectedQuality;
     if (data.selectedSize) state.selectedSize = data.selectedSize;
+    if (data.extraNotes !== undefined) state.extraNotes = data.extraNotes;
     const qs = document.getElementById('qualitySelect');
     if (qs) qs.value = state.selectedQuality;
     const ss = document.getElementById('sizeSelect');
     if (ss) ss.value = state.selectedSize;
+    const en = document.getElementById('extraNotes');
+    if (en) en.value = state.extraNotes || '';
 
     // restore generated images
     if (data.generatedImages && data.generatedImages.length > 0) {
@@ -496,6 +501,13 @@ $('#sizeSelect').addEventListener('change', () => {
   updateGenSummary();
   saveSession();
 });
+const extraNotesEl = document.getElementById('extraNotes');
+if (extraNotesEl) {
+  extraNotesEl.addEventListener('input', () => {
+    state.extraNotes = extraNotesEl.value;
+    saveSession();
+  });
+}
 
 function updateGenSummary() {
   const totalCount = state.clothingItems.length;
@@ -738,7 +750,7 @@ generateBtn.addEventListener('click', async () => {
           const data = await callImageEdit({
             personPhoto: state.personPhoto,
             clothingItems: [item],
-            prompt: buildTryOnPrompt(item.type, item.size),
+            prompt: buildTryOnPrompt(item.type, item.size, state.extraNotes),
             apiKey: state.apiKey,
             signal: controller.signal,
             size: state.selectedSize,
@@ -807,7 +819,7 @@ generateBtn.addEventListener('click', async () => {
         const data = await callImageEdit({
           personPhoto: state.personPhoto,
           clothingItems: items,
-          prompt: COMBINED_PROMPT,
+          prompt: COMBINED_PROMPT + (state.extraNotes ? `\n\nZusätzliche Anweisungen des Nutzers: ${state.extraNotes}` : ''),
           apiKey: state.apiKey,
           signal: controller.signal,
           size: state.selectedSize,
@@ -872,7 +884,7 @@ generateBtn.addEventListener('click', async () => {
       renderZipPreview();
       generateAllSaleTexts();
       saveSession();
-      addHistoryEntry(items.length, mode, successCount);
+      addHistoryEntry(items.length, mode, successCount, state.extraNotes);
       document.getElementById('step4')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       showToast(`${successCount} von ${totalCalls} Bild${totalCalls > 1 ? 'ern' : ''} erfolgreich`, successCount === totalCalls ? 'success' : 'warning');
     }
@@ -990,7 +1002,7 @@ async function generateSaleTextForImage(img) {
         role: 'user',
         content: [
           { type: 'image_url', image_url: { url: base64ToDataUrl(img.base64, img.mimeType) } },
-          { type: 'text', text: buildSalePrompt(TYPE_LABELS[img.clothingType] || img.clothingType, img.size, img.colors || []) },
+          { type: 'text', text: buildSalePrompt(TYPE_LABELS[img.clothingType] || img.clothingType, img.size, img.colors || [], state.extraNotes) },
         ],
       },
     ],
@@ -1304,6 +1316,9 @@ resetBtn.addEventListener('click', () => {
   document.getElementById('costEstimate').style.display = 'none';
   $('#modeSingle').classList.add('selected');
   $('#modeCombined').classList.remove('selected');
+  state.extraNotes = '';
+  const en = document.getElementById('extraNotes');
+  if (en) en.value = '';
 
   personFileInput.value = '';
   clothingFileInput.value = '';
@@ -1341,7 +1356,7 @@ document.querySelectorAll('.settings-tab').forEach(tab => {
 
 const HISTORY_KEY = 'vto_history';
 
-function addHistoryEntry(itemCount, mode, successCount) {
+function addHistoryEntry(itemCount, mode, successCount, notes) {
   try {
     const raw = localStorage.getItem(HISTORY_KEY);
     const history = raw ? JSON.parse(raw) : [];
@@ -1351,6 +1366,7 @@ function addHistoryEntry(itemCount, mode, successCount) {
       itemCount,
       mode,
       successCount,
+      notes: notes || '',
     });
     if (history.length > 20) history.length = 20;
     localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
@@ -1373,6 +1389,7 @@ function renderHistory() {
         <div class="history-item-info">
           <strong>Session ${history.length - idx}</strong>
           <span>${new Date(h.date).toLocaleDateString('de-DE')} · ${h.itemCount} Kleidungsstück${h.itemCount > 1 ? 'e' : ''} · ${h.mode === 'single' ? 'Einzeln' : 'Kombiniert'} · ${h.successCount} Bild${h.successCount > 1 ? 'er' : ''}</span>
+          ${h.notes ? `<span class="history-notes">„${h.notes.slice(0, 30)}${h.notes.length > 30 ? '…' : ''}"</span>` : ''}
         </div>
         <button class="btn btn-sm btn-outline" onclick="deleteHistoryEntry('${h.id}')" title="Eintrag löschen">✕</button>
       </div>

@@ -961,7 +961,7 @@ header.header-compact{box-shadow:0 2px 24px rgba(0,0,0,.45)}
 
 /* === GEN BUTTON FULL WIDTH === */
 .gen-btn{background:rgba(26,26,46,.85);min-width:320px;max-width:100%;padding:1rem 2rem!important;font-size:1.1rem!important;border-radius:var(--radius)!important;position:relative;overflow:hidden;border:none;font-weight:700;cursor:pointer;transition:all .3s ease;box-shadow:0 4px 24px rgba(108,99,255,.25)}
-.gen-btn:hover{filter:brightness(1.1);transform:translateY(-2px);box-shadow:0 4px 28px rgba(108,99,255,.4)}
+.gen-btn:hover{background:rgba(50,50,80,.9);transform:translateY(-2px);box-shadow:0 4px 28px rgba(108,99,255,.5)}
 .gen-btn:active{transform:scale(.97)}
 .gen-btn:disabled{opacity:.4;cursor:not-allowed;transform:none;filter:none;box-shadow:none}
 .gen-btn:not(:disabled)::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.1),transparent);transform:translateX(-100%);animation:btn-shine 2.5s ease infinite}

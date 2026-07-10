@@ -1008,3 +1008,28 @@ header.header-compact{box-shadow:0 2px 24px rgba(0,0,0,.45)}
 }
 
 .history-notes{display:block;font-size:.7rem;color:var(--text-3);font-style:italic;margin-top:.15rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px}
+
+/* ============ AUTH OVERLAY ============ */
+.auth-hidden{display:none!important}
+
+#devBadge{position:fixed;bottom:0;left:0;right:0;z-index:9999;background:#ff9800;color:#000;text-align:center;font-size:.75rem;padding:4px 8px;font-weight:600}
+
+.login-overlay{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;background:rgba(10,10,25,.92);backdrop-filter:blur(12px);padding:1rem}
+.login-card{background:var(--surface-1);border:1px solid var(--border);border-radius:var(--radius-lg);padding:2rem;width:100%;max-width:400px;box-shadow:0 25px 60px rgba(0,0,0,.5)}
+.login-header{text-align:center;margin-bottom:1.5rem}
+.login-logo{font-size:2.5rem}
+.login-header h2{margin:.5rem 0 .25rem;font-size:1.3rem}
+.login-header p{color:var(--text-3);font-size:.85rem;margin:0}
+.login-tabs{display:flex;gap:0;margin-bottom:1.25rem;border-radius:var(--radius-sm);overflow:hidden;border:1px solid var(--border)}
+.login-tab{flex:1;padding:.6rem;border:none;background:transparent;color:var(--text-3);font-size:.85rem;cursor:pointer;transition:all .2s}
+.login-tab.active{background:var(--primary);color:#fff;font-weight:600}
+.login-field{margin-bottom:1rem}
+.login-field label{display:block;font-size:.8rem;color:var(--text-3);margin-bottom:.3rem}
+.login-field input{width:100%;padding:.7rem .85rem;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--text-1);font-size:.9rem;outline:none;box-sizing:border-box;transition:border .2s}
+.login-field input:focus{border-color:var(--primary)}
+.login-btn{width:100%;padding:.75rem;font-size:.95rem;margin-top:.5rem}
+.login-divider{display:flex;align-items:center;gap:.75rem;margin:1.25rem 0;color:var(--text-3);font-size:.8rem}
+.login-divider::before,.login-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.login-google-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:.6rem;padding:.7rem;font-size:.9rem}
+.login-google-btn svg{flex-shrink:0}
+.login-error{text-align:center;font-size:.8rem;color:var(--error);margin-top:.75rem;min-height:1.2rem}

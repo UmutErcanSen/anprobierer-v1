@@ -1,4 +1,4 @@
-const TYPE_LABELS = {
+export const TYPE_LABELS = {
   jacket_coat: 'Jacken & Mäntel',
   sweater: 'Pullover & Strickpullover',
   blazer_suit: 'Blazer & Anzüge',
@@ -16,7 +16,7 @@ const TYPE_LABELS = {
   costume: 'Kostüme & Besonderes',
 };
 
-const TYPE_EN = {
+export const TYPE_EN = {
   jacket_coat: 'jacket or coat',
   sweater: 'sweater or pullover',
   blazer_suit: 'blazer or suit',
@@ -34,7 +34,7 @@ const TYPE_EN = {
   costume: 'costume or special outfit',
 };
 
-const COLORS = [
+export const COLORS = [
   { label: 'Keine Angabe', value: '', hex: '' },
   { label: 'Schwarz', value: 'schwarz', hex: '#000000' },
   { label: 'Weiß', value: 'weiss', hex: '#f5f5f5' },
@@ -57,7 +57,7 @@ const COLORS = [
   { label: 'Mehrfarbig', value: 'mehrfarbig', hex: '' },
 ];
 
-const SIZES = [
+export const SIZES = [
   'XXS (30/2)',
   'XS (34/6)',
   'S (36/8)',
@@ -70,20 +70,20 @@ const SIZES = [
   '5XL (50/22)',
 ];
 
-const $ = s => document.querySelector(s);
-const $$ = s => document.querySelectorAll(s);
+export const $ = s => document.querySelector(s);
+export const $$ = s => document.querySelectorAll(s);
 
-function sleep(ms) { return new Promise(r => setTimeout(r, ms)) }
+export function sleep(ms) { return new Promise(r => setTimeout(r, ms)) }
 
-function formatDate() {
+export function formatDate() {
   const d = new Date();
   const pad = n => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}_${pad(d.getHours())}-${pad(d.getMinutes())}`;
 }
 
-function generateId() { return Math.random().toString(36).slice(2, 9) }
+export function generateId() { return Math.random().toString(36).slice(2, 9) }
 
-function fileToBase64(file) {
+export function fileToBase64(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => {
@@ -96,20 +96,20 @@ function fileToBase64(file) {
   });
 }
 
-function dataUrlToBase64(dataUrl) {
+export function dataUrlToBase64(dataUrl) {
   const parts = dataUrl.split(',');
   return { base64: parts[1] || parts[0], mimeType: dataUrl.split(';')[0].split(':')[1] || 'image/jpeg' };
 }
 
-function base64ToDataUrl(base64, mimeType) {
+export function base64ToDataUrl(base64, mimeType) {
   return `data:${mimeType};base64,${base64}`;
 }
 
-function getImageSize(base64) {
+export function getImageSize(base64) {
   return Math.round((base64.length * 3) / 4 / 1024 / 1024 * 100) / 100;
 }
 
-function base64ToBlob(base64, mimeType) {
+export function base64ToBlob(base64, mimeType) {
   const byteChars = atob(base64);
   const byteNums = new Array(byteChars.length);
   for (let i = 0; i < byteChars.length; i++) {
@@ -119,7 +119,7 @@ function base64ToBlob(base64, mimeType) {
   return new Blob([byteArray], { type: mimeType });
 }
 
-function showToast(message, type = 'info', duration = 6000) {
+export function showToast(message, type = 'info', duration = 6000) {
   const icons = { error: '❌', success: '✅', warning: '⚠️', info: 'ℹ️' };
   const container = document.getElementById('toastContainer');
   if (!container) return;
@@ -130,7 +130,7 @@ function showToast(message, type = 'info', duration = 6000) {
   setTimeout(() => { if (el.parentElement) el.remove() }, duration);
 }
 
-function convertImageToStandard(file) {
+export function convertImageToStandard(file) {
   return new Promise((resolve, reject) => {
     const img = new Image();
     const url = URL.createObjectURL(file);
@@ -167,7 +167,7 @@ function convertImageToStandard(file) {
   });
 }
 
-function escapeHtml(str) {
+export function escapeHtml(str) {
   const d = document.createElement('div');
   d.textContent = str;
   return d.innerHTML;

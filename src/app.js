@@ -1,3 +1,18 @@
+import {
+  TYPE_LABELS, TYPE_EN, COLORS, SIZES,
+  $, $$, sleep, formatDate, generateId,
+  fileToBase64, dataUrlToBase64, base64ToDataUrl,
+  getImageSize, base64ToBlob, showToast,
+  convertImageToStandard, escapeHtml,
+} from './utils.js';
+
+import {
+  OPENAI_API, IMAGE_MODEL, TEXT_MODEL, OpenAIError,
+  QUALITY_PRICES, IMAGE_SIZES, COMBINED_PROMPT,
+  buildTryOnPrompt, buildSalePrompt, callImageEdit,
+  callChatCompletion, testApiKey, estimateCost,
+} from './api.js';
+
 const state = {
   apiKey: '',
   personPhoto: null,

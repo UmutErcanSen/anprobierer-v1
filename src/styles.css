@@ -601,8 +601,7 @@ footer{text-align:center;padding:2rem;color:var(--text-3);font-size:.8rem;border
 .account-hint{font-size:.85rem;color:var(--text-3)}
 
 /* === PLAN COMPARISON TABLE === */
-.account-plan-comparison{padding:1.25rem 1.25rem 1rem}
-.account-plan-comparison h3{font-size:.9rem;color:var(--text-2);margin-bottom:.9rem;font-weight:700}
+.plan-comparison-title{font-size:.9rem;color:var(--text-2);margin-bottom:.9rem;font-weight:700}
 .plan-table{display:flex;flex-direction:column;gap:0;margin-bottom:.9rem}
 .plan-table-head{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:.3rem;margin-bottom:.35rem}
 .plan-table-row{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:.3rem;margin-bottom:.2rem}
@@ -614,7 +613,13 @@ footer{text-align:center;padding:2rem;color:var(--text-3);font-size:.8rem;border
 .plan-cell-name{font-size:.85rem}
 .plan-cell--active{background:var(--plan-color-dim,rgba(108,99,255,.12));color:var(--plan-color,var(--primary));border-color:var(--plan-color,var(--primary));font-weight:600}
 .plan-table-head .plan-cell--active{background:var(--plan-color-dim,rgba(108,99,255,.12));border:1px solid var(--plan-color,var(--primary))}
-.account-plan-comparison .account-upgrade-btn{width:100%;justify-content:center;font-size:.85rem;display:block;margin:0 auto}
+.plan-upgrade-btn{width:100%;justify-content:center;font-size:.85rem;display:block;margin:.75rem auto 0}
+.account-plan-comparison{padding:1.25rem 1.25rem 1rem}
+.account-plan-comparison .plan-comparison-title{display:none}
+.account-plan-comparison .plan-upgrade-btn{max-width:320px}
+
+/* === HOME PAGE PLAN COMPARISON === */
+.plan-comparison-home{max-width:540px;margin:2.5rem auto;padding:0 1rem}
 
 .select-overlay{
   display:none;position:fixed;z-index:9999;left:0;top:0;

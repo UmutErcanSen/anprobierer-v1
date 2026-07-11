@@ -15,6 +15,8 @@ import {
 
 import { currentUser, userProfile } from './auth.js';
 import { checkGenerationAllowed, incrementGenerationsUsed, saveGeneration } from './firestore.js';
+import { renderPlanComparison } from './plans.js';
+import { onAuthChange } from './auth.js';
 
 const DEV_MODE = import.meta.env.VITE_DEV_MODE === 'true';
 
@@ -1542,3 +1544,13 @@ document.addEventListener('keydown', e => {
 
 console.log('✦ Virtual Try-On App (OpenAI) geladen');
 console.log(`API-Key ${state.apiKey ? '✓ vorhanden' : '✗ fehlt'}`);
+
+// Homepage plan comparison
+const homeComparison = document.getElementById('planComparisonHome');
+if (homeComparison) {
+  renderPlanComparison(homeComparison, 'free', { showUpgradeBtn: false });
+  onAuthChange((user, profile) => {
+    const plan = profile?.subscription || 'free';
+    renderPlanComparison(homeComparison, plan, { showUpgradeBtn: false });
+  });
+}

@@ -1,59 +1,7 @@
 import { onAuthChange, refreshUserProfile, currentUser, userProfile, logout } from './auth.js';
 import { getUserGenerations } from './firestore.js';
 import { onRouteChange, getCurrentPath, navigateTo } from './router.js';
-
-const PLANS = {
-  free: {
-    label: 'Gratis', limit: 5, color: '#71717a',
-    emoji: '⭐', price: '0 €', quality: 'Mittel', support: 'Standard',
-  },
-  basic: {
-    label: 'Basic', limit: 50, color: '#22c55e',
-    emoji: '💎', price: '9,99 €', quality: 'Hoch', support: 'Priorität',
-  },
-  pro: {
-    label: 'Pro', limit: -1, color: '#f59e0b',
-    emoji: '👑', price: '19,99 €', quality: 'Max', support: 'Premium',
-  },
-};
-
-function renderPlanComparison(subscription) {
-  const el = document.getElementById('accountPlanComparison');
-  if (!el) return;
-  const rows = [
-    { label: 'Generierungen', key: l => l.limit === -1 ? '∞' : `${l.limit}/Monat` },
-    { label: 'Qualität', key: l => l.quality },
-    { label: 'Support', key: l => l.support },
-    { label: 'Preis', key: l => l.price },
-  ];
-  const plans = ['free', 'basic', 'pro'];
-  el.innerHTML = `
-    <h3>📊 Tarifvergleich</h3>
-    <div class="plan-table">
-      <div class="plan-table-head">
-        <div class="plan-table-corner"></div>
-        ${plans.map(key => {
-          const p = PLANS[key];
-          const active = subscription === key ? ' plan-cell--active' : '';
-          return `<div class="plan-cell plan-cell--head${active}">
-            <span class="plan-cell-emoji">${p.emoji}</span>
-            <span class="plan-cell-name">${p.label}</span>
-          </div>`;
-        }).join('')}
-      </div>
-      ${rows.map(r => `
-        <div class="plan-table-row">
-          <div class="plan-table-label">${r.label}</div>
-          ${plans.map(key => {
-            const active = subscription === key ? ' plan-cell--active' : '';
-            return `<div class="plan-cell${active}">${r.key(PLANS[key])}</div>`;
-          }).join('')}
-        </div>
-      `).join('')}
-    </div>
-    <button class="btn btn-primary account-upgrade-btn" id="accountUpgradeBtn" disabled>⬆️ Jetzt upgraden (bald verfügbar)</button>
-  `;
-}
+import { PLANS, renderPlanComparison } from './plans.js';
 
 function renderAccount(profile) {
   const emailEl = document.getElementById('accountEmail');
@@ -120,7 +68,10 @@ function renderAccount(profile) {
     if (usageLabel) usageLabel.textContent += ` · ⚠️ nur noch ${remaining}`;
   }
 
-  renderPlanComparison(subKey);
+  const compEl = document.getElementById('accountPlanComparison');
+  if (compEl) {
+    renderPlanComparison(compEl, subKey, { showUpgradeBtn: true });
+  }
 
   if (historyList && currentUser) {
     getUserGenerations(currentUser.uid, 20).then(entries => {

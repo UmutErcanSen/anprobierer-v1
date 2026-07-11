@@ -563,9 +563,15 @@ footer{text-align:center;padding:2rem;color:var(--text-3);font-size:.8rem;border
   border-radius:var(--radius-sm);cursor:pointer;
   padding:.45rem .6rem;font-size:1.2rem;line-height:1;
   transition:var(--transition);color:var(--text-2);margin-left:auto;
-  display:flex;align-items:center;justify-content:center;
+  display:flex;align-items:center;justify-content:center;position:relative;
 }
 .settings-btn:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-dim)}
+.settings-btn-dot{
+  position:absolute;top:-2px;right:-2px;width:10px;height:10px;
+  border-radius:50%;border:2px solid var(--bg);
+  background:var(--plan-color,#71717a);
+}
+.settings-btn-dot--premium{background:linear-gradient(135deg,#22c55e,#f59e0b)}
 
 /* === ACCOUNT PAGE === */
 .account-page{padding-bottom:3rem;max-width:600px;margin:0 auto}

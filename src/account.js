@@ -3,6 +3,16 @@ import { getUserGenerations } from './firestore.js';
 import { onRouteChange, getCurrentPath, navigateTo } from './router.js';
 import { PLANS, renderPlanComparison } from './plans.js';
 
+const DEV_MODE = import.meta.env.VITE_DEV_MODE === 'true';
+
+const MOCK_HISTORY = [
+  { mode: 'combined', quality: 'hoch', itemCount: 3, date: '2026-07-10' },
+  { mode: 'single', quality: 'mittel', itemCount: 2, date: '2026-07-08' },
+  { mode: 'single', quality: 'hoch', itemCount: 1, date: '2026-07-05' },
+  { mode: 'combined', quality: 'mittel', itemCount: 2, date: '2026-06-28' },
+  { mode: 'single', quality: 'niedrig', itemCount: 1, date: '2026-06-20' },
+];
+
 function renderAccount(profile) {
   const emailEl = document.getElementById('accountEmail');
   const avatarEl = document.getElementById('accountAvatar');
@@ -74,22 +84,31 @@ function renderAccount(profile) {
   }
 
   if (historyList && currentUser) {
-    getUserGenerations(currentUser.uid, 20).then(entries => {
-      if (entries.length === 0) {
-        historyList.innerHTML = '<div class="account-history-empty">Noch keine Generierungen</div>';
-        return;
-      }
-      historyList.innerHTML = entries.map(e => {
-        const date = e.createdAt?.toDate?.()?.toLocaleDateString('de-DE') || '–';
-        const info = e.mode === 'combined' ? 'Kombiniert' : `${e.itemCount || '?'} Einzelbilder`;
-        return `<div class="account-history-item">
-          <span class="account-history-date">${date}</span>
-          <span class="account-history-info">${info} · ${e.quality || 'mittel'}</span>
-        </div>`;
-      }).join('');
-    }).catch(() => {
-      historyList.innerHTML = '<div class="account-history-empty">Fehler beim Laden</div>';
-    });
+    if (DEV_MODE) {
+      historyList.innerHTML = MOCK_HISTORY.map(e => `
+        <div class="account-history-item">
+          <span class="account-history-date">${e.date}</span>
+          <span class="account-history-info">${e.mode === 'combined' ? 'Kombiniert' : e.itemCount + ' Einzelbilder'} · ${e.quality}</span>
+        </div>
+      `).join('');
+    } else {
+      getUserGenerations(currentUser.uid, 20).then(entries => {
+        if (entries.length === 0) {
+          historyList.innerHTML = '<div class="account-history-empty">Noch keine Generierungen</div>';
+          return;
+        }
+        historyList.innerHTML = entries.map(e => {
+          const date = e.createdAt?.toDate?.()?.toLocaleDateString('de-DE') || '–';
+          const info = e.mode === 'combined' ? 'Kombiniert' : `${e.itemCount || '?'} Einzelbilder`;
+          return `<div class="account-history-item">
+            <span class="account-history-date">${date}</span>
+            <span class="account-history-info">${info} · ${e.quality || 'mittel'}</span>
+          </div>`;
+        }).join('');
+      }).catch(() => {
+        historyList.innerHTML = '<div class="account-history-empty">Fehler beim Laden</div>';
+      });
+    }
   }
 
   if (logoutBtn) {

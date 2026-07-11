@@ -1554,9 +1554,23 @@ console.log(`API-Key ${state.apiKey ? '✓ vorhanden' : '✗ fehlt'}`);
 // Homepage plan comparison
 const homeComparison = document.getElementById('planComparisonHome');
 if (homeComparison) {
-  renderPlanComparison(homeComparison, 'free', { showUpgradeBtn: false });
+  const renderHomeComparison = (plan) => {
+    renderPlanComparison(homeComparison, plan, {
+      showUpgradeBtn: true,
+      onUpgrade: async (targetPlan) => {
+        if (!currentUser) {
+          try {
+            await requireAuth();
+            const plan = userProfile?.subscription || 'free';
+            renderHomeComparison(plan);
+          } catch { return }
+        }
+      },
+    });
+  };
+  renderHomeComparison('free');
   onAuthChange((user, profile) => {
     const plan = profile?.subscription || 'free';
-    renderPlanComparison(homeComparison, plan, { showUpgradeBtn: false });
+    renderHomeComparison(plan);
   });
 }

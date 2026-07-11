@@ -25,7 +25,7 @@ const ROWS = [
 const PLAN_KEYS = ['free', 'basic', 'pro'];
 
 export function renderPlanComparison(container, activePlan, options = {}) {
-  const { showUpgradeBtn = true } = options;
+  const { showUpgradeBtn = true, onUpgrade } = options;
   const active = activePlan || '';
 
   const headerCells = PLAN_KEYS.map(key => {
@@ -60,7 +60,7 @@ export function renderPlanComparison(container, activePlan, options = {}) {
     return `<div class="plan-cell plan-cell--footer${isActive ? ' plan-cell--active' : ''}" data-plan="${key}" style="--plan-color:${p.color};--plan-color-dim:${p.color}18">
       ${isActive
         ? `<span class="plan-active-badge">✓ Aktuelles Abo</span>`
-        : `<button class="plan-upgrade-btn" data-plan="${key}" disabled>⬆️ Upgraden</button>`
+        : `<button class="plan-upgrade-btn" data-plan="${key}">⬆️ Upgraden</button>`
       }
     </div>`;
   }).join('');
@@ -80,4 +80,10 @@ export function renderPlanComparison(container, activePlan, options = {}) {
       </div>` : ''}
     </div>
   `;
+
+  if (onUpgrade) {
+    container.querySelectorAll('.plan-upgrade-btn').forEach(btn => {
+      btn.addEventListener('click', () => onUpgrade(btn.dataset.plan));
+    });
+  }
 }

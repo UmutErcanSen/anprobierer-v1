@@ -20,6 +20,25 @@ export function onAuthChange(fn) {
   authListeners.push(fn);
 }
 
+const PLAN_COLORS = {
+  free: '#71717a',
+  basic: '#22c55e',
+  pro: '#f59e0b',
+};
+
+function updateUserDot(plan) {
+  const btn = document.getElementById('userBtn');
+  if (!btn) return;
+  let dot = btn.querySelector('.settings-btn-dot');
+  if (!dot) {
+    dot = document.createElement('span');
+    dot.className = 'settings-btn-dot';
+    btn.appendChild(dot);
+  }
+  const color = PLAN_COLORS[plan] || '#71717a';
+  dot.style.setProperty('--plan-color', color);
+}
+
 function notifyListeners(user, profile) {
   authListeners.forEach(fn => fn(user, profile));
 }
@@ -63,6 +82,7 @@ async function onUserLoggedIn(user) {
     userProfile = await getUserProfile(user.uid);
   }
   notifyListeners(user, userProfile);
+  updateUserDot(userProfile?.subscription || 'free');
   hideLoginOverlay();
   if (authResolve) {
     authResolve(user);
@@ -75,6 +95,9 @@ function onUserLoggedOut() {
   currentUser = null;
   userProfile = null;
   notifyListeners(null, null);
+  const btn = document.getElementById('userBtn');
+  const dot = btn?.querySelector('.settings-btn-dot');
+  if (dot) dot.remove();
 }
 
 export async function refreshUserProfile() {
@@ -98,13 +121,16 @@ export function initAuthGuard() {
     badge.textContent = '🧪 DEV-Modus – Lokaler API-Key wird verwendet';
     document.body.appendChild(badge);
     currentUser = { uid: 'dev-user', email: 'dev@local.dev' };
+    const mockDate = new Date('2026-01-15');
     userProfile = {
       email: 'dev@local.dev',
       subscription: 'free',
-      generationsUsed: 0,
+      generationsUsed: 3,
       generationLimit: 5,
+      createdAt: { toDate: () => mockDate },
     };
     notifyListeners(currentUser, userProfile);
+    updateUserDot('free');
     return;
   }
 

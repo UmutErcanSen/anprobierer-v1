@@ -41,6 +41,7 @@ function onUserLoggedOut() {
 }
 
 export async function refreshUserProfile() {
+  if (DEV_MODE) return userProfile;
   if (currentUser) {
     userProfile = await getUserProfile(currentUser.uid);
     notifyListeners(currentUser, userProfile);
@@ -60,6 +61,14 @@ export function initAuthGuard() {
     badge.id = 'devBadge';
     badge.textContent = '🧪 DEV-Modus – Lokaler API-Key wird verwendet';
     document.body.appendChild(badge);
+    currentUser = { uid: 'dev-user', email: 'dev@local.dev' };
+    userProfile = {
+      email: 'dev@local.dev',
+      subscription: 'free',
+      generationsUsed: 0,
+      generationLimit: 5,
+    };
+    notifyListeners(currentUser, userProfile);
     return;
   }
 

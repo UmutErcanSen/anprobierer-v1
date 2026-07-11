@@ -65,6 +65,8 @@ function renderAccount(profile) {
           <span class="account-history-info">${info} · ${e.quality || 'mittel'}</span>
         </div>`;
       }).join('');
+    }).catch(() => {
+      historyList.innerHTML = '<div class="account-history-empty">Fehler beim Laden</div>';
     });
   }
 

@@ -24,6 +24,37 @@ function notifyListeners(user, profile) {
   authListeners.forEach(fn => fn(user, profile));
 }
 
+let authResolve = null;
+let authReject = null;
+
+function showLoginOverlay() {
+  const overlay = document.getElementById('loginOverlay');
+  if (overlay) {
+    overlay.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+}
+
+function hideLoginOverlay() {
+  const overlay = document.getElementById('loginOverlay');
+  if (overlay) {
+    overlay.style.display = 'none';
+    document.body.style.overflow = '';
+  }
+}
+
+export function requireAuth() {
+  return new Promise((resolve, reject) => {
+    if (currentUser) {
+      resolve(currentUser);
+      return;
+    }
+    authResolve = resolve;
+    authReject = reject;
+    showLoginOverlay();
+  });
+}
+
 async function onUserLoggedIn(user) {
   currentUser = user;
   userProfile = await getUserProfile(user.uid);
@@ -32,6 +63,12 @@ async function onUserLoggedIn(user) {
     userProfile = await getUserProfile(user.uid);
   }
   notifyListeners(user, userProfile);
+  hideLoginOverlay();
+  if (authResolve) {
+    authResolve(user);
+    authResolve = null;
+    authReject = null;
+  }
 }
 
 function onUserLoggedOut() {
@@ -55,7 +92,6 @@ export function initAuthGuard() {
   if (!appContainer || !loginOverlay) return;
 
   if (DEV_MODE) {
-    appContainer.classList.remove('auth-hidden');
     loginOverlay.style.display = 'none';
     const badge = document.createElement('div');
     badge.id = 'devBadge';
@@ -72,15 +108,22 @@ export function initAuthGuard() {
     return;
   }
 
+  loginOverlay.addEventListener('click', (e) => {
+    if (e.target === loginOverlay) {
+      hideLoginOverlay();
+      if (authReject) {
+        authReject(new Error('Login abgebrochen'));
+        authResolve = null;
+        authReject = null;
+      }
+    }
+  });
+
   onAuthStateChanged(auth, async user => {
     if (user) {
       await onUserLoggedIn(user);
-      appContainer.classList.remove('auth-hidden');
-      loginOverlay.style.display = 'none';
     } else {
       onUserLoggedOut();
-      appContainer.classList.add('auth-hidden');
-      loginOverlay.style.display = 'flex';
     }
   });
 }
@@ -178,7 +221,6 @@ function initLoginUI() {
   });
 }
 
-// Init when DOM is ready
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initLoginUI);
 } else {

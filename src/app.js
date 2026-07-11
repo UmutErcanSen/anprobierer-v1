@@ -16,7 +16,7 @@ import {
 import { currentUser, userProfile } from './auth.js';
 import { checkGenerationAllowed, incrementGenerationsUsed, saveGeneration } from './firestore.js';
 import { renderPlanComparison } from './plans.js';
-import { onAuthChange } from './auth.js';
+import { onAuthChange, requireAuth } from './auth.js';
 
 const DEV_MODE = import.meta.env.VITE_DEV_MODE === 'true';
 
@@ -309,7 +309,14 @@ personFileInput.addEventListener('change', () => {
   if (personFileInput.files[0]) handlePersonFile(personFileInput.files[0]);
 });
 
-$('#step1StartBtn').addEventListener('click', () => {
+$('#step1StartBtn').addEventListener('click', async () => {
+  if (!DEV_MODE && !currentUser) {
+    try {
+      await requireAuth();
+    } catch {
+      return;
+    }
+  }
   document.getElementById('heroSection').classList.add('hero-hidden');
   document.getElementById('step1MiddleSection').classList.add('hidden-zone');
   const dz = document.getElementById('personDropZone');

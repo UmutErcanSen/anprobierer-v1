@@ -2,6 +2,9 @@ import { onAuthChange, refreshUserProfile, currentUser, userProfile, logout } fr
 import { getUserGenerations } from './firestore.js';
 import { onRouteChange, getCurrentPath, navigateTo } from './router.js';
 import { PLANS, renderPlanComparison } from './plans.js';
+import { requireAuth } from './auth.js';
+
+const DEV_MODE = import.meta.env.VITE_DEV_MODE === 'true';
 
 function renderAccount(profile) {
   const emailEl = document.getElementById('accountEmail');
@@ -113,3 +116,16 @@ onRouteChange((path) => {
     });
   }
 });
+
+window.handleAccountClick = async function () {
+  if (DEV_MODE || currentUser) {
+    navigateTo('/account');
+  } else {
+    try {
+      await requireAuth();
+      navigateTo('/account');
+    } catch {
+      // user closed overlay – stay on current page
+    }
+  }
+};

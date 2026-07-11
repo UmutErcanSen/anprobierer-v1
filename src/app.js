@@ -1237,17 +1237,6 @@ window.closeSettings = function () {
   document.body.style.overflow = '';
 };
 
-window.toggleUserModal = function () {
-  const m = document.getElementById('userModal');
-  m.classList.toggle('visible');
-  document.body.style.overflow = m.classList.contains('visible') ? 'hidden' : '';
-};
-
-window.closeUserModal = function () {
-  document.getElementById('userModal').classList.remove('visible');
-  document.body.style.overflow = '';
-};
-
 window.openPhotoGuide = function () {
   document.getElementById('photoGuide').classList.add('visible');
   document.body.style.overflow = 'hidden';
@@ -1318,8 +1307,6 @@ document.addEventListener('keydown', e => {
     if (cg.classList.contains('visible')) closeClothingGuide();
     const sm = document.getElementById('settingsModal');
     if (sm.classList.contains('visible')) closeSettings();
-    const um = document.getElementById('userModal');
-    if (um.classList.contains('visible')) closeUserModal();
     const so = document.getElementById('selectOverlay');
     if (so.classList.contains('visible')) closeSelectOverlay();
   }

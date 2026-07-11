@@ -49,7 +49,7 @@
       <div class="header-inner">
         <h1><span class="gradient-text">✦</span> <span class="gradient-text">Virtual Try-On</span></h1>
         <div class="header-btn-group">
-          <button class="settings-btn" id="userBtn" onclick="toggleUserModal()" title="Benutzerbereich">
+          <button class="settings-btn" id="userBtn" onclick="navigateTo('/account')" title="Benutzerbereich">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="8" r="4"/>
               <path d="M4 21c0-4 3.5-7 8-7s8 3 8 7"/>
@@ -60,211 +60,258 @@
       </div>
     </header>
 
-    <div class="container">
+    <div id="route-home">
+      <div class="container">
 
-      <section id="step1" class="step-section">
-        <!-- Zustand 1: Hero + Starten -->
-        <div class="hero-section" id="heroSection">
-          <div class="hero-label">Virtual Try On</div>
-          <div class="hero-rotating-wrap">
-            <span class="hero-word gradient-text" id="heroRotatingWord">Anprobieren</span>
-          </div>
-          <p class="hero-sub">mit KI für deine Vinted-Anzeigen</p>
-          <button class="btn btn-gradient" id="step1StartBtn">✨ Starten</button>
-        </div>
-
-        <!-- Zustand 2: Upload-Zone (nach Starten) -->
-        <div class="step-header hidden-zone" id="step1Header">
-          <span class="step-number">1</span>
-          <div>
-            <h2>Personenfoto hochladen</h2>
-            <p>Ganzkörperaufnahme mit neutralem Hintergrund &amp; guter Beleuchtung</p>
-          </div>
-        </div>
-        <div class="upload-zone hidden-zone" id="personDropZone">
-          <div class="icon">🧍</div>
-          <strong>Foto hier ablegen oder klicken zum Auswählen</strong>
-          <div class="hint">Unterstützt: JPG, PNG, WEBP · iOS Fotos werden automatisch konvertiert (max. 20 MB)</div>
-          <input type="file" id="personFileInput" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" />
-        </div>
-        <div class="person-preview hidden" id="personPreview"></div>
-        <div class="photo-tip-row hidden" id="photoTipRow">
-          <button class="btn btn-sm btn-outline info-btn" onclick="openPhotoGuide()">🛈 Tipps für das perfekte Foto</button>
-        </div>
-
-        <!-- Sichtbar initial + nach Upload; unsichtbar nach Starten-Klick -->
-        <div id="step1MiddleSection">
-
-          <!-- Initial view (before upload) -->
-          <div id="step1InitialView">
-            <div class="how-it-works reveal">
-              <div class="how-left">
-                <span class="how-badge">So einfach geht's</span>
-                <h2 class="how-title">Drei Schritte zur<br><span class="gradient-text">perfekten</span><br>Vinted-Anzeige</h2>
-                <p class="how-desc">Lade dein Foto hoch, wähle Kleidungsstücke aus und lass die KI in Sekunden professionelle Anprobierbilder für deine Vinted-Anzeige erstellen.</p>
-              </div>
-              <div class="how-right">
-                <img class="phone-img-raw" src="assets/phone-preview.png" alt="Vorschau" onerror="this.style.display='none'">
-              </div>
+        <section id="step1" class="step-section">
+          <!-- Zustand 1: Hero + Starten -->
+          <div class="hero-section" id="heroSection">
+            <div class="hero-label">Virtual Try On</div>
+            <div class="hero-rotating-wrap">
+              <span class="hero-word gradient-text" id="heroRotatingWord">Anprobieren</span>
             </div>
-            <div class="feature-highlights reveal">
-              <div class="feature-card">
-                <div class="fc-media">
-                  <img class="fc-img" src="assets/card-upload.png" alt="" onerror="this.style.display='none'">
-                </div>
-                <div class="fc-body">
-                  <h3 class="fc-title">Foto hochladen</h3>
-                  <p class="fc-desc">Person + Kleidungsstücke</p>
-                </div>
-              </div>
-              <div class="feature-card">
-                <div class="fc-media">
-                  <img class="fc-img" src="assets/card-ai.png" alt="" onerror="this.style.display='none'">
-                </div>
-                <div class="fc-body">
-                  <h3 class="fc-title">KI-Generierung</h3>
-                  <p class="fc-desc">Virtuelle Anprobe in Sekunden</p>
-                </div>
-              </div>
-              <div class="feature-card">
-                <div class="fc-media">
-                  <img class="fc-img" src="assets/card-results.png" alt="" onerror="this.style.display='none'">
-                </div>
-                <div class="fc-body">
-                  <h3 class="fc-title">Fertige Anzeige</h3>
-                  <p class="fc-desc">Bilder + Vinted-Texte</p>
-                </div>
-              </div>
-            </div>
+            <p class="hero-sub">mit KI für deine Vinted-Anzeigen</p>
+            <button class="btn btn-gradient" id="step1StartBtn">✨ Starten</button>
           </div>
-        </div>
-      </section>
 
-      <section id="step2" class="step-section hidden-zone">
-        <div class="card">
-          <div class="step-header">
-            <span class="step-number">2</span>
+          <!-- Zustand 2: Upload-Zone (nach Starten) -->
+          <div class="step-header hidden-zone" id="step1Header">
+            <span class="step-number">1</span>
             <div>
-              <h2>👕 Kleidungsstücke hochladen</h2>
-              <p>Wähle für jedes Kleidungsstück den Typ aus und lege Details fest</p>
+              <h2>Personenfoto hochladen</h2>
+              <p>Ganzkörperaufnahme mit neutralem Hintergrund &amp; guter Beleuchtung</p>
             </div>
           </div>
-          <div class="upload-zone" id="clothingDropZone">
-            <div class="icon">👔</div>
-            <strong>Kleidungsfotos hier ablegen oder klicken</strong>
-            <div class="hint">JPG, PNG, WEBP · iOS Fotos kompatibel · Mehrere Dateien auswählbar</div>
-            <input
-              type="file"
-              id="clothingFileInput"
-              accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
-              multiple
-            />
+          <div class="upload-zone hidden-zone" id="personDropZone">
+            <div class="icon">🧍</div>
+            <strong>Foto hier ablegen oder klicken zum Auswählen</strong>
+            <div class="hint">Unterstützt: JPG, PNG, WEBP · iOS Fotos werden automatisch konvertiert (max. 20 MB)</div>
+            <input type="file" id="personFileInput" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" />
           </div>
-          <div class="preview-grid" id="clothingPreviewGrid"></div>
-          <div class="photo-tip-row photo-tip-row--clothing">
-            <button class="btn btn-sm btn-outline info-btn" onclick="openClothingGuide()">🛈 Tipps für Kleidungsfotos</button>
+          <div class="person-preview hidden" id="personPreview"></div>
+          <div class="photo-tip-row hidden" id="photoTipRow">
+            <button class="btn btn-sm btn-outline info-btn" onclick="openPhotoGuide()">🛈 Tipps für das perfekte Foto</button>
           </div>
-          <p class="hint-muted hidden" id="noClothingHint">
-            Noch keine Kleidungsstücke hinzugefügt.
-          </p>
-        </div>
-      </section>
 
-      <section id="step3" class="step-section hidden-zone">
-        <div class="card">
-          <div class="step-header">
-            <span class="step-number">3</span>
-            <div>
-              <h2>⚙️ Modus & Generierung</h2>
-              <p>Wähle Modus, Qualität und gib optionale Anweisungen für die KI</p>
-            </div>
-          </div>
-          <div class="mode-grid">
-            <div class="mode-card selected" data-mode="single" id="modeSingle">
-              <div class="mode-icon">🪞</div>
-              <div class="mode-title">Einzeln</div>
-              <div class="mode-desc">Pro Kleidungsstück ein separates Anprobebild</div>
-            </div>
-            <div class="mode-card" data-mode="combined" id="modeCombined">
-              <div class="mode-icon">👤</div>
-              <div class="mode-title">Alle zusammen</div>
-              <div class="mode-desc">Ein Bild mit allen Kleidungsstücken kombiniert</div>
-            </div>
-          </div>
-          <div class="options-row">
-            <div class="option-group">
-              <label for="qualitySelect">Bildqualität</label>
-              <select id="qualitySelect">
-                <option value="low">Niedrig (~$0.006/Bild)</option>
-                <option value="medium" selected>Mittel (~$0.041/Bild)</option>
-                <option value="high">Hoch (~$0.165/Bild)</option>
-              </select>
-            </div>
-            <div class="option-group">
-              <label for="sizeSelect">Bildgröße</label>
-              <select id="sizeSelect">
-                <option value="1024x1536" selected>Hochformat (1024×1536)</option>
-                <option value="1024x1024">Quadrat (1024×1024)</option>
-                <option value="1536x1024">Querformat (1536×1024)</option>
-              </select>
-            </div>
-          </div>
-          <div class="extra-notes-row">
-            <label for="extraNotes">💡 Zusätzliche Anweisungen für die KI</label>
-            <textarea id="extraNotes" rows="2" placeholder='z. B. "Bei dieser Hose keine Taschen", "Kragen hochgestellt", …'></textarea>
-          </div>
-          <div class="gen-info" id="genSummary">
-            <div class="gen-info-empty">
-              <span class="gen-info-icon">✨</span>
-              <span>Klicke auf <strong>Anzeige erstellen</strong>, um die KI-Generierung zu starten.</span>
-            </div>
-          </div>
-          <div class="cost-estimate hidden" id="costEstimate"></div>
-          <div class="gen-action">
-            <button class="btn btn-primary gen-btn" id="generateBtn" disabled>
-              <span class="gen-btn-icon gen-btn-icon--left">✦</span>
-              <span class="gradient-text">Anzeige erstellen</span>
-              <span class="gen-btn-icon gen-btn-icon--right">✦</span>
-            </button>
-          </div>
-          <div class="gen-progress hidden" id="progressWrap">
-            <div class="progress-overall" id="progressOverall">Initialisiere...</div>
-            <div class="progress-items" id="progressItems"></div>
-          </div>
-          <div class="log-footer">
-            <button class="log-toggle" onclick="toggleLog()">📂 Details</button>
-            <div class="log-area" id="logArea"></div>
-          </div>
-        </div>
-      </section>
+          <!-- Sichtbar initial + nach Upload; unsichtbar nach Starten-Klick -->
+          <div id="step1MiddleSection">
 
-      <section id="step4" class="step-section hidden-zone">
-        <div class="card">
-          <div class="step-header">
-            <span class="step-number">4</span>
-            <div>
-              <h2>🖼️ Ergebnisse & Download</h2>
-              <p>Generierte Bilder und Verkaufstexte – einzeln oder als ZIP herunterladen</p>
-            </div>
-          </div>
-          <div class="results-grid" id="resultsGrid"></div>
-          <p class="hint-muted hidden" id="noResultsHint">Noch keine Bilder generiert.</p>
-          <div class="download-section">
-            <div class="download-row">
-              <div class="download-input-wrap">
-                <label class="form-label">Session-Titel</label>
-                <input type="text" id="sessionTitle" value="VirtualTryOn" class="session-input" />
+            <!-- Initial view (before upload) -->
+            <div id="step1InitialView">
+              <div class="how-it-works reveal">
+                <div class="how-left">
+                  <span class="how-badge">So einfach geht's</span>
+                  <h2 class="how-title">Drei Schritte zur<br><span class="gradient-text">perfekten</span><br>Vinted-Anzeige</h2>
+                  <p class="how-desc">Lade dein Foto hoch, wähle Kleidungsstücke aus und lass die KI in Sekunden professionelle Anprobierbilder für deine Vinted-Anzeige erstellen.</p>
+                </div>
+                <div class="how-right">
+                  <img class="phone-img-raw" src="assets/phone-preview.png" alt="Vorschau" onerror="this.style.display='none'">
+                </div>
               </div>
-              <div class="download-btns">
-                <button class="btn btn-success" id="downloadAllBtn">📦 ZIP herunterladen</button>
-                <button class="btn btn-outline" id="resetBtn">🔄 Neue Session</button>
+              <div class="feature-highlights reveal">
+                <div class="feature-card">
+                  <div class="fc-media">
+                    <img class="fc-img" src="assets/card-upload.png" alt="" onerror="this.style.display='none'">
+                  </div>
+                  <div class="fc-body">
+                    <h3 class="fc-title">Foto hochladen</h3>
+                    <p class="fc-desc">Person + Kleidungsstücke</p>
+                  </div>
+                </div>
+                <div class="feature-card">
+                  <div class="fc-media">
+                    <img class="fc-img" src="assets/card-ai.png" alt="" onerror="this.style.display='none'">
+                  </div>
+                  <div class="fc-body">
+                    <h3 class="fc-title">KI-Generierung</h3>
+                    <p class="fc-desc">Virtuelle Anprobe in Sekunden</p>
+                  </div>
+                </div>
+                <div class="feature-card">
+                  <div class="fc-media">
+                    <img class="fc-img" src="assets/card-results.png" alt="" onerror="this.style.display='none'">
+                  </div>
+                  <div class="fc-body">
+                    <h3 class="fc-title">Fertige Anzeige</h3>
+                    <p class="fc-desc">Bilder + Vinted-Texte</p>
+                  </div>
+                </div>
               </div>
             </div>
-            <div class="zip-preview" id="zipPreview"></div>
           </div>
+        </section>
+
+        <section id="step2" class="step-section hidden-zone">
+          <div class="card">
+            <div class="step-header">
+              <span class="step-number">2</span>
+              <div>
+                <h2>👕 Kleidungsstücke hochladen</h2>
+                <p>Wähle für jedes Kleidungsstück den Typ aus und lege Details fest</p>
+              </div>
+            </div>
+            <div class="upload-zone" id="clothingDropZone">
+              <div class="icon">👔</div>
+              <strong>Kleidungsfotos hier ablegen oder klicken</strong>
+              <div class="hint">JPG, PNG, WEBP · iOS Fotos kompatibel · Mehrere Dateien auswählbar</div>
+              <input
+                type="file"
+                id="clothingFileInput"
+                accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+                multiple
+              />
+            </div>
+            <div class="preview-grid" id="clothingPreviewGrid"></div>
+            <div class="photo-tip-row photo-tip-row--clothing">
+              <button class="btn btn-sm btn-outline info-btn" onclick="openClothingGuide()">🛈 Tipps für Kleidungsfotos</button>
+            </div>
+            <p class="hint-muted hidden" id="noClothingHint">
+              Noch keine Kleidungsstücke hinzugefügt.
+            </p>
+          </div>
+        </section>
+
+        <section id="step3" class="step-section hidden-zone">
+          <div class="card">
+            <div class="step-header">
+              <span class="step-number">3</span>
+              <div>
+                <h2>⚙️ Modus & Generierung</h2>
+                <p>Wähle Modus, Qualität und gib optionale Anweisungen für die KI</p>
+              </div>
+            </div>
+            <div class="mode-grid">
+              <div class="mode-card selected" data-mode="single" id="modeSingle">
+                <div class="mode-icon">🪞</div>
+                <div class="mode-title">Einzeln</div>
+                <div class="mode-desc">Pro Kleidungsstück ein separates Anprobebild</div>
+              </div>
+              <div class="mode-card" data-mode="combined" id="modeCombined">
+                <div class="mode-icon">👤</div>
+                <div class="mode-title">Alle zusammen</div>
+                <div class="mode-desc">Ein Bild mit allen Kleidungsstücken kombiniert</div>
+              </div>
+            </div>
+            <div class="options-row">
+              <div class="option-group">
+                <label for="qualitySelect">Bildqualität</label>
+                <select id="qualitySelect">
+                  <option value="low">Niedrig (~$0.006/Bild)</option>
+                  <option value="medium" selected>Mittel (~$0.041/Bild)</option>
+                  <option value="high">Hoch (~$0.165/Bild)</option>
+                </select>
+              </div>
+              <div class="option-group">
+                <label for="sizeSelect">Bildgröße</label>
+                <select id="sizeSelect">
+                  <option value="1024x1536" selected>Hochformat (1024×1536)</option>
+                  <option value="1024x1024">Quadrat (1024×1024)</option>
+                  <option value="1536x1024">Querformat (1536×1024)</option>
+                </select>
+              </div>
+            </div>
+            <div class="extra-notes-row">
+              <label for="extraNotes">💡 Zusätzliche Anweisungen für die KI</label>
+              <textarea id="extraNotes" rows="2" placeholder='z. B. "Bei dieser Hose keine Taschen", "Kragen hochgestellt", …'></textarea>
+            </div>
+            <div class="gen-info" id="genSummary">
+              <div class="gen-info-empty">
+                <span class="gen-info-icon">✨</span>
+                <span>Klicke auf <strong>Anzeige erstellen</strong>, um die KI-Generierung zu starten.</span>
+              </div>
+            </div>
+            <div class="cost-estimate hidden" id="costEstimate"></div>
+            <div class="gen-action">
+              <button class="btn btn-primary gen-btn" id="generateBtn" disabled>
+                <span class="gen-btn-icon gen-btn-icon--left">✦</span>
+                <span class="gradient-text">Anzeige erstellen</span>
+                <span class="gen-btn-icon gen-btn-icon--right">✦</span>
+              </button>
+            </div>
+            <div class="gen-progress hidden" id="progressWrap">
+              <div class="progress-overall" id="progressOverall">Initialisiere...</div>
+              <div class="progress-items" id="progressItems"></div>
+            </div>
+            <div class="log-footer">
+              <button class="log-toggle" onclick="toggleLog()">📂 Details</button>
+              <div class="log-area" id="logArea"></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="step4" class="step-section hidden-zone">
+          <div class="card">
+            <div class="step-header">
+              <span class="step-number">4</span>
+              <div>
+                <h2>🖼️ Ergebnisse & Download</h2>
+                <p>Generierte Bilder und Verkaufstexte – einzeln oder als ZIP herunterladen</p>
+              </div>
+            </div>
+            <div class="results-grid" id="resultsGrid"></div>
+            <p class="hint-muted hidden" id="noResultsHint">Noch keine Bilder generiert.</p>
+            <div class="download-section">
+              <div class="download-row">
+                <div class="download-input-wrap">
+                  <label class="form-label">Session-Titel</label>
+                  <input type="text" id="sessionTitle" value="VirtualTryOn" class="session-input" />
+                </div>
+                <div class="download-btns">
+                  <button class="btn btn-success" id="downloadAllBtn">📦 ZIP herunterladen</button>
+                  <button class="btn btn-outline" id="resetBtn">🔄 Neue Session</button>
+                </div>
+              </div>
+              <div class="zip-preview" id="zipPreview"></div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div><!-- /route-home -->
+
+    <!-- /account page -->
+    <div id="route-account" class="hidden">
+      <div class="container account-page">
+        <button class="btn btn-ghost account-back" onclick="navigateTo('/')">← Zurück</button>
+        <h2 class="account-heading">👤 Mein Konto</h2>
+
+        <div class="account-cards" id="accountProfile">
+          <div class="account-card">
+            <div class="account-avatar" id="accountAvatar">👤</div>
+            <div class="account-details">
+              <div class="account-email" id="accountEmail">–</div>
+              <div class="account-member-since" id="accountMemberSince"></div>
+              <div class="account-plan-row">
+                <span class="account-plan-badge" id="accountPlanBadge">Gratis</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="account-card">
+            <h3>💰 Abo & Verbrauch</h3>
+            <div class="account-usage-bar-wrap">
+              <div class="account-usage-bar">
+                <div class="account-usage-fill" id="accountUsageBar" style="width:0%"></div>
+              </div>
+              <span class="account-usage-label" id="accountUsageLabel">0 / 5 Generierungen</span>
+            </div>
+            <button class="btn btn-primary account-upgrade-btn" id="accountUpgradeBtn" disabled>⬆️ Upgrade (bald verfügbar)</button>
+          </div>
+
+          <div class="account-card">
+            <h3>📋 Meine Anzeigen</h3>
+            <div class="account-history-list" id="accountHistoryList">
+              <div class="account-history-empty">Lade...</div>
+            </div>
+          </div>
+
+          <button class="btn btn-outline account-logout-btn" id="accountLogoutBtn">🚪 Ausloggen</button>
         </div>
-      </section>
-    </div>
+
+        <div class="account-placeholder hidden" id="accountPlaceholder">
+          <p class="account-hint">Bitte einloggen, um dein Profil zu sehen.</p>
+        </div>
+      </div>
+    </div><!-- /route-account -->
 
     </div><!-- /appContainer -->
 
@@ -371,42 +418,6 @@
         <div class="settings-panel" data-panel="about">
           <p class="about-text about-text--mb">✦ <strong>Virtual Try-On</strong> nutzt <strong>OpenAI GPT Image 2</strong> für fotorealistische Anprobebilder und <strong>GPT-4o-mini</strong> für Vinted-Verkaufstexte.</p>
           <p class="about-text">Alle Bildverarbeitung läuft lokal im Browser. Dein API-Key wird ausschließlich in deinem <strong>localStorage</strong> gespeichert.</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="user-modal" id="userModal" onclick="if(event.target===this)closeUserModal()">
-      <div class="user-content" onclick="event.stopPropagation()">
-        <button class="user-close" onclick="closeUserModal()">&times;</button>
-        <h2>👤 Mein Konto</h2>
-        <div class="user-profile" id="userProfile">
-          <div class="user-field">
-            <label>E-Mail</label>
-            <div class="user-field-box" id="userEmail">–</div>
-          </div>
-          <div class="user-field">
-            <label>💰 Abo</label>
-            <div class="user-plan-row">
-              <span class="user-plan-badge" id="userPlanBadge">Gratis</span>
-            </div>
-          </div>
-          <div class="user-field">
-            <label>📊 Verbrauch</label>
-            <div class="user-usage-bar-wrap">
-              <div class="user-usage-bar"><div class="user-usage-fill" id="userUsageBar" style="width:0%"></div></div>
-              <span class="user-usage-label" id="userUsageLabel">0 / 5 Generierungen</span>
-            </div>
-          </div>
-          <div class="user-field">
-            <label>📋 Meine Anzeigen</label>
-            <div class="user-history-list" id="userHistoryList">
-              <div class="user-history-empty">Lade...</div>
-            </div>
-          </div>
-          <button class="btn btn-sm btn-outline user-logout-btn" id="userLogoutBtn">🚪 Ausloggen</button>
-        </div>
-        <div class="user-placeholder" id="userPlaceholder" style="display:none">
-          <p class="user-hint">Bitte einloggen</p>
         </div>
       </div>
     </div>

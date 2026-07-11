@@ -566,52 +566,34 @@ footer{text-align:center;padding:2rem;color:var(--text-3);font-size:.8rem;border
 }
 .settings-btn:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-dim)}
 
-.user-modal{
-  display:none;position:fixed;z-index:9997;left:0;top:0;
-  width:100%;height:100%;background:rgba(0,0,0,0.8);
-  align-items:center;justify-content:center;cursor:pointer;
-}
-.user-modal.visible{display:flex}
-.user-content{
-  background:var(--surface);border:1px solid var(--surface-2);
-  border-radius:var(--radius);padding:2rem;
-  max-width:440px;width:92%;cursor:default;position:relative;
-  box-shadow:0 8px 40px rgba(0,0,0,0.5);
-}
-.user-content h2{font-size:1.2rem;margin-bottom:1.25rem}
-.user-close{
-  position:absolute;top:.75rem;right:1rem;
-  color:var(--text-3);font-size:2rem;cursor:pointer;
-  background:none;border:none;line-height:1;
-  width:40px;height:40px;display:flex;
-  align-items:center;justify-content:center;
-}
-.user-close:hover{color:var(--text)}
-.user-placeholder{display:flex;flex-direction:column;gap:1rem}
-.user-field label{display:block;font-size:.82rem;color:var(--text-2);margin-bottom:.3rem;font-weight:600}
-.user-field-box{
-  background:var(--bg);border:1px solid var(--surface-3);
-  border-radius:var(--radius-sm);padding:.6rem .75rem;
-  font-size:.85rem;color:var(--text-3);
-}
-.user-plan-row{display:flex;align-items:center;gap:.75rem}
-.user-plan-badge{
-  display:inline-block;padding:.25rem .75rem;
-  background:var(--primary-dim);color:var(--primary);
-  border-radius:999px;font-size:.8rem;font-weight:600;
-}
-.user-usage-bar-wrap{display:flex;align-items:center;gap:.6rem}
-.user-usage-bar{flex:1;height:8px;background:var(--bg);border-radius:99px;overflow:hidden}
-.user-usage-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--primary),var(--accent))}
-.user-usage-label{font-size:.78rem;color:var(--text-3);white-space:nowrap}
-.user-hint{font-size:.78rem;color:var(--text-3);margin-top:.5rem;text-align:center}
-.user-profile{display:flex;flex-direction:column;gap:1rem}
-.user-logout-btn{align-self:flex-start;margin-top:.5rem}
-.user-history-list{max-height:200px;overflow-y:auto;display:flex;flex-direction:column;gap:.4rem}
-.user-history-empty{font-size:.8rem;color:var(--text-3);padding:.5rem 0}
-.user-history-item{display:flex;justify-content:space-between;align-items:center;padding:.4rem .6rem;background:var(--surface-2);border-radius:var(--radius-sm);font-size:.8rem}
-.user-history-date{color:var(--text-3);font-size:.75rem}
-.user-history-info{color:var(--text-2)}
+/* === ACCOUNT PAGE === */
+.account-page{padding-bottom:3rem;max-width:600px;margin:0 auto}
+.account-back{margin-bottom:1rem;font-size:.85rem;color:var(--text-3);padding:.4rem .75rem;border-radius:var(--radius-sm)}
+.account-back:hover{color:var(--text);background:var(--surface-2)}
+.account-heading{font-size:1.4rem;margin-bottom:1.5rem;font-weight:800}
+.account-cards{display:flex;flex-direction:column;gap:1rem}
+.account-card{background:var(--surface);border:1px solid var(--surface-2);border-radius:var(--radius);padding:1.25rem 1.5rem}
+.account-card h3{font-size:.9rem;color:var(--text-2);margin-bottom:.75rem;font-weight:700}
+.account-avatar{width:48px;height:48px;border-radius:50%;background:var(--primary-dim);color:var(--primary);display:flex;align-items:center;justify-content:center;font-size:1.25rem;font-weight:800;flex-shrink:0}
+.account-card:first-child{display:flex;gap:1rem;align-items:center}
+.account-details{display:flex;flex-direction:column;gap:.25rem}
+.account-email{font-size:.95rem;font-weight:700;color:var(--text)}
+.account-member-since{font-size:.78rem;color:var(--text-3)}
+.account-plan-row{margin-top:.15rem}
+.account-plan-badge{display:inline-block;padding:.2rem .7rem;border-radius:999px;font-size:.78rem;font-weight:700;border:1px solid}
+.account-usage-bar-wrap{display:flex;align-items:center;gap:.6rem}
+.account-usage-bar{flex:1;height:8px;background:var(--bg);border-radius:99px;overflow:hidden}
+.account-usage-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--primary),var(--accent));transition:width .4s ease}
+.account-usage-label{font-size:.78rem;color:var(--text-3);white-space:nowrap}
+.account-upgrade-btn{margin-top:.75rem;width:100%;justify-content:center;opacity:.6;font-size:.85rem}
+.account-history-list{max-height:260px;overflow-y:auto;display:flex;flex-direction:column;gap:.35rem}
+.account-history-empty{font-size:.82rem;color:var(--text-3);padding:.5rem 0}
+.account-history-item{display:flex;justify-content:space-between;align-items:center;padding:.45rem .7rem;background:var(--surface-2);border-radius:var(--radius-sm);font-size:.82rem}
+.account-history-date{color:var(--text-3);font-size:.75rem}
+.account-history-info{color:var(--text-2);font-weight:500}
+.account-logout-btn{align-self:flex-start;margin-top:.75rem;font-size:.85rem}
+.account-placeholder{padding:2rem 0;text-align:center}
+.account-hint{font-size:.85rem;color:var(--text-3)}
 
 .select-overlay{
   display:none;position:fixed;z-index:9999;left:0;top:0;
@@ -920,10 +902,10 @@ input:hover,select:hover{border-color:var(--primary)!important}
 
 /* === BOTTOM SHEET (MOBILE) === */
 @media(max-width:640px){
-  .settings-modal.visible,.user-modal.visible,.photo-guide-modal.visible{
+  .settings-modal.visible,.photo-guide-modal.visible{
     align-items:flex-end;
   }
-  .settings-content,.user-content{
+  .settings-content{
     width:100%;max-width:100%;max-height:80vh;
     border-radius:var(--radius) var(--radius) 0 0;
     margin-top:auto;

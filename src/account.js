@@ -2,11 +2,58 @@ import { onAuthChange, refreshUserProfile, currentUser, userProfile, logout } fr
 import { getUserGenerations } from './firestore.js';
 import { onRouteChange, getCurrentPath, navigateTo } from './router.js';
 
-const SUBSCRIPTION_LABELS = {
-  free: { label: 'Gratis', limit: 5, color: '#71717a' },
-  basic: { label: 'Basic', limit: 50, color: '#22c55e' },
-  pro: { label: 'Pro', limit: -1, color: '#f59e0b' },
+const PLANS = {
+  free: {
+    label: 'Gratis', limit: 5, color: '#71717a',
+    emoji: '⭐', price: '0 €', quality: 'Mittel', support: 'Standard',
+  },
+  basic: {
+    label: 'Basic', limit: 50, color: '#22c55e',
+    emoji: '💎', price: '9,99 €', quality: 'Hoch', support: 'Priorität',
+  },
+  pro: {
+    label: 'Pro', limit: -1, color: '#f59e0b',
+    emoji: '👑', price: '19,99 €', quality: 'Max', support: 'Premium',
+  },
 };
+
+function renderPlanComparison(subscription) {
+  const el = document.getElementById('accountPlanComparison');
+  if (!el) return;
+  const rows = [
+    { label: 'Generierungen', key: l => l.limit === -1 ? '∞' : `${l.limit}/Monat` },
+    { label: 'Qualität', key: l => l.quality },
+    { label: 'Support', key: l => l.support },
+    { label: 'Preis', key: l => l.price },
+  ];
+  const plans = ['free', 'basic', 'pro'];
+  el.innerHTML = `
+    <h3>📊 Tarifvergleich</h3>
+    <div class="plan-table">
+      <div class="plan-table-head">
+        <div class="plan-table-corner"></div>
+        ${plans.map(key => {
+          const p = PLANS[key];
+          const active = subscription === key ? ' plan-cell--active' : '';
+          return `<div class="plan-cell plan-cell--head${active}">
+            <span class="plan-cell-emoji">${p.emoji}</span>
+            <span class="plan-cell-name">${p.label}</span>
+          </div>`;
+        }).join('')}
+      </div>
+      ${rows.map(r => `
+        <div class="plan-table-row">
+          <div class="plan-table-label">${r.label}</div>
+          ${plans.map(key => {
+            const active = subscription === key ? ' plan-cell--active' : '';
+            return `<div class="plan-cell${active}">${r.key(PLANS[key])}</div>`;
+          }).join('')}
+        </div>
+      `).join('')}
+    </div>
+    <button class="btn btn-primary account-upgrade-btn" id="accountUpgradeBtn" disabled>⬆️ Jetzt upgraden (bald verfügbar)</button>
+  `;
+}
 
 function renderAccount(profile) {
   const emailEl = document.getElementById('accountEmail');
@@ -37,19 +84,43 @@ function renderAccount(profile) {
     memberSinceEl.textContent = `Mitglied seit ${d.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' })}`;
   }
 
-  const sub = SUBSCRIPTION_LABELS[profile.subscription] || SUBSCRIPTION_LABELS.free;
+  const subKey = profile.subscription || 'free';
+  const sub = PLANS[subKey] || PLANS.free;
+
   if (planBadge) {
-    planBadge.textContent = sub.label;
-    planBadge.style.color = sub.color;
-    planBadge.style.borderColor = sub.color;
-    planBadge.style.background = `${sub.color}15`;
+    planBadge.innerHTML = `${sub.emoji} ${sub.label} <span class="plan-badge-limit">· ${sub.limit === -1 ? '∞' : sub.limit + '/Monat'}</span>`;
+    planBadge.style.setProperty('--plan-color', sub.color);
+    planBadge.style.setProperty('--plan-color-dim', `${sub.color}18`);
   }
 
   const used = profile.generationsUsed || 0;
   const max = sub.limit === -1 ? '∞' : sub.limit;
   const pct = sub.limit === -1 ? 100 : Math.min((used / sub.limit) * 100, 100);
-  if (usageBar) usageBar.style.width = `${pct}%`;
+  const remaining = sub.limit === -1 ? -1 : sub.limit - used;
+
   if (usageLabel) usageLabel.textContent = `${used} / ${max} Generierungen`;
+
+  if (usageBar) {
+    usageBar.style.width = '0%';
+    usageBar.classList.remove('account-usage-fill--critical');
+    usageBar.classList.remove('account-usage-fill--low');
+    if (remaining >= 0 && remaining <= 2) {
+      usageBar.classList.add('account-usage-fill--critical');
+    } else if (remaining >= 0 && remaining <= 5) {
+      usageBar.classList.add('account-usage-fill--low');
+    }
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        usageBar.style.width = `${pct}%`;
+      });
+    });
+  }
+
+  if (remaining > 0 && remaining <= 2) {
+    if (usageLabel) usageLabel.textContent += ` · ⚠️ nur noch ${remaining}`;
+  }
+
+  renderPlanComparison(subKey);
 
   if (historyList && currentUser) {
     getUserGenerations(currentUser.uid, 20).then(entries => {

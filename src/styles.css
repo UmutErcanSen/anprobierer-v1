@@ -574,26 +574,47 @@ footer{text-align:center;padding:2rem;color:var(--text-3);font-size:.8rem;border
 .account-cards{display:flex;flex-direction:column;gap:1rem}
 .account-card{background:var(--surface);border:1px solid var(--surface-2);border-radius:var(--radius);padding:1.25rem 1.5rem}
 .account-card h3{font-size:.9rem;color:var(--text-2);margin-bottom:.75rem;font-weight:700}
-.account-avatar{width:48px;height:48px;border-radius:50%;background:var(--primary-dim);color:var(--primary);display:flex;align-items:center;justify-content:center;font-size:1.25rem;font-weight:800;flex-shrink:0}
+.account-avatar{width:52px;height:52px;border-radius:50%;background:var(--primary-dim);color:var(--primary);display:flex;align-items:center;justify-content:center;font-size:1.3rem;font-weight:800;flex-shrink:0}
 .account-card:first-child{display:flex;gap:1rem;align-items:center}
 .account-details{display:flex;flex-direction:column;gap:.25rem}
 .account-email{font-size:.95rem;font-weight:700;color:var(--text)}
 .account-member-since{font-size:.78rem;color:var(--text-3)}
 .account-plan-row{margin-top:.15rem}
-.account-plan-badge{display:inline-block;padding:.2rem .7rem;border-radius:999px;font-size:.78rem;font-weight:700;border:1px solid}
+.account-plan-badge{display:inline-flex;align-items:center;gap:.35rem;padding:.35rem .85rem;border-radius:999px;font-size:.85rem;font-weight:700;border:1px solid var(--plan-color,#71717a);background:var(--plan-color-dim,rgba(113,113,122,.1));color:var(--plan-color,#71717a)}
+.plan-badge-limit{font-weight:400;opacity:.7;font-size:.78rem}
 .account-usage-bar-wrap{display:flex;align-items:center;gap:.6rem}
 .account-usage-bar{flex:1;height:8px;background:var(--bg);border-radius:99px;overflow:hidden}
-.account-usage-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--primary),var(--accent));transition:width .4s ease}
+.account-usage-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--primary),var(--accent));transition:width .6s cubic-bezier(.22,1,.36,1);position:relative;overflow:hidden}
+.account-usage-fill::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.12),transparent);animation:usage-stripe 2s linear infinite}
+@keyframes usage-stripe{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+.account-usage-fill--low{background:linear-gradient(90deg,#f59e0b,#eab308)}
+.account-usage-fill--critical{background:linear-gradient(90deg,#ef4444,#dc2626);animation:usage-critical-pulse 1.2s ease-in-out infinite}
+@keyframes usage-critical-pulse{0%,100%{box-shadow:0 0 6px rgba(239,68,68,.4)}50%{box-shadow:0 0 14px rgba(239,68,68,.7)}}
 .account-usage-label{font-size:.78rem;color:var(--text-3);white-space:nowrap}
-.account-upgrade-btn{margin-top:.75rem;width:100%;justify-content:center;opacity:.6;font-size:.85rem}
 .account-history-list{max-height:260px;overflow-y:auto;display:flex;flex-direction:column;gap:.35rem}
 .account-history-empty{font-size:.82rem;color:var(--text-3);padding:.5rem 0}
 .account-history-item{display:flex;justify-content:space-between;align-items:center;padding:.45rem .7rem;background:var(--surface-2);border-radius:var(--radius-sm);font-size:.82rem}
 .account-history-date{color:var(--text-3);font-size:.75rem}
 .account-history-info{color:var(--text-2);font-weight:500}
-.account-logout-btn{align-self:flex-start;margin-top:.75rem;font-size:.85rem}
+.account-logout-btn{align-self:flex-start;margin-top:.5rem;font-size:.85rem}
 .account-placeholder{padding:2rem 0;text-align:center}
 .account-hint{font-size:.85rem;color:var(--text-3)}
+
+/* === PLAN COMPARISON TABLE === */
+.account-plan-comparison{padding:1.25rem 1.25rem 1rem}
+.account-plan-comparison h3{font-size:.9rem;color:var(--text-2);margin-bottom:.9rem;font-weight:700}
+.plan-table{display:flex;flex-direction:column;gap:0;margin-bottom:.9rem}
+.plan-table-head{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:.3rem;margin-bottom:.35rem}
+.plan-table-row{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:.3rem;margin-bottom:.2rem}
+.plan-table-label{font-size:.78rem;color:var(--text-3);padding:.4rem .4rem .4rem 0;display:flex;align-items:center;font-weight:600}
+.plan-table-corner{display:flex;align-items:flex-end;padding:0 0 .2rem 0}
+.plan-cell{text-align:center;font-size:.78rem;padding:.35rem .25rem;border-radius:var(--radius-sm);color:var(--text-3);background:var(--bg);display:flex;flex-direction:column;align-items:center;gap:.1rem}
+.plan-cell--head{font-weight:700;font-size:.82rem;color:var(--text-2);padding:.5rem .25rem;border:1px solid var(--surface-3);gap:0}
+.plan-cell-emoji{font-size:1.25rem}
+.plan-cell-name{font-size:.85rem}
+.plan-cell--active{background:var(--plan-color-dim,rgba(108,99,255,.12));color:var(--plan-color,var(--primary));border-color:var(--plan-color,var(--primary));font-weight:600}
+.plan-table-head .plan-cell--active{background:var(--plan-color-dim,rgba(108,99,255,.12));border:1px solid var(--plan-color,var(--primary))}
+.account-plan-comparison .account-upgrade-btn{width:100%;justify-content:center;font-size:.85rem;display:block;margin:0 auto}
 
 .select-overlay{
   display:none;position:fixed;z-index:9999;left:0;top:0;

@@ -13,10 +13,9 @@ import {
   callChatCompletion, testApiKey, estimateCost,
 } from './api.js';
 
-import { currentUser, userProfile } from './auth.js';
+import { currentUser, userProfile, onAuthChange, requireAuth } from './auth.js';
 import { checkGenerationAllowed, incrementGenerationsUsed, saveGeneration } from './firestore.js';
 import { renderPlanComparison } from './plans.js';
-import { onAuthChange, requireAuth } from './auth.js';
 
 const DEV_MODE = import.meta.env.VITE_DEV_MODE === 'true';
 

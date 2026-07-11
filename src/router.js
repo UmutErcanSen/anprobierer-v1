@@ -1,7 +1,15 @@
+import { requireAuth, currentUser } from './auth.js';
+
+const DEV_MODE = import.meta.env.VITE_DEV_MODE === 'true';
+
 export const ROUTES = {
   HOME: '/',
   ACCOUNT: '/account',
 };
+
+function isRouteProtected(path) {
+  return path === ROUTES.ACCOUNT;
+}
 
 let currentPath = window.location.pathname || '/';
 
@@ -26,8 +34,15 @@ function showRoute(path) {
   if (accountEl) accountEl.classList.toggle('hidden', path !== ROUTES.ACCOUNT);
 }
 
-export function navigateTo(path) {
+export async function navigateTo(path) {
   if (path === currentPath) return;
+  if (!DEV_MODE && isRouteProtected(path) && !currentUser) {
+    try {
+      await requireAuth();
+    } catch {
+      return;
+    }
+  }
   window.history.pushState({ path }, '', path);
   currentPath = path;
   showRoute(path);
@@ -36,6 +51,13 @@ export function navigateTo(path) {
 
 function handlePopState(e) {
   const path = e.state?.path || window.location.pathname || '/';
+  if (!DEV_MODE && isRouteProtected(path) && !currentUser) {
+    currentPath = ROUTES.HOME;
+    window.history.replaceState({ path: currentPath }, '', currentPath);
+    showRoute(currentPath);
+    notify(currentPath);
+    return;
+  }
   currentPath = path;
   showRoute(path);
   notify(path);
@@ -45,6 +67,10 @@ function initRouter() {
   window.addEventListener('popstate', handlePopState);
   const validPaths = Object.values(ROUTES);
   if (!validPaths.includes(currentPath)) {
+    currentPath = ROUTES.HOME;
+    window.history.replaceState({ path: currentPath }, '', currentPath);
+  }
+  if (!DEV_MODE && isRouteProtected(currentPath)) {
     currentPath = ROUTES.HOME;
     window.history.replaceState({ path: currentPath }, '', currentPath);
   }

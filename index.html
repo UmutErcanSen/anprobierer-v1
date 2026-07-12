@@ -295,13 +295,17 @@
     <!-- /account page -->
     <div id="route-account" class="hidden">
       <div class="container account-page">
-        <button class="btn btn-ghost account-back" onclick="navigateTo('/')">← Zurück</button>
-        <h2 class="account-heading">👤 Mein Konto</h2>
+        <div class="account-header-row">
+          <button class="btn btn-ghost account-back" onclick="navigateTo('/')">← Zurück</button>
+          <h2 class="account-heading"><span id="accountHeadingIcon">👤</span> Mein Konto<span class="account-heading-name" id="accountHeadingName"></span></h2>
+          <button class="account-logout-btn" id="accountLogoutBtn">Abmelden</button>
+        </div>
 
         <div class="account-cards" id="accountProfile">
           <div class="account-card">
             <div class="account-avatar" id="accountAvatar">👤</div>
             <div class="account-details">
+              <div class="account-name" id="accountDisplayName2"></div>
               <div class="account-email" id="accountEmail">–</div>
               <div class="account-member-since" id="accountMemberSince"></div>
               <div class="account-plan-row">
@@ -356,14 +360,16 @@
               </div>
               <div class="account-settings-message" id="passwordMessage"></div>
             </div>
-            <div class="account-danger-zone">
-              <h3>⚠️ Gefahrenbereich</h3>
-              <p style="font-size:.8rem;color:var(--text-3);margin-bottom:.5rem">Konto und alle zugehörigen Daten dauerhaft löschen. Dies kann nicht rückgängig gemacht werden.</p>
-              <button class="btn btn-sm btn-danger account-delete-btn" id="deleteAccountBtn">Konto löschen</button>
+            <div class="account-management-zone">
+              <h3>Kontoverwaltung</h3>
+              <p style="font-size:.8rem;color:var(--text-3);margin-bottom:.75rem">Verwalte deine Daten und dein Konto.</p>
+              <div class="account-management-actions">
+                <button class="btn btn-sm btn-outline" id="exportDataBtn">📦 Daten exportieren</button>
+                <button class="btn btn-sm btn-danger" id="deleteAccountBtn">Konto löschen</button>
+              </div>
             </div>
           </div>
 
-          <button class="btn btn-outline account-logout-btn" id="accountLogoutBtn">🚪 Ausloggen</button>
         </div>
 
         <div class="account-placeholder hidden" id="accountPlaceholder">
@@ -507,6 +513,21 @@
         <div class="confirm-modal-actions">
           <button class="btn btn-outline btn-sm" id="cancelDeleteBtn">Abbrechen</button>
           <button class="btn btn-danger btn-sm" id="confirmDeleteBtn">Endgültig löschen</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="confirm-modal" id="dataExportModal">
+      <div class="confirm-modal-content" onclick="event.stopPropagation()">
+        <h3>📦 Daten exportieren</h3>
+        <p style="font-size:.8rem;color:var(--text-3);margin-bottom:1rem">Hier siehst du alle Daten, die in deinem Export enthalten sind.</p>
+        <div class="data-export-preview" id="dataExportPreview">
+          <div class="skeleton skeleton-text"></div>
+          <div class="skeleton skeleton-text short"></div>
+        </div>
+        <div class="confirm-modal-actions">
+          <button class="btn btn-outline btn-sm" id="cancelExportBtn">Schließen</button>
+          <button class="btn btn-primary btn-sm" id="confirmExportBtn">Als JSON herunterladen</button>
         </div>
       </div>
     </div>

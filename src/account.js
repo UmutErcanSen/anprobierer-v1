@@ -17,6 +17,8 @@ const MOCK_HISTORY = [
 function renderAccount(profile) {
   const emailEl = document.getElementById('accountEmail');
   const avatarEl = document.getElementById('accountAvatar');
+  const nameEl = document.getElementById('accountDisplayName2');
+  const headingNameEl = document.getElementById('accountHeadingName');
   const memberSinceEl = document.getElementById('accountMemberSince');
   const planBadge = document.getElementById('accountPlanBadge');
   const usageBar = document.getElementById('accountUsageBar');
@@ -37,6 +39,15 @@ function renderAccount(profile) {
 
   if (emailEl) emailEl.textContent = profile.email || 'Keine E-Mail';
   if (avatarEl) avatarEl.textContent = (profile.email?.[0] || '?').toUpperCase();
+
+  const displayName = profile.displayName?.trim();
+  if (nameEl) {
+    nameEl.textContent = displayName || '';
+    nameEl.classList.toggle('hidden', !displayName);
+  }
+  if (headingNameEl) {
+    headingNameEl.textContent = displayName ? ` – ${displayName}` : '';
+  }
 
   if (memberSinceEl && profile.createdAt?.toDate) {
     const d = profile.createdAt.toDate();
@@ -240,6 +251,119 @@ function renderAccount(profile) {
         confirmDeleteBtn.disabled = false;
         confirmDeleteBtn.textContent = 'Endgültig löschen';
       }
+    };
+  }
+
+  const exportDataBtn = document.getElementById('exportDataBtn');
+  const exportModal = document.getElementById('dataExportModal');
+  const cancelExportBtn = document.getElementById('cancelExportBtn');
+  const confirmExportBtn = document.getElementById('confirmExportBtn');
+  const dataExportPreview = document.getElementById('dataExportPreview');
+
+  if (exportDataBtn) {
+    exportDataBtn.onclick = async () => {
+      exportModal.classList.add('visible');
+      document.body.style.overflow = 'hidden';
+      dataExportPreview.innerHTML = '<div class="skeleton skeleton-text"></div><div class="skeleton skeleton-text short"></div>';
+
+      const subKey = profile?.subscription || 'free';
+      const sub = PLANS[subKey] || PLANS.free;
+      let generations = [];
+      try {
+        generations = DEV_MODE
+          ? MOCK_HISTORY
+          : await getUserGenerations(currentUser.uid, 100);
+      } catch (_) {}
+
+      let html = '';
+
+      html += '<div class="data-export-section">';
+      html += '<h4>Profil</h4>';
+      html += `<div class="data-export-item"><span class="data-export-label">E-Mail</span><span class="data-export-value">${profile?.email || '–'}</span></div>`;
+      html += `<div class="data-export-item"><span class="data-export-label">Anzeigename</span><span class="data-export-value">${profile?.displayName || '–'}</span></div>`;
+      html += `<div class="data-export-item"><span class="data-export-label">Abo</span><span class="data-export-value">${sub.label}</span></div>`;
+      if (profile?.createdAt?.toDate) {
+        const d = profile.createdAt.toDate();
+        html += `<div class="data-export-item"><span class="data-export-label">Registriert am</span><span class="data-export-value">${d.toLocaleDateString('de-DE')}</span></div>`;
+      }
+      html += '</div>';
+
+      html += '<div class="data-export-section">';
+      html += '<h4>Nutzung</h4>';
+      const used = profile?.generationsUsed || 0;
+      const max = sub.limit === -1 ? '∞' : sub.limit;
+      html += `<div class="data-export-item"><span class="data-export-label">Generierungen</span><span class="data-export-value">${used} / ${max}</span></div>`;
+      html += '</div>';
+
+      html += '<div class="data-export-section">';
+      html += '<h4>Generierungsverlauf</h4>';
+      if (generations.length === 0) {
+        html += '<div class="data-export-empty">Noch keine Generierungen vorhanden.</div>';
+      } else {
+        generations.forEach(e => {
+          const date = e.createdAt?.toDate?.()?.toLocaleDateString('de-DE') || '–';
+          const info = e.mode === 'combined' ? 'Kombiniert' : `${e.itemCount || '?'} Einzelbilder`;
+          html += `<div class="data-export-item"><span class="data-export-label">${date}</span><span class="data-export-value">${info} · ${e.quality || 'mittel'}</span></div>`;
+        });
+      }
+      html += '</div>';
+
+      dataExportPreview.innerHTML = html;
+    };
+  }
+  if (cancelExportBtn) {
+    cancelExportBtn.onclick = () => {
+      exportModal.classList.remove('visible');
+      document.body.style.overflow = '';
+    };
+  }
+  if (exportModal) {
+    exportModal.addEventListener('click', (e) => {
+      if (e.target === exportModal) {
+        exportModal.classList.remove('visible');
+        document.body.style.overflow = '';
+      }
+    });
+  }
+  if (confirmExportBtn) {
+    confirmExportBtn.onclick = async () => {
+      const subKey = profile?.subscription || 'free';
+      const sub = PLANS[subKey] || PLANS.free;
+      let generations = [];
+      try {
+        generations = DEV_MODE
+          ? MOCK_HISTORY
+          : await getUserGenerations(currentUser.uid, 100);
+      } catch (_) {}
+
+      const exportData = {
+        exportedAt: new Date().toISOString(),
+        profile: {
+          email: profile?.email || null,
+          displayName: profile?.displayName || null,
+          subscription: subKey,
+          generationsUsed: profile?.generationsUsed || 0,
+          generationLimit: sub.limit,
+          createdAt: profile?.createdAt?.toDate?.()?.toISOString() || null,
+        },
+        generations: generations.map(e => ({
+          date: e.createdAt?.toDate?.()?.toISOString() || null,
+          mode: e.mode || null,
+          quality: e.quality || null,
+          itemCount: e.itemCount || null,
+        })),
+      };
+
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `virtual-try-on-export-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('Export heruntergeladen.', 'success');
     };
   }
 }

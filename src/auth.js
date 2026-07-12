@@ -55,6 +55,15 @@ function notifyListeners(user, profile) {
 let authResolve = null;
 let authReject = null;
 
+let authStateResolved = false;
+let firstAuthResolve = null;
+const firstAuthPromise = new Promise(r => { firstAuthResolve = r; });
+
+export function waitForAuth() {
+  if (authStateResolved) return Promise.resolve(currentUser);
+  return firstAuthPromise;
+}
+
 function showLoginOverlay() {
   const overlay = document.getElementById('loginOverlay');
   if (overlay) {
@@ -253,6 +262,10 @@ export function initAuthGuard() {
 
   onAuthStateChanged(auth, async user => {
     console.log('[auth] onAuthStateChanged user=', user ? user.email : null, 'emailVerified=', user?.emailVerified);
+    if (!authStateResolved) {
+      authStateResolved = true;
+      firstAuthResolve(user);
+    }
     if (user) {
       await onUserLoggedIn(user);
     } else {

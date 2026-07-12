@@ -1,4 +1,4 @@
-import { requireAuth, currentUser, setPendingRedirect } from './auth.js';
+import { requireAuth, currentUser, setPendingRedirect, waitForAuth } from './auth.js';
 
 const DEV_MODE = import.meta.env.VITE_DEV_MODE === 'true';
 
@@ -64,7 +64,7 @@ function handlePopState(e) {
   notify(path);
 }
 
-function initRouter() {
+async function initRouter() {
   window.addEventListener('popstate', handlePopState);
   const validPaths = Object.values(ROUTES);
   if (!validPaths.includes(currentPath)) {
@@ -72,8 +72,11 @@ function initRouter() {
     window.history.replaceState({ path: currentPath }, '', currentPath);
   }
   if (!DEV_MODE && isRouteProtected(currentPath)) {
-    currentPath = ROUTES.HOME;
-    window.history.replaceState({ path: currentPath }, '', currentPath);
+    await waitForAuth();
+    if (!currentUser) {
+      currentPath = ROUTES.HOME;
+      window.history.replaceState({ path: currentPath }, '', currentPath);
+    }
   }
   showRoute(currentPath);
 }

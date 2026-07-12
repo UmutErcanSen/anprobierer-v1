@@ -1134,6 +1134,11 @@ header.header-compact{box-shadow:0 2px 24px rgba(0,0,0,.45)}
 .login-link-btn:hover{color:var(--primary)}
 .forgot-password-section{margin-top:1rem}
 .forgot-password-text{font-size:.8rem;color:var(--text-3);margin-bottom:1rem;text-align:center}
+.verify-section{text-align:center;padding:1rem 0}
+.verify-icon{font-size:2rem;margin-bottom:.75rem}
+.verify-text{font-size:.85rem;color:var(--text-2);margin-bottom:.25rem}
+.verify-email{font-size:.95rem;font-weight:700;color:var(--primary);margin-bottom:1rem;word-break:break-all}
+.verify-hint{font-size:.78rem;color:var(--text-3);margin-bottom:1.25rem;line-height:1.5}
 .account-settings-card{background:var(--surface);border:1px solid var(--surface-2);border-radius:var(--radius);padding:1.25rem 1.5rem}
 .account-settings-card h3{font-size:.9rem;color:var(--text-2);margin-bottom:.75rem;font-weight:700}
 .account-settings-field{margin-bottom:1rem}

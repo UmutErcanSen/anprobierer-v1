@@ -172,3 +172,71 @@ export function escapeHtml(str) {
   d.textContent = str;
   return d.innerHTML;
 }
+
+const DISPOSABLE_DOMAINS = new Set([
+  'guerrillamail.com','guerrillamail.de','guerrillamail.net','grr.la','grr.la',
+  'tempmail.com','temp-mail.org','tempail.com','temp-mail.de',
+  'mailinator.com','mailinator.net','guerrillamailblock.com',
+  '10minutemail.com','10minutemail.co.uk','10minutemail.de',
+  'throwaway.email','throwawaymail.com',
+  'yopmail.com','yopmail.fr',
+  'trashmail.com','trashmail.de','trashmail.me','trashmail.net',
+  'dispostable.com','sharklasers.com','grr.la','guerrillamail.com',
+  'getnada.com','mohmal.com',
+  'maildrop.cc','mailsac.com',
+  'fakeinbox.com','fakeemail.com','fakemailgenerator.com',
+  'tmpmail.net','tmpmail.org',
+  'discard.email','discardmail.com',
+  'spamgourmet.com','spamgourmet.net',
+  'mailnesia.com','tempinbox.com',
+  'boun.cr','bouncr.com',
+  'harakirimail.com','jnxjn.com',
+  'tempr.email','tempmailer.com','tempmailer.de',
+  'burnermail.io','burnermail.pro',
+  'jetable.org','jetable.fr.nf','jetable.com',
+  'mytemp.email','mytmp.email',
+  'tmpmail.me','tmpmail.io',
+  'emailondeck.com','33mail.com',
+  'catchall.email',
+  'discardmail.de','discardmail.fr',
+  'mailexpire.com','mailforspam.com',
+  'spamfree24.org','spamfree24.de',
+  'trashymail.com','trashymail.net',
+  'uggsrock.com','weg-werf-email.de',
+]);
+
+const TRUSTED_DOMAINS = new Set([
+  'gmail.com','googlemail.com','yahoo.com','yahoo.de','yahoo.co.uk',
+  'outlook.com','hotmail.com','live.com','msn.com','microsoft.com',
+  'web.de','t-online.de','freenet.de','gmx.de','gmx.com','gmx.net',
+  't-online.de','arcor.de','freenet.de',
+  'icloud.com','me.com','mac.com',
+  'protonmail.com','proton.me','protonmail.ch',
+  'aol.com','aol.de',
+  'zoho.com','mail.com','email.com',
+  'fastmail.com','fastmail.fm',
+  'yandex.com','yandex.de','yandex.ru',
+  'mail.ru','inbox.ru','list.ru',
+  'laposte.net','orange.fr','wanadoo.fr',
+  'libero.it','virgilio.it','alice.it',
+  'terra.com.br','bol.com.br',
+  'naver.com','daum.net','hanmail.net',
+  'qq.com','163.com','126.com','sina.com',
+  'rediffmail.com','indiatimes.com',
+]);
+
+export function getDisposableEmailDomains() {
+  return DISPOSABLE_DOMAINS;
+}
+
+export function getTrustedDomains() {
+  return TRUSTED_DOMAINS;
+}
+
+export function validateEmailDomain(email) {
+  const domain = email.split('@')[1]?.toLowerCase();
+  if (!domain) return { valid: false, reason: 'Ungültige E-Mail-Adresse.' };
+  if (TRUSTED_DOMAINS.has(domain)) return { valid: true, trusted: true };
+  if (DISPOSABLE_DOMAINS.has(domain)) return { valid: false, reason: 'Wegwerf-E-Mail-Adressen sind nicht erlaubt. Bitte nutze eine echte E-Mail-Adresse (z.B. Gmail, Outlook, GMX).' };
+  return { valid: true, trusted: false };
+}

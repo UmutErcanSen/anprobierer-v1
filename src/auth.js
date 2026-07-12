@@ -6,6 +6,7 @@ import {
   GoogleAuthProvider,
   signOut,
   sendPasswordResetEmail,
+  sendEmailVerification,
   updateProfile,
   updateEmail,
   reauthenticateWithCredential,
@@ -15,6 +16,7 @@ import {
 } from 'firebase/auth';
 import { auth } from './firebase.js';
 import { createUserProfile, getUserProfile, deleteUserData } from './firestore.js';
+import { validateEmailDomain } from './utils.js';
 
 const DEV_MODE = import.meta.env.VITE_DEV_MODE === 'true';
 
@@ -81,6 +83,81 @@ export function requireAuth() {
   });
 }
 
+export function isEmailVerified() {
+  if (DEV_MODE) return true;
+  return currentUser?.emailVerified === true;
+}
+
+let verifyOverlayMode = null;
+
+function showVerifyOverlay(mode, email) {
+  verifyOverlayMode = mode;
+  const overlay = document.getElementById('loginOverlay');
+  const loginCard = overlay?.querySelector('.login-card');
+  if (!overlay || !loginCard) return;
+
+  const tabs = loginCard.querySelector('.login-tabs');
+  const form = document.getElementById('loginForm');
+  const divider = loginCard.querySelector('.login-divider');
+  const googleBtn = document.getElementById('loginGoogleBtn');
+  const forgotBtn = document.getElementById('forgotPasswordBtn');
+  const forgotSection = document.getElementById('forgotPasswordSection');
+  const verifySection = document.getElementById('verifySection');
+  const verifyTitle = document.getElementById('verifyTitle');
+  const verifyText = document.getElementById('verifyText');
+  const verifyEmail = document.getElementById('verifyEmailDisplay');
+  const resendBtn = document.getElementById('resendVerifyBtn');
+  const verifyMsg = document.getElementById('verifyMessage');
+  const backBtn = document.getElementById('verifyBackBtn');
+
+  if (tabs) tabs.classList.add('hidden');
+  if (form) form.classList.add('hidden');
+  if (divider) divider.classList.add('hidden');
+  if (googleBtn) googleBtn.classList.add('hidden');
+  if (forgotBtn) forgotBtn.classList.add('hidden');
+  if (forgotSection) forgotSection.classList.add('hidden');
+  if (verifySection) verifySection.classList.remove('hidden');
+
+  if (mode === 'registered') {
+    verifyTitle.textContent = '✅ Registrierung erfolgreich';
+    verifyText.textContent = 'Wir haben eine Bestätigungs-E-Mail gesendet an:';
+    verifyEmail.textContent = email;
+  } else if (mode === 'unverified') {
+    verifyTitle.textContent = '⚠️ Bitte bestätige deine E-Mail-Adresse';
+    verifyText.textContent = 'Du hast noch keine E-Mail-Adresse bestätigt. Bitte klicke auf den Link in unserer Bestätigungs-Mail an:';
+    verifyEmail.textContent = email;
+  }
+  if (verifyMsg) verifyMsg.textContent = '';
+  overlay.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+
+  resendBtn?.addEventListener('click', async () => {
+    resendBtn.disabled = true;
+    resendBtn.textContent = '⏳ Wird gesendet...';
+    if (verifyMsg) verifyMsg.textContent = '';
+    try {
+      await sendEmailVerification(auth.currentUser);
+      if (verifyMsg) { verifyMsg.textContent = '✅ Bestätigungs-E-Mail erneut gesendet.'; verifyMsg.className = 'login-success'; }
+    } catch (err) {
+      if (verifyMsg) { verifyMsg.textContent = '❌ ' + (err.message || 'Fehler beim Senden.'); verifyMsg.className = 'login-error'; }
+    } finally {
+      resendBtn.disabled = false;
+      resendBtn.textContent = '📧 Erneut senden';
+    }
+  });
+
+  backBtn?.addEventListener('click', async () => {
+    try { await signOut(auth); } catch (_) {}
+    verifySection.classList.add('hidden');
+    if (tabs) tabs.classList.remove('hidden');
+    if (form) form.classList.remove('hidden');
+    if (divider) divider.classList.remove('hidden');
+    if (googleBtn) googleBtn.classList.remove('hidden');
+    if (forgotBtn) forgotBtn.classList.remove('hidden');
+    verifyOverlayMode = null;
+  });
+}
+
 async function onUserLoggedIn(user) {
   currentUser = user;
   userProfile = await getUserProfile(user.uid);
@@ -90,6 +167,12 @@ async function onUserLoggedIn(user) {
   }
   notifyListeners(user, userProfile);
   updateUserDot(userProfile?.subscription || 'free');
+
+  if (!user.emailVerified && !DEV_MODE) {
+    showVerifyOverlay('unverified', user.email);
+    return;
+  }
+
   hideLoginOverlay();
   if (authResolve) {
     authResolve(user);
@@ -252,6 +335,11 @@ window.updateUserEmail = updateUserEmail;
 window.changeUserPassword = changeUserPassword;
 window.reauthenticateUser = reauthenticateUser;
 window.deleteAccount = deleteAccount;
+window.resendVerification = async function() {
+  if (currentUser) {
+    await sendEmailVerification(currentUser);
+  }
+};
 
 // ============ Login-Overlay UI Logic ============
 
@@ -330,7 +418,15 @@ function initLoginUI() {
     e.preventDefault();
     const email = emailInput.value.trim();
     const password = passwordInput.value;
-    if (!email || !password) { errorEl.textContent = 'Bitte E-Mail und Passwort eingeben.'; return }
+    if (!email || !password) { errorEl.textContent = 'Bitte E-Mail und Passwort eingeben.'; errorEl.className = 'login-error'; return }
+
+    const domainCheck = validateEmailDomain(email);
+    if (!domainCheck.valid) {
+      errorEl.textContent = domainCheck.reason;
+      errorEl.className = 'login-error';
+      return;
+    }
+
     submitBtn.disabled = true;
     submitBtn.textContent = '⏳ ...';
     errorEl.textContent = '';
@@ -338,17 +434,21 @@ function initLoginUI() {
       if (mode === 'login') {
         await loginWithEmail(email, password);
       } else {
-        await registerWithEmail(email, password);
+        const cred = await registerWithEmail(email, password);
+        await sendEmailVerification(cred.user);
+        showVerifyOverlay('registered', email);
       }
     } catch (err) {
-      const msg = err.code === 'auth/user-not-found' ? 'Benutzer nicht gefunden.'
+      const msg = err.code === 'auth/user-not-found' ? 'Kein Konto mit dieser E-Mail-Adresse gefunden.'
         : err.code === 'auth/wrong-password' ? 'Falsches Passwort.'
-        : err.code === 'auth/email-already-in-use' ? 'E-Mail bereits registriert.'
+        : err.code === 'auth/email-already-in-use' ? 'E-Mail bereits registriert. Bitte melde dich an.'
         : err.code === 'auth/weak-password' ? 'Passwort zu kurz (min. 6 Zeichen).'
-        : err.code === 'auth/invalid-credential' ? 'Ungültige Anmeldedaten.'
+        : err.code === 'auth/invalid-credential' ? 'Ungültige Anmeldedaten. Prüfe E-Mail und Passwort.'
+        : err.code === 'auth/too-many-requests' ? 'Zu viele Versuche. Bitte warte kurz und versuche es erneut.'
         : err.code === 'auth/popup-closed-by-user' ? 'Google-Anmeldung abgebrochen.'
         : err.message || 'Ein Fehler ist aufgetreten.';
       errorEl.textContent = msg;
+      errorEl.className = 'login-error';
     } finally {
       submitBtn.disabled = false;
       submitBtn.textContent = mode === 'login' ? 'Anmelden' : 'Registrieren';

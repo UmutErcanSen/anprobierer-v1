@@ -13,7 +13,7 @@ import {
   callChatCompletion, testApiKey, estimateCost,
 } from './api.js';
 
-import { currentUser, userProfile, onAuthChange, requireAuth, setPendingRedirect } from './auth.js';
+import { currentUser, userProfile, onAuthChange, requireAuth, setPendingRedirect, isEmailVerified } from './auth.js';
 import { checkGenerationAllowed, incrementGenerationsUsed, saveGeneration } from './firestore.js';
 import { renderPlanComparison } from './plans.js';
 
@@ -316,6 +316,10 @@ $('#step1StartBtn').addEventListener('click', async () => {
     } catch {
       return;
     }
+  }
+  if (!DEV_MODE && currentUser && !isEmailVerified()) {
+    showToast('🔒 Bitte bestätige zuerst deine E-Mail-Adresse.', 'error');
+    return;
   }
   document.getElementById('heroSection').classList.add('hero-hidden');
   document.getElementById('step1MiddleSection').classList.add('hidden-zone');
@@ -782,6 +786,9 @@ generateBtn.addEventListener('click', async () => {
     const allowed = await checkGenerationAllowed(currentUser?.uid);
     if (!allowed) {
       showToast('🔒 Limit erreicht. Upgrade dein Abo für mehr Generierungen.', 'error'); return;
+    }
+    if (!isEmailVerified()) {
+      showToast('🔒 Bitte bestätige zuerst deine E-Mail-Adresse. Prüfe dein Postfach.', 'error'); return;
     }
   }
 

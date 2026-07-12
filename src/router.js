@@ -29,6 +29,7 @@ export function getCurrentPath() {
 }
 
 function showRoute(path) {
+  document.documentElement.removeAttribute('id');
   const homeEl = document.getElementById('route-home');
   const createEl = document.getElementById('route-create');
   const accountEl = document.getElementById('route-account');

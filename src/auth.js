@@ -197,8 +197,8 @@ async function onUserLoggedIn(user) {
     authReject = null;
   }
   const redirectUrl = consumePendingRedirect();
-  if (redirectUrl) {
-    window.location.href = redirectUrl;
+  if (redirectUrl && window.navigateTo) {
+    window.navigateTo(redirectUrl);
   } else if (hadExplicitLogin && window.navigateTo) {
     window.navigateTo('/account');
   }

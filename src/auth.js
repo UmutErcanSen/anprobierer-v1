@@ -266,6 +266,16 @@ export function initAuthGuard() {
     }
   });
 
+  document.getElementById('loginCloseBtn')?.addEventListener('click', () => {
+    if (verifyOverlayMode) return;
+    hideLoginOverlay();
+    if (authReject) {
+      authReject(new Error('Login abgebrochen'));
+      authResolve = null;
+      authReject = null;
+    }
+  });
+
   onAuthStateChanged(auth, async user => {
     console.log('[auth] onAuthStateChanged user=', user ? user.email : null, 'emailVerified=', user?.emailVerified);
     if (!authStateResolved) {

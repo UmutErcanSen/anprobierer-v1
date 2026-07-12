@@ -239,6 +239,7 @@ export function initAuthGuard() {
 
   loginOverlay.addEventListener('click', (e) => {
     if (e.target === loginOverlay) {
+      if (verifyOverlayMode) return;
       hideLoginOverlay();
       if (authReject) {
         authReject(new Error('Login abgebrochen'));

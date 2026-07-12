@@ -575,12 +575,7 @@ footer{text-align:center;padding:2rem;color:var(--text-3);font-size:.8rem;border
   display:flex;align-items:center;justify-content:center;position:relative;
 }
 .settings-btn:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-dim)}
-.settings-btn-dot{
-  position:absolute;top:-2px;right:-2px;width:10px;height:10px;
-  border-radius:50%;border:2px solid var(--bg);
-  background:var(--plan-color,#71717a);
-}
-.settings-btn-dot--premium{background:linear-gradient(135deg,#22c55e,#f59e0b)}
+.settings-btn--active{border-color:var(--primary);box-shadow:0 0 8px rgba(108,99,255,.5),0 0 16px rgba(108,99,255,.2)}
 
 /* === ACCOUNT PAGE === */
 .account-page{padding-bottom:3rem;max-width:600px;margin:0 auto}

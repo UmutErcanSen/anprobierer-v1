@@ -1180,3 +1180,11 @@ header.header-compact{box-shadow:0 2px 24px rgba(0,0,0,.45)}
 .confirm-modal-content h3{margin-bottom:.75rem}
 .confirm-modal-content p{font-size:.85rem;color:var(--text-2);margin-bottom:1rem}
 .confirm-modal-actions{display:flex;gap:.5rem;justify-content:flex-end}
+
+/* === LOGIN OVERLAY MOBILE === */
+@media(max-width:480px){
+  .login-overlay{padding:.75rem;align-items:flex-start;padding-top:3rem}
+  .login-card{padding:1.5rem}
+  .login-close-btn svg{width:22px;height:22px}
+  .login-close-btn{top:.25rem;right:.25rem;padding:.6rem}
+}

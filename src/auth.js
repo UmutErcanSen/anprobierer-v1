@@ -69,6 +69,8 @@ function showLoginOverlay() {
   if (overlay) {
     overlay.style.display = 'flex';
     document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.width = '100%';
   }
 }
 
@@ -77,6 +79,8 @@ function hideLoginOverlay() {
   if (overlay) {
     overlay.style.display = 'none';
     document.body.style.overflow = '';
+    document.body.style.position = '';
+    document.body.style.width = '';
   }
 }
 

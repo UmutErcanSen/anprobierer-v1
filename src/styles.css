@@ -1183,8 +1183,11 @@ header.header-compact{box-shadow:0 2px 24px rgba(0,0,0,.45)}
 
 /* === LOGIN OVERLAY MOBILE === */
 @media(max-width:480px){
-  .login-overlay{padding:.75rem;align-items:flex-start;padding-top:3rem}
-  .login-card{padding:1.5rem}
+  .login-overlay{padding:.75rem;align-items:flex-start;padding-top:1.25rem;overflow-y:auto;-webkit-overflow-scrolling:touch}
+  .login-card{padding:1.25rem}
   .login-close-btn svg{width:22px;height:22px}
   .login-close-btn{top:.25rem;right:.25rem;padding:.6rem}
+  .login-header{margin-bottom:1rem}
+  .login-links{margin-top:.25rem}
+  .login-divider{margin:.6rem 0}
 }

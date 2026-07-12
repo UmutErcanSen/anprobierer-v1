@@ -25,7 +25,7 @@ npm run dev
 
 → http://localhost:5173
 
-Im `.env` ist `VITE_DEV_MODE=true` → kein Login nötig.
+Im `.env` ist `VITE_DEV_MODE=false` → Login nötig.
 
 ### API-Key automatisch hinterlegen (optional)
 
@@ -44,51 +44,88 @@ Beim nächsten Start wird der Key automatisch geladen.
 
 ## 🔥 Live schalten (Firebase Hosting)
 
-### Einmalig: Einloggen
+### Schritt 1: Neuesten Code holen
+
+Im Terminal im Projektordner:
 
 **Windows (PowerShell):**
 ```bash
-cmd /c "firebase login"
+cmd /c "git pull"
 ```
 
 **Mac (Terminal):**
 ```bash
-firebase login
+git pull
 ```
 
-→ Browser öffnet sich → Google-Konto auswählen → fertig.
+→ Holt die neuesten Dateien vom GitHub-Repository.
 
-### Deployen (nach jeder Änderung)
+### Schritt 2: Neu bauen
 
 **Windows (PowerShell):**
 ```bash
-cmd /c "npm run deploy"
+cmd /c "npm run build"
 ```
 
 **Mac (Terminal):**
 ```bash
-npm run deploy
+npm run build
 ```
 
-→ Baut `dist/` + lädt auf Firebase CDN hoch.
+→ Erzeugt frische Dateien im `dist/`-Ordner.
+→ **WICHTIG:** Ohne diesen Schritt wird die alte Version deployed!
 
-Live unter: https://virtual-try-on-6d197.web.app
+### Schritt 3: Auf Firebase hochladen
+
+**Windows (PowerShell):**
+```bash
+cmd /c "firebase deploy --only hosting"
+```
+
+**Mac (Terminal):**
+```bash
+firebase deploy --only hosting
+```
+
+→ Lädt den `dist/`-Ordner auf Firebase CDN hoch.
+
+### Schritt 4: Browser-Cache leeren
+
+Im Browser:
+1. **Cmd+Shift+Delete** (Mac) oder **Strg+Shift+Delete** (Windows)
+2. "Bilder und Dateien im Cache" auswählen
+3. "Cache leeren" klicken
+4. Seite neu laden: https://virtual-try-on-6d197.web.app
+
+### Oder alles in einem Befehl (nach git pull):
+
+```bash
+# Mac
+npm run build && firebase deploy --only hosting
+
+# Windows
+cmd /c "npm run build && firebase deploy --only hosting"
+```
 
 ---
 
-## 💾 Code sichern (optional)
+## 📝 Änderungen commiten und pushen
+
+Nach dem Programmieren:
 
 **Windows (PowerShell):**
 ```bash
-git add -A && git commit -m "Was geändert wurde"
+cmd /c "git add -A && git commit -m "Beschreibung""
 cmd /c "git push"
 ```
 
 **Mac (Terminal):**
 ```bash
-git add -A && git commit -m "Was geändert wurde"
+git add -A && git commit -m "Beschreibung"
 git push
 ```
+
+→ Speichert die Änderungen auf GitHub.
 
 ---
 
@@ -99,11 +136,13 @@ src/
 ├── main.js          Einstiegspunkt
 ├── firebase.js      Firebase Init
 ├── auth.js          Login/Registrierung/Google + AuthGuard
-├── user.js          Benutzer-Profil-Modal
+├── account.js       Benutzer-Profil bearbeiten
 ├── firestore.js     Firestore CRUD (Profile, Generierungen)
 ├── app.js           Hauptlogik (Upload, Generierung, Ergebnisse)
 ├── api.js           OpenAI API-Aufrufe
 ├── utils.js         Hilfsfunktionen
+├── router.js        Client-seitige Navigation
+├── plans.js         Abo-Vergleich
 └── styles.css       Styles
 
 public/
@@ -113,6 +152,9 @@ public/
 index.html           HTML-Grundgerüst
 firebase.json        Firebase Hosting Config
 .firebaserc          Firebase Projekt-Alias
+.env                 Basis-Umgebungsvariablen (committed)
+.env.local           Lokale Overrides (NICHT committed, gitignore)
+.env.production      Produktions-Umgebungsvariablen (committed)
 ```
 
 ---
@@ -129,30 +171,11 @@ firebase.json        Firebase Hosting Config
 
 ## 🛠 Nützliche Befehle
 
-### Lokaler Dev-Server
-
-| Platform | Befehl |
-|----------|--------|
-| Windows | `cmd /c "npm run dev"` |
-| Mac | `npm run dev` |
-
-### Build (ohne Deploy)
-
-| Platform | Befehl |
-|----------|--------|
-| Windows | `cmd /c "npm run build"` |
-| Mac | `npm run build` |
-
-### Build-Export lokal testen
-
-| Platform | Befehl |
-|----------|--------|
-| Windows | `cmd /c "npm run preview"` |
-| Mac | `npm run preview` |
-
-### Deploy (Bauen + Live schalten)
-
-| Platform | Befehl |
-|----------|--------|
-| Windows | `cmd /c "npm run deploy"` |
-| Mac | `npm run deploy` |
+| Befehl | Was passiert? | Windows |
+|--------|--------------|---------|
+| `npm run dev` | Startet lokalen Dev-Server (http://localhost:5173) | `cmd /c "npm run dev"` |
+| `npm run build` | Baut prod-ready Version nach `dist/` | `cmd /c "npm run build"` |
+| `npm run deploy` | Baut + deployed auf Firebase | `cmd /c "npm run deploy"` |
+| `npm run preview` | Testet den Build lokal | `cmd /c "npm run preview"` |
+| `git pull` | Holt neuesten Code von GitHub | `cmd /c "git pull"` |
+| `firebase deploy --only hosting` | Deployet nur Hosting (schneller) | `cmd /c "firebase deploy --only hosting"` |

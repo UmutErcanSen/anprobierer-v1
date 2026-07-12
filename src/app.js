@@ -243,7 +243,6 @@ async function handlePersonFile(file) {
     const data = await fileToBase64(converted);
     state.personPhoto = data;
     renderPersonPreview();
-    ['step2','step3'].forEach(id => document.getElementById(id)?.classList.remove('hidden-zone'));
     updateGenerateBtnState();
     saveSession();
     showToast('Personenfoto erfolgreich geladen', 'success');
@@ -1314,7 +1313,7 @@ export function resetUploadUI() {
   if (pv) pv.classList.add('hidden');
   const dropZone = document.getElementById('personDropZone');
   if (dropZone) dropZone.classList.remove('has-file');
-  ['step2','step3','step4'].forEach(id => document.getElementById(id)?.classList.add('hidden-zone'));
+  document.getElementById('step4')?.classList.add('hidden-zone');
   clothingPreviewGrid.innerHTML = '';
   noClothingHint.classList.remove('hidden');
   updateClothingBadge();

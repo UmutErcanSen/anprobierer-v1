@@ -89,6 +89,7 @@ export function isEmailVerified() {
 }
 
 let verifyOverlayMode = null;
+let verifyOverlayListenersAttached = false;
 
 function showVerifyOverlay(mode, email) {
   verifyOverlayMode = mode;
@@ -131,31 +132,34 @@ function showVerifyOverlay(mode, email) {
   overlay.style.display = 'flex';
   document.body.style.overflow = 'hidden';
 
-  resendBtn?.addEventListener('click', async () => {
-    resendBtn.disabled = true;
-    resendBtn.textContent = '⏳ Wird gesendet...';
-    if (verifyMsg) verifyMsg.textContent = '';
-    try {
-      await sendEmailVerification(auth.currentUser);
-      if (verifyMsg) { verifyMsg.textContent = '✅ Bestätigungs-E-Mail erneut gesendet.'; verifyMsg.className = 'login-success'; }
-    } catch (err) {
-      if (verifyMsg) { verifyMsg.textContent = '❌ ' + (err.message || 'Fehler beim Senden.'); verifyMsg.className = 'login-error'; }
-    } finally {
-      resendBtn.disabled = false;
-      resendBtn.textContent = '📧 Erneut senden';
-    }
-  });
+  if (!verifyOverlayListenersAttached) {
+    verifyOverlayListenersAttached = true;
+    resendBtn?.addEventListener('click', async () => {
+      resendBtn.disabled = true;
+      resendBtn.textContent = '⏳ Wird gesendet...';
+      if (verifyMsg) verifyMsg.textContent = '';
+      try {
+        await sendEmailVerification(auth.currentUser);
+        if (verifyMsg) { verifyMsg.textContent = '✅ Bestätigungs-E-Mail erneut gesendet.'; verifyMsg.className = 'login-success'; }
+      } catch (err) {
+        if (verifyMsg) { verifyMsg.textContent = '❌ ' + (err.message || 'Fehler beim Senden.'); verifyMsg.className = 'login-error'; }
+      } finally {
+        resendBtn.disabled = false;
+        resendBtn.textContent = '📧 Erneut senden';
+      }
+    });
 
-  backBtn?.addEventListener('click', async () => {
-    try { await signOut(auth); } catch (_) {}
-    verifySection.classList.add('hidden');
-    if (tabs) tabs.classList.remove('hidden');
-    if (form) form.classList.remove('hidden');
-    if (divider) divider.classList.remove('hidden');
-    if (googleBtn) googleBtn.classList.remove('hidden');
-    if (forgotBtn) forgotBtn.classList.remove('hidden');
-    verifyOverlayMode = null;
-  });
+    backBtn?.addEventListener('click', async () => {
+      try { await signOut(auth); } catch (_) {}
+      verifySection.classList.add('hidden');
+      if (tabs) tabs.classList.remove('hidden');
+      if (form) form.classList.remove('hidden');
+      if (divider) divider.classList.remove('hidden');
+      if (googleBtn) googleBtn.classList.remove('hidden');
+      if (forgotBtn) forgotBtn.classList.remove('hidden');
+      verifyOverlayMode = null;
+    });
+  }
 }
 
 async function onUserLoggedIn(user) {

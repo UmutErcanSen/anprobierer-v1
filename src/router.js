@@ -55,13 +55,6 @@ export async function navigateTo(path) {
 
 function handlePopState(e) {
   const path = e.state?.path || window.location.pathname || '/';
-  if (!DEV_MODE && isRouteProtected(path) && !currentUser) {
-    currentPath = ROUTES.HOME;
-    window.history.replaceState({ path: currentPath }, '', currentPath);
-    showRoute(currentPath);
-    notify(currentPath);
-    return;
-  }
   currentPath = path;
   showRoute(path);
   notify(path);
@@ -76,10 +69,6 @@ async function initRouter() {
   }
   if (!DEV_MODE && isRouteProtected(currentPath)) {
     await waitForAuth();
-    if (!currentUser) {
-      currentPath = ROUTES.HOME;
-      window.history.replaceState({ path: currentPath }, '', currentPath);
-    }
   }
   showRoute(currentPath);
 }

@@ -212,7 +212,10 @@ function onUserLoggedOut() {
   const btn = document.getElementById('userBtn');
   const dot = btn?.querySelector('.settings-btn-dot');
   if (dot) dot.remove();
-  showLoginOverlay();
+  const path = window.location.pathname;
+  if (path === '/account' || path === '/anzeige-erstellen') {
+    showLoginOverlay();
+  }
 }
 
 export async function refreshUserProfile() {

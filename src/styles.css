@@ -1121,7 +1121,7 @@ header.header-compact{box-shadow:0 2px 24px rgba(0,0,0,.45)}
 
 .login-overlay{position:fixed;inset:0;z-index:10000;display:none;align-items:center;justify-content:center;background:rgba(10,10,25,.92);backdrop-filter:blur(12px);padding:1rem}
 .login-card{position:relative;background:var(--surface-1);border:1px solid var(--border);border-radius:var(--radius-lg);padding:2rem;width:100%;max-width:400px;box-shadow:0 25px 60px rgba(0,0,0,.5)}
-.login-close-btn{position:absolute;top:.75rem;right:.75rem;background:none;border:none;font-size:1.5rem;color:var(--text-3);cursor:pointer;line-height:1;padding:.25rem .5rem;border-radius:var(--radius-sm)}
+.login-close-btn{position:absolute;top:.5rem;right:.5rem;background:none;border:none;color:var(--text-3);cursor:pointer;padding:.5rem;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center}
 .login-close-btn:hover{color:var(--text-1);background:rgba(255,255,255,.08)}
 .login-header{text-align:center;margin-bottom:1.5rem}
 .login-logo{font-size:2.5rem}

@@ -6,6 +6,7 @@ export const ROUTES = {
   HOME: '/',
   CREATE: '/anzeige-erstellen',
   ACCOUNT: '/account',
+  PREISE: '/preise',
 };
 
 function isRouteProtected(path) {
@@ -32,6 +33,7 @@ const ROUTE_TITLES = {
   [ROUTES.HOME]: 'Virtual Try-On',
   [ROUTES.CREATE]: 'Anzeige erstellen – Virtual Try-On',
   [ROUTES.ACCOUNT]: 'Mein Konto – Virtual Try-On',
+  [ROUTES.PREISE]: 'Preise – Virtual Try-On',
 };
 
 function showRoute(path) {
@@ -40,9 +42,11 @@ function showRoute(path) {
   const homeEl = document.getElementById('route-home');
   const createEl = document.getElementById('route-create');
   const accountEl = document.getElementById('route-account');
+  const preiseEl = document.getElementById('route-preise');
   if (homeEl) homeEl.classList.toggle('hidden', path !== ROUTES.HOME);
   if (createEl) createEl.classList.toggle('hidden', path !== ROUTES.CREATE);
   if (accountEl) accountEl.classList.toggle('hidden', path !== ROUTES.ACCOUNT);
+  if (preiseEl) preiseEl.classList.toggle('hidden', path !== ROUTES.PREISE);
 }
 
 export async function navigateTo(path) {

@@ -74,6 +74,7 @@
       <div class="header-inner">
         <h1><a href="/" onclick="event.preventDefault(); navigateTo('/')"><span class="gradient-text">✦</span> <span class="gradient-text">Virtual Try-On</span></a></h1>
         <div class="header-btn-group">
+          <a class="header-nav-link" onclick="navigateTo('/preise')">Preise</a>
           <button class="settings-btn" id="userBtn" onclick="navigateTo('/account')">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="8" r="4"/>
@@ -135,10 +136,101 @@
               </div>
             </div>
           </div>
-          <div class="plan-comparison-home reveal" id="planComparisonHome"></div>
         </section>
       </div>
     </div><!-- /route-home -->
+
+    <div id="route-preise" class="hidden">
+      <div class="container">
+        <section class="pricing-hero">
+          <span class="pricing-hero-badge">Preise</span>
+          <h1 class="pricing-hero-title">Wähle den <span class="gradient-text">passenden Plan</span></h1>
+          <p class="pricing-hero-sub">Starte kostenlos oder steigere deine Bildqualität und Produktivität.</p>
+        </section>
+
+        <section class="pricing-cards">
+          <div class="pricing-card">
+            <div class="pricing-card-header">
+              <span class="pricing-card-emoji">⭐</span>
+              <h3 class="pricing-card-name">Free</h3>
+              <div class="pricing-card-price">0 €<span class="pricing-card-period">/Monat</span></div>
+              <p class="pricing-card-desc">Virtual Try-On ausprobieren</p>
+            </div>
+            <ul class="pricing-card-features">
+              <li><span class="pricing-check">✓</span> 5 Generierungen / Monat</li>
+              <li><span class="pricing-check">✓</span> Mittlere Bildqualität</li>
+              <li><span class="pricing-check">✓</span> Einzelne Kleidungsstücke</li>
+              <li><span class="pricing-check">✓</span> Standard-Support</li>
+            </ul>
+            <button class="btn btn-outline pricing-card-btn" onclick="navigateTo('/anzeige-erstellen')">Kostenlos starten</button>
+          </div>
+
+          <div class="pricing-card pricing-card--popular">
+            <span class="pricing-popular-badge">★ Beliebt</span>
+            <div class="pricing-card-header">
+              <span class="pricing-card-emoji">💎</span>
+              <h3 class="pricing-card-name">Basic</h3>
+              <div class="pricing-card-price">9,99 €<span class="pricing-card-period">/Monat</span></div>
+              <p class="pricing-card-desc">Für aktive Verkäufer</p>
+            </div>
+            <ul class="pricing-card-features">
+              <li><span class="pricing-check">✓</span> 50 Generierungen / Monat</li>
+              <li><span class="pricing-check">✓</span> Hohe Bildqualität</li>
+              <li><span class="pricing-check">✓</span> Mehrere Kleidungsstücke</li>
+              <li><span class="pricing-check">✓</span> Prioritäts-Support</li>
+            </ul>
+            <button class="btn btn-primary pricing-card-btn" onclick="navigateTo('/anzeige-erstellen')">Auswählen</button>
+          </div>
+
+          <div class="pricing-card">
+            <div class="pricing-card-header">
+              <span class="pricing-card-emoji">👑</span>
+              <h3 class="pricing-card-name">Pro</h3>
+              <div class="pricing-card-price">19,99 €<span class="pricing-card-period">/Monat</span></div>
+              <p class="pricing-card-desc">Für Profi-Verkäufer</p>
+            </div>
+            <ul class="pricing-card-features">
+              <li><span class="pricing-check">✓</span> Unlimited Generierungen</li>
+              <li><span class="pricing-check">✓</span> Maximale Bildqualität</li>
+              <li><span class="pricing-check">✓</span> Mehrere Kleidungsstücke</li>
+              <li><span class="pricing-check">✓</span> Premium-Support</li>
+            </ul>
+            <button class="btn btn-gradient pricing-card-btn" onclick="navigateTo('/anzeige-erstellen')">Auswählen</button>
+          </div>
+        </section>
+
+        <section class="pricing-comparison">
+          <h2 class="pricing-section-title">Funktionen im Detail</h2>
+          <div id="pricingComparisonTable"></div>
+        </section>
+
+        <section class="pricing-faq">
+          <h2 class="pricing-section-title">Häufig gestellte Fragen</h2>
+          <div class="pricing-faq-list">
+            <details class="pricing-faq-item">
+              <summary>Kann ich jederzeit zwischen den Plänen wechseln?</summary>
+              <p>Ja, du kannst jederzeit upgraden oder downgraden. Die Änderung wird sofort wirksam und die Kosten werden anteilig berechnet.</p>
+            </details>
+            <details class="pricing-faq-item">
+              <summary>Was passiert mit meinen Daten wenn ich downgrades?</summary>
+              <p>Alle deine bisherigen Generierungen und Daten bleiben erhalten. Bei einem Downgrade wird nur die monatliche Generierungsanzahl angepasst.</p>
+            </details>
+            <details class="pricing-faq-item">
+              <summary>Gibt es eine Testphase für Basic oder Pro?</summary>
+              <p>Ja! Jeder neue Nutzer hat eine 7-tägige Testphase für Basic und Pro, um alle Funktionen risikofrei auszuprobieren.</p>
+            </details>
+            <details class="pricing-faq-item">
+              <summary>Wie werden die Generierungen gezählt?</summary>
+              <p>Jede erfolgreiche KI-Generierung zählt als eine Generierung. Fehlgeschlagene Versuche werden nicht gezählt.</p>
+            </details>
+            <details class="pricing-faq-item">
+              <summary>Kann ich mein Abo jederzeit kündigen?</summary>
+              <p>Ja, es gibt keine Bindung. Du kannst dein Abo jederzeit über die Account-Seite kündigen. Das Abo bleibt bis zum Ende der laufenden Periode aktiv.</p>
+            </details>
+          </div>
+        </section>
+      </div>
+    </div><!-- /route-preise -->
 
     <div id="route-create" class="hidden">
       <div class="container">

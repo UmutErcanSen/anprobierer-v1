@@ -1,6 +1,6 @@
 export const PLANS = {
   free: {
-    label: 'Gratis', limit: 5, color: '#71717a',
+    label: 'Free', limit: 5, color: '#71717a',
     emoji: '⭐', price: '0 €', quality: 'Mittel', support: 'Standard',
     popular: false,
   },

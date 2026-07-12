@@ -1517,31 +1517,25 @@ onRouteChange((path) => {
     }
     window.scrollTo({ top: 0, behavior: 'instant' });
   }
+  if (path === ROUTES.PREISE) {
+    const pricingTable = document.getElementById('pricingComparisonTable');
+    if (pricingTable) {
+      renderPlanComparison(pricingTable, userProfile?.subscription || 'free', {
+        showUpgradeBtn: true,
+        onUpgrade: async () => {
+          if (!currentUser) {
+            try { await requireAuth(); } catch { return; }
+          }
+          navigateTo('/anzeige-erstellen');
+        },
+      });
+    }
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }
 });
 
-// Homepage plan comparison
-const homeComparison = document.getElementById('planComparisonHome');
-if (homeComparison) {
-  const renderHomeComparison = (plan) => {
-    renderPlanComparison(homeComparison, plan, {
-      showUpgradeBtn: true,
-      onUpgrade: async (targetPlan) => {
-        if (!currentUser) {
-          try {
-            await requireAuth();
-            const plan = userProfile?.subscription || 'free';
-            renderHomeComparison(plan);
-          } catch { return }
-        }
-      },
-    });
-  };
-  renderHomeComparison('free');
-  onAuthChange((user, profile) => {
-    const plan = profile?.subscription || 'free';
-    renderHomeComparison(plan);
-    if (!user) {
-      resetUploadUI();
-    }
-  });
-}
+onAuthChange((user, profile) => {
+  if (!user) {
+    resetUploadUI();
+  }
+});

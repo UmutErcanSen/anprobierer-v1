@@ -6,10 +6,21 @@ KI-gestützte Anprobebilder für Vinted-Anzeigen.
 
 ## 🚀 Lokal entwickeln
 
-PowerShell blockiert `.ps1`-Skripte. Darum immer **`cmd /c`** vor jedem Befehl:
+### Voraussetzungen
 
+- [Node.js](https://nodejs.org) 18+ (auf Mac mit nvm: `nvm use 24`)
+- npm (wird mit Node.js installiert)
+
+### Dev-Server starten
+
+**Windows (PowerShell):**
 ```bash
 cmd /c "npm run dev"
+```
+
+**Mac (Terminal):**
+```bash
+npm run dev
 ```
 
 → http://localhost:5173
@@ -20,14 +31,14 @@ Im `.env` ist `VITE_DEV_MODE=true` → kein Login nötig.
 
 Damit du den Key nicht jedes Mal manuell eintragen musst:
 
-1. Erstelle `src/../.env.local` (wird nicht committed)
+1. Erstelle `.env.local` im Projektstamm (wird nicht committed)
 2. Trag deinen Key ein:
 
 ```
 VITE_DEV_API_KEY=sk-dein-wirklicher-key
 ```
 
-Beim nächsten `cmd /c "npm run dev"` wird der Key automatisch geladen.
+Beim nächsten Start wird der Key automatisch geladen.
 
 ---
 
@@ -35,16 +46,28 @@ Beim nächsten `cmd /c "npm run dev"` wird der Key automatisch geladen.
 
 ### Einmalig: Einloggen
 
+**Windows (PowerShell):**
 ```bash
 cmd /c "firebase login"
+```
+
+**Mac (Terminal):**
+```bash
+firebase login
 ```
 
 → Browser öffnet sich → Google-Konto auswählen → fertig.
 
 ### Deployen (nach jeder Änderung)
 
+**Windows (PowerShell):**
 ```bash
 cmd /c "npm run deploy"
+```
+
+**Mac (Terminal):**
+```bash
+npm run deploy
 ```
 
 → Baut `dist/` + lädt auf Firebase CDN hoch.
@@ -55,9 +78,16 @@ Live unter: https://virtual-try-on-6d197.web.app
 
 ## 💾 Code sichern (optional)
 
+**Windows (PowerShell):**
 ```bash
 git add -A && git commit -m "Was geändert wurde"
 cmd /c "git push"
+```
+
+**Mac (Terminal):**
+```bash
+git add -A && git commit -m "Was geändert wurde"
+git push
 ```
 
 ---
@@ -99,9 +129,30 @@ firebase.json        Firebase Hosting Config
 
 ## 🛠 Nützliche Befehle
 
-| Befehl | Beschreibung |
-|--------|-------------|
-| `cmd /c "npm run dev"` | Lokaler Dev-Server |
-| `cmd /c "npm run build"` | Nur bauen (ohne deploy) |
-| `cmd /c "npm run preview"` | Gebaute `dist/` lokal testen |
-| `cmd /c "npm run deploy"` | Bauen + live schalten |
+### Lokaler Dev-Server
+
+| Platform | Befehl |
+|----------|--------|
+| Windows | `cmd /c "npm run dev"` |
+| Mac | `npm run dev` |
+
+### Build (ohne Deploy)
+
+| Platform | Befehl |
+|----------|--------|
+| Windows | `cmd /c "npm run build"` |
+| Mac | `npm run build` |
+
+### Build-Export lokal testen
+
+| Platform | Befehl |
+|----------|--------|
+| Windows | `cmd /c "npm run preview"` |
+| Mac | `npm run preview` |
+
+### Deploy (Bauen + Live schalten)
+
+| Platform | Befehl |
+|----------|--------|
+| Windows | `cmd /c "npm run deploy"` |
+| Mac | `npm run deploy` |

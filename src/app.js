@@ -1208,10 +1208,13 @@ window.closeSettings = function () {
 };
 
 window.toggleBurgerMenu = function () {
-  document.getElementById('burgerDropdown').classList.toggle('open');
+  const dd = document.getElementById('burgerDropdown');
+  const isOpen = dd.classList.toggle('open');
+  document.body.style.overflow = isOpen ? 'hidden' : '';
 };
 window.closeBurgerMenu = function () {
   document.getElementById('burgerDropdown').classList.remove('open');
+  document.body.style.overflow = '';
 };
 document.addEventListener('click', (e) => {
   const wrapper = document.querySelector('.burger-wrapper');

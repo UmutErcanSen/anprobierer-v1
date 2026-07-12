@@ -13,7 +13,7 @@ import {
   callChatCompletion, testApiKey, estimateCost,
 } from './api.js';
 
-import { currentUser, userProfile, onAuthChange, requireAuth } from './auth.js';
+import { currentUser, userProfile, onAuthChange, requireAuth, setPendingRedirect } from './auth.js';
 import { checkGenerationAllowed, incrementGenerationsUsed, saveGeneration } from './firestore.js';
 import { renderPlanComparison } from './plans.js';
 
@@ -311,6 +311,7 @@ personFileInput.addEventListener('change', () => {
 $('#step1StartBtn').addEventListener('click', async () => {
   if (!DEV_MODE && !currentUser) {
     try {
+      setPendingRedirect(window.location.href);
       await requireAuth();
     } catch {
       return;

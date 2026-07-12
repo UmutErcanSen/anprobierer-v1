@@ -1,5 +1,5 @@
 import {
-  doc, getDoc, setDoc, updateDoc, increment,
+  doc, getDoc, setDoc, updateDoc, increment, deleteDoc,
   collection, addDoc, query, orderBy, limit, getDocs,
   serverTimestamp,
 } from 'firebase/firestore';
@@ -49,4 +49,12 @@ export async function getUserGenerations(uid, max = 20) {
   );
   const snap = await getDocs(q);
   return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+}
+
+export async function deleteUserData(uid) {
+  const genSnap = await getDocs(collection(db, 'generations', uid));
+  const batch = [];
+  genSnap.forEach(d => batch.push(deleteDoc(d.ref)));
+  await Promise.all(batch);
+  await deleteDoc(doc(db, 'users', uid));
 }

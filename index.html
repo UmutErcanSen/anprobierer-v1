@@ -40,6 +40,20 @@
           Mit Google fortfahren
         </button>
         <p class="login-error" id="loginError"></p>
+        <div class="login-links">
+          <button class="login-link-btn" id="forgotPasswordBtn">Passwort vergessen?</button>
+        </div>
+        <div class="forgot-password-section hidden" id="forgotPasswordSection">
+          <p class="forgot-password-text">Trage deine E-Mail-Adresse ein und wir senden dir einen Link zum Zurücksetzen deines Passworts.</p>
+          <div class="login-field">
+            <label for="resetEmail">E-Mail</label>
+            <input type="email" id="resetEmail" placeholder="deine@email.de" />
+          </div>
+          <button class="btn btn-primary login-btn" id="resetSubmitBtn">Reset-Link senden</button>
+          <p class="login-error" id="resetError"></p>
+          <p class="login-success" id="resetSuccess"></p>
+          <button class="login-link-btn" id="backToLoginBtn">← Zurück zum Login</button>
+        </div>
       </div>
     </div>
 
@@ -306,6 +320,40 @@
 
           <div class="account-card account-plan-comparison" id="accountPlanComparison"></div>
 
+          <div class="account-settings-card" id="accountSettings">
+            <h3>⚙️ Einstellungen</h3>
+            <div class="account-settings-field">
+              <label for="accountDisplayName">Anzeigename</label>
+              <div class="account-settings-row">
+                <input type="text" id="accountDisplayName" placeholder="Dein Name" />
+                <button class="btn btn-sm btn-primary" id="saveNameBtn">Speichern</button>
+              </div>
+              <div class="account-settings-message" id="nameMessage"></div>
+            </div>
+            <div class="account-settings-field">
+              <label for="accountNewEmail">E-Mail-Adresse ändern</label>
+              <div class="account-settings-row">
+                <input type="email" id="accountNewEmail" placeholder="neue@email.de" />
+                <button class="btn btn-sm btn-primary" id="changeEmailBtn">Ändern</button>
+              </div>
+              <div class="account-settings-message" id="emailMessage"></div>
+            </div>
+            <div class="account-settings-field">
+              <label for="accountCurrentPassword">Passwort ändern</label>
+              <input type="password" id="accountCurrentPassword" placeholder="Aktuelles Passwort" style="margin-bottom:.5rem" />
+              <div class="account-settings-row">
+                <input type="password" id="accountNewPassword" placeholder="Neues Passwort (min. 6 Zeichen)" />
+                <button class="btn btn-sm btn-primary" id="changePasswordBtn">Ändern</button>
+              </div>
+              <div class="account-settings-message" id="passwordMessage"></div>
+            </div>
+            <div class="account-danger-zone">
+              <h3>⚠️ Gefahrenbereich</h3>
+              <p style="font-size:.8rem;color:var(--text-3);margin-bottom:.5rem">Konto und alle zugehörigen Daten dauerhaft löschen. Dies kann nicht rückgängig gemacht werden.</p>
+              <button class="btn btn-sm btn-danger account-delete-btn" id="deleteAccountBtn">Konto löschen</button>
+            </div>
+          </div>
+
           <button class="btn btn-outline account-logout-btn" id="accountLogoutBtn">🚪 Ausloggen</button>
         </div>
 
@@ -433,6 +481,26 @@
     </div>
 
     <div class="toast-container" id="toastContainer"></div>
+
+    <div class="confirm-modal" id="deleteAccountModal">
+      <div class="confirm-modal-content" onclick="event.stopPropagation()">
+        <h3>⚠️ Konto wirklich löschen?</h3>
+        <p>Diese Aktion kann nicht rückgängig gemacht werden. Alle deine Daten, inklusive Profil und Generierungen, werden dauerhaft gelöscht.</p>
+        <div class="account-settings-field">
+          <label for="deleteConfirmEmail">Bestätige mit deiner E-Mail-Adresse</label>
+          <input type="email" id="deleteConfirmEmail" placeholder="deine@email.de" />
+        </div>
+        <div class="account-settings-field">
+          <label for="deleteConfirmPassword">Dein Passwort</label>
+          <input type="password" id="deleteConfirmPassword" placeholder="••••••••" />
+        </div>
+        <p class="account-settings-message error" id="deleteAccountError"></p>
+        <div class="confirm-modal-actions">
+          <button class="btn btn-outline btn-sm" id="cancelDeleteBtn">Abbrechen</button>
+          <button class="btn btn-danger btn-sm" id="confirmDeleteBtn">Endgültig löschen</button>
+        </div>
+      </div>
+    </div>
 
     <script type="module" src="/src/main.js"></script>
   </body>

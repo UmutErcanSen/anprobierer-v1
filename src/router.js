@@ -1,4 +1,4 @@
-import { requireAuth, currentUser } from './auth.js';
+import { requireAuth, currentUser, setPendingRedirect } from './auth.js';
 
 const DEV_MODE = import.meta.env.VITE_DEV_MODE === 'true';
 
@@ -38,6 +38,7 @@ export async function navigateTo(path) {
   if (path === currentPath) return;
   if (!DEV_MODE && isRouteProtected(path) && !currentUser) {
     try {
+      setPendingRedirect(path);
       await requireAuth();
     } catch {
       return;

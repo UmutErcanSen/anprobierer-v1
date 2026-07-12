@@ -1,7 +1,8 @@
-import { onAuthChange, refreshUserProfile, currentUser, userProfile, logout } from './auth.js';
+import { onAuthChange, refreshUserProfile, currentUser, userProfile, logout, updateUserDisplayName, updateUserEmail, changeUserPassword, deleteAccount, reauthenticateUser } from './auth.js';
 import { getUserGenerations } from './firestore.js';
 import { onRouteChange, getCurrentPath, navigateTo } from './router.js';
 import { PLANS, renderPlanComparison } from './plans.js';
+import { showToast } from './utils.js';
 
 const DEV_MODE = import.meta.env.VITE_DEV_MODE === 'true';
 
@@ -115,6 +116,130 @@ function renderAccount(profile) {
     logoutBtn.onclick = async () => {
       await logout();
       navigateTo('/');
+    };
+  }
+
+  const nameInput = document.getElementById('accountDisplayName');
+  const saveNameBtn = document.getElementById('saveNameBtn');
+  const nameMessage = document.getElementById('nameMessage');
+  if (nameInput && profile) {
+    nameInput.value = profile.displayName || '';
+  }
+  if (saveNameBtn) {
+    saveNameBtn.onclick = async () => {
+      const name = nameInput.value.trim();
+      if (!name) { nameMessage.textContent = 'Bitte einen Namen eingeben.'; nameMessage.className = 'account-settings-message error'; return; }
+      saveNameBtn.disabled = true;
+      try {
+        await updateUserDisplayName(name);
+        nameMessage.textContent = '✅ Name aktualisiert.'; nameMessage.className = 'account-settings-message success';
+      } catch (err) {
+        nameMessage.textContent = '❌ ' + (err.message || 'Fehler beim Speichern.'); nameMessage.className = 'account-settings-message error';
+      } finally {
+        saveNameBtn.disabled = false;
+      }
+    };
+  }
+
+  const emailInput = document.getElementById('accountNewEmail');
+  const changeEmailBtn = document.getElementById('changeEmailBtn');
+  const emailMessage = document.getElementById('emailMessage');
+  if (changeEmailBtn) {
+    changeEmailBtn.onclick = async () => {
+      const newEmail = emailInput.value.trim();
+      if (!newEmail || !newEmail.includes('@')) { emailMessage.textContent = 'Bitte gültige E-Mail eingeben.'; emailMessage.className = 'account-settings-message error'; return; }
+      if (!confirm(`E-Mail-Adresse zu "${newEmail}" ändern? Eine Bestätigungs-Mail wird gesendet.`)) return;
+      changeEmailBtn.disabled = true;
+      try {
+        await updateUserEmail(newEmail);
+        emailMessage.textContent = '✅ E-Mail geändert. Bitte neue Adresse bestätigen.'; emailMessage.className = 'account-settings-message success';
+        await refreshUserProfile();
+      } catch (err) {
+        if (err.code === 'auth/requires-recent-login') {
+          emailMessage.textContent = '⚠️ Bitte zuerst abmelden und erneut einloggen, dann E-Mail ändern.'; emailMessage.className = 'account-settings-message error';
+        } else {
+          emailMessage.textContent = '❌ ' + (err.message || 'Fehler beim Ändern.'); emailMessage.className = 'account-settings-message error';
+        }
+      } finally {
+        changeEmailBtn.disabled = false;
+      }
+    };
+  }
+
+  const currentPasswordInput = document.getElementById('accountCurrentPassword');
+  const newPasswordInput = document.getElementById('accountNewPassword');
+  const changePasswordBtn = document.getElementById('changePasswordBtn');
+  const passwordMessage = document.getElementById('passwordMessage');
+  if (changePasswordBtn) {
+    changePasswordBtn.onclick = async () => {
+      const current = currentPasswordInput.value;
+      const newPw = newPasswordInput.value;
+      if (!current || !newPw) { passwordMessage.textContent = 'Bitte beide Felder ausfüllen.'; passwordMessage.className = 'account-settings-message error'; return; }
+      if (newPw.length < 6) { passwordMessage.textContent = 'Neues Passwort muss min. 6 Zeichen lang sein.'; passwordMessage.className = 'account-settings-message error'; return; }
+      changePasswordBtn.disabled = true;
+      try {
+        await changeUserPassword(current, newPw);
+        passwordMessage.textContent = '✅ Passwort geändert.'; passwordMessage.className = 'account-settings-message success';
+        currentPasswordInput.value = '';
+        newPasswordInput.value = '';
+      } catch (err) {
+        passwordMessage.textContent = '❌ ' + (err.code === 'auth/wrong-password' ? 'Aktuelles Passwort ist falsch.' : err.message || 'Fehler beim Ändern.'); passwordMessage.className = 'account-settings-message error';
+      } finally {
+        changePasswordBtn.disabled = false;
+      }
+    };
+  }
+
+  const deleteAccountBtn = document.getElementById('deleteAccountBtn');
+  const deleteModal = document.getElementById('deleteAccountModal');
+  const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
+  const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+  const deleteConfirmEmail = document.getElementById('deleteConfirmEmail');
+  const deleteConfirmPassword = document.getElementById('deleteConfirmPassword');
+  const deleteAccountError = document.getElementById('deleteAccountError');
+
+  if (deleteAccountBtn) {
+    deleteAccountBtn.onclick = () => {
+      deleteModal.classList.add('visible');
+      document.body.style.overflow = 'hidden';
+      deleteConfirmEmail.value = profile?.email || '';
+      deleteAccountError.textContent = '';
+    };
+  }
+  if (cancelDeleteBtn) {
+    cancelDeleteBtn.onclick = () => {
+      deleteModal.classList.remove('visible');
+      document.body.style.overflow = '';
+    };
+  }
+  if (deleteModal) {
+    deleteModal.addEventListener('click', (e) => {
+      if (e.target === deleteModal) {
+        deleteModal.classList.remove('visible');
+        document.body.style.overflow = '';
+      }
+    });
+  }
+  if (confirmDeleteBtn) {
+    confirmDeleteBtn.onclick = async () => {
+      const email = deleteConfirmEmail.value.trim();
+      const password = deleteConfirmPassword.value;
+      if (!email || !password) { deleteAccountError.textContent = 'Bitte E-Mail und Passwort eingeben.'; return; }
+      if (email !== profile?.email) { deleteAccountError.textContent = 'E-Mail stimmt nicht überein.'; return; }
+      confirmDeleteBtn.disabled = true;
+      confirmDeleteBtn.textContent = '⏳ Wird gelöscht...';
+      try {
+        await deleteAccount(password);
+        deleteModal.classList.remove('visible');
+        document.body.style.overflow = '';
+        showToast('Konto erfolgreich gelöscht.', 'success');
+        navigateTo('/');
+      } catch (err) {
+        deleteAccountError.textContent = '❌ ' + (err.code === 'auth/wrong-password' ? 'Passwort ist falsch.' : err.message || 'Fehler beim Löschen.');
+      } finally {
+        confirmDeleteBtn.disabled = false;
+        confirmDeleteBtn.textContent = 'Endgültig löschen';
+      }
     };
   }
 }

@@ -5,9 +5,16 @@ import {
   signInWithPopup,
   GoogleAuthProvider,
   signOut,
+  sendPasswordResetEmail,
+  updateProfile,
+  updateEmail,
+  reauthenticateWithCredential,
+  EmailAuthProvider,
+  updatePassword,
+  deleteUser,
 } from 'firebase/auth';
 import { auth } from './firebase.js';
-import { createUserProfile, getUserProfile } from './firestore.js';
+import { createUserProfile, getUserProfile, deleteUserData } from './firestore.js';
 
 const DEV_MODE = import.meta.env.VITE_DEV_MODE === 'true';
 
@@ -88,6 +95,10 @@ async function onUserLoggedIn(user) {
     authResolve(user);
     authResolve = null;
     authReject = null;
+  }
+  const redirectUrl = consumePendingRedirect();
+  if (redirectUrl) {
+    window.location.href = redirectUrl;
   }
 }
 
@@ -171,10 +182,76 @@ export async function logout() {
   return signOut(auth);
 }
 
+export async function resetPassword(email) {
+  return sendPasswordResetEmail(auth, email);
+}
+
+export async function updateUserDisplayName(name) {
+  if (!currentUser) throw new Error('Nicht eingeloggt');
+  await updateProfile(currentUser, { displayName: name });
+  await refreshUserProfile();
+}
+
+export async function updateUserEmail(newEmail) {
+  if (!currentUser) throw new Error('Nicht eingeloggt');
+  await updateEmail(currentUser, newEmail);
+}
+
+export async function changeUserPassword(currentPassword, newPassword) {
+  if (!currentUser) throw new Error('Nicht eingeloggt');
+  const credential = EmailAuthProvider.credential(currentUser.email, currentPassword);
+  await reauthenticateWithCredential(currentUser, credential);
+  await updatePassword(currentUser, newPassword);
+}
+
+export async function reauthenticateUser(password) {
+  if (!currentUser) throw new Error('Nicht eingeloggt');
+  const credential = EmailAuthProvider.credential(currentUser.email, password);
+  await reauthenticateWithCredential(currentUser, credential);
+}
+
+export async function deleteAccount(password) {
+  if (!currentUser) throw new Error('Nicht eingeloggt');
+  const credential = EmailAuthProvider.credential(currentUser.email, password);
+  await reauthenticateWithCredential(currentUser, credential);
+  await deleteUserData(currentUser.uid);
+  await deleteUser(currentUser);
+}
+
+let pendingRedirect = null;
+
+export function setPendingRedirect(url) {
+  pendingRedirect = url;
+  try { sessionStorage.setItem('vto_pending_redirect', url); } catch (_) {}
+}
+
+export function consumePendingRedirect() {
+  if (pendingRedirect) {
+    const url = pendingRedirect;
+    pendingRedirect = null;
+    try { sessionStorage.removeItem('vto_pending_redirect'); } catch (_) {}
+    return url;
+  }
+  try {
+    const stored = sessionStorage.getItem('vto_pending_redirect');
+    if (stored) {
+      sessionStorage.removeItem('vto_pending_redirect');
+      return stored;
+    }
+  } catch (_) {}
+  return null;
+}
+
 window.loginWithEmail = loginWithEmail;
 window.registerWithEmail = registerWithEmail;
 window.loginWithGoogle = loginWithGoogle;
 window.logout = logout;
+window.resetPassword = resetPassword;
+window.updateUserDisplayName = updateUserDisplayName;
+window.updateUserEmail = updateUserEmail;
+window.changeUserPassword = changeUserPassword;
+window.reauthenticateUser = reauthenticateUser;
+window.deleteAccount = deleteAccount;
 
 // ============ Login-Overlay UI Logic ============
 
@@ -186,6 +263,13 @@ function initLoginUI() {
   const passwordInput = document.getElementById('loginPassword');
   const errorEl = document.getElementById('loginError');
   const googleBtn = document.getElementById('loginGoogleBtn');
+  const forgotBtn = document.getElementById('forgotPasswordBtn');
+  const forgotSection = document.getElementById('forgotPasswordSection');
+  const resetEmail = document.getElementById('resetEmail');
+  const resetSubmitBtn = document.getElementById('resetSubmitBtn');
+  const resetError = document.getElementById('resetError');
+  const resetSuccess = document.getElementById('resetSuccess');
+  const backToLoginBtn = document.getElementById('backToLoginBtn');
 
   if (!form) return;
 
@@ -199,6 +283,47 @@ function initLoginUI() {
       submitBtn.textContent = mode === 'login' ? 'Anmelden' : 'Registrieren';
       errorEl.textContent = '';
     });
+  });
+
+  forgotBtn?.addEventListener('click', () => {
+    form.classList.add('hidden');
+    document.querySelector('.login-tabs').classList.add('hidden');
+    document.querySelector('.login-divider').classList.add('hidden');
+    googleBtn.classList.add('hidden');
+    forgotBtn.classList.add('hidden');
+    forgotSection.classList.remove('hidden');
+    resetEmail.value = emailInput.value.trim();
+    resetError.textContent = '';
+    resetSuccess.textContent = '';
+  });
+
+  backToLoginBtn?.addEventListener('click', () => {
+    forgotSection.classList.add('hidden');
+    form.classList.remove('hidden');
+    document.querySelector('.login-tabs').classList.remove('hidden');
+    document.querySelector('.login-divider').classList.remove('hidden');
+    googleBtn.classList.remove('hidden');
+    forgotBtn.classList.remove('hidden');
+  });
+
+  resetSubmitBtn?.addEventListener('click', async () => {
+    const email = resetEmail.value.trim();
+    if (!email) { resetError.textContent = 'Bitte E-Mail-Adresse eingeben.'; return; }
+    resetSubmitBtn.disabled = true;
+    resetSubmitBtn.textContent = '⏳ Wird gesendet...';
+    resetError.textContent = '';
+    resetSuccess.textContent = '';
+    try {
+      await resetPassword(email);
+      resetSuccess.textContent = '✅ E-Mail zum Zurücksetzen gesendet. Bitte Postfach prüfen.';
+    } catch (err) {
+      resetError.textContent = err.code === 'auth/user-not-found'
+        ? 'Kein Konto mit dieser E-Mail-Adresse gefunden.'
+        : err.message || 'Fehler beim Senden der E-Mail.';
+    } finally {
+      resetSubmitBtn.disabled = false;
+      resetSubmitBtn.textContent = 'Reset-Link senden';
+    }
   });
 
   form.addEventListener('submit', async (e) => {

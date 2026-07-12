@@ -190,6 +190,7 @@ async function onUserLoggedIn(user) {
 
   console.log('[auth] → hideLoginOverlay (verified or DEV_MODE)');
   hideLoginOverlay();
+  const hadExplicitLogin = !!authResolve;
   if (authResolve) {
     authResolve(user);
     authResolve = null;
@@ -198,6 +199,8 @@ async function onUserLoggedIn(user) {
   const redirectUrl = consumePendingRedirect();
   if (redirectUrl) {
     window.location.href = redirectUrl;
+  } else if (hadExplicitLogin && window.navigateTo) {
+    window.navigateTo('/account');
   }
 }
 

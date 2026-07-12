@@ -4,11 +4,12 @@ const DEV_MODE = import.meta.env.VITE_DEV_MODE === 'true';
 
 export const ROUTES = {
   HOME: '/',
+  CREATE: '/anzeige-erstellen',
   ACCOUNT: '/account',
 };
 
 function isRouteProtected(path) {
-  return path === ROUTES.ACCOUNT;
+  return path === ROUTES.ACCOUNT || path === ROUTES.CREATE;
 }
 
 let currentPath = window.location.pathname || '/';
@@ -29,8 +30,10 @@ export function getCurrentPath() {
 
 function showRoute(path) {
   const homeEl = document.getElementById('route-home');
+  const createEl = document.getElementById('route-create');
   const accountEl = document.getElementById('route-account');
   if (homeEl) homeEl.classList.toggle('hidden', path !== ROUTES.HOME);
+  if (createEl) createEl.classList.toggle('hidden', path !== ROUTES.CREATE);
   if (accountEl) accountEl.classList.toggle('hidden', path !== ROUTES.ACCOUNT);
 }
 

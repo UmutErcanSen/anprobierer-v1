@@ -16,6 +16,7 @@ import {
 import { currentUser, userProfile, onAuthChange, requireAuth, setPendingRedirect, isEmailVerified } from './auth.js';
 import { checkGenerationAllowed, incrementGenerationsUsed, saveGeneration } from './firestore.js';
 import { renderPlanComparison } from './plans.js';
+import { onRouteChange, getCurrentPath, navigateTo, ROUTES } from './router.js';
 
 const DEV_MODE = import.meta.env.VITE_DEV_MODE === 'true';
 
@@ -63,21 +64,7 @@ function loadSession() {
     // restore person photo
     if (data.personPhoto) {
       state.personPhoto = data.personPhoto;
-      const dz = document.getElementById('personDropZone');
-      if (dz) dz.classList.remove('hidden-zone');
       renderPersonPreview();
-      const hero = document.getElementById('heroSection');
-      if (hero) hero.classList.add('hero-hidden');
-      const middle = document.getElementById('step1MiddleSection');
-      if (middle) { middle.classList.remove('hidden-zone'); middle.classList.add('fade-in'); }
-      const initView = document.getElementById('step1InitialView');
-      if (initView) initView.classList.add('hidden');
-      const startBtn = document.getElementById('step1StartBtn');
-      if (startBtn) startBtn.disabled = true;
-      const tipRow = document.getElementById('photoTipRow');
-      if (tipRow) tipRow.classList.remove('hidden');
-      const stepHeader = document.getElementById('step1Header');
-      if (stepHeader) stepHeader.classList.remove('hidden-zone');
       ['step2','step3'].forEach(id => document.getElementById(id)?.classList.remove('hidden-zone'));
     }
 
@@ -256,11 +243,8 @@ async function handlePersonFile(file) {
     const data = await fileToBase64(converted);
     state.personPhoto = data;
     renderPersonPreview();
+    ['step2','step3'].forEach(id => document.getElementById(id)?.classList.remove('hidden-zone'));
     updateGenerateBtnState();
-    const middle = document.getElementById('step1MiddleSection');
-    if (middle) { middle.classList.remove('hidden-zone'); middle.classList.add('fade-in'); }
-    const initView = document.getElementById('step1InitialView');
-    if (initView) initView.classList.add('hidden');
     saveSession();
     showToast('Personenfoto erfolgreich geladen', 'success');
   } catch (err) {
@@ -286,10 +270,6 @@ function renderPersonPreview() {
     personPreview.classList.add('hidden');
     personDropZone.classList.remove('has-file');
     personFileInput.value = '';
-    const middle = document.getElementById('step1MiddleSection');
-    if (middle) middle.classList.add('hidden-zone');
-    const initView = document.getElementById('step1InitialView');
-    if (initView) initView.classList.remove('hidden');
     updateGenerateBtnState();
     saveSession();
   });
@@ -306,31 +286,6 @@ personDropZone.addEventListener('drop', e => {
 });
 personFileInput.addEventListener('change', () => {
   if (personFileInput.files[0]) handlePersonFile(personFileInput.files[0]);
-});
-
-$('#step1StartBtn').addEventListener('click', async () => {
-  if (!DEV_MODE && !currentUser) {
-    try {
-      setPendingRedirect(window.location.href);
-      await requireAuth();
-    } catch {
-      return;
-    }
-  }
-  if (!DEV_MODE && currentUser && !isEmailVerified()) {
-    showToast('🔒 Bitte bestätige zuerst deine E-Mail-Adresse.', 'error');
-    return;
-  }
-  document.getElementById('heroSection').classList.add('hero-hidden');
-  document.getElementById('step1MiddleSection').classList.add('hidden-zone');
-  const dz = document.getElementById('personDropZone');
-  dz.classList.remove('hidden-zone');
-  dz.classList.add('fade-in');
-  document.getElementById('step1Header')?.classList.remove('hidden-zone');
-  document.getElementById('step1StartBtn').disabled = true;
-  const tipRow = document.getElementById('photoTipRow');
-  if (tipRow) tipRow.classList.remove('hidden');
-  ['step2','step3'].forEach(id => document.getElementById(id)?.classList.remove('hidden-zone'));
 });
 
 // ============ CLOTHING ITEMS ============
@@ -1358,17 +1313,8 @@ export function resetUploadUI() {
   const pv = document.getElementById('personPreview');
   if (pv) pv.classList.add('hidden');
   const dropZone = document.getElementById('personDropZone');
-  if (dropZone) { dropZone.classList.remove('has-file'); dropZone.classList.add('hidden-zone'); }
-  const initView = document.getElementById('step1InitialView');
-  if (initView) initView.classList.remove('hidden');
-  const tipRow = document.getElementById('photoTipRow');
-  if (tipRow) tipRow.classList.remove('hidden');
-  const hero = document.getElementById('heroSection');
-  if (hero) hero.classList.remove('hero-hidden');
-  document.getElementById('step1Header')?.classList.add('hidden-zone');
+  if (dropZone) dropZone.classList.remove('has-file');
   ['step2','step3','step4'].forEach(id => document.getElementById(id)?.classList.add('hidden-zone'));
-  const startBtn = document.getElementById('step1StartBtn');
-  if (startBtn) startBtn.disabled = false;
   clothingPreviewGrid.innerHTML = '';
   noClothingHint.classList.remove('hidden');
   updateClothingBadge();
@@ -1395,12 +1341,12 @@ export function resetUploadUI() {
   clothingFileInput.value = '';
   clearSession();
   updateGenerateBtnState();
+  navigateTo('/');
 }
 
 resetBtn.addEventListener('click', () => {
   if (state.generatedImages.length > 0 && !confirm('Wirklich zurücksetzen? Alle generierten Bilder gehen verloren.')) return;
   resetUploadUI();
-  window.scrollTo({ top: 0, behavior: 'smooth' });
   showToast('Session zurückgesetzt', 'info');
 });
 
@@ -1563,6 +1509,16 @@ document.addEventListener('keydown', e => {
 
 console.log('✦ Virtual Try-On App (OpenAI) geladen');
 console.log(`API-Key ${state.apiKey ? '✓ vorhanden' : '✗ fehlt'}`);
+
+// Route-aware initialization
+onRouteChange((path) => {
+  if (path === ROUTES.CREATE) {
+    if (!DEV_MODE && currentUser && !isEmailVerified()) {
+      showToast('🔒 Bitte bestätige zuerst deine E-Mail-Adresse.', 'error');
+    }
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }
+});
 
 // Homepage plan comparison
 const homeComparison = document.getElementById('planComparisonHome');

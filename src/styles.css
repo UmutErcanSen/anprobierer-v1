@@ -39,7 +39,8 @@ body{
 }
 input,button,select,textarea{font:inherit;color:inherit}
 .hidden{display:none!important}
-#account-route #route-home{display:none!important}
+#account-route #route-home,#account-route #route-create,
+#create-route #route-home,#create-route #route-account{display:none!important}
 
 header{
   background:rgba(26,26,46,.65);

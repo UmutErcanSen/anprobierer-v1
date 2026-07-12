@@ -9,7 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
-    <script>if(location.pathname==='/account')document.documentElement.id='account-route'</script>
+    <script>if(location.pathname==='/account')document.documentElement.id='account-route';else if(location.pathname==='/anzeige-erstellen')document.documentElement.id='create-route'</script>
   </head>
   <body>
     <!-- Login Overlay (visible when not authenticated) -->
@@ -86,85 +86,80 @@
 
     <div id="route-home">
       <div class="container">
-
-        <section id="step1" class="step-section">
-          <!-- Zustand 1: Hero + Starten -->
+        <section class="step-section">
           <div class="hero-section" id="heroSection">
             <div class="hero-label">Virtual Try On</div>
             <div class="hero-rotating-wrap">
               <span class="hero-word gradient-text" id="heroRotatingWord">Anprobieren</span>
             </div>
             <p class="hero-sub">mit KI für deine Vinted-Anzeigen</p>
-            <button class="btn btn-gradient" id="step1StartBtn">✨ Starten</button>
+            <button class="btn btn-gradient" onclick="navigateTo('/anzeige-erstellen')">✨ Starten</button>
           </div>
+          <div class="how-it-works reveal">
+            <div class="how-left">
+              <span class="how-badge">So einfach geht's</span>
+              <h2 class="how-title">Drei Schritte zur<br><span class="gradient-text">perfekten</span><br>Vinted-Anzeige</h2>
+              <p class="how-desc">Lade dein Foto hoch, wähle Kleidungsstücke aus und lass die KI in Sekunden professionelle Anprobierbilder für deine Vinted-Anzeige erstellen.</p>
+            </div>
+            <div class="how-right">
+              <img class="phone-img-raw" src="assets/phone-preview.png" alt="Vorschau" onerror="this.style.display='none'">
+            </div>
+          </div>
+          <div class="feature-highlights reveal">
+            <div class="feature-card">
+              <div class="fc-media">
+                <img class="fc-img" src="assets/card-upload.png" alt="" onerror="this.style.display='none'">
+              </div>
+              <div class="fc-body">
+                <h3 class="fc-title">Foto hochladen</h3>
+                <p class="fc-desc">Person + Kleidungsstücke</p>
+              </div>
+            </div>
+            <div class="feature-card">
+              <div class="fc-media">
+                <img class="fc-img" src="assets/card-ai.png" alt="" onerror="this.style.display='none'">
+              </div>
+              <div class="fc-body">
+                <h3 class="fc-title">KI-Generierung</h3>
+                <p class="fc-desc">Virtuelle Anprobe in Sekunden</p>
+              </div>
+            </div>
+            <div class="feature-card">
+              <div class="fc-media">
+                <img class="fc-img" src="assets/card-results.png" alt="" onerror="this.style.display='none'">
+              </div>
+              <div class="fc-body">
+                <h3 class="fc-title">Fertige Anzeige</h3>
+                <p class="fc-desc">Bilder + Vinted-Texte</p>
+              </div>
+            </div>
+          </div>
+          <div class="plan-comparison-home reveal" id="planComparisonHome"></div>
+        </section>
+      </div>
+    </div><!-- /route-home -->
 
-          <!-- Zustand 2: Upload-Zone (nach Starten) -->
-          <div class="step-header hidden-zone" id="step1Header">
+    <div id="route-create" class="hidden">
+      <div class="container">
+        <section id="step1" class="step-section">
+          <div class="step-header" id="step1Header">
             <span class="step-number">1</span>
             <div>
               <h2>Personenfoto hochladen</h2>
               <p>Ganzkörperaufnahme mit neutralem Hintergrund &amp; guter Beleuchtung</p>
             </div>
           </div>
-          <div class="upload-zone hidden-zone" id="personDropZone">
+          <div class="upload-zone" id="personDropZone">
             <div class="icon">🧍</div>
             <strong>Foto hier ablegen oder klicken zum Auswählen</strong>
             <div class="hint">Unterstützt: JPG, PNG, WEBP · iOS Fotos werden automatisch konvertiert (max. 20 MB)</div>
             <input type="file" id="personFileInput" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" />
           </div>
           <div class="person-preview hidden" id="personPreview"></div>
-          <div class="photo-tip-row hidden" id="photoTipRow">
+          <div class="photo-tip-row" id="photoTipRow">
             <button class="btn btn-sm btn-outline info-btn" onclick="openPhotoGuide()">🛈 Tipps für das perfekte Foto</button>
           </div>
-
-          <!-- Sichtbar initial + nach Upload; unsichtbar nach Starten-Klick -->
-          <div id="step1MiddleSection">
-
-            <!-- Initial view (before upload) -->
-            <div id="step1InitialView">
-              <div class="how-it-works reveal">
-                <div class="how-left">
-                  <span class="how-badge">So einfach geht's</span>
-                  <h2 class="how-title">Drei Schritte zur<br><span class="gradient-text">perfekten</span><br>Vinted-Anzeige</h2>
-                  <p class="how-desc">Lade dein Foto hoch, wähle Kleidungsstücke aus und lass die KI in Sekunden professionelle Anprobierbilder für deine Vinted-Anzeige erstellen.</p>
-                </div>
-                <div class="how-right">
-                  <img class="phone-img-raw" src="assets/phone-preview.png" alt="Vorschau" onerror="this.style.display='none'">
-                </div>
-              </div>
-              <div class="feature-highlights reveal">
-              <div class="feature-card">
-                <div class="fc-media">
-                  <img class="fc-img" src="assets/card-upload.png" alt="" onerror="this.style.display='none'">
-                </div>
-                <div class="fc-body">
-                  <h3 class="fc-title">Foto hochladen</h3>
-                  <p class="fc-desc">Person + Kleidungsstücke</p>
-                </div>
-              </div>
-              <div class="feature-card">
-                <div class="fc-media">
-                  <img class="fc-img" src="assets/card-ai.png" alt="" onerror="this.style.display='none'">
-                </div>
-                <div class="fc-body">
-                  <h3 class="fc-title">KI-Generierung</h3>
-                  <p class="fc-desc">Virtuelle Anprobe in Sekunden</p>
-                </div>
-              </div>
-              <div class="feature-card">
-                <div class="fc-media">
-                  <img class="fc-img" src="assets/card-results.png" alt="" onerror="this.style.display='none'">
-                </div>
-                <div class="fc-body">
-                  <h3 class="fc-title">Fertige Anzeige</h3>
-                  <p class="fc-desc">Bilder + Vinted-Texte</p>
-                </div>
-              </div>
-            </div>
-            <div class="plan-comparison-home reveal" id="planComparisonHome"></div>
-          </div>
-        </div>
-      </section>
+        </section>
 
         <section id="step2" class="step-section hidden-zone">
           <div class="card">
@@ -237,7 +232,7 @@
             </div>
             <div class="extra-notes-row">
               <label for="extraNotes">💡 Zusätzliche Anweisungen für die KI</label>
-              <textarea id="extraNotes" rows="2" placeholder='z. B. "Bei dieser Hose keine Taschen", "Kragen hochgestellt", …'></textarea>
+              <textarea id="extraNotes" rows="2" placeholder='z. B. "Bei dieser Hose keine Taschen", "Kragen hochgestellt", …'></textarea>
             </div>
             <div class="gen-info" id="genSummary">
               <div class="gen-info-empty">
@@ -291,7 +286,7 @@
           </div>
         </section>
       </div>
-    </div><!-- /route-home -->
+    </div><!-- /route-create -->
 
     <!-- /account page -->
     <div id="route-account" class="hidden">

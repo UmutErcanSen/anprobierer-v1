@@ -25,13 +25,16 @@ function renderAccount(profile) {
   const logoutBtn = document.getElementById('accountLogoutBtn');
   const cards = document.getElementById('accountProfile');
   const placeholder = document.getElementById('accountPlaceholder');
+  const skeleton = document.getElementById('accountSkeleton');
 
   if (!profile) {
+    if (skeleton) skeleton.classList.add('hidden');
     if (cards) cards.classList.add('hidden');
     if (placeholder) placeholder.classList.remove('hidden');
     return;
   }
 
+  if (skeleton) skeleton.classList.add('hidden');
   if (cards) cards.classList.remove('hidden');
   if (placeholder) placeholder.classList.add('hidden');
 
@@ -343,6 +346,12 @@ onAuthChange((user, profile) => {
 
 onRouteChange((path) => {
   if (path === '/account') {
+    const skeleton = document.getElementById('accountSkeleton');
+    const cards = document.getElementById('accountProfile');
+    const placeholder = document.getElementById('accountPlaceholder');
+    if (skeleton) skeleton.classList.remove('hidden');
+    if (cards) cards.classList.add('hidden');
+    if (placeholder) placeholder.classList.add('hidden');
     refreshUserProfile().then(profile => {
       renderAccount(profile);
     });

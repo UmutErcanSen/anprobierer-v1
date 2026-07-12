@@ -28,8 +28,15 @@ export function getCurrentPath() {
   return currentPath;
 }
 
+const ROUTE_TITLES = {
+  [ROUTES.HOME]: 'Virtual Try-On',
+  [ROUTES.CREATE]: 'Anzeige erstellen – Virtual Try-On',
+  [ROUTES.ACCOUNT]: 'Mein Konto – Virtual Try-On',
+};
+
 function showRoute(path) {
   document.documentElement.removeAttribute('id');
+  document.title = ROUTE_TITLES[path] || 'Virtual Try-On';
   const homeEl = document.getElementById('route-home');
   const createEl = document.getElementById('route-create');
   const accountEl = document.getElementById('route-account');

@@ -293,12 +293,17 @@
     <div id="route-account" class="hidden">
       <div class="container account-page">
         <div class="account-header-row">
-          <button class="btn btn-ghost account-back" onclick="navigateTo('/')">← Zurück</button>
           <h2 class="account-heading"><span id="accountHeadingIcon">👤</span> Mein Konto</h2>
-          <button class="account-logout-btn" id="accountLogoutBtn">Abmelden</button>
+          <button class="btn btn-ghost account-back" onclick="navigateTo('/')">← Zurück</button>
         </div>
 
-        <div class="account-cards" id="accountProfile">
+        <div id="accountSkeleton" class="account-skeleton">
+          <div class="skeleton-card"><div class="skeleton skeleton-circle"></div><div class="skeleton-wrap"><div class="skeleton skeleton-text"></div><div class="skeleton skeleton-text short"></div></div></div>
+          <div class="skeleton-card"><div class="skeleton skeleton-text short"></div></div>
+          <div class="skeleton-card"><div class="skeleton skeleton-text"></div><div class="skeleton skeleton-text short"></div></div>
+        </div>
+
+        <div class="account-cards hidden" id="accountProfile">
           <div class="account-card">
             <div class="account-avatar" id="accountAvatar">👤</div>
             <div class="account-details">
@@ -350,14 +355,21 @@
             </div>
             <div class="account-management-zone">
               <h3>Kontoverwaltung</h3>
-              <p style="font-size:.8rem;color:var(--text-3);margin-bottom:.75rem">Verwalte deine Daten und dein Konto.</p>
-              <div class="account-management-actions">
-                <button class="btn btn-sm btn-outline" id="exportDataBtn">📦 Daten exportieren</button>
-                <button class="btn btn-sm btn-danger" id="deleteAccountBtn">Konto löschen</button>
-              </div>
+              <button class="account-mgmt-btn" id="exportDataBtn">
+                <span class="account-mgmt-label">📦 Daten exportieren</span>
+                <span class="account-mgmt-desc">Lade eine Kopie all deiner Daten inklusive Verlauf herunter.</span>
+              </button>
+              <button class="account-mgmt-btn account-mgmt-btn--danger" id="deleteAccountBtn">
+                <span class="account-mgmt-label">Konto löschen</span>
+                <span class="account-mgmt-desc">Lösche dein Konto unwiderruflich mit all deinen Daten.</span>
+              </button>
             </div>
           </div>
 
+        </div>
+
+        <div class="account-logout-zone">
+          <button class="account-logout-btn" id="accountLogoutBtn">Abmelden</button>
         </div>
 
         <div class="account-placeholder hidden" id="accountPlaceholder">

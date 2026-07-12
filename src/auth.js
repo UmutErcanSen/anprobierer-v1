@@ -33,6 +33,19 @@ function updateUserBtn(loggedIn) {
   const btn = document.getElementById('userBtn');
   if (!btn) return;
   btn.classList.toggle('settings-btn--active', loggedIn);
+  let letter = btn.querySelector('.settings-btn-letter');
+  if (loggedIn && userProfile) {
+    const name = userProfile.displayName || userProfile.email || '';
+    const initial = (name.charAt(0) || '?').toUpperCase();
+    if (!letter) {
+      letter = document.createElement('span');
+      letter.className = 'settings-btn-letter';
+      btn.appendChild(letter);
+    }
+    letter.textContent = initial;
+  } else if (letter) {
+    letter.remove();
+  }
 }
 
 function notifyListeners(user, profile) {
@@ -212,6 +225,7 @@ export async function refreshUserProfile() {
   if (currentUser) {
     userProfile = await getUserProfile(currentUser.uid);
     notifyListeners(currentUser, userProfile);
+    updateUserBtn(true);
   }
   return userProfile;
 }

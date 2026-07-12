@@ -9,6 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
+    <script>if(location.pathname==='/account')document.documentElement.id='account-route'</script>
   </head>
   <body>
     <!-- Login Overlay (visible when not authenticated) -->
@@ -72,13 +73,13 @@
       <div class="header-inner">
         <h1><a href="/" onclick="event.preventDefault(); navigateTo('/')"><span class="gradient-text">✦</span> <span class="gradient-text">Virtual Try-On</span></a></h1>
         <div class="header-btn-group">
-          <button class="settings-btn" id="userBtn" onclick="navigateTo('/account')" title="Benutzerbereich">
+          <button class="settings-btn" id="userBtn" onclick="navigateTo('/account')">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="8" r="4"/>
               <path d="M4 21c0-4 3.5-7 8-7s8 3 8 7"/>
             </svg>
           </button>
-          <button class="settings-btn" id="settingsBtn" onclick="toggleSettings()" title="Einstellungen">⚙️</button>
+          <button class="settings-btn" id="settingsBtn" onclick="toggleSettings()">⚙️</button>
         </div>
       </div>
     </header>
@@ -297,7 +298,7 @@
       <div class="container account-page">
         <div class="account-header-row">
           <button class="btn btn-ghost account-back" onclick="navigateTo('/')">← Zurück</button>
-          <h2 class="account-heading"><span id="accountHeadingIcon">👤</span> Mein Konto<span class="account-heading-name" id="accountHeadingName"></span></h2>
+          <h2 class="account-heading"><span id="accountHeadingIcon">👤</span> Mein Konto</h2>
           <button class="account-logout-btn" id="accountLogoutBtn">Abmelden</button>
         </div>
 
@@ -305,7 +306,6 @@
           <div class="account-card">
             <div class="account-avatar" id="accountAvatar">👤</div>
             <div class="account-details">
-              <div class="account-name" id="accountDisplayName2"></div>
               <div class="account-email" id="accountEmail">–</div>
               <div class="account-member-since" id="accountMemberSince"></div>
               <div class="account-plan-row">
@@ -335,14 +335,6 @@
 
           <div class="account-settings-card" id="accountSettings">
             <h3>⚙️ Einstellungen</h3>
-            <div class="account-settings-field">
-              <label for="accountDisplayName">Anzeigename</label>
-              <div class="account-settings-row">
-                <input type="text" id="accountDisplayName" placeholder="Dein Name" />
-                <button class="btn btn-sm btn-primary" id="saveNameBtn">Speichern</button>
-              </div>
-              <div class="account-settings-message" id="nameMessage"></div>
-            </div>
             <div class="account-settings-field">
               <label for="accountNewEmail">E-Mail-Adresse ändern</label>
               <div class="account-settings-row">

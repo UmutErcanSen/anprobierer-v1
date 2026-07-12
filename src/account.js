@@ -1,4 +1,4 @@
-import { onAuthChange, refreshUserProfile, currentUser, userProfile, logout, updateUserDisplayName, updateUserEmail, changeUserPassword, deleteAccount, reauthenticateUser } from './auth.js';
+import { onAuthChange, refreshUserProfile, currentUser, userProfile, logout, updateUserEmail, changeUserPassword, deleteAccount, reauthenticateUser } from './auth.js';
 import { getUserGenerations } from './firestore.js';
 import { onRouteChange, getCurrentPath, navigateTo } from './router.js';
 import { PLANS, renderPlanComparison } from './plans.js';
@@ -17,8 +17,6 @@ const MOCK_HISTORY = [
 function renderAccount(profile) {
   const emailEl = document.getElementById('accountEmail');
   const avatarEl = document.getElementById('accountAvatar');
-  const nameEl = document.getElementById('accountDisplayName2');
-  const headingNameEl = document.getElementById('accountHeadingName');
   const memberSinceEl = document.getElementById('accountMemberSince');
   const planBadge = document.getElementById('accountPlanBadge');
   const usageBar = document.getElementById('accountUsageBar');
@@ -39,15 +37,6 @@ function renderAccount(profile) {
 
   if (emailEl) emailEl.textContent = profile.email || 'Keine E-Mail';
   if (avatarEl) avatarEl.textContent = (profile.email?.[0] || '?').toUpperCase();
-
-  const displayName = profile.displayName?.trim();
-  if (nameEl) {
-    nameEl.textContent = displayName || '';
-    nameEl.classList.toggle('hidden', !displayName);
-  }
-  if (headingNameEl) {
-    headingNameEl.textContent = displayName ? ` – ${displayName}` : '';
-  }
 
   if (memberSinceEl && profile.createdAt?.toDate) {
     const d = profile.createdAt.toDate();
@@ -127,28 +116,6 @@ function renderAccount(profile) {
     logoutBtn.onclick = async () => {
       await logout();
       navigateTo('/');
-    };
-  }
-
-  const nameInput = document.getElementById('accountDisplayName');
-  const saveNameBtn = document.getElementById('saveNameBtn');
-  const nameMessage = document.getElementById('nameMessage');
-  if (nameInput && profile) {
-    nameInput.value = profile.displayName || '';
-  }
-  if (saveNameBtn) {
-    saveNameBtn.onclick = async () => {
-      const name = nameInput.value.trim();
-      if (!name) { nameMessage.textContent = 'Bitte einen Namen eingeben.'; nameMessage.className = 'account-settings-message error'; return; }
-      saveNameBtn.disabled = true;
-      try {
-        await updateUserDisplayName(name);
-        nameMessage.textContent = '✅ Name aktualisiert.'; nameMessage.className = 'account-settings-message success';
-      } catch (err) {
-        nameMessage.textContent = '❌ ' + (err.message || 'Fehler beim Speichern.'); nameMessage.className = 'account-settings-message error';
-      } finally {
-        saveNameBtn.disabled = false;
-      }
     };
   }
 

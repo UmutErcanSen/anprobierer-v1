@@ -39,6 +39,7 @@ body{
 }
 input,button,select,textarea{font:inherit;color:inherit}
 .hidden{display:none!important}
+#account-route #route-home{display:none!important}
 
 header{
   background:rgba(26,26,46,.65);
@@ -580,7 +581,8 @@ footer{text-align:center;padding:2rem;color:var(--text-3);font-size:.8rem;border
 .account-back:hover{color:var(--text);background:var(--surface-2)}
 .account-heading{font-size:1.4rem;font-weight:800;margin-bottom:0;flex:1}
 .account-logout-btn{
-  background:none;border:none;
+  background:none;
+  border:1px solid var(--error);
   color:var(--error);font-size:.85rem;font-weight:600;
   cursor:pointer;padding:.4rem .75rem;border-radius:var(--radius-sm);
   transition:var(--transition);margin-left:auto;white-space:nowrap;
@@ -593,8 +595,6 @@ footer{text-align:center;padding:2rem;color:var(--text-3);font-size:.8rem;border
 .account-card:first-child{display:flex;gap:1rem;align-items:center}
 .account-details{display:flex;flex-direction:column;gap:.25rem}
 .account-email{font-size:.95rem;font-weight:700;color:var(--text)}
-.account-name{font-size:1.05rem;font-weight:800;color:var(--text)}
-.account-heading-name{font-weight:400;color:var(--text-3);font-size:1rem}
 .account-member-since{font-size:.78rem;color:var(--text-3)}
 .account-plan-row{margin-top:.15rem}
 .account-plan-badge{display:inline-flex;align-items:center;gap:.35rem;padding:.35rem .85rem;border-radius:999px;font-size:.85rem;font-weight:700;border:1px solid var(--plan-color,#71717a);background:var(--plan-color-dim,rgba(113,113,122,.1));color:var(--plan-color,#71717a)}

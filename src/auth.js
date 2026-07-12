@@ -172,11 +172,14 @@ async function onUserLoggedIn(user) {
   notifyListeners(user, userProfile);
   updateUserDot(userProfile?.subscription || 'free');
 
+  console.log('[auth] onUserLoggedIn emailVerified=', user.emailVerified, 'DEV_MODE=', DEV_MODE);
   if (!user.emailVerified && !DEV_MODE) {
+    console.log('[auth] → showVerifyOverlay (unverified)');
     showVerifyOverlay('unverified', user.email);
     return;
   }
 
+  console.log('[auth] → hideLoginOverlay (verified or DEV_MODE)');
   hideLoginOverlay();
   if (authResolve) {
     authResolve(user);
@@ -232,6 +235,8 @@ export function initAuthGuard() {
     return;
   }
 
+  console.log('[auth] initAuthGuard DEV_MODE =', DEV_MODE);
+
   loginOverlay.addEventListener('click', (e) => {
     if (e.target === loginOverlay) {
       hideLoginOverlay();
@@ -244,6 +249,7 @@ export function initAuthGuard() {
   });
 
   onAuthStateChanged(auth, async user => {
+    console.log('[auth] onAuthStateChanged user=', user ? user.email : null, 'emailVerified=', user?.emailVerified);
     if (user) {
       await onUserLoggedIn(user);
     } else {
@@ -439,7 +445,9 @@ function initLoginUI() {
         await loginWithEmail(email, password);
       } else {
         const cred = await registerWithEmail(email, password);
+        console.log('[auth] Registration successful, sending verification email...');
         await sendEmailVerification(cred.user);
+        console.log('[auth] Verification email sent, calling showVerifyOverlay("registered")');
         showVerifyOverlay('registered', email);
       }
     } catch (err) {

@@ -1207,6 +1207,19 @@ window.closeSettings = function () {
   document.body.style.overflow = '';
 };
 
+window.toggleBurgerMenu = function () {
+  document.getElementById('burgerDropdown').classList.toggle('open');
+};
+window.closeBurgerMenu = function () {
+  document.getElementById('burgerDropdown').classList.remove('open');
+};
+document.addEventListener('click', (e) => {
+  const wrapper = document.querySelector('.burger-wrapper');
+  if (wrapper && !wrapper.contains(e.target)) {
+    closeBurgerMenu();
+  }
+});
+
 window.openPhotoGuide = function () {
   document.getElementById('photoGuide').classList.add('visible');
   document.body.style.overflow = 'hidden';

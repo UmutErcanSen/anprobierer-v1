@@ -1347,8 +1347,7 @@ function renderZipPreview() {
   zipPreview.textContent = `📦 ${imgCount} Bild${imgCount > 1 ? 'er' : ''}${textCount > 0 ? ` + ${textCount} Verkaufstext${textCount > 1 ? 'e' : ''}` : ''} · Bereit zum Download als "${title}_${formatDate()}.zip"`;
 }
 
-resetBtn.addEventListener('click', () => {
-  if (state.generatedImages.length > 0 && !confirm('Wirklich zurücksetzen? Alle generierten Bilder gehen verloren.')) return;
+export function resetUploadUI() {
   state.personPhoto = null;
   state.clothingItems = [];
   state.generatedImages = [];
@@ -1383,8 +1382,9 @@ resetBtn.addEventListener('click', () => {
   progressWrap.classList.add('hidden');
   document.getElementById('progressItems').innerHTML = '';
   document.getElementById('progressOverall').textContent = '';
-  zipPreview.textContent = '';
-  document.getElementById('costEstimate').classList.add('hidden');
+  const zp = document.getElementById('zipPreview');
+  if (zp) zp.textContent = '';
+  document.getElementById('costEstimate')?.classList.add('hidden');
   $('#modeSingle').classList.add('selected');
   $('#modeCombined').classList.remove('selected');
   state.extraNotes = '';
@@ -1395,6 +1395,11 @@ resetBtn.addEventListener('click', () => {
   clothingFileInput.value = '';
   clearSession();
   updateGenerateBtnState();
+}
+
+resetBtn.addEventListener('click', () => {
+  if (state.generatedImages.length > 0 && !confirm('Wirklich zurücksetzen? Alle generierten Bilder gehen verloren.')) return;
+  resetUploadUI();
   window.scrollTo({ top: 0, behavior: 'smooth' });
   showToast('Session zurückgesetzt', 'info');
 });
@@ -1580,5 +1585,8 @@ if (homeComparison) {
   onAuthChange((user, profile) => {
     const plan = profile?.subscription || 'free';
     renderHomeComparison(plan);
+    if (!user) {
+      resetUploadUI();
+    }
   });
 }

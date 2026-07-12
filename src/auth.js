@@ -195,10 +195,12 @@ async function onUserLoggedIn(user) {
 function onUserLoggedOut() {
   currentUser = null;
   userProfile = null;
+  verifyOverlayMode = null;
   notifyListeners(null, null);
   const btn = document.getElementById('userBtn');
   const dot = btn?.querySelector('.settings-btn-dot');
   if (dot) dot.remove();
+  showLoginOverlay();
 }
 
 export async function refreshUserProfile() {

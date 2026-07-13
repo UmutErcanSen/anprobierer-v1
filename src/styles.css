@@ -1290,9 +1290,9 @@ header.header-compact{box-shadow:0 2px 24px rgba(0,0,0,.45)}
   .pricing-card-btn{padding:.7rem 1.5rem;font-size:.95rem}
 
   .burger-dropdown{
-    position:fixed;inset:0;
+    position:fixed;left:0;right:0;top:0;bottom:0;
     background:var(--bg);z-index:9999;display:none;
-    flex-direction:column;padding:1.5rem;padding-top:4.5rem;
+    flex-direction:column;padding:1.5rem;
   }
   .burger-dropdown.open{display:flex}
   .burger-item{font-size:1.15rem;padding:1rem;border-bottom:1px solid var(--border)}

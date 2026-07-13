@@ -1209,9 +1209,18 @@ window.closeSettings = function () {
 
 window.toggleBurgerMenu = function () {
   const dd = document.getElementById('burgerDropdown');
-  const isOpen = dd.classList.toggle('open');
-  const isMobile = window.innerWidth <= 768;
-  document.body.style.overflow = (isOpen && isMobile) ? 'hidden' : '';
+  const isOpen = dd.classList.contains('open');
+
+  if (!isOpen && window.innerWidth <= 768) {
+    const header = document.querySelector('header');
+    dd.style.top = header.offsetHeight + 'px';
+    document.body.style.overflow = 'hidden';
+  } else {
+    dd.style.top = '';
+    document.body.style.overflow = '';
+  }
+
+  dd.classList.toggle('open');
 };
 window.closeBurgerMenu = function () {
   document.getElementById('burgerDropdown').classList.remove('open');

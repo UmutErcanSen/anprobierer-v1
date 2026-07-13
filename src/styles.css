@@ -21,6 +21,7 @@
   --shadow-md: 0 4px 16px rgba(0,0,0,0.35);
   --shadow-glow: 0 0 24px rgba(108,99,255,0.2);
   --shadow-accent: 0 0 20px rgba(244,63,94,0.15);
+  --border: var(--surface-3);
   --tertiary: #06b6d4;
   --font: 'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
   --transition: .2s ease;
@@ -66,6 +67,7 @@ header h1 a:hover{opacity:.85}
 .burger-dropdown.open{display:block}
 .burger-item{display:flex;align-items:center;gap:.6rem;padding:.6rem 1rem;font-size:.9rem;color:var(--text-2);cursor:pointer;transition:var(--transition);text-decoration:none;white-space:nowrap}
 .burger-item:hover{background:var(--surface-2);color:var(--text)}
+.burger-divider{height:1px;background:var(--surface-3);margin:.35rem .5rem}
 .status-dot{
   width:10px;height:10px;border-radius:50%;
   background:var(--text-3);flex-shrink:0;

@@ -1210,7 +1210,8 @@ window.closeSettings = function () {
 window.toggleBurgerMenu = function () {
   const dd = document.getElementById('burgerDropdown');
   const isOpen = dd.classList.toggle('open');
-  document.body.style.overflow = isOpen ? 'hidden' : '';
+  const isMobile = window.innerWidth <= 768;
+  document.body.style.overflow = (isOpen && isMobile) ? 'hidden' : '';
 };
 window.closeBurgerMenu = function () {
   document.getElementById('burgerDropdown').classList.remove('open');

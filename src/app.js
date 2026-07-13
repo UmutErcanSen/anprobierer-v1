@@ -1240,6 +1240,12 @@ window.closeBurgerMenu = function () {
   document.getElementById('burgerDropdown').classList.remove('open');
   document.body.style.overflow = '';
 };
+window.toggleAllFaq = function () {
+  const items = document.querySelectorAll('.pricing-faq-item');
+  const allOpen = Array.from(items).every(el => el.open);
+  items.forEach(el => { el.open = !allOpen; });
+  document.getElementById('faqToggleBtn').textContent = allOpen ? 'Alle aufklappen' : 'Alle schließen';
+};
 document.addEventListener('click', (e) => {
   const wrapper = document.querySelector('.burger-wrapper');
   const dd = document.getElementById('burgerDropdown');

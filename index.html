@@ -158,7 +158,9 @@
         <section class="pricing-cards">
           <div class="pricing-card">
             <div class="pricing-card-header">
-              <span class="pricing-card-emoji">⭐</span>
+              <span class="pricing-card-emoji">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#71717a" stroke-width="1.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="rgba(113,113,122,.15)" stroke="#71717a"/></svg>
+              </span>
               <h3 class="pricing-card-name">Free</h3>
               <div class="pricing-card-price">0 €<span class="pricing-card-period">/Monat</span></div>
               <p class="pricing-card-desc">Virtual Try-On ausprobieren</p>
@@ -175,7 +177,9 @@
           <div class="pricing-card pricing-card--popular">
             <span class="pricing-popular-badge">★ Beliebt</span>
             <div class="pricing-card-header">
-              <span class="pricing-card-emoji">💎</span>
+              <span class="pricing-card-emoji">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5z" fill="rgba(34,197,94,.15)" stroke="#22c55e"/><path d="M2 17l10 5 10-5" stroke="#22c55e"/><path d="M2 12l10 5 10-5" stroke="#22c55e"/></svg>
+              </span>
               <h3 class="pricing-card-name">Basic</h3>
               <div class="pricing-card-price">9,99 €<span class="pricing-card-period">/Monat</span></div>
               <p class="pricing-card-desc">Für aktive Verkäufer</p>
@@ -191,7 +195,9 @@
 
           <div class="pricing-card">
             <div class="pricing-card-header">
-              <span class="pricing-card-emoji">👑</span>
+              <span class="pricing-card-emoji">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="1.5"><path d="M2 19h20v-2H2v2z" fill="rgba(245,158,11,.15)" stroke="#f59e0b"/><path d="M4 17l2-9 4 3 2-6 2 6 4-3 2 9H4z" stroke="#f59e0b"/></svg>
+              </span>
               <h3 class="pricing-card-name">Pro</h3>
               <div class="pricing-card-price">19,99 €<span class="pricing-card-period">/Monat</span></div>
               <p class="pricing-card-desc">Für Profi-Verkäufer</p>
@@ -213,13 +219,16 @@
 
         <section class="pricing-faq">
           <h2 class="pricing-section-title">Häufig gestellte Fragen</h2>
+          <div class="pricing-faq-toggle">
+            <button onclick="toggleAllFaq()" id="faqToggleBtn">Alle aufklappen</button>
+          </div>
           <div class="pricing-faq-list">
             <details class="pricing-faq-item">
               <summary>Kann ich jederzeit zwischen den Plänen wechseln?</summary>
               <p>Ja, du kannst jederzeit upgraden oder downgraden. Die Änderung wird sofort wirksam und die Kosten werden anteilig berechnet.</p>
             </details>
             <details class="pricing-faq-item">
-              <summary>Was passiert mit meinen Daten wenn ich downgrades?</summary>
+              <summary>Was passiert mit meinen Daten wenn ich downgrade?</summary>
               <p>Alle deine bisherigen Generierungen und Daten bleiben erhalten. Bei einem Downgrade wird nur die monatliche Generierungsanzahl angepasst.</p>
             </details>
             <details class="pricing-faq-item">
@@ -235,6 +244,12 @@
               <p>Ja, es gibt keine Bindung. Du kannst dein Abo jederzeit über die Account-Seite kündigen. Das Abo bleibt bis zum Ende der laufenden Periode aktiv.</p>
             </details>
           </div>
+        </section>
+
+        <section class="pricing-cta">
+          <h2>Bereit loszulegen?</h2>
+          <p>Starte mit dem Free-Plan und upgrade jederzeit, wenn du mehr brauchst.</p>
+          <button class="btn btn-gradient" onclick="navigateTo('/anzeige-erstellen')">Jetzt kostenlos starten</button>
         </section>
       </div>
     </div><!-- /route-preise -->

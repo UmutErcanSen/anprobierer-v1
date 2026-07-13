@@ -1250,7 +1250,7 @@ header.header-compact{box-shadow:0 2px 24px rgba(0,0,0,.45)}
 
 .pricing-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;margin:2.5rem auto;max-width:960px}
 .pricing-card{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:2rem 1.5rem;display:flex;flex-direction:column;transition:var(--transition);min-height:420px}
-.pricing-card:hover{border-color:var(--border-light);box-shadow:0 8px 30px rgba(0,0,0,.15)}
+.pricing-card:hover{border-color:var(--border-light);box-shadow:0 8px 30px rgba(0,0,0,.15);transform:translateY(-2px)}
 .pricing-card--popular{
   background:
     linear-gradient(var(--surface),var(--surface)) padding-box,
@@ -1260,10 +1260,12 @@ header.header-compact{box-shadow:0 2px 24px rgba(0,0,0,.45)}
 }
 .pricing-card--popular:hover{
   box-shadow:0 0 30px rgba(108,99,255,.25),0 12px 40px rgba(0,0,0,.25);
+  transform:translateY(-2px);
 }
 .pricing-popular-badge{position:absolute;top:-12px;left:50%;transform:translateX(-50%);padding:.25rem .75rem;border-radius:var(--radius-full);background:var(--primary);color:white;font-size:.7rem;font-weight:700;white-space:nowrap}
 .pricing-card-header{text-align:center;margin-bottom:1.5rem}
-.pricing-card-emoji{font-size:2rem;display:block;margin-bottom:.5rem}
+.pricing-card-emoji{font-size:2rem;display:flex;align-items:center;justify-content:center;margin-bottom:.5rem}
+.pricing-card-emoji svg{display:block}
 .pricing-card-name{font-size:1.25rem;font-weight:700;margin-bottom:.25rem}
 .pricing-card-price{font-size:2.25rem;font-weight:800;line-height:1.2}
 .pricing-card-period{font-size:.9rem;font-weight:400;color:var(--text-3)}
@@ -1271,6 +1273,7 @@ header.header-compact{box-shadow:0 2px 24px rgba(0,0,0,.45)}
 .pricing-card-features{list-style:none;padding:0;margin:0 0 1.5rem;flex:1}
 .pricing-card-features li{display:flex;align-items:center;gap:.5rem;padding:.4rem 0;font-size:.9rem;color:var(--text-2)}
 .pricing-check{color:var(--success);font-weight:700;font-size:.85rem}
+.pricing-card:first-child{opacity:.75}
 .pricing-card-btn{width:100%;margin-top:auto;padding:.7rem 1.5rem;font-size:.95rem;border-radius:var(--radius-sm);justify-content:center}
 .btn-gradient{background:linear-gradient(135deg,var(--primary),#a855f7);color:white;border:none}
 .btn-gradient:hover{opacity:.9}
@@ -1285,10 +1288,25 @@ header.header-compact{box-shadow:0 2px 24px rgba(0,0,0,.45)}
 .pricing-faq-item{border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;background:var(--surface)}
 .pricing-faq-item summary{padding:1rem 1.25rem;font-size:.95rem;font-weight:600;cursor:pointer;transition:var(--transition);list-style:none}
 .pricing-faq-item summary::-webkit-details-marker{display:none}
+.pricing-faq-item summary:focus-visible{outline:2px solid var(--primary);outline-offset:-2px}
 .pricing-faq-item summary::before{content:'▸';margin-right:.75rem;color:var(--text-3);transition:transform .2s}
 .pricing-faq-item[open] summary::before{transform:rotate(90deg)}
 .pricing-faq-item summary:hover{background:var(--surface-2)}
-.pricing-faq-item p{padding:0 1.25rem 1rem;color:var(--text-3);font-size:.9rem;line-height:1.6}
+.pricing-faq-item p{padding:0 1.25rem 1rem;color:var(--text-2);font-size:.95rem;line-height:1.6}
+.pricing-faq-item[open] p{animation:faqFadeIn .25s ease}
+.pricing-faq-toggle{display:flex;justify-content:center;margin-bottom:1rem}
+.pricing-faq-toggle button{background:none;border:1px solid var(--border);color:var(--text-3);font-size:.82rem;padding:.35rem .85rem;border-radius:var(--radius-sm);cursor:pointer;transition:var(--transition)}
+.pricing-faq-toggle button:hover{color:var(--text);border-color:var(--text-3);background:var(--surface-2)}
+
+@keyframes faqFadeIn{
+  from{opacity:0;transform:translateY(-4px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+.pricing-cta{text-align:center;margin:4rem auto;max-width:600px;padding:2rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg)}
+.pricing-cta h2{font-size:1.35rem;font-weight:700;margin-bottom:.5rem}
+.pricing-cta p{color:var(--text-3);font-size:.9rem;margin-bottom:1.25rem;line-height:1.5}
+.pricing-cta .btn{padding:.75rem 2rem;font-size:1rem}
 
 @media(max-width:768px){
   .pricing-hero{padding:2rem 0 1.5rem}
@@ -1305,4 +1323,15 @@ header.header-compact{box-shadow:0 2px 24px rgba(0,0,0,.45)}
   .burger-dropdown.open{display:flex}
   .burger-item{font-size:1.15rem;padding:1rem;border-bottom:1px solid var(--border)}
   .burger-item:last-child{border-bottom:none}
+}
+
+@media(max-width:600px){
+  .pricing-cards{padding:0 .5rem}
+  .pricing-section-title{font-size:1.2rem}
+  .plan-table{overflow-x:auto;overflow-y:visible}
+  .plan-table-head,.plan-table-row{min-width:480px}
+  .pricing-faq-item summary{font-size:.9rem;padding:.85rem 1rem}
+  .pricing-faq-item p{font-size:.88rem;padding:0 1rem .85rem}
+  .pricing-cta{margin:2.5rem auto;padding:1.5rem}
+  .pricing-cta h2{font-size:1.15rem}
 }

@@ -120,13 +120,30 @@ function renderAccount(profile) {
     };
 
     const renderClothingFilters = (entries) => {
-      const sel = document.getElementById('filterClothing');
-      if (!sel) return;
-      const prev = sel.value;
       const types = [...new Set(entries.map(e => e.clothingType).filter(Boolean))].sort();
-      sel.innerHTML = `<option value="all">Alle</option>` +
-        types.map(t => `<option value="${t}">${t}</option>`).join('');
-      sel.value = types.includes(prev) ? prev : 'all';
+      const options = `<option value="all">Alle</option>` + types.map(t => `<option value="${t}">${t}</option>`).join('');
+
+      const mobileSel = document.getElementById('filterClothingMobile');
+      if (mobileSel) {
+        const prev = mobileSel.value;
+        mobileSel.innerHTML = options;
+        mobileSel.value = types.includes(prev) ? prev : 'all';
+      }
+
+      const desktopContainer = document.getElementById('filterClothingDesktop');
+      if (desktopContainer) {
+        desktopContainer.innerHTML = `<button class="account-filter-badge active" data-filter="all">Alle</button>` +
+          types.map(t => `<button class="account-filter-badge" data-filter="${t}">${t}</button>`).join('');
+        desktopContainer.querySelectorAll('.account-filter-badge').forEach(btn => {
+          btn.addEventListener('click', () => {
+            desktopContainer.querySelectorAll('.account-filter-badge').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            activeFilters.clothing = btn.dataset.filter;
+            syncSelectsFromFilters();
+            applyFilters();
+          });
+        });
+      }
     };
 
     const filterEntries = (entries) => {
@@ -225,27 +242,79 @@ function renderAccount(profile) {
 
     const applyFilters = () => renderHistoryCards(allEntries);
 
-    const searchInput = document.getElementById('historySearch');
-    if (searchInput) {
-      searchInput.addEventListener('input', (e) => {
-        activeFilters.search = e.target.value;
+    const syncSelectsFromFilters = () => {
+      const modeSel = document.getElementById('filterModeMobile');
+      const clothingSel = document.getElementById('filterClothingMobile');
+      const timeSel = document.getElementById('filterTimeMobile');
+      if (modeSel) modeSel.value = activeFilters.mode;
+      if (clothingSel) clothingSel.value = activeFilters.clothing;
+      if (timeSel) timeSel.value = activeFilters.time;
+    };
+
+    const syncBadgesFromFilters = () => {
+      ['filterModeDesktop', 'filterTimeDesktop'].forEach(containerId => {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        const key = containerId === 'filterModeDesktop' ? 'mode' : 'time';
+        container.querySelectorAll('.account-filter-badge').forEach(btn => {
+          btn.classList.toggle('active', btn.dataset.filter === activeFilters[key]);
+        });
+      });
+      const clothingContainer = document.getElementById('filterClothingDesktop');
+      if (clothingContainer) {
+        clothingContainer.querySelectorAll('.account-filter-badge').forEach(btn => {
+          btn.classList.toggle('active', btn.dataset.filter === activeFilters.clothing);
+        });
+      }
+    };
+
+    const searchMobile = document.getElementById('historySearchMobile');
+    const searchDesktop = document.getElementById('historySearchDesktop');
+    const handleSearch = (e) => {
+      activeFilters.search = e.target.value;
+      if (searchMobile && e.target !== searchMobile) searchMobile.value = e.target.value;
+      if (searchDesktop && e.target !== searchDesktop) searchDesktop.value = e.target.value;
+      applyFilters();
+    };
+    if (searchMobile) searchMobile.addEventListener('input', handleSearch);
+    if (searchDesktop) searchDesktop.addEventListener('input', handleSearch);
+
+    document.getElementById('filterModeMobile')?.addEventListener('change', (e) => {
+      activeFilters.mode = e.target.value;
+      syncBadgesFromFilters();
+      applyFilters();
+    });
+
+    document.getElementById('filterClothingMobile')?.addEventListener('change', (e) => {
+      activeFilters.clothing = e.target.value;
+      syncBadgesFromFilters();
+      applyFilters();
+    });
+
+    document.getElementById('filterTimeMobile')?.addEventListener('change', (e) => {
+      activeFilters.time = e.target.value;
+      syncBadgesFromFilters();
+      applyFilters();
+    });
+
+    document.querySelectorAll('#filterModeDesktop .account-filter-badge').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#filterModeDesktop .account-filter-badge').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        activeFilters.mode = btn.dataset.filter;
+        syncSelectsFromFilters();
         applyFilters();
       });
-    }
-
-    document.getElementById('filterMode').addEventListener('change', (e) => {
-      activeFilters.mode = e.target.value;
-      applyFilters();
     });
 
-    document.getElementById('filterClothing').addEventListener('change', (e) => {
-      activeFilters.clothing = e.target.value;
-      applyFilters();
-    });
-
-    document.getElementById('filterTime').addEventListener('change', (e) => {
-      activeFilters.time = e.target.value;
-      applyFilters();
+    document.querySelectorAll('#filterTimeDesktop .account-filter-badge').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#filterTimeDesktop .account-filter-badge').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        activeFilters.time = btn.dataset.filter;
+        syncSelectsFromFilters();
+        applyFilters();
+      });
     });
 
     const loadEntries = (entries) => {

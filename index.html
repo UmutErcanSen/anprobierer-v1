@@ -404,8 +404,8 @@
     <div id="route-account" class="hidden">
       <div class="container account-page">
         <div class="account-header-row">
-          <h2 class="account-heading"><span id="accountHeadingIcon">👤</span> Mein Konto</h2>
-          <button class="btn btn-ghost account-back" onclick="navigateTo('/')">← Zurück</button>
+          <h2 class="account-heading"><span id="accountHeadingIcon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span> Mein Konto</h2>
+          <button class="btn btn-ghost account-back" onclick="navigateTo('/')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg> Zurück</button>
         </div>
 
         <div id="accountSkeleton" class="account-skeleton">
@@ -416,28 +416,39 @@
 
         <div class="account-cards hidden" id="accountProfile">
           <div class="account-card">
-            <div class="account-avatar" id="accountAvatar">👤</div>
+            <div class="account-avatar" id="accountAvatar"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
             <div class="account-details">
               <div class="account-email" id="accountEmail">–</div>
               <div class="account-member-since" id="accountMemberSince"></div>
               <div class="account-plan-row">
-                <span class="account-plan-badge" id="accountPlanBadge">⭐ Gratis</span>
+                <span class="account-plan-badge" id="accountPlanBadge" onclick="navigateTo('/preise')">⭐ Gratis</span>
               </div>
             </div>
           </div>
 
-          <div class="account-card">
-            <h3>💰 Verbrauch</h3>
-            <div class="account-usage-bar-wrap">
-              <div class="account-usage-bar">
-                <div class="account-usage-fill" id="accountUsageBar" style="width:0%"></div>
+          <div class="account-card account-card--donut">
+            <div class="account-donut-container">
+              <svg class="account-donut" viewBox="0 0 120 120">
+                <defs>
+                  <linearGradient id="donutGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="#6c63ff"/>
+                    <stop offset="100%" stop-color="#f43f5e"/>
+                  </linearGradient>
+                </defs>
+                <circle class="account-donut-bg" cx="60" cy="60" r="50" fill="none" stroke-width="10"/>
+                <circle class="account-donut-fill" id="accountDonutFill" cx="60" cy="60" r="50" fill="none" stroke-width="10" stroke-dasharray="314.159" stroke-dashoffset="314.159" transform="rotate(-90 60 60)"/>
+              </svg>
+              <div class="account-donut-center">
+                <span class="account-donut-count" id="accountDonutCount">0</span>
+                <span class="account-donut-sep">/</span>
+                <span class="account-donut-max" id="accountDonutMax">5</span>
               </div>
-              <span class="account-usage-label" id="accountUsageLabel">0 / 5 Generierungen</span>
             </div>
+            <div class="account-donut-label" id="accountDonutLabel">Noch 5 Generierungen</div>
           </div>
 
           <div class="account-card">
-            <h3>📋 Meine Anzeigen</h3>
+            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h6M8 16h4"/></svg> Meine Anzeigen</h3>
             <div class="account-history-list" id="accountHistoryList">
               <div class="account-history-empty">Lade...</div>
             </div>
@@ -446,7 +457,11 @@
           <div class="account-card account-plan-comparison" id="accountPlanComparison"></div>
 
           <div class="account-settings-card" id="accountSettings">
-            <h3>⚙️ Einstellungen</h3>
+            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg> Einstellungen</h3>
+            <div class="account-settings-field">
+              <label>Aktuelle E-Mail</label>
+              <div class="account-settings-email-current" id="accountEmailDisplay">–</div>
+            </div>
             <div class="account-settings-field">
               <label for="accountNewEmail">E-Mail-Adresse ändern</label>
               <div class="account-settings-row">
@@ -456,24 +471,25 @@
               <div class="account-settings-message" id="emailMessage"></div>
             </div>
             <div class="account-settings-field">
-              <label for="accountCurrentPassword">Passwort ändern</label>
+              <label for="accountCurrentPassword">Aktuelles Passwort</label>
               <div class="password-wrap">
                 <input type="password" id="accountCurrentPassword" placeholder="Aktuelles Passwort" />
-                <button class="pw-toggle" data-target="accountCurrentPassword" tabindex="-1" type="button">👁</button>
+                <button class="pw-toggle" data-target="accountCurrentPassword" tabindex="-1" type="button"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
               </div>
-              <div class="account-settings-row">
-                <div class="password-wrap password-wrap--inline">
-                  <input type="password" id="accountNewPassword" placeholder="Neues Passwort (min. 6 Zeichen)" />
-                  <button class="pw-toggle" data-target="accountNewPassword" tabindex="-1" type="button">👁</button>
-                </div>
-                <button class="btn btn-sm btn-primary" id="changePasswordBtn">Ändern</button>
+            </div>
+            <div class="account-settings-field">
+              <label for="accountNewPassword">Neues Passwort</label>
+              <div class="password-wrap">
+                <input type="password" id="accountNewPassword" placeholder="Neues Passwort (min. 6 Zeichen)" />
+                <button class="pw-toggle" data-target="accountNewPassword" tabindex="-1" type="button"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
               </div>
+              <button class="btn btn-sm btn-primary account-pw-btn" id="changePasswordBtn">Passwort ändern</button>
               <div class="account-settings-message" id="passwordMessage"></div>
             </div>
             <div class="account-management-zone">
               <h3>Kontoverwaltung</h3>
               <button class="account-mgmt-btn" id="exportDataBtn">
-                <span class="account-mgmt-label">📦 Daten exportieren</span>
+                <span class="account-mgmt-label"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Daten exportieren</span>
                 <span class="account-mgmt-desc">Lade eine Kopie all deiner Daten inklusive Verlauf herunter.</span>
               </button>
               <button class="account-mgmt-btn account-mgmt-btn--danger" id="deleteAccountBtn">
@@ -634,7 +650,7 @@
 
     <div class="confirm-modal" id="deleteAccountModal">
       <div class="confirm-modal-content" onclick="event.stopPropagation()">
-        <h3>⚠️ Konto wirklich löschen?</h3>
+        <h3><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Konto wirklich löschen?</h3>
         <p>Diese Aktion kann nicht rückgängig gemacht werden. Alle deine Daten, inklusive Profil und Generierungen, werden dauerhaft gelöscht.</p>
         <div class="account-settings-field">
           <label for="deleteConfirmEmail">Bestätige mit deiner E-Mail-Adresse</label>
@@ -654,7 +670,7 @@
 
     <div class="confirm-modal" id="dataExportModal">
       <div class="confirm-modal-content" onclick="event.stopPropagation()">
-        <h3>📦 Daten exportieren</h3>
+        <h3><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Daten exportieren</h3>
         <p style="font-size:.8rem;color:var(--text-3);margin-bottom:1rem">Hier siehst du alle Daten, die in deinem Export enthalten sind.</p>
         <div class="data-export-preview" id="dataExportPreview">
           <div class="skeleton skeleton-text"></div>

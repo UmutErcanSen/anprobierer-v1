@@ -16,11 +16,14 @@ const MOCK_HISTORY = [
 
 function renderAccount(profile) {
   const emailEl = document.getElementById('accountEmail');
+  const emailDisplayEl = document.getElementById('accountEmailDisplay');
   const avatarEl = document.getElementById('accountAvatar');
   const memberSinceEl = document.getElementById('accountMemberSince');
   const planBadge = document.getElementById('accountPlanBadge');
-  const usageBar = document.getElementById('accountUsageBar');
-  const usageLabel = document.getElementById('accountUsageLabel');
+  const donutFill = document.getElementById('accountDonutFill');
+  const donutCount = document.getElementById('accountDonutCount');
+  const donutMax = document.getElementById('accountDonutMax');
+  const donutLabel = document.getElementById('accountDonutLabel');
   const historyList = document.getElementById('accountHistoryList');
   const logoutBtn = document.getElementById('accountLogoutBtn');
   const cards = document.getElementById('accountProfile');
@@ -39,6 +42,7 @@ function renderAccount(profile) {
   if (placeholder) placeholder.classList.add('hidden');
 
   if (emailEl) emailEl.textContent = profile.email || 'Keine E-Mail';
+  if (emailDisplayEl) emailDisplayEl.textContent = profile.email || 'Keine E-Mail';
   if (avatarEl) avatarEl.textContent = (profile.email?.[0] || '?').toUpperCase();
 
   if (memberSinceEl && profile.createdAt?.toDate) {
@@ -50,7 +54,7 @@ function renderAccount(profile) {
   const sub = PLANS[subKey] || PLANS.free;
 
   if (planBadge) {
-    planBadge.innerHTML = `${sub.emoji} ${sub.label} <span class="plan-badge-limit">· ${sub.limit === -1 ? '∞' : sub.limit + '/Monat'}</span>`;
+    planBadge.innerHTML = `${sub.label} <span class="plan-badge-limit">· ${sub.limit === -1 ? '∞' : sub.limit + '/Monat'}</span>`;
     planBadge.style.setProperty('--plan-color', sub.color);
     planBadge.style.setProperty('--plan-color-dim', `${sub.color}18`);
   }
@@ -60,26 +64,29 @@ function renderAccount(profile) {
   const pct = sub.limit === -1 ? 100 : Math.min((used / sub.limit) * 100, 100);
   const remaining = sub.limit === -1 ? -1 : sub.limit - used;
 
-  if (usageLabel) usageLabel.textContent = `${used} / ${max} Generierungen`;
+  if (donutCount) donutCount.textContent = used;
+  if (donutMax) donutMax.textContent = max;
 
-  if (usageBar) {
-    usageBar.style.width = '0%';
-    usageBar.classList.remove('account-usage-fill--critical');
-    usageBar.classList.remove('account-usage-fill--low');
+  if (donutLabel) {
+    donutLabel.textContent = remaining === -1
+      ? `Unbegrenzte Generierungen`
+      : `Noch ${remaining} Generierungen`;
+  }
+
+  if (donutFill) {
+    const circumference = 314.159;
+    const offset = circumference * (1 - pct / 100);
+    donutFill.classList.remove('account-donut-fill--critical', 'account-donut-fill--low');
     if (remaining >= 0 && remaining <= 2) {
-      usageBar.classList.add('account-usage-fill--critical');
+      donutFill.classList.add('account-donut-fill--critical');
     } else if (remaining >= 0 && remaining <= 5) {
-      usageBar.classList.add('account-usage-fill--low');
+      donutFill.classList.add('account-donut-fill--low');
     }
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        usageBar.style.width = `${pct}%`;
+        donutFill.style.strokeDashoffset = offset;
       });
     });
-  }
-
-  if (remaining > 0 && remaining <= 2) {
-    if (usageLabel) usageLabel.textContent += ` · ⚠️ nur noch ${remaining}`;
   }
 
   const compEl = document.getElementById('accountPlanComparison');
@@ -177,7 +184,12 @@ function renderAccount(profile) {
       if (!input) return;
       const isPassword = input.type === 'password';
       input.type = isPassword ? 'text' : 'password';
-      btn.textContent = isPassword ? '👁‍🗨' : '👁';
+      const svg = btn.querySelector('svg');
+      if (svg) {
+        svg.innerHTML = isPassword
+          ? '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>'
+          : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+      }
     });
   });
 

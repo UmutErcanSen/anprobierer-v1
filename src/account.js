@@ -1,5 +1,5 @@
 import { onAuthChange, refreshUserProfile, currentUser, userProfile, logout, updateUserEmail, changeUserPassword, deleteAccount, reauthenticateUser } from './auth.js';
-import { getUserGenerations } from './firestore.js';
+import { getUserGenerations, deleteGeneration } from './firestore.js';
 import { onRouteChange, getCurrentPath, navigateTo } from './router.js';
 import { PLANS, renderPlanComparison } from './plans.js';
 import { showToast } from './utils.js';
@@ -7,11 +7,12 @@ import { showToast } from './utils.js';
 const DEV_MODE = import.meta.env.VITE_DEV_MODE === 'true';
 
 const MOCK_HISTORY = [
-  { mode: 'combined', quality: 'hoch', itemCount: 3, date: '2026-07-10' },
-  { mode: 'single', quality: 'mittel', itemCount: 2, date: '2026-07-08' },
-  { mode: 'single', quality: 'hoch', itemCount: 1, date: '2026-07-05' },
-  { mode: 'combined', quality: 'mittel', itemCount: 2, date: '2026-06-28' },
-  { mode: 'single', quality: 'niedrig', itemCount: 1, date: '2026-06-20' },
+  { id: 'mock1', mode: 'combined', quality: 'hoch', itemCount: 3, imageCount: 2, notes: 'T-Shirt + Jeans für Sommerlook', date: '2026-07-10' },
+  { id: 'mock2', mode: 'single', quality: 'mittel', itemCount: 2, imageCount: 2, notes: '', date: '2026-07-08' },
+  { id: 'mock3', mode: 'single', quality: 'hoch', itemCount: 1, imageCount: 1, notes: 'Bluse für Bewerbungsfoto', date: '2026-07-05' },
+  { id: 'mock4', mode: 'combined', quality: 'mittel', itemCount: 2, imageCount: 1, notes: '', date: '2026-06-28' },
+  { id: 'mock5', mode: 'single', quality: 'niedrig', itemCount: 1, imageCount: 1, notes: 'Schnelltest', date: '2026-06-20' },
+  { id: 'mock6', mode: 'combined', quality: 'hoch', itemCount: 4, imageCount: 3, notes: 'Komplettes Outfit: Jacke+Shirt+Hose+Schuhe', date: '2026-06-15' },
 ];
 
 function renderAccount(profile) {
@@ -94,28 +95,81 @@ function renderAccount(profile) {
     renderPlanComparison(compEl, subKey, { showUpgradeBtn: true });
   }
 
+  const historyStats = document.getElementById('accountHistoryStats');
   if (historyList && currentUser) {
+    const renderHistoryCards = (entries) => {
+      const total = entries.length;
+      const thisMonth = entries.filter(e => {
+        const d = e.createdAt?.toDate ? e.createdAt.toDate() : new Date(e.date + 'T00:00:00');
+        const now = new Date();
+        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+      }).length;
+
+      if (historyStats) {
+        historyStats.textContent = total === 0
+          ? ''
+          : `Insgesamt ${total} Generierungen · ${thisMonth} diesen Monat`;
+      }
+
+      if (total === 0) {
+        historyList.innerHTML = `
+          <div class="account-history-empty">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" stroke-width="1"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h6M8 16h4"/></svg>
+            <span>Noch keine Anzeigen erstellt</span>
+            <button class="btn btn-sm btn-primary" onclick="navigateTo('/anzeige-erstellen')">Jetzt erste Anzeige erstellen</button>
+          </div>`;
+        return;
+      }
+
+      historyList.innerHTML = entries.map(e => {
+        const date = e.createdAt?.toDate?.()?.toLocaleDateString('de-DE') || e.date || '–';
+        const modeLabel = e.mode === 'combined' ? 'Kombiniert' : 'Einzelbilder';
+        const modeClass = e.mode === 'combined' ? 'combined' : 'single';
+        const qualityDot = `account-history-quality-dot--${e.quality || 'mittel'}`;
+        const notes = e.notes || '';
+        const hasNotes = notes.length > 0;
+        const infoParts = [];
+        if (e.itemCount) infoParts.push(`${e.itemCount} Kleidungsstück${e.itemCount > 1 ? 'e' : ''}`);
+        if (e.imageCount) infoParts.push(`${e.imageCount} Bild${e.imageCount > 1 ? 'er' : ''}`);
+        const infoText = infoParts.join(' · ');
+
+        return `<div class="account-history-card">
+          <div class="account-history-top">
+            <span class="account-history-badge account-history-badge--${modeClass}">${modeLabel}</span>
+            <span class="account-history-quality-dot ${qualityDot}"></span>
+            <span class="account-history-meta">
+              <span>${date}</span>
+              <button class="account-history-delete" data-id="${e.id}" title="Eintrag löschen">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              </button>
+            </span>
+          </div>
+          ${infoText ? `<div style="font-size:.78rem;color:var(--text-2);padding-left:.15rem">${infoText}</div>` : ''}
+          ${hasNotes ? `<div class="account-history-notes">„${notes}"</div>` : ''}
+        </div>`;
+      }).join('');
+
+      historyList.querySelectorAll('.account-history-delete').forEach(btn => {
+        btn.addEventListener('click', async (ev) => {
+          ev.stopPropagation();
+          const id = btn.dataset.id;
+          if (!confirm('Diesen Eintrag unwiderruflich löschen?')) return;
+          try {
+            if (!DEV_MODE) await deleteGeneration(currentUser.uid, id);
+            renderHistoryCards(entries.filter(e => e.id !== id));
+            showToast('Eintrag gelöscht.', 'success');
+          } catch (_) {
+            showToast('Fehler beim Löschen.', 'error');
+          }
+        });
+      });
+    };
+
     if (DEV_MODE) {
-      historyList.innerHTML = MOCK_HISTORY.map(e => `
-        <div class="account-history-item">
-          <span class="account-history-date">${e.date}</span>
-          <span class="account-history-info">${e.mode === 'combined' ? 'Kombiniert' : e.itemCount + ' Einzelbilder'} · ${e.quality}</span>
-        </div>
-      `).join('');
+      renderHistoryCards(MOCK_HISTORY);
     } else {
       getUserGenerations(currentUser.uid, 20).then(entries => {
-        if (entries.length === 0) {
-          historyList.innerHTML = '<div class="account-history-empty">Noch keine Generierungen</div>';
-          return;
-        }
-        historyList.innerHTML = entries.map(e => {
-          const date = e.createdAt?.toDate?.()?.toLocaleDateString('de-DE') || '–';
-          const info = e.mode === 'combined' ? 'Kombiniert' : `${e.itemCount || '?'} Einzelbilder`;
-          return `<div class="account-history-item">
-            <span class="account-history-date">${date}</span>
-            <span class="account-history-info">${info} · ${e.quality || 'mittel'}</span>
-          </div>`;
-        }).join('');
+        renderHistoryCards(entries);
       }).catch(() => {
         historyList.innerHTML = '<div class="account-history-empty">Fehler beim Laden</div>';
       });
@@ -293,7 +347,7 @@ function renderAccount(profile) {
         html += '<div class="data-export-empty">Noch keine Generierungen vorhanden.</div>';
       } else {
         generations.forEach(e => {
-          const date = e.createdAt?.toDate?.()?.toLocaleDateString('de-DE') || '–';
+          const date = e.createdAt?.toDate?.()?.toLocaleDateString('de-DE') || e.date || '–';
           const info = e.mode === 'combined' ? 'Kombiniert' : `${e.itemCount || '?'} Einzelbilder`;
           html += `<div class="data-export-item"><span class="data-export-label">${date}</span><span class="data-export-value">${info} · ${e.quality || 'mittel'}</span></div>`;
         });

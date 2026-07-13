@@ -51,6 +51,10 @@ export async function getUserGenerations(uid, max = 20) {
   return snap.docs.map(d => ({ id: d.id, ...d.data() }));
 }
 
+export async function deleteGeneration(uid, generationId) {
+  await deleteDoc(doc(db, 'generations', uid, generationId));
+}
+
 export async function deleteUserData(uid) {
   const genSnap = await getDocs(collection(db, 'generations', uid));
   const batch = [];

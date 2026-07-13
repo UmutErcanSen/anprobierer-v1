@@ -1254,9 +1254,11 @@ header.header-compact{box-shadow:0 2px 24px rgba(0,0,0,.45)}
 .pricing-card--popular{
   background:
     linear-gradient(var(--surface),var(--surface)) padding-box,
-    linear-gradient(135deg,var(--primary),#a855f7) border-box;
+    linear-gradient(135deg,var(--primary),#a855f7,#c084fc,var(--primary)) border-box;
+  background-size:100% 100%,300% 100%;
   border:2px solid transparent;
   box-shadow:0 0 24px rgba(108,99,255,.15),0 8px 30px rgba(0,0,0,.2);
+  animation:borderShimmer 4s linear infinite;
 }
 .pricing-card--popular:hover{
   box-shadow:0 0 30px rgba(108,99,255,.25),0 12px 40px rgba(0,0,0,.25);
@@ -1293,14 +1295,15 @@ header.header-compact{box-shadow:0 2px 24px rgba(0,0,0,.45)}
 .pricing-faq-item[open] summary::before{transform:rotate(90deg)}
 .pricing-faq-item summary:hover{background:var(--surface-2)}
 .pricing-faq-item p{padding:0 1.25rem 1rem;color:var(--text-2);font-size:.95rem;line-height:1.6}
-.pricing-faq-item[open] p{animation:faqFadeIn .25s ease}
-.pricing-faq-toggle{display:flex;justify-content:center;margin-bottom:1rem}
-.pricing-faq-toggle button{background:none;border:1px solid var(--border);color:var(--text-3);font-size:.82rem;padding:.35rem .85rem;border-radius:var(--radius-sm);cursor:pointer;transition:var(--transition)}
-.pricing-faq-toggle button:hover{color:var(--text);border-color:var(--text-3);background:var(--surface-2)}
+.pricing-faq-item[open] p{animation:faqFadeIn .25s ease;padding-top:.75rem}
 
 @keyframes faqFadeIn{
   from{opacity:0;transform:translateY(-4px)}
   to{opacity:1;transform:translateY(0)}
+}
+@keyframes borderShimmer{
+  0%{background-position:0 0,0% 0%}
+  100%{background-position:0 0,100% 0%}
 }
 
 .pricing-cta{text-align:center;margin:4rem auto;max-width:600px;padding:2rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg)}

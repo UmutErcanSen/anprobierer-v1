@@ -1211,12 +1211,26 @@ window.toggleBurgerMenu = function () {
   const dd = document.getElementById('burgerDropdown');
   const isOpen = dd.classList.contains('open');
 
-  if (!isOpen && window.innerWidth <= 768) {
-    const header = document.querySelector('header');
-    dd.style.top = header.offsetHeight + 'px';
-    document.body.style.overflow = 'hidden';
+  if (!isOpen) {
+    const btn = document.getElementById('burgerBtn');
+    const rect = btn.getBoundingClientRect();
+
+    if (window.innerWidth > 768) {
+      dd.style.top = (rect.bottom + 8) + 'px';
+      dd.style.right = (window.innerWidth - rect.right) + 'px';
+      dd.style.left = 'auto';
+      dd.style.bottom = 'auto';
+      document.body.style.overflow = '';
+    } else {
+      const header = document.querySelector('header');
+      dd.style.top = header.offsetHeight + 'px';
+      document.body.style.overflow = 'hidden';
+    }
   } else {
     dd.style.top = '';
+    dd.style.right = '';
+    dd.style.left = '';
+    dd.style.bottom = '';
     document.body.style.overflow = '';
   }
 

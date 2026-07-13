@@ -62,7 +62,7 @@ header h1 a:hover{opacity:.85}
 .burger-wrapper{position:relative}
 .burger-btn{background:transparent;border:1px solid var(--surface-3);border-radius:var(--radius-sm);cursor:pointer;padding:.45rem .6rem;color:var(--text-2);display:flex;align-items:center;justify-content:center;transition:var(--transition)}
 .burger-btn:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-dim)}
-.burger-dropdown{display:none;position:fixed;top:52px;right:1rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-md);min-width:200px;padding:.4rem 0;z-index:1000}
+.burger-dropdown{display:none;position:fixed;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-md);min-width:200px;padding:.4rem 0;z-index:1000}
 .burger-dropdown.open{display:block}
 .burger-item{display:flex;align-items:center;gap:.6rem;padding:.6rem 1rem;font-size:.9rem;color:var(--text-2);cursor:pointer;transition:var(--transition);text-decoration:none;white-space:nowrap}
 .burger-item:hover{background:var(--surface-2);color:var(--text)}

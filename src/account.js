@@ -97,24 +97,7 @@ function renderAccount(profile) {
   const historyStats = document.getElementById('accountHistoryStats');
   if (historyList && currentUser) {
     let allEntries = [];
-    let activeFilters = { mode: [], clothing: [], time: [], search: '' };
-
-    const toggleFilter = (groupId, value) => {
-      const group = document.getElementById(groupId);
-      if (!group) return [];
-      const allBtn = group.querySelector('.account-filter-badge[data-filter="all"]');
-      if (value === 'all') {
-        group.querySelectorAll('.account-filter-badge').forEach(b => b.classList.remove('active'));
-        allBtn?.classList.add('active');
-        return [];
-      }
-      allBtn?.classList.remove('active');
-      const btn = group.querySelector(`.account-filter-badge[data-filter="${value}"]`);
-      btn?.classList.toggle('active');
-      const active = [...group.querySelectorAll('.account-filter-badge.active:not([data-filter="all"])')].map(b => b.dataset.filter);
-      if (active.length === 0) allBtn?.classList.add('active');
-      return active;
-    };
+    let activeFilters = { mode: 'all', clothing: 'all', time: 'all', search: '' };
 
     const renderStats = (entries) => {
       const now = new Date();
@@ -137,36 +120,31 @@ function renderAccount(profile) {
     };
 
     const renderClothingFilters = (entries) => {
-      const filterClothing = document.getElementById('filterClothing');
-      if (!filterClothing) return;
+      const sel = document.getElementById('filterClothing');
+      if (!sel) return;
+      const prev = sel.value;
       const types = [...new Set(entries.map(e => e.clothingType).filter(Boolean))].sort();
-      filterClothing.innerHTML = `<button class="account-filter-badge active" data-filter="all">Alle</button>` +
-        types.map(t => `<button class="account-filter-badge" data-filter="${t}">${t}</button>`).join('');
-      filterClothing.querySelectorAll('.account-filter-badge').forEach(btn => {
-        btn.addEventListener('click', () => {
-          activeFilters.clothing = toggleFilter('filterClothing', btn.dataset.filter);
-          applyFilters();
-        });
-      });
+      sel.innerHTML = `<option value="all">Alle</option>` +
+        types.map(t => `<option value="${t}">${t}</option>`).join('');
+      sel.value = types.includes(prev) ? prev : 'all';
     };
 
     const filterEntries = (entries) => {
       return entries.filter(e => {
-        if (activeFilters.mode.length > 0 && !activeFilters.mode.includes(e.mode)) return false;
-        if (activeFilters.clothing.length > 0 && !activeFilters.clothing.includes(e.clothingType)) return false;
+        if (activeFilters.mode !== 'all' && e.mode !== activeFilters.mode) return false;
+        if (activeFilters.clothing !== 'all' && e.clothingType !== activeFilters.clothing) return false;
         if (activeFilters.search) {
           const q = activeFilters.search.toLowerCase();
           const notes = (e.notes || '').toLowerCase();
           const type = (e.clothingType || '').toLowerCase();
           if (!notes.includes(q) && !type.includes(q)) return false;
         }
-        if (activeFilters.time.length > 0) {
+        if (activeFilters.time !== 'all') {
           const d = e.createdAt?.toDate ? e.createdAt.toDate() : new Date(e.date + 'T00:00:00');
           const diffDays = (new Date() - d) / (1000 * 60 * 60 * 24);
-          const match = (activeFilters.time.includes('week') && diffDays <= 7)
-            || (activeFilters.time.includes('month') && diffDays > 7 && diffDays <= 30)
-            || (activeFilters.time.includes('older') && diffDays > 30);
-          if (!match) return false;
+          if (activeFilters.time === 'week' && diffDays > 7) return false;
+          if (activeFilters.time === 'month' && (diffDays <= 7 || diffDays > 30)) return false;
+          if (activeFilters.time === 'older' && diffDays <= 30) return false;
         }
         return true;
       });
@@ -213,13 +191,16 @@ function renderAccount(profile) {
             <span class="account-history-quality-dot ${qualityDot}"></span>
             <span class="account-history-meta">
               <span>${date}</span>
-              <button class="account-history-delete" data-id="${e.id}" title="Eintrag löschen">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-              </button>
             </span>
           </div>
           ${infoText ? `<div class="account-history-info">${infoText}</div>` : ''}
           ${hasNotes ? `<div class="account-history-notes">„${notes}"</div>` : ''}
+          <div class="account-history-actions">
+            <button class="account-history-delete" data-id="${e.id}" title="Eintrag löschen">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              Löschen
+            </button>
+          </div>
         </div>`;
       }).join('');
 
@@ -233,13 +214,6 @@ function renderAccount(profile) {
             allEntries = allEntries.filter(e => e.id !== id);
             renderStats(allEntries);
             renderClothingFilters(allEntries);
-            const filterClothing = document.getElementById('filterClothing');
-            if (filterClothing) {
-              filterClothing.querySelectorAll('.account-filter-badge').forEach(b => {
-                if (activeFilters.clothing.includes(b.dataset.filter)) b.classList.add('active');
-                else b.classList.remove('active');
-              });
-            }
             renderHistoryCards(allEntries);
             showToast('Eintrag gelöscht.', 'success');
           } catch (_) {
@@ -259,18 +233,19 @@ function renderAccount(profile) {
       });
     }
 
-    document.querySelectorAll('#filterMode .account-filter-badge').forEach(btn => {
-      btn.addEventListener('click', () => {
-        activeFilters.mode = toggleFilter('filterMode', btn.dataset.filter);
-        applyFilters();
-      });
+    document.getElementById('filterMode').addEventListener('change', (e) => {
+      activeFilters.mode = e.target.value;
+      applyFilters();
     });
 
-    document.querySelectorAll('#filterTime .account-filter-badge').forEach(btn => {
-      btn.addEventListener('click', () => {
-        activeFilters.time = toggleFilter('filterTime', btn.dataset.filter);
-        applyFilters();
-      });
+    document.getElementById('filterClothing').addEventListener('change', (e) => {
+      activeFilters.clothing = e.target.value;
+      applyFilters();
+    });
+
+    document.getElementById('filterTime').addEventListener('change', (e) => {
+      activeFilters.time = e.target.value;
+      applyFilters();
     });
 
     const loadEntries = (entries) => {

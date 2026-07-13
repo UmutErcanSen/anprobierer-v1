@@ -447,9 +447,58 @@
             <div class="account-donut-label" id="accountDonutLabel">Noch 5 Generierungen</div>
           </div>
 
-          <div class="account-card">
+          <div class="account-card account-card--stats">
+            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 20V10M12 20V4M6 20v-6"/></svg> Statistik</h3>
+            <div class="account-stats-grid" id="accountStatsGrid">
+              <div class="account-stat">
+                <span class="account-stat-value" id="statTotal">0</span>
+                <span class="account-stat-label">Gesamt</span>
+              </div>
+              <div class="account-stat">
+                <span class="account-stat-value" id="statMonth">0</span>
+                <span class="account-stat-label">Diesen Monat</span>
+              </div>
+              <div class="account-stat">
+                <span class="account-stat-value" id="statCombined">0</span>
+                <span class="account-stat-label">Kombiniert</span>
+              </div>
+              <div class="account-stat">
+                <span class="account-stat-value" id="statSingle">0</span>
+                <span class="account-stat-label">Einzelbilder</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="account-card account-card--history">
             <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h6M8 16h4"/></svg> Meine Anzeigen</h3>
-            <div class="account-history-stats" id="accountHistoryStats"></div>
+            <div class="account-history-toolbar">
+              <div class="account-history-search-wrap">
+                <svg class="account-history-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input class="account-history-search" id="historySearch" type="text" placeholder="Suchen..." />
+              </div>
+              <div class="account-history-filter-group">
+                <span class="account-filter-label">Modus</span>
+                <div class="account-history-filters" id="filterMode">
+                  <button class="account-filter-badge active" data-filter="all">Alle</button>
+                  <button class="account-filter-badge" data-filter="combined">Kombiniert</button>
+                  <button class="account-filter-badge" data-filter="single">Einzelbilder</button>
+                </div>
+              </div>
+              <div class="account-history-filter-group">
+                <span class="account-filter-label">Kleidung</span>
+                <div class="account-history-filters" id="filterClothing"></div>
+              </div>
+              <div class="account-history-filter-group">
+                <span class="account-filter-label">Zeitraum</span>
+                <div class="account-history-filters" id="filterTime">
+                  <button class="account-filter-badge active" data-filter="all">Alle</button>
+                  <button class="account-filter-badge" data-filter="week">Woche</button>
+                  <button class="account-filter-badge" data-filter="month">Monat</button>
+                  <button class="account-filter-badge" data-filter="older">Älter</button>
+                </div>
+              </div>
+            </div>
+            <div class="account-history-count" id="accountHistoryCount"></div>
             <div class="account-history-list" id="accountHistoryList">
               <div class="account-history-empty">
                 <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" stroke-width="1"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h6M8 16h4"/></svg>

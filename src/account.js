@@ -7,12 +7,16 @@ import { showToast } from './utils.js';
 const DEV_MODE = import.meta.env.VITE_DEV_MODE === 'true';
 
 const MOCK_HISTORY = [
-  { id: 'mock1', mode: 'combined', quality: 'hoch', itemCount: 3, imageCount: 2, notes: 'T-Shirt + Jeans für Sommerlook', date: '2026-07-10' },
-  { id: 'mock2', mode: 'single', quality: 'mittel', itemCount: 2, imageCount: 2, notes: '', date: '2026-07-08' },
-  { id: 'mock3', mode: 'single', quality: 'hoch', itemCount: 1, imageCount: 1, notes: 'Bluse für Bewerbungsfoto', date: '2026-07-05' },
-  { id: 'mock4', mode: 'combined', quality: 'mittel', itemCount: 2, imageCount: 1, notes: '', date: '2026-06-28' },
-  { id: 'mock5', mode: 'single', quality: 'niedrig', itemCount: 1, imageCount: 1, notes: 'Schnelltest', date: '2026-06-20' },
-  { id: 'mock6', mode: 'combined', quality: 'hoch', itemCount: 4, imageCount: 3, notes: 'Komplettes Outfit: Jacke+Shirt+Hose+Schuhe', date: '2026-06-15' },
+  { id: 'm1',  mode: 'combined', quality: 'hoch',    itemCount: 3, imageCount: 2, clothingType: 'T-Shirt', notes: 'T-Shirt + Jeans für Sommerlook', date: '2026-07-12' },
+  { id: 'm2',  mode: 'single',   quality: 'mittel',  itemCount: 2, imageCount: 2, clothingType: 'Kleid',   notes: 'Kleid für Hochzeit',             date: '2026-07-11' },
+  { id: 'm3',  mode: 'combined', quality: 'hoch',    itemCount: 1, imageCount: 1, clothingType: 'Bluse',   notes: 'Bluse für Bewerbungsfoto',        date: '2026-07-10' },
+  { id: 'm4',  mode: 'single',   quality: 'niedrig', itemCount: 4, imageCount: 3, clothingType: 'Outfit',  notes: 'Komplettes Outfit',               date: '2026-07-08' },
+  { id: 'm5',  mode: 'combined', quality: 'hoch',    itemCount: 2, imageCount: 2, clothingType: 'Hose',    notes: '',                               date: '2026-07-05' },
+  { id: 'm6',  mode: 'single',   quality: 'mittel',  itemCount: 1, imageCount: 1, clothingType: 'Jacke',   notes: 'Schnelltest',                    date: '2026-06-28' },
+  { id: 'm7',  mode: 'combined', quality: 'hoch',    itemCount: 3, imageCount: 2, clothingType: 'Jacke',   notes: 'Winterjacke für Vinted',         date: '2026-06-20' },
+  { id: 'm8',  mode: 'single',   quality: 'niedrig', itemCount: 2, imageCount: 1, clothingType: 'Schuhe',  notes: '',                               date: '2026-06-15' },
+  { id: 'm9',  mode: 'combined', quality: 'mittel',  itemCount: 5, imageCount: 4, clothingType: 'Outfit',  notes: 'Ganzer Schrank',                 date: '2026-06-10' },
+  { id: 'm10', mode: 'single',   quality: 'hoch',    itemCount: 1, imageCount: 1, clothingType: 'Bluse',   notes: 'Vintage Designerstück',          date: '2026-06-05' },
 ];
 
 function renderAccount(profile) {
@@ -92,31 +96,87 @@ function renderAccount(profile) {
 
   const historyStats = document.getElementById('accountHistoryStats');
   if (historyList && currentUser) {
-    const renderHistoryCards = (entries) => {
+    let allEntries = [];
+    let activeFilters = { mode: 'all', clothing: 'all', time: 'all', search: '' };
+
+    const renderStats = (entries) => {
+      const now = new Date();
       const total = entries.length;
       const thisMonth = entries.filter(e => {
         const d = e.createdAt?.toDate ? e.createdAt.toDate() : new Date(e.date + 'T00:00:00');
-        const now = new Date();
         return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
       }).length;
+      const combined = entries.filter(e => e.mode === 'combined').length;
+      const single = entries.filter(e => e.mode === 'single').length;
 
-      if (historyStats) {
-        historyStats.textContent = total === 0
-          ? ''
-          : `Insgesamt ${total} Generierungen · ${thisMonth} diesen Monat`;
+      const statTotal = document.getElementById('statTotal');
+      const statMonth = document.getElementById('statMonth');
+      const statCombined = document.getElementById('statCombined');
+      const statSingle = document.getElementById('statSingle');
+      if (statTotal) statTotal.textContent = total;
+      if (statMonth) statMonth.textContent = thisMonth;
+      if (statCombined) statCombined.textContent = combined;
+      if (statSingle) statSingle.textContent = single;
+    };
+
+    const renderClothingFilters = (entries) => {
+      const filterClothing = document.getElementById('filterClothing');
+      if (!filterClothing) return;
+      const types = [...new Set(entries.map(e => e.clothingType).filter(Boolean))].sort();
+      filterClothing.innerHTML = `<button class="account-filter-badge active" data-filter="all">Alle</button>` +
+        types.map(t => `<button class="account-filter-badge" data-filter="${t}">${t}</button>`).join('');
+      filterClothing.querySelectorAll('.account-filter-badge').forEach(btn => {
+        btn.addEventListener('click', () => {
+          filterClothing.querySelectorAll('.account-filter-badge').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          activeFilters.clothing = btn.dataset.filter;
+          applyFilters();
+        });
+      });
+    };
+
+    const filterEntries = (entries) => {
+      return entries.filter(e => {
+        if (activeFilters.mode !== 'all' && e.mode !== activeFilters.mode) return false;
+        if (activeFilters.clothing !== 'all' && e.clothingType !== activeFilters.clothing) return false;
+        if (activeFilters.search) {
+          const q = activeFilters.search.toLowerCase();
+          const notes = (e.notes || '').toLowerCase();
+          const type = (e.clothingType || '').toLowerCase();
+          if (!notes.includes(q) && !type.includes(q)) return false;
+        }
+        if (activeFilters.time !== 'all') {
+          const d = e.createdAt?.toDate ? e.createdAt.toDate() : new Date(e.date + 'T00:00:00');
+          const now = new Date();
+          const diffDays = (now - d) / (1000 * 60 * 60 * 24);
+          if (activeFilters.time === 'week' && diffDays > 7) return false;
+          if (activeFilters.time === 'month' && diffDays > 30) return false;
+          if (activeFilters.time === 'older' && diffDays <= 30) return false;
+        }
+        return true;
+      });
+    };
+
+    const renderHistoryCards = (entries) => {
+      const filtered = filterEntries(entries);
+      const historyCount = document.getElementById('accountHistoryCount');
+      if (historyCount) {
+        historyCount.textContent = filtered.length === entries.length
+          ? `${entries.length} Anzeige${entries.length !== 1 ? 'n' : ''}`
+          : `${filtered.length} von ${entries.length} Anzeigen`;
       }
 
-      if (total === 0) {
+      if (filtered.length === 0) {
         historyList.innerHTML = `
           <div class="account-history-empty">
             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" stroke-width="1"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h6M8 16h4"/></svg>
-            <span>Noch keine Anzeigen erstellt</span>
-            <button class="btn btn-sm btn-primary" onclick="navigateTo('/anzeige-erstellen')">Jetzt erste Anzeige erstellen</button>
+            <span>${entries.length === 0 ? 'Noch keine Anzeigen erstellt' : 'Keine Ergebnisse für diese Filter'}</span>
+            ${entries.length === 0 ? '<button class="btn btn-sm btn-primary" onclick="navigateTo(\'/anzeige-erstellen\')">Jetzt erste Anzeige erstellen</button>' : ''}
           </div>`;
         return;
       }
 
-      historyList.innerHTML = entries.map(e => {
+      historyList.innerHTML = filtered.map(e => {
         const date = e.createdAt?.toDate?.()?.toLocaleDateString('de-DE') || e.date || '–';
         const modeLabel = e.mode === 'combined' ? 'Kombiniert' : 'Einzelbilder';
         const modeClass = e.mode === 'combined' ? 'combined' : 'single';
@@ -124,6 +184,7 @@ function renderAccount(profile) {
         const notes = e.notes || '';
         const hasNotes = notes.length > 0;
         const infoParts = [];
+        if (e.clothingType) infoParts.push(e.clothingType);
         if (e.itemCount) infoParts.push(`${e.itemCount} Kleidungsstück${e.itemCount > 1 ? 'e' : ''}`);
         if (e.imageCount) infoParts.push(`${e.imageCount} Bild${e.imageCount > 1 ? 'er' : ''}`);
         const infoText = infoParts.join(' · ');
@@ -151,7 +212,10 @@ function renderAccount(profile) {
           if (!confirm('Diesen Eintrag unwiderruflich löschen?')) return;
           try {
             if (!DEV_MODE) await deleteGeneration(currentUser.uid, id);
-            renderHistoryCards(entries.filter(e => e.id !== id));
+            allEntries = allEntries.filter(e => e.id !== id);
+            renderStats(allEntries);
+            renderClothingFilters(allEntries);
+            renderHistoryCards(allEntries);
             showToast('Eintrag gelöscht.', 'success');
           } catch (_) {
             showToast('Fehler beim Löschen.', 'error');
@@ -160,11 +224,46 @@ function renderAccount(profile) {
       });
     };
 
+    const applyFilters = () => renderHistoryCards(allEntries);
+
+    const searchInput = document.getElementById('historySearch');
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => {
+        activeFilters.search = e.target.value;
+        applyFilters();
+      });
+    }
+
+    document.querySelectorAll('#filterMode .account-filter-badge').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#filterMode .account-filter-badge').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        activeFilters.mode = btn.dataset.filter;
+        applyFilters();
+      });
+    });
+
+    document.querySelectorAll('#filterTime .account-filter-badge').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#filterTime .account-filter-badge').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        activeFilters.time = btn.dataset.filter;
+        applyFilters();
+      });
+    });
+
+    const loadEntries = (entries) => {
+      allEntries = entries;
+      renderStats(entries);
+      renderClothingFilters(entries);
+      renderHistoryCards(entries);
+    };
+
     if (DEV_MODE) {
-      renderHistoryCards(MOCK_HISTORY);
+      loadEntries(MOCK_HISTORY);
     } else {
-      getUserGenerations(currentUser.uid, 20).then(entries => {
-        renderHistoryCards(entries);
+      getUserGenerations(currentUser.uid, 50).then(entries => {
+        loadEntries(entries);
       }).catch(() => {
         historyList.innerHTML = `<div class="account-history-empty">
           <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" stroke-width="1"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h6M8 16h4"/></svg>

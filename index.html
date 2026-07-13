@@ -446,9 +446,15 @@
             </div>
             <div class="account-settings-field">
               <label for="accountCurrentPassword">Passwort ändern</label>
-              <input type="password" id="accountCurrentPassword" placeholder="Aktuelles Passwort" style="margin-bottom:.5rem" />
+              <div class="password-wrap">
+                <input type="password" id="accountCurrentPassword" placeholder="Aktuelles Passwort" />
+                <button class="pw-toggle" data-target="accountCurrentPassword" tabindex="-1" type="button">👁</button>
+              </div>
               <div class="account-settings-row">
-                <input type="password" id="accountNewPassword" placeholder="Neues Passwort (min. 6 Zeichen)" />
+                <div class="password-wrap password-wrap--inline">
+                  <input type="password" id="accountNewPassword" placeholder="Neues Passwort (min. 6 Zeichen)" />
+                  <button class="pw-toggle" data-target="accountNewPassword" tabindex="-1" type="button">👁</button>
+                </div>
                 <button class="btn btn-sm btn-primary" id="changePasswordBtn">Ändern</button>
               </div>
               <div class="account-settings-message" id="passwordMessage"></div>

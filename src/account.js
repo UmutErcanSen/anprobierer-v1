@@ -171,6 +171,16 @@ function renderAccount(profile) {
     };
   }
 
+  document.querySelectorAll('.pw-toggle').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const input = document.getElementById(btn.dataset.target);
+      if (!input) return;
+      const isPassword = input.type === 'password';
+      input.type = isPassword ? 'text' : 'password';
+      btn.textContent = isPassword ? '👁‍🗨' : '👁';
+    });
+  });
+
   const deleteAccountBtn = document.getElementById('deleteAccountBtn');
   const deleteModal = document.getElementById('deleteAccountModal');
   const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');

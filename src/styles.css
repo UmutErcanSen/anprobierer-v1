@@ -625,7 +625,7 @@ footer{text-align:center;padding:1.5rem 1rem;color:var(--text-3);font-size:.8rem
 .account-plan-badge:hover{filter:brightness(1.2);transform:scale(1.05);box-shadow:0 2px 12px rgba(108,99,255,.3)}
 .plan-badge-limit{font-weight:400;opacity:.7;font-size:.78rem}
 .account-card--donut{text-align:center;padding:2.25rem 1.5rem 1.5rem;display:flex;flex-direction:column;align-items:center;grid-column:1}
-.account-card:nth-child(3){grid-column:2}
+.account-card--stats{grid-column:2}
 .account-card--history{grid-column:1/-1}
 .account-donut-container{position:relative;display:inline-flex;align-items:center;justify-content:center;width:180px;height:180px}
 .account-donut{width:100%;height:100%}
@@ -1391,4 +1391,8 @@ header.header-compact{box-shadow:0 2px 24px rgba(0,0,0,.45)}
   .account-card--stats,
   .account-card--history,
   .account-settings-card{grid-column:1}
+  .account-history-toolbar{flex-direction:column;gap:.6rem}
+  .account-history-search-wrap{max-width:100%}
+  .account-history-filter-group{flex-direction:column;gap:.3rem}
+  .account-history-filters{overflow-x:auto}
 }

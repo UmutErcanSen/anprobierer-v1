@@ -97,7 +97,24 @@ function renderAccount(profile) {
   const historyStats = document.getElementById('accountHistoryStats');
   if (historyList && currentUser) {
     let allEntries = [];
-    let activeFilters = { mode: 'all', clothing: 'all', time: 'all', search: '' };
+    let activeFilters = { mode: [], clothing: [], time: [], search: '' };
+
+    const toggleFilter = (groupId, value) => {
+      const group = document.getElementById(groupId);
+      if (!group) return [];
+      const allBtn = group.querySelector('.account-filter-badge[data-filter="all"]');
+      if (value === 'all') {
+        group.querySelectorAll('.account-filter-badge').forEach(b => b.classList.remove('active'));
+        allBtn?.classList.add('active');
+        return [];
+      }
+      allBtn?.classList.remove('active');
+      const btn = group.querySelector(`.account-filter-badge[data-filter="${value}"]`);
+      btn?.classList.toggle('active');
+      const active = [...group.querySelectorAll('.account-filter-badge.active:not([data-filter="all"])')].map(b => b.dataset.filter);
+      if (active.length === 0) allBtn?.classList.add('active');
+      return active;
+    };
 
     const renderStats = (entries) => {
       const now = new Date();
@@ -127,9 +144,7 @@ function renderAccount(profile) {
         types.map(t => `<button class="account-filter-badge" data-filter="${t}">${t}</button>`).join('');
       filterClothing.querySelectorAll('.account-filter-badge').forEach(btn => {
         btn.addEventListener('click', () => {
-          filterClothing.querySelectorAll('.account-filter-badge').forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
-          activeFilters.clothing = btn.dataset.filter;
+          activeFilters.clothing = toggleFilter('filterClothing', btn.dataset.filter);
           applyFilters();
         });
       });
@@ -137,21 +152,21 @@ function renderAccount(profile) {
 
     const filterEntries = (entries) => {
       return entries.filter(e => {
-        if (activeFilters.mode !== 'all' && e.mode !== activeFilters.mode) return false;
-        if (activeFilters.clothing !== 'all' && e.clothingType !== activeFilters.clothing) return false;
+        if (activeFilters.mode.length > 0 && !activeFilters.mode.includes(e.mode)) return false;
+        if (activeFilters.clothing.length > 0 && !activeFilters.clothing.includes(e.clothingType)) return false;
         if (activeFilters.search) {
           const q = activeFilters.search.toLowerCase();
           const notes = (e.notes || '').toLowerCase();
           const type = (e.clothingType || '').toLowerCase();
           if (!notes.includes(q) && !type.includes(q)) return false;
         }
-        if (activeFilters.time !== 'all') {
+        if (activeFilters.time.length > 0) {
           const d = e.createdAt?.toDate ? e.createdAt.toDate() : new Date(e.date + 'T00:00:00');
-          const now = new Date();
-          const diffDays = (now - d) / (1000 * 60 * 60 * 24);
-          if (activeFilters.time === 'week' && diffDays > 7) return false;
-          if (activeFilters.time === 'month' && diffDays > 30) return false;
-          if (activeFilters.time === 'older' && diffDays <= 30) return false;
+          const diffDays = (new Date() - d) / (1000 * 60 * 60 * 24);
+          const match = (activeFilters.time.includes('week') && diffDays <= 7)
+            || (activeFilters.time.includes('month') && diffDays > 7 && diffDays <= 30)
+            || (activeFilters.time.includes('older') && diffDays > 30);
+          if (!match) return false;
         }
         return true;
       });
@@ -215,6 +230,13 @@ function renderAccount(profile) {
             allEntries = allEntries.filter(e => e.id !== id);
             renderStats(allEntries);
             renderClothingFilters(allEntries);
+            const filterClothing = document.getElementById('filterClothing');
+            if (filterClothing) {
+              filterClothing.querySelectorAll('.account-filter-badge').forEach(b => {
+                if (activeFilters.clothing.includes(b.dataset.filter)) b.classList.add('active');
+                else b.classList.remove('active');
+              });
+            }
             renderHistoryCards(allEntries);
             showToast('Eintrag gelöscht.', 'success');
           } catch (_) {
@@ -236,18 +258,14 @@ function renderAccount(profile) {
 
     document.querySelectorAll('#filterMode .account-filter-badge').forEach(btn => {
       btn.addEventListener('click', () => {
-        document.querySelectorAll('#filterMode .account-filter-badge').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        activeFilters.mode = btn.dataset.filter;
+        activeFilters.mode = toggleFilter('filterMode', btn.dataset.filter);
         applyFilters();
       });
     });
 
     document.querySelectorAll('#filterTime .account-filter-badge').forEach(btn => {
       btn.addEventListener('click', () => {
-        document.querySelectorAll('#filterTime .account-filter-badge').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        activeFilters.time = btn.dataset.filter;
+        activeFilters.time = toggleFilter('filterTime', btn.dataset.filter);
         applyFilters();
       });
     });

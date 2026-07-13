@@ -38,6 +38,7 @@ body{
   color:var(--text);
   min-height:100vh;
   line-height:1.6;
+  overflow-x:hidden;
 }
 input,button,select,textarea{font:inherit;color:inherit}
 .hidden{display:none!important}
@@ -644,6 +645,8 @@ footer{text-align:center;padding:1.5rem 1rem;color:var(--text-3);font-size:.8rem
 .account-history-list{max-height:400px;overflow-y:auto;display:flex;flex-direction:column;gap:.5rem}
 .account-history-empty{display:flex;flex-direction:column;align-items:center;gap:.6rem;padding:1.5rem 0;font-size:.82rem;color:var(--text-3)}
 .account-history-card{display:flex;flex-direction:column;gap:.35rem;padding:.65rem .75rem;background:var(--surface-2);border-radius:var(--radius-sm);border:1px solid var(--surface-3);transition:var(--transition)}
+.account-history-card--combined{border-left:3px solid var(--primary)}
+.account-history-card--single{border-left:3px solid var(--tertiary)}
 .account-history-card:hover{border-color:var(--border-light)}
 .account-history-top{display:flex;align-items:center;gap:.4rem;flex-wrap:wrap}
 .account-history-badge{display:inline-flex;align-items:center;gap:.25rem;padding:.15rem .45rem;border-radius:4px;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em}
@@ -655,7 +658,9 @@ footer{text-align:center;padding:1.5rem 1rem;color:var(--text-3);font-size:.8rem
 .account-history-quality-dot--niedrig{background:var(--text-3)}
 .account-history-meta{font-size:.75rem;color:var(--text-3);margin-left:auto;display:flex;align-items:center;gap:.5rem}
 .account-history-notes{font-size:.75rem;color:var(--text-3);font-style:italic;padding-left:.15rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
-.account-history-delete{background:none;border:none;cursor:pointer;padding:.2rem;display:flex;align-items:center;color:var(--text-3);border-radius:4px;transition:var(--transition)}
+.account-history-info{font-size:.78rem;color:var(--text-2);padding-left:.15rem}
+.account-history-delete{background:none;border:none;cursor:pointer;padding:.6rem;min-width:48px;min-height:48px;display:flex;align-items:center;justify-content:center;color:var(--text-3);border-radius:var(--radius-sm);transition:var(--transition)}
+.account-history-delete svg{width:20px;height:20px}
 .account-history-delete:hover{color:var(--error);background:rgba(239,68,68,.08)}
 .account-placeholder{padding:2rem 0;text-align:center}
 .account-hint{font-size:.85rem;color:var(--text-3)}
@@ -1150,7 +1155,7 @@ header.header-compact{box-shadow:0 2px 24px rgba(0,0,0,.45)}
 .upload-count{display:inline-flex;align-items:center;gap:.35rem;padding:.35rem .75rem;background:var(--primary-dim);color:var(--primary);border-radius:999px;font-size:.8rem;font-weight:600;margin-top:.5rem;animation:fadeIn .3s ease}
 
 /* === GEN BUTTON FULL WIDTH === */
-.gen-btn{min-width:320px;max-width:100%;padding:1rem 2rem!important;font-size:1.1rem!important;border-radius:var(--radius)!important;display:inline-flex!important;align-items:center;justify-content:center;gap:.5rem;position:relative;overflow:hidden;border:1px solid transparent;font-weight:700;cursor:pointer;transition:all .3s ease}
+.gen-btn{min-width:280px;max-width:100%;padding:1rem 2rem!important;font-size:1.1rem!important;border-radius:var(--radius)!important;display:inline-flex!important;align-items:center;justify-content:center;gap:.5rem;position:relative;overflow:hidden;border:1px solid transparent;font-weight:700;cursor:pointer;transition:all .3s ease}
 .gen-btn:disabled{opacity:.55;cursor:not-allowed;transform:none;filter:none;box-shadow:none;background:rgba(26,26,46,.5);border-color:rgba(255,255,255,.06)}
 .gen-btn:not(:disabled){background:linear-gradient(135deg,var(--primary),#7c6aff);box-shadow:0 4px 24px rgba(108,99,255,.35);animation:btn-pulse 2s ease-in-out infinite}
 .gen-btn:not(:disabled):hover{background:linear-gradient(135deg,var(--primary-hover),#6b5cf7);transform:translateY(-2px);box-shadow:0 6px 32px rgba(108,99,255,.5)}
@@ -1378,7 +1383,7 @@ header.header-compact{box-shadow:0 2px 24px rgba(0,0,0,.45)}
   .pricing-cards{padding:0 .5rem}
   .pricing-section-title{font-size:1.2rem}
   .plan-table{overflow-x:auto;overflow-y:visible}
-  .plan-table-head,.plan-table-row{min-width:480px}
+  .plan-table-head,.plan-table-row{min-width:auto;width:100%}
   .pricing-faq-item summary{font-size:.9rem;padding:.85rem 1rem}
   .pricing-faq-item p{font-size:.88rem;padding:0 1rem .85rem}
   .pricing-cta{margin:2.5rem auto;padding:1.5rem}
@@ -1407,5 +1412,4 @@ header.header-compact{box-shadow:0 2px 24px rgba(0,0,0,.45)}
   .account-history-top{justify-content:flex-start}
   .account-history-list{max-height:50vh}
   .account-filter-badge{padding:.45rem .85rem;font-size:.82rem}
-  .account-history-delete{padding:.5rem;min-width:44px;min-height:44px;justify-content:center}
 }

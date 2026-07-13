@@ -192,7 +192,10 @@ function renderAccount(profile) {
       }
 
       historyList.innerHTML = filtered.map(e => {
-        const date = e.createdAt?.toDate?.()?.toLocaleDateString('de-DE') || e.date || '–';
+        const rawDate = e.createdAt?.toDate?.() || (e.date ? new Date(e.date + 'T00:00:00') : null);
+        const date = rawDate
+          ? `${String(rawDate.getDate()).padStart(2,'0')}/${String(rawDate.getMonth()+1).padStart(2,'0')}/${rawDate.getFullYear()}`
+          : '–';
         const modeLabel = e.mode === 'combined' ? 'Kombiniert' : 'Einzelbilder';
         const modeClass = e.mode === 'combined' ? 'combined' : 'single';
         const qualityDot = `account-history-quality-dot--${e.quality || 'mittel'}`;
@@ -204,18 +207,18 @@ function renderAccount(profile) {
         if (e.imageCount) infoParts.push(`${e.imageCount} Bild${e.imageCount > 1 ? 'er' : ''}`);
         const infoText = infoParts.join(' · ');
 
-        return `<div class="account-history-card">
+        return `<div class="account-history-card account-history-card--${modeClass}">
           <div class="account-history-top">
             <span class="account-history-badge account-history-badge--${modeClass}">${modeLabel}</span>
             <span class="account-history-quality-dot ${qualityDot}"></span>
             <span class="account-history-meta">
               <span>${date}</span>
               <button class="account-history-delete" data-id="${e.id}" title="Eintrag löschen">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
               </button>
             </span>
           </div>
-          ${infoText ? `<div style="font-size:.78rem;color:var(--text-2);padding-left:.15rem">${infoText}</div>` : ''}
+          ${infoText ? `<div class="account-history-info">${infoText}</div>` : ''}
           ${hasNotes ? `<div class="account-history-notes">„${notes}"</div>` : ''}
         </div>`;
       }).join('');

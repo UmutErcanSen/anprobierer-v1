@@ -1223,6 +1223,11 @@ document.addEventListener('click', (e) => {
     closeBurgerMenu();
   }
 });
+document.getElementById('burgerDropdown').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) {
+    closeBurgerMenu();
+  }
+});
 
 window.openPhotoGuide = function () {
   document.getElementById('photoGuide').classList.add('visible');

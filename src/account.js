@@ -1,7 +1,7 @@
 import { onAuthChange, refreshUserProfile, currentUser, userProfile, logout, updateUserEmail, changeUserPassword, deleteAccount, reauthenticateUser } from './auth.js';
 import { getUserGenerations, deleteGeneration } from './firestore.js';
 import { onRouteChange, getCurrentPath, navigateTo } from './router.js';
-import { PLANS, renderPlanComparison } from './plans.js';
+import { PLANS } from './plans.js';
 import { showToast } from './utils.js';
 
 const DEV_MODE = import.meta.env.VITE_DEV_MODE === 'true';
@@ -88,11 +88,6 @@ function renderAccount(profile) {
         donutFill.style.strokeDashoffset = offset;
       });
     });
-  }
-
-  const compEl = document.getElementById('accountPlanComparison');
-  if (compEl) {
-    renderPlanComparison(compEl, subKey, { showUpgradeBtn: true });
   }
 
   const historyStats = document.getElementById('accountHistoryStats');

@@ -1,4 +1,5 @@
 import { requireAuth, currentUser, setPendingRedirect, waitForAuth } from './auth.js';
+import { PRIVACY, IMPRINT, renderLegalContent } from './legal-content.js';
 
 const DEV_MODE = import.meta.env.VITE_DEV_MODE === 'true';
 
@@ -7,6 +8,8 @@ export const ROUTES = {
   CREATE: '/anzeige-erstellen',
   ACCOUNT: '/account',
   PREISE: '/preise',
+  PRIVACY: '/datenschutz',
+  IMPRINT: '/impressum',
 };
 
 function isRouteProtected(path) {
@@ -34,6 +37,8 @@ const ROUTE_TITLES = {
   [ROUTES.CREATE]: 'Anzeige erstellen – Virtual Try-On',
   [ROUTES.ACCOUNT]: 'Mein Konto – Virtual Try-On',
   [ROUTES.PREISE]: 'Preise – Virtual Try-On',
+  [ROUTES.PRIVACY]: 'Datenschutzerklärung – Virtual Try-On',
+  [ROUTES.IMPRINT]: 'Impressum – Virtual Try-On',
 };
 
 function showRoute(path) {
@@ -43,10 +48,22 @@ function showRoute(path) {
   const createEl = document.getElementById('route-create');
   const accountEl = document.getElementById('route-account');
   const preiseEl = document.getElementById('route-preise');
+  const privacyEl = document.getElementById('route-datenschutz');
+  const imprintEl = document.getElementById('route-impressum');
   if (homeEl) homeEl.classList.toggle('hidden', path !== ROUTES.HOME);
   if (createEl) createEl.classList.toggle('hidden', path !== ROUTES.CREATE);
   if (accountEl) accountEl.classList.toggle('hidden', path !== ROUTES.ACCOUNT);
   if (preiseEl) preiseEl.classList.toggle('hidden', path !== ROUTES.PREISE);
+  if (privacyEl) privacyEl.classList.toggle('hidden', path !== ROUTES.PRIVACY);
+  if (imprintEl) imprintEl.classList.toggle('hidden', path !== ROUTES.IMPRINT);
+  if (path === ROUTES.PRIVACY) {
+    const container = document.getElementById('privacyContent');
+    if (container) renderLegalContent(container, PRIVACY);
+  }
+  if (path === ROUTES.IMPRINT) {
+    const container = document.getElementById('imprintContent');
+    if (container) renderLegalContent(container, IMPRINT);
+  }
 }
 
 export async function navigateTo(path) {

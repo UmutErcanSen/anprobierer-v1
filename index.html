@@ -4,9 +4,6 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Virtual Try-On – KI Anzeigen Erstellung</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
     <script>if(location.pathname==='/account')document.documentElement.id='account-route';else if(location.pathname==='/anzeige-erstellen')document.documentElement.id='create-route'</script>
@@ -486,9 +483,27 @@
 
     </div><!-- /appContainer -->
 
+    <!-- Legal pages (hidden by default, shown via router) -->
+    <div id="route-datenschutz" class="hidden legal-page">
+      <div class="container legal-container" id="privacyContent"></div>
+    </div>
+
+    <div id="route-impressum" class="hidden legal-page">
+      <div class="container legal-container" id="imprintContent"></div>
+    </div>
+
     <footer>
-      Virtual Try-On · Nutzt OpenAI GPT Image 2 · Alle Verarbeitung im Browser ·
-      API-Key liegt nur in deinem localStorage
+      <div class="footer-inner">
+        <div class="footer-links">
+          <a href="/" onclick="event.preventDefault();navigateTo('/')">Startseite</a>
+          <a href="/preise" onclick="event.preventDefault();navigateTo('/preise')">Preise</a>
+          <a href="/datenschutz" onclick="event.preventDefault();navigateTo('/datenschutz')">Datenschutz</a>
+          <a href="/impressum" onclick="event.preventDefault();navigateTo('/impressum')">Impressum</a>
+        </div>
+        <p class="footer-info">
+          Virtual Try-On · Nutzt OpenAI GPT Image 2 · API-Key liegt nur lokal im Browser
+        </p>
+      </div>
     </footer>
 
     <div class="photo-guide-modal" id="photoGuide" onclick="closePhotoGuide(event)">

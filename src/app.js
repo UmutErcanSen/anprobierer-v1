@@ -1228,7 +1228,8 @@ window.closeBurgerMenu = function () {
 };
 document.addEventListener('click', (e) => {
   const wrapper = document.querySelector('.burger-wrapper');
-  if (wrapper && !wrapper.contains(e.target)) {
+  const dd = document.getElementById('burgerDropdown');
+  if (wrapper && dd && !wrapper.contains(e.target) && !dd.contains(e.target)) {
     closeBurgerMenu();
   }
 });

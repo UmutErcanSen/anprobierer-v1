@@ -171,7 +171,11 @@ function renderAccount(profile) {
       getUserGenerations(currentUser.uid, 20).then(entries => {
         renderHistoryCards(entries);
       }).catch(() => {
-        historyList.innerHTML = '<div class="account-history-empty">Fehler beim Laden</div>';
+        historyList.innerHTML = `<div class="account-history-empty">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" stroke-width="1"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h6M8 16h4"/></svg>
+          <span>Noch keine Anzeigen erstellt</span>
+          <button class="btn btn-sm btn-primary" onclick="navigateTo('/anzeige-erstellen')">Jetzt erste Anzeige erstellen</button>
+        </div>`;
       });
     }
   }

@@ -2,23 +2,29 @@ export const PLANS = {
   free: {
     label: 'Free', limit: 5, color: '#71717a',
     emoji: '⭐', price: '0 €', quality: 'Mittel', support: 'Standard',
+    itemsPerImage: '1', vintedTexts: 'Nein',
     popular: false,
   },
   basic: {
     label: 'Basic', limit: 50, color: '#22c55e',
     emoji: '💎', price: '9,99 €', quality: 'Hoch', support: 'Priorität',
+    itemsPerImage: 'Bis zu 5', vintedTexts: 'Ja',
     popular: true,
   },
   pro: {
     label: 'Pro', limit: -1, color: '#f59e0b',
     emoji: '👑', price: '19,99 €', quality: 'Max', support: 'Premium',
+    itemsPerImage: 'Unbegrenzt', vintedTexts: 'Ja',
     popular: false,
   },
 };
 
 const ROWS = [
-  { label: 'Generierungen', key: p => p.limit === -1 ? '∞' : `${p.limit}/Monat` },
-  { label: 'Qualität', key: p => p.quality },
+  { label: 'Generierungen / Monat', key: p => p.limit === -1 ? 'Unbegrenzt' : `${p.limit}` },
+  { label: 'Bildqualität', key: p => p.quality },
+  { label: 'Kleidungsstücke pro Bild', key: p => p.itemsPerImage },
+  { label: 'Vinted-Anzeigentexte', key: p => p.vintedTexts },
+  { label: 'Download-Format', key: () => 'PNG + ZIP' },
   { label: 'Support', key: p => p.support },
 ];
 
@@ -32,8 +38,7 @@ export function renderPlanComparison(container, activePlan, options = {}) {
     const p = PLANS[key];
     const isActive = active === key;
     return `<div class="plan-cell plan-cell--head${isActive ? ' plan-cell--active' : ''}" data-plan="${key}" style="--plan-color:${p.color};--plan-color-dim:${p.color}18">
-      ${p.popular ? '<span class="plan-badge-popular">★ Beliebt</span>' : ''}
-      <span class="plan-cell-emoji">${p.emoji}</span>
+      ${p.popular ? '<span class="plan-badge-popular">Beliebt</span>' : ''}
       <span class="plan-cell-name">${p.label}</span>
       <span class="plan-cell-price">${p.price}</span>
       <span class="plan-cell-period">/Monat</span>
@@ -59,14 +64,14 @@ export function renderPlanComparison(container, activePlan, options = {}) {
     }
     return `<div class="plan-cell plan-cell--footer${isActive ? ' plan-cell--active' : ''}" data-plan="${key}" style="--plan-color:${p.color};--plan-color-dim:${p.color}18">
       ${isActive
-        ? `<span class="plan-active-badge">✓ Aktuelles Abo</span>`
-        : `<button class="plan-upgrade-btn" data-plan="${key}">⬆️ Upgraden</button>`
+        ? `<span class="plan-active-badge">Aktuelles Abo</span>`
+        : `<button class="plan-upgrade-btn" data-plan="${key}">Upgraden</button>`
       }
     </div>`;
   }).join('');
 
   container.innerHTML = `
-    <h3 class="plan-comparison-title">📊 Tarifvergleich</h3>
+    <h3 class="plan-comparison-title">Tarifvergleich</h3>
     <div class="plan-table">
       <div class="plan-table-head">
         <div class="plan-table-corner"></div>

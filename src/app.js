@@ -1585,22 +1585,3 @@ onAuthChange((user, profile) => {
     resetUploadUI();
   }
 });
-
-// Video Hero Play/Pause
-{
-  const heroVideo = document.getElementById('heroVideo');
-  const pauseBtn = document.getElementById('videoPauseBtn');
-  if (heroVideo && pauseBtn) {
-    const togglePlay = () => {
-      if (heroVideo.paused) {
-        heroVideo.play();
-        pauseBtn.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>';
-      } else {
-        heroVideo.pause();
-        pauseBtn.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21"/></svg>';
-      }
-    };
-    heroVideo.addEventListener('click', togglePlay);
-    pauseBtn.addEventListener('click', (e) => { e.stopPropagation(); togglePlay(); });
-  }
-}

@@ -575,6 +575,31 @@ function renderAccount(profile) {
       showToast('Export heruntergeladen.', 'success');
     };
   }
+
+  const tabsContainer = document.querySelector('.account-card--merged .account-tabs');
+  if (tabsContainer) {
+    tabsContainer.querySelectorAll('.account-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tab = btn.dataset.tab;
+        tabsContainer.querySelectorAll('.account-tab').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const parent = tabsContainer.closest('.account-card--merged');
+        parent.querySelectorAll('.account-tab-content').forEach(c => c.classList.remove('active'));
+        const content = parent.querySelector(`.account-tab-content#tab${tab.charAt(0).toUpperCase() + tab.slice(1)}`);
+        if (content) content.classList.add('active');
+        if (tab === 'generations') {
+          const donutFill = document.getElementById('accountDonutFill');
+          if (donutFill) {
+            requestAnimationFrame(() => {
+              requestAnimationFrame(() => {
+                donutFill.style.strokeDashoffset = donutFill.style.strokeDashoffset;
+              });
+            });
+          }
+        }
+      });
+    });
+  }
 }
 
 onAuthChange((user, profile) => {

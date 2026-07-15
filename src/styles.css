@@ -641,8 +641,14 @@ footer{text-align:center;padding:1.5rem 1rem;color:var(--text-3);font-size:.8rem
 .account-plan-badge:hover{filter:brightness(1.2);transform:scale(1.05);box-shadow:0 2px 12px rgba(108,99,255,.3)}
 .account-plan-badge:hover::after{opacity:1;transform:translateX(2px)}
 .plan-badge-limit{font-weight:400;opacity:.7;font-size:.78rem}
-.account-card--donut{text-align:center;padding:2.25rem 1.5rem 1.5rem;display:flex;flex-direction:column;align-items:center;grid-column:1}
-.account-card--stats{grid-column:2}
+.account-card--merged{grid-column:1/-1}
+.account-tabs{display:flex;gap:0;border-bottom:1px solid var(--surface-2);margin:-1.25rem -1.5rem .75rem}
+.account-tab{flex:1;display:flex;align-items:center;justify-content:center;gap:.4rem;padding:.7rem .5rem;background:none;border:none;color:var(--text-3);font-size:.84rem;font-weight:600;cursor:pointer;transition:var(--transition);position:relative;border-bottom:2px solid transparent}
+.account-tab:hover{color:var(--text-2);background:var(--surface-2)}
+.account-tab.active{color:var(--primary);border-bottom-color:var(--primary)}
+.account-tab svg{width:16px;height:16px;flex-shrink:0}
+.account-tab-content{display:none;text-align:center;padding:.5rem 0}
+.account-tab-content.active{display:block}
 .account-card--history{grid-column:1/-1}
 .account-donut-container{position:relative;display:inline-flex;align-items:center;justify-content:center;width:180px;height:180px}
 .account-donut{width:100%;height:100%}
@@ -683,8 +689,7 @@ footer{text-align:center;padding:1.5rem 1rem;color:var(--text-3);font-size:.8rem
 .account-placeholder{padding:2rem 0;text-align:center}
 .account-hint{font-size:.85rem;color:var(--text-3)}
 
-/* === STATS CARD === */
-.account-card--stats{padding:1.25rem 1.5rem}
+/* === STATS GRID (innerhalb merged card) === */
 .account-stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:.75rem}
 .account-stat{text-align:center}
 .account-stat-value{display:block;font-size:1.5rem;font-weight:800;color:var(--text);line-height:1.2}
@@ -1441,9 +1446,8 @@ header.header-compact{box-shadow:0 2px 24px rgba(0,0,0,.45)}
   .account-page{padding:0 .75rem 2rem;overflow:hidden}
   .account-heading{font-size:1.25rem}
   .account-cards{grid-template-columns:1fr}
-  .account-card:first-child,.account-card--donut,.account-card--stats,.account-card--history,.account-settings-card{grid-column:1}
+  .account-card:first-child,.account-card--merged,.account-card--history,.account-settings-card{grid-column:1}
   .account-card{padding:1.1rem}
-  .account-card--donut{padding:1.5rem 1rem 1rem}
   .account-donut-container{width:140px;height:140px}
   .account-stat-value{font-size:1.35rem}
   .account-stat-label{font-size:.78rem}

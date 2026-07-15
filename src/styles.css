@@ -643,9 +643,9 @@ footer{text-align:center;padding:1.5rem 1rem;color:var(--text-3);font-size:.8rem
 .plan-badge-limit{font-weight:400;opacity:.7;font-size:.78rem}
 .account-card--merged{grid-column:1/-1}
 .account-tabs{display:flex;gap:0;border-bottom:1px solid var(--surface-2);margin:-1.25rem -1.5rem .75rem}
-.account-tab{flex:1;display:flex;align-items:center;justify-content:center;gap:.4rem;padding:.7rem .5rem;background:none;border:none;color:var(--text-3);font-size:.84rem;font-weight:600;cursor:pointer;transition:var(--transition);position:relative;border-bottom:2px solid transparent}
-.account-tab:hover{color:var(--text-2);background:var(--surface-2)}
-.account-tab.active{color:var(--primary);border-bottom-color:var(--primary)}
+.account-tab{flex:1;display:flex;align-items:center;justify-content:center;gap:.4rem;padding:.75rem .5rem;background:none;border:none;color:var(--text-3);font-size:.84rem;font-weight:600;cursor:pointer;transition:var(--transition);position:relative;border-bottom:2px solid transparent}
+.account-tab:hover{color:var(--text);background:var(--surface-2)}
+.account-tab.active{color:var(--primary);background:rgba(108,99,255,.06);border-bottom-color:var(--primary);font-weight:700}
 .account-tab svg{width:16px;height:16px;flex-shrink:0}
 .account-tab-content{display:none;text-align:center;padding:.5rem 0}
 .account-tab-content.active{display:block}
@@ -700,8 +700,8 @@ footer{text-align:center;padding:1.5rem 1rem;color:var(--text-3);font-size:.8rem
 .account-history-toolbar-desktop{display:none}
 .account-history-search-wrap{position:relative;width:100%}
 .account-history-search-icon{position:absolute;left:1rem;top:50%;transform:translateY(-50%);color:var(--primary);pointer-events:none}
-.account-history-search{width:100%;padding:.85rem 1rem .85rem 2.75rem;border:1px solid var(--primary);border-radius:var(--radius-sm);background:rgba(108,99,255,.04);color:var(--text);font-size:.95rem;outline:none;transition:border .2s,box-shadow .2s;min-height:48px}
-.account-history-search:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(108,99,255,.15)}
+.account-history-search{width:100%;padding:.85rem 1rem .85rem 2.75rem;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--text);font-size:.95rem;outline:none;transition:border .2s,box-shadow .2s;min-height:48px}
+.account-history-search:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(108,99,255,.12);background:var(--surface)}
 .account-history-select-row{display:flex;gap:.6rem;flex-wrap:wrap}
 .account-history-select-group{display:flex;flex-direction:column;gap:.25rem;flex:1;min-width:0}
 .account-filter-label{font-size:.75rem;color:var(--text-3);font-weight:600;text-transform:uppercase;letter-spacing:.03em}

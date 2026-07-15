@@ -1655,6 +1655,7 @@ console.log(`API-Key ${state.apiKey ? 'vorhanden' : 'fehlt'}`);
 
 // Route-aware initialization
 onRouteChange((path) => {
+  window.scrollTo({ top: 0, behavior: 'instant' });
   if (path === ROUTES.CREATE) {
     if (!DEV_MODE && currentUser && !isEmailVerified()) {
       showToast('Bitte bestätige zuerst deine E-Mail-Adresse.', 'error');
@@ -1663,7 +1664,6 @@ onRouteChange((path) => {
     updateGenLimitWarning();
     applyFeatureGating();
     updateStepStepper();
-    window.scrollTo({ top: 0, behavior: 'instant' });
   }
   if (path === ROUTES.PREISE) {
     const pricingTable = document.getElementById('pricingComparisonTable');
@@ -1678,7 +1678,6 @@ onRouteChange((path) => {
         },
       });
     }
-    window.scrollTo({ top: 0, behavior: 'instant' });
   }
 });
 

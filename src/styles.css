@@ -647,10 +647,10 @@ footer{text-align:center;padding:1.5rem 1rem;color:var(--text-3);font-size:.8rem
 .account-tab:hover{color:var(--text);background:var(--surface-2)}
 .account-tab.active{color:var(--primary);background:rgba(108,99,255,.06);border-bottom-color:var(--primary);font-weight:700}
 .account-tab svg{width:16px;height:16px;flex-shrink:0}
-.account-tab-content{display:none;text-align:center;padding:.5rem 0}
-.account-tab-content.active{display:block}
+.account-tab-content{display:none;text-align:center;padding:.5rem 0;min-height:240px;flex-direction:column;align-items:center;justify-content:center}
+.account-tab-content.active{display:flex}
 .account-card--history{grid-column:1/-1}
-.account-donut-container{position:relative;display:inline-flex;align-items:center;justify-content:center;width:180px;height:180px}
+.account-donut-container{position:relative;display:inline-flex;align-items:center;justify-content:center;width:180px;height:180px;flex-shrink:0}
 .account-donut{width:100%;height:100%}
 .account-donut-bg{stroke:var(--surface-2)}
 .account-donut-fill{stroke:url(#donutGradient);transition:stroke-dashoffset .8s cubic-bezier(.22,1,.36,1)}
@@ -690,9 +690,10 @@ footer{text-align:center;padding:1.5rem 1rem;color:var(--text-3);font-size:.8rem
 .account-hint{font-size:.85rem;color:var(--text-3)}
 
 /* === STATS GRID (innerhalb merged card) === */
-.account-stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:.75rem}
-.account-stat{text-align:center}
-.account-stat-value{display:block;font-size:1.5rem;font-weight:800;color:var(--text);line-height:1.2}
+.account-stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:.65rem;width:100%}
+.account-stat{text-align:center;padding:.85rem .5rem .65rem;background:var(--surface-2);border-radius:var(--radius-sm);position:relative}
+.stat-bar{position:absolute;top:0;left:.75rem;right:.75rem;height:3px;border-radius:0 0 3px 3px;background:var(--stat-color,var(--primary))}
+.account-stat-value{display:block;font-size:1.5rem;font-weight:800;color:var(--text);line-height:1.2;margin-top:.35rem}
 .account-stat-label{font-size:.72rem;color:var(--text-3);font-weight:500}
 
 /* === HISTORY TOOLBAR === */

@@ -113,7 +113,6 @@ import { icon } from './icons.js';
 
 export function renderLegalContent(container, data) {
   container.innerHTML = `
-    <a href="/" onclick="event.preventDefault();navigateTo('/')" class="legal-back">${icon('arrow-left', 14)} Zurück zur Startseite</a>
     <h1>${data.title}</h1>
     <p class="legal-updated">${data.updated}</p>
     ${data.sections.map(s => `

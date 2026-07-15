@@ -40,6 +40,8 @@ body{
     radial-gradient(ellipse 800px at 70% 100%, rgba(244,63,94,.05) 0, transparent 50%);
   color:var(--text);
   min-height:100vh;
+  display:flex;
+  flex-direction:column;
   line-height:1.6;
   overflow-x:hidden;
 }
@@ -71,6 +73,9 @@ header h1 a:hover{opacity:.85}
 .burger-dropdown.open{display:block}
 .burger-item{display:flex;align-items:center;gap:.6rem;padding:.6rem 1rem;font-size:.9rem;color:var(--text-2);cursor:pointer;transition:var(--transition);text-decoration:none;white-space:nowrap}
 .burger-item:hover{background:var(--surface-2);color:var(--text)}
+.burger-divider{height:1px;background:var(--surface-3);margin:.3rem 0}
+.burger-item--danger{color:var(--error)}
+.burger-item--danger:hover{background:rgba(239,68,68,.1);color:var(--error)}
 .status-dot{
   width:10px;height:10px;border-radius:50%;
   background:var(--text-3);flex-shrink:0;
@@ -508,7 +513,7 @@ header h1 a:hover{opacity:.85}
 .person-preview-inner{position:relative;display:inline-block}
 .person-preview img{width:100%;height:auto;display:block}
 
-footer{text-align:center;padding:1.5rem 1rem;color:var(--text-3);font-size:.8rem;border-top:1px solid var(--surface-2);margin-top:2rem}
+footer{text-align:center;padding:1.5rem 1rem;color:var(--text-3);font-size:.8rem;border-top:1px solid var(--surface-2);margin-top:auto}
 .footer-inner{max-width:680px;margin:0 auto}
 .footer-links{display:flex;justify-content:center;gap:1.25rem;margin-bottom:.6rem;flex-wrap:wrap}
 .footer-links a{color:var(--text-3);text-decoration:none;transition:var(--transition)}

@@ -14,7 +14,7 @@ import {
   callChatCompletion, testApiKey, estimateCost,
 } from './api.js';
 
-import { currentUser, userProfile, onAuthChange, requireAuth, setPendingRedirect, isEmailVerified, refreshUserProfile } from './auth.js';
+import { currentUser, userProfile, onAuthChange, requireAuth, setPendingRedirect, isEmailVerified, refreshUserProfile, logout } from './auth.js';
 import { checkGenerationAllowed, incrementGenerationsUsed, saveGeneration } from './firestore.js';
 import { PLANS, renderPlanComparison } from './plans.js';
 import { onRouteChange, getCurrentPath, navigateTo, ROUTES } from './router.js';
@@ -1332,6 +1332,11 @@ window.toggleBurgerMenu = function () {
 window.closeBurgerMenu = function () {
   document.getElementById('burgerDropdown').classList.remove('open');
   document.body.style.overflow = '';
+};
+window.handleBurgerLogout = async function () {
+  closeBurgerMenu();
+  await logout();
+  navigateTo('/');
 };
 document.addEventListener('click', (e) => {
   const wrapper = document.querySelector('.burger-wrapper');

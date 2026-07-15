@@ -12,9 +12,9 @@
     <!-- Login Overlay (visible when not authenticated) -->
     <div class="login-overlay" id="loginOverlay">
       <div class="login-card">
-        <button class="login-close-btn" id="loginCloseBtn" aria-label="Schließen"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        <button class="login-close-btn" id="loginCloseBtn" aria-label="Schließen"><span data-lucide="x" data-size="18"></span></button>
         <div class="login-header">
-          <span class="login-logo">✦</span>
+          <span class="login-logo"><span data-lucide="sparkles" data-size="22"></span></span>
           <h2>Virtual Try-On</h2>
           <p>Melde dich an, um KI-Anprobebilder zu erstellen</p>
         </div>
@@ -51,16 +51,16 @@
           <button class="btn btn-primary login-btn" id="resetSubmitBtn">Reset-Link senden</button>
           <p class="login-error" id="resetError"></p>
           <p class="login-success" id="resetSuccess"></p>
-          <button class="login-link-btn" id="backToLoginBtn">← Zurück zum Login</button>
+          <button class="login-link-btn" id="backToLoginBtn"><span data-lucide="arrow-left" data-size="14"></span> Zurück zum Login</button>
         </div>
         <div class="verify-section hidden" id="verifySection">
-          <div class="verify-icon" id="verifyTitle">✅</div>
+          <div class="verify-icon" id="verifyTitle"><span data-lucide="check-circle" data-size="22"></span></div>
           <p class="verify-text" id="verifyText">Wir haben eine Bestätigungs-E-Mail gesendet an:</p>
           <p class="verify-email" id="verifyEmailDisplay"></p>
           <p class="verify-hint">Klicke auf den Link in der E-Mail, um dein Konto zu aktivieren. Du kannst die App danach normal nutzen.</p>
-          <button class="btn btn-primary login-btn" id="resendVerifyBtn">📧 Erneut senden</button>
+          <button class="btn btn-primary login-btn" id="resendVerifyBtn"><span data-lucide="mail" data-size="14"></span> Erneut senden</button>
           <p class="login-success" id="verifyMessage"></p>
-          <button class="login-link-btn" id="verifyBackBtn">← Zurück zum Login</button>
+          <button class="login-link-btn" id="verifyBackBtn"><span data-lucide="arrow-left" data-size="14"></span> Zurück zum Login</button>
         </div>
       </div>
     </div>
@@ -69,17 +69,14 @@
     <div id="appContainer">
     <header>
       <div class="header-inner">
-        <h1><a href="/" onclick="event.preventDefault(); navigateTo('/')"><span class="gradient-text">✦</span> <span class="gradient-text">Virtual Try-On</span></a></h1>
+        <h1><a href="/" onclick="event.preventDefault(); navigateTo('/')"><span class="gradient-text"><span data-lucide="sparkles" data-size="16"></span></span> <span class="gradient-text">Virtual Try-On</span></a></h1>
         <div class="header-btn-group">
           <button class="settings-btn" id="userBtn" onclick="navigateTo('/account')">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="8" r="4"/>
-              <path d="M4 21c0-4 3.5-7 8-7s8 3 8 7"/>
-            </svg>
+            <span data-lucide="user" data-size="18"></span>
           </button>
           <div class="burger-wrapper">
             <button class="burger-btn" id="burgerBtn" onclick="toggleBurgerMenu()">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+              <span data-lucide="menu" data-size="18" data-sw="2.5"></span>
             </button>
           </div>
         </div>
@@ -101,22 +98,20 @@
           </video>
         </div>
         <div class="video-hero-overlay"></div>
-        <div class="video-hero-motto">
-          <div class="video-hero-motto-box">
-            <span class="video-hero-motto-text gradient-text">Einfach. Anziehen. Verkaufen.</span>
-          </div>
-        </div>
-      </section>
-      <div class="container">
-        <section class="step-section">
-          <div class="hero-section" id="heroSection">
+        <div class="video-hero-content">
+          <div class="video-hero-content-box">
             <div class="hero-label">Virtual Try On</div>
             <div class="hero-rotating-wrap">
               <span class="hero-word gradient-text" id="heroRotatingWord">Anprobieren</span>
             </div>
             <p class="hero-sub">mit KI für deine Vinted-Anzeigen</p>
-            <button class="btn btn-gradient" onclick="navigateTo('/anzeige-erstellen')">✨ Starten</button>
+            <button class="btn btn-gradient" onclick="navigateTo('/anzeige-erstellen')"><span data-lucide="sparkles" data-size="16"></span> Starten</button>
           </div>
+        </div>
+      </section>
+      <div class="container">
+        <section class="step-section">
+
           <div class="how-it-works reveal">
             <div class="how-left">
               <span class="how-badge">So einfach geht's</span>
@@ -171,28 +166,28 @@
         <section class="pricing-cards">
           <div class="pricing-card pricing-card--free">
             <div class="pricing-card-header">
-              <span class="pricing-card-emoji">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#71717a" stroke-width="1.5"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="rgba(113,113,122,.15)" stroke="#71717a"/></svg>
+              <span class="pricing-card-emoji" style="color:#71717a">
+                <span data-lucide="star" data-size="32"></span>
               </span>
               <h3 class="pricing-card-name">Free</h3>
               <div class="pricing-card-price">0 €<span class="pricing-card-period">/Monat</span></div>
               <p class="pricing-card-desc">Limitierte Testversion</p>
             </div>
             <ul class="pricing-card-features">
-              <li><span class="pricing-check">✓</span> Nur 5 – danach kein Zugriff mehr</li>
-              <li><span class="pricing-check">✓</span> Mittlere Bildqualität</li>
-              <li><span class="pricing-check">✓</span> Einzelne Kleidungsstücke</li>
-              <li><span class="pricing-check">✓</span> Standard-Support</li>
+              <li><span class="pricing-check"><span data-lucide="check" data-size="12" style="color:var(--success)"></span></span> Nur 5 – danach kein Zugriff mehr</li>
+              <li><span class="pricing-check"><span data-lucide="check" data-size="12" style="color:var(--success)"></span></span> Mittlere Bildqualität</li>
+              <li><span class="pricing-check"><span data-lucide="check" data-size="12" style="color:var(--success)"></span></span> Einzelne Kleidungsstücke</li>
+              <li><span class="pricing-check"><span data-lucide="check" data-size="12" style="color:var(--success)"></span></span> Standard-Support</li>
             </ul>
             <p class="pricing-free-warning">Nur 5 kostenlose Generierungen</p>
             <button class="btn btn-primary pricing-card-btn" onclick="navigateTo('/anzeige-erstellen')">Jetzt ausprobieren</button>
           </div>
 
           <div class="pricing-card pricing-card--popular">
-            <span class="pricing-popular-badge">★ Beliebt</span>
+            <span class="pricing-popular-badge"><span data-lucide="star" data-size="12"></span> Beliebt</span>
             <div class="pricing-card-header">
-              <span class="pricing-card-emoji">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5z" fill="rgba(34,197,94,.15)" stroke="#22c55e"/><path d="M2 17l10 5 10-5" stroke="#22c55e"/><path d="M2 12l10 5 10-5" stroke="#22c55e"/></svg>
+              <span class="pricing-card-emoji" style="color:#22c55e">
+                <span data-lucide="layers" data-size="32"></span>
               </span>
               <h3 class="pricing-card-name">Basic</h3>
               <div class="pricing-card-price">9,99 €<span class="pricing-card-period">/Monat</span></div>
@@ -200,29 +195,29 @@
               <p class="pricing-card-desc">Für aktive Verkäufer</p>
             </div>
             <ul class="pricing-card-features">
-              <li><span class="pricing-check">✓</span> Bis zu 50 Generierungen / Monat</li>
-              <li><span class="pricing-check">✓</span> Hohe Bildqualität</li>
-              <li><span class="pricing-check">✓</span> Mehrere Kleidungsstücke</li>
-              <li><span class="pricing-check">✓</span> Prioritäts-Support</li>
-              <li><span class="pricing-check">✓</span> 7 Tage kostenlos testen</li>
+              <li><span class="pricing-check"><span data-lucide="check" data-size="12" style="color:var(--success)"></span></span> Bis zu 50 Generierungen / Monat</li>
+              <li><span class="pricing-check"><span data-lucide="check" data-size="12" style="color:var(--success)"></span></span> Hohe Bildqualität</li>
+              <li><span class="pricing-check"><span data-lucide="check" data-size="12" style="color:var(--success)"></span></span> Mehrere Kleidungsstücke</li>
+              <li><span class="pricing-check"><span data-lucide="check" data-size="12" style="color:var(--success)"></span></span> Prioritäts-Support</li>
+              <li><span class="pricing-check"><span data-lucide="check" data-size="12" style="color:var(--success)"></span></span> 7 Tage kostenlos testen</li>
             </ul>
             <button class="btn btn-primary pricing-card-btn" onclick="navigateTo('/anzeige-erstellen')">Jetzt ausprobieren</button>
           </div>
 
           <div class="pricing-card">
             <div class="pricing-card-header">
-              <span class="pricing-card-emoji">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="1.5"><path d="M2 19h20v-2H2v2z" fill="rgba(245,158,11,.15)" stroke="#f59e0b"/><path d="M4 17l2-9 4 3 2-6 2 6 4-3 2 9H4z" stroke="#f59e0b"/></svg>
+              <span class="pricing-card-emoji" style="color:#f59e0b">
+                <span data-lucide="crown" data-size="32"></span>
               </span>
               <h3 class="pricing-card-name">Pro</h3>
               <div class="pricing-card-price">19,99 €<span class="pricing-card-period">/Monat</span></div>
               <p class="pricing-card-desc">Für Profi-Verkäufer</p>
             </div>
             <ul class="pricing-card-features">
-              <li><span class="pricing-check">✓</span> Unlimited Generierungen</li>
-              <li><span class="pricing-check">✓</span> Maximale Bildqualität</li>
-              <li><span class="pricing-check">✓</span> Mehrere Kleidungsstücke</li>
-              <li><span class="pricing-check">✓</span> Premium-Support</li>
+              <li><span class="pricing-check"><span data-lucide="check" data-size="12" style="color:var(--success)"></span></span> Unlimited Generierungen</li>
+              <li><span class="pricing-check"><span data-lucide="check" data-size="12" style="color:var(--success)"></span></span> Maximale Bildqualität</li>
+              <li><span class="pricing-check"><span data-lucide="check" data-size="12" style="color:var(--success)"></span></span> Mehrere Kleidungsstücke</li>
+              <li><span class="pricing-check"><span data-lucide="check" data-size="12" style="color:var(--success)"></span></span> Premium-Support</li>
             </ul>
             <button class="btn btn-primary pricing-card-btn" onclick="navigateTo('/anzeige-erstellen')">Jetzt ausprobieren</button>
           </div>
@@ -237,23 +232,23 @@
           <h2 class="pricing-section-title">Häufig gestellte Fragen</h2>
           <div class="pricing-faq-list">
             <details class="pricing-faq-item">
-              <summary>Kann ich jederzeit zwischen den Plänen wechseln?</summary>
+              <summary><span class="faq-chevron" data-lucide="chevron-right" data-size="14"></span>Kann ich jederzeit zwischen den Plänen wechseln?</summary>
               <p>Ja, du kannst jederzeit upgraden oder downgraden. Die Änderung wird sofort wirksam und die Kosten werden anteilig berechnet.</p>
             </details>
             <details class="pricing-faq-item">
-              <summary>Was passiert mit meinen Daten wenn ich downgrade?</summary>
+              <summary><span class="faq-chevron" data-lucide="chevron-right" data-size="14"></span>Was passiert mit meinen Daten wenn ich downgrade?</summary>
               <p>Alle deine bisherigen Generierungen und Daten bleiben erhalten. Bei einem Downgrade wird nur die monatliche Generierungsanzahl angepasst.</p>
             </details>
             <details class="pricing-faq-item">
-              <summary>Gibt es eine Testphase für Basic oder Pro?</summary>
+              <summary><span class="faq-chevron" data-lucide="chevron-right" data-size="14"></span>Gibt es eine Testphase für Basic oder Pro?</summary>
               <p>Ja! Jeder neue Nutzer erhält 7 Tage kostenlosen Zugang zu Basic und Pro – unbegrenzte Generierungen und alle Premium-Funktionen. Nach Ablauf der Testphase verfällt der Zugang, es sei denn, du upgradest.</p>
             </details>
             <details class="pricing-faq-item">
-              <summary>Wie werden die Generierungen gezählt?</summary>
+              <summary><span class="faq-chevron" data-lucide="chevron-right" data-size="14"></span>Wie werden die Generierungen gezählt?</summary>
               <p>Jede erfolgreiche KI-Generierung zählt als eine Generierung. Fehlgeschlagene Versuche werden nicht gezählt.</p>
             </details>
             <details class="pricing-faq-item">
-              <summary>Kann ich mein Abo jederzeit kündigen?</summary>
+              <summary><span class="faq-chevron" data-lucide="chevron-right" data-size="14"></span>Kann ich mein Abo jederzeit kündigen?</summary>
               <p>Ja, es gibt keine Bindung. Du kannst dein Abo jederzeit über die Account-Seite kündigen. Das Abo bleibt bis zum Ende der laufenden Periode aktiv.</p>
             </details>
           </div>
@@ -299,14 +294,14 @@
             </div>
           </div>
           <div class="upload-zone" id="personDropZone">
-            <div class="icon">🧍</div>
+            <div class="icon"><span data-lucide="user" data-size="24"></span></div>
             <strong>Foto hier ablegen oder klicken zum Auswählen</strong>
             <div class="hint">Unterstützt: JPG, PNG, WEBP · iOS Fotos werden automatisch konvertiert (max. 20 MB)</div>
             <input type="file" id="personFileInput" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" />
           </div>
           <div class="person-preview hidden" id="personPreview"></div>
           <div class="photo-tip-row" id="photoTipRow">
-            <button class="btn btn-sm btn-outline info-btn" onclick="openPhotoGuide()">🛈 Tipps für das perfekte Foto</button>
+            <button class="btn btn-sm btn-outline info-btn" onclick="openPhotoGuide()"><span data-lucide="info" data-size="14"></span> Tipps für das perfekte Foto</button>
           </div>
         </section>
 
@@ -315,12 +310,12 @@
             <div class="step-header">
               <span class="step-number">2</span>
               <div>
-                <h2>👕 Kleidungsstücke hochladen</h2>
+                <h2><span data-lucide="shirt" data-size="18"></span> Kleidungsstücke hochladen</h2>
                 <p>Wähle für jedes Kleidungsstück den Typ aus und lege Details fest</p>
               </div>
             </div>
             <div class="upload-zone" id="clothingDropZone">
-              <div class="icon">👔</div>
+              <div class="icon"><span data-lucide="shirt" data-size="24"></span></div>
               <strong>Kleidungsfotos hier ablegen oder klicken</strong>
               <div class="hint">JPG, PNG, WEBP · iOS Fotos kompatibel · Mehrere Dateien auswählbar</div>
               <input
@@ -332,7 +327,7 @@
             </div>
             <div class="preview-grid" id="clothingPreviewGrid"></div>
             <div class="photo-tip-row photo-tip-row--clothing">
-              <button class="btn btn-sm btn-outline info-btn" onclick="openClothingGuide()">🛈 Tipps für Kleidungsfotos</button>
+              <button class="btn btn-sm btn-outline info-btn" onclick="openClothingGuide()"><span data-lucide="info" data-size="14"></span> Tipps für Kleidungsfotos</button>
             </div>
             <p class="hint-muted hidden" id="noClothingHint">
               Noch keine Kleidungsstücke hinzugefügt.
@@ -345,30 +340,21 @@
             <div class="step-header">
               <span class="step-number">3</span>
               <div>
-                <h2>⚙️ Modus & Generierung</h2>
+                <h2><span data-lucide="settings" data-size="18"></span> Modus & Generierung</h2>
                 <p>Wähle Modus, Qualität und gib optionale Anweisungen für die KI</p>
               </div>
             </div>
             <div class="mode-grid">
               <div class="mode-card selected" data-mode="single" id="modeSingle">
                 <div class="mode-icon">
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <rect x="3" y="3" width="18" height="18" rx="2"/>
-                    <circle cx="12" cy="10" r="3"/>
-                    <path d="M5 21c.88-2.24 3.66-4 7-4s6.12 1.76 7 4"/>
-                  </svg>
+                  <span data-lucide="user" data-size="28"></span>
                 </div>
-                <div class="mode-title">Einzeln <span class="mode-badge">★ Empfohlen</span></div>
+                <div class="mode-title">Einzeln <span class="mode-badge"><span data-lucide="star" data-size="10"></span> Empfohlen</span></div>
                 <div class="mode-desc">Pro Kleidungsstück ein separates Anprobebild</div>
               </div>
               <div class="mode-card" data-mode="combined" id="modeCombined">
                 <div class="mode-icon">
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <circle cx="9" cy="7" r="3"/>
-                    <circle cx="15" cy="7" r="3"/>
-                    <path d="M3 21c.88-2.24 2.66-4 6-4s5.12 1.76 6 4"/>
-                    <path d="M15 17c3.34 0 5.12 1.76 6 4"/>
-                  </svg>
+                  <span data-lucide="users" data-size="28"></span>
                 </div>
                 <div class="mode-title">Alle zusammen</div>
                 <div class="mode-desc">Ein Bild mit allen Kleidungsstücken kombiniert</div>
@@ -393,12 +379,12 @@
               </div>
             </div>
             <div class="extra-notes-row">
-              <label for="extraNotes">💡 Zusätzliche Anweisungen für die KI</label>
+              <label for="extraNotes"><span data-lucide="lightbulb" data-size="14"></span> Zusätzliche Anweisungen für die KI</label>
               <textarea id="extraNotes" rows="2" placeholder='z. B. "Bei dieser Hose keine Taschen", "Kragen hochgestellt", …'></textarea>
             </div>
             <div class="gen-info" id="genSummary">
               <div class="gen-info-empty">
-                <span class="gen-info-icon">✨</span>
+                <span class="gen-info-icon"><span data-lucide="sparkles" data-size="16"></span></span>
                 <span>Klicke auf <strong>Anzeige erstellen</strong>, um die KI-Generierung zu starten.</span>
               </div>
             </div>
@@ -407,9 +393,9 @@
             <div class="gen-limit-warning hidden" id="genLimitWarning"></div>
             <div class="gen-action">
               <button class="btn btn-primary gen-btn" id="generateBtn" disabled>
-                <span class="gen-btn-icon gen-btn-icon--left">✦</span>
+                <span class="gen-btn-icon gen-btn-icon--left"><span data-lucide="sparkles" data-size="14"></span></span>
                 <span class="gradient-text">Anzeige erstellen</span>
-                <span class="gen-btn-icon gen-btn-icon--right">✦</span>
+                <span class="gen-btn-icon gen-btn-icon--right"><span data-lucide="sparkles" data-size="14"></span></span>
               </button>
             </div>
             <div class="gen-progress hidden" id="progressWrap">
@@ -417,7 +403,7 @@
               <div class="progress-items" id="progressItems"></div>
             </div>
             <div class="log-footer">
-              <button class="log-toggle" onclick="toggleLog()">📂 Details</button>
+              <button class="log-toggle" onclick="toggleLog()"><span data-lucide="folder-open" data-size="14"></span> Details</button>
               <div class="log-area" id="logArea"></div>
             </div>
           </div>
@@ -428,7 +414,7 @@
             <div class="step-header">
               <span class="step-number">4</span>
               <div>
-                <h2>🖼️ Ergebnisse & Download</h2>
+                <h2><span data-lucide="image" data-size="18"></span> Ergebnisse & Download</h2>
                 <p>Generierte Bilder und Verkaufstexte – einzeln oder als ZIP herunterladen</p>
               </div>
             </div>
@@ -441,8 +427,8 @@
                   <input type="text" id="sessionTitle" value="VirtualTryOn" class="session-input" />
                 </div>
                 <div class="download-btns">
-                  <button class="btn btn-success" id="downloadAllBtn">📦 ZIP herunterladen</button>
-                  <button class="btn btn-outline" id="resetBtn">🔄 Neue Session</button>
+                  <button class="btn btn-success" id="downloadAllBtn"><span data-lucide="package" data-size="16"></span> ZIP herunterladen</button>
+                  <button class="btn btn-outline" id="resetBtn"><span data-lucide="refresh-cw" data-size="16"></span> Neue Session</button>
                 </div>
               </div>
               <div class="zip-preview" id="zipPreview"></div>
@@ -456,8 +442,8 @@
     <div id="route-account" class="hidden">
       <div class="container account-page">
         <div class="account-header-row">
-          <h2 class="account-heading"><span id="accountHeadingIcon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span> Mein Konto</h2>
-          <button class="btn btn-ghost account-back" onclick="navigateTo('/')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg> Zurück</button>
+          <h2 class="account-heading"><span id="accountHeadingIcon"><span data-lucide="user" data-size="24"></span></span> Mein Konto</h2>
+          <button class="btn btn-ghost account-back" onclick="navigateTo('/')"><span data-lucide="arrow-left" data-size="16"></span> Zurück</button>
         </div>
 
         <div id="accountSkeleton" class="account-skeleton">
@@ -468,12 +454,12 @@
 
         <div class="account-cards hidden" id="accountProfile">
           <div class="account-card">
-            <div class="account-avatar" id="accountAvatar"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+            <div class="account-avatar" id="accountAvatar"><span data-lucide="user" data-size="26"></span></div>
             <div class="account-details">
               <div class="account-email" id="accountEmail">–</div>
               <div class="account-member-since" id="accountMemberSince"></div>
               <div class="account-plan-row">
-                <span class="account-plan-badge" id="accountPlanBadge" onclick="navigateTo('/preise')">⭐ Gratis</span>
+                <span class="account-plan-badge" id="accountPlanBadge" onclick="navigateTo('/preise')"><span class="lucide-icon-placeholder"></span> Gratis</span>
               </div>
             </div>
           </div>
@@ -481,11 +467,11 @@
           <div class="account-card account-card--merged">
             <div class="account-tabs">
               <button class="account-tab active" data-tab="generations">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <span data-lucide="clock" data-size="16"></span>
                 Generierungen
               </button>
               <button class="account-tab" data-tab="stats">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+                <span data-lucide="bar-chart-3" data-size="16"></span>
                 Statistik
               </button>
             </div>
@@ -510,33 +496,47 @@
               <div class="account-donut-label" id="accountDonutLabel">0 von 5 Gratis-Generierungen</div>
             </div>
             <div class="account-tab-content" id="tabStats">
-              <div class="account-stats-grid" id="accountStatsGrid">
-                <div class="account-stat" style="--stat-color:var(--primary)">
-                  <div class="stat-bar"></div>
-                  <span class="account-stat-value" id="statTotal">0</span>
-                  <span class="account-stat-label">Gesamt</span>
+              <div class="stats-grid" id="accountStatsGrid">
+                <div class="stat-card" data-stat="total">
+                  <div class="stat-card-glow"></div>
+                  <div class="stat-card-header">
+                    <span class="stat-card-icon" data-lucide="bar-chart-3" data-size="18"></span>
+                    <span class="stat-card-label">Gesamt</span>
+                  </div>
+                  <span class="stat-card-value" id="statTotal">0</span>
+                  <span class="stat-card-trend" id="statTotalTrend"></span>
                 </div>
-                <div class="account-stat" style="--stat-color:var(--accent)">
-                  <div class="stat-bar"></div>
-                  <span class="account-stat-value" id="statMonth">0</span>
-                  <span class="account-stat-label">Diesen Monat</span>
+                <div class="stat-card" data-stat="month">
+                  <div class="stat-card-glow"></div>
+                  <div class="stat-card-header">
+                    <span class="stat-card-icon" data-lucide="calendar" data-size="18"></span>
+                    <span class="stat-card-label">Diesen Monat</span>
+                  </div>
+                  <span class="stat-card-value" id="statMonth">0</span>
                 </div>
-                <div class="account-stat" style="--stat-color:var(--primary)">
-                  <div class="stat-bar"></div>
-                  <span class="account-stat-value" id="statCombined">0</span>
-                  <span class="account-stat-label">Kombiniert</span>
+                <div class="stat-card" data-stat="combined">
+                  <div class="stat-card-glow"></div>
+                  <div class="stat-card-header">
+                    <span class="stat-card-icon" data-lucide="layers" data-size="18"></span>
+                    <span class="stat-card-label">Kombiniert</span>
+                  </div>
+                  <span class="stat-card-value" id="statCombined">0</span>
+                  <span class="stat-card-badge">Kombiniert</span>
                 </div>
-                <div class="account-stat" style="--stat-color:var(--tertiary)">
-                  <div class="stat-bar"></div>
-                  <span class="account-stat-value" id="statSingle">0</span>
-                  <span class="account-stat-label">Einzelbilder</span>
+                <div class="stat-card" data-stat="single">
+                  <div class="stat-card-glow"></div>
+                  <div class="stat-card-header">
+                    <span class="stat-card-icon" data-lucide="image" data-size="18"></span>
+                    <span class="stat-card-label">Einzelbilder</span>
+                  </div>
+                  <span class="stat-card-value" id="statSingle">0</span>
                 </div>
               </div>
             </div>
           </div>
 
           <div class="account-card account-card--history">
-            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h6M8 16h4"/></svg> Meine Anzeigen</h3>
+            <h3><span data-lucide="file-text" data-size="18"></span> Meine Anzeigen</h3>
             <div class="account-history-toolbar-mobile">
               <div class="account-history-search-wrap">
                 <svg class="account-history-search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -570,7 +570,7 @@
             </div>
             <div class="account-history-toolbar-desktop">
               <div class="account-history-search-wrap">
-                <svg class="account-history-search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <span class="account-history-search-icon" data-lucide="search" data-size="18"></span>
                 <input class="account-history-search" id="historySearchDesktop" type="text" placeholder="Suche..." />
               </div>
               <div class="account-history-filter-row">
@@ -600,7 +600,7 @@
             <div class="account-history-count" id="accountHistoryCount"></div>
             <div class="account-history-list" id="accountHistoryList">
               <div class="account-history-empty">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" stroke-width="1"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h6M8 16h4"/></svg>
+                <span data-lucide="file-text" data-size="40" style="stroke:var(--text-3);stroke-width:1"></span>
                 <span>Noch keine Anzeigen erstellt</span>
                 <button class="btn btn-sm btn-primary" onclick="navigateTo('/anzeige-erstellen')">Jetzt erste Anzeige erstellen</button>
               </div>
@@ -608,7 +608,7 @@
           </div>
 
           <div class="account-settings-card" id="accountSettings">
-            <h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg> Einstellungen</h3>
+            <h3><span data-lucide="settings" data-size="18"></span> Einstellungen</h3>
             <div class="account-settings-field">
               <label>Aktuelle E-Mail</label>
               <div class="account-settings-email-current" id="accountEmailDisplay">–</div>
@@ -625,14 +625,14 @@
               <label for="accountCurrentPassword">Aktuelles Passwort</label>
               <div class="password-wrap">
                 <input type="password" id="accountCurrentPassword" placeholder="Aktuelles Passwort" />
-                <button class="pw-toggle" data-target="accountCurrentPassword" tabindex="-1" type="button"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                <button class="pw-toggle" data-target="accountCurrentPassword" tabindex="-1" type="button"><span data-lucide="eye" data-size="18"></span></button>
               </div>
             </div>
             <div class="account-settings-field">
               <label for="accountNewPassword">Neues Passwort</label>
               <div class="password-wrap">
                 <input type="password" id="accountNewPassword" placeholder="Neues Passwort (min. 6 Zeichen)" />
-                <button class="pw-toggle" data-target="accountNewPassword" tabindex="-1" type="button"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+                <button class="pw-toggle" data-target="accountNewPassword" tabindex="-1" type="button"><span data-lucide="eye" data-size="18"></span></button>
               </div>
               <button class="btn btn-sm btn-primary account-pw-btn" id="changePasswordBtn">Passwort ändern</button>
               <div class="account-settings-message" id="passwordMessage"></div>
@@ -640,7 +640,7 @@
             <div class="account-management-zone">
               <h3>Kontoverwaltung</h3>
               <button class="account-mgmt-btn" id="exportDataBtn">
-                <span class="account-mgmt-label"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Daten exportieren</span>
+                <span class="account-mgmt-label"><span data-lucide="download" data-size="18"></span> Daten exportieren</span>
                 <span class="account-mgmt-desc">Lade eine Kopie all deiner Daten inklusive Verlauf herunter.</span>
               </button>
               <button class="account-mgmt-btn account-mgmt-btn--danger" id="deleteAccountBtn">
@@ -690,12 +690,12 @@
     <div class="photo-guide-modal" id="photoGuide" onclick="closePhotoGuide(event)">
       <div class="photo-guide-content" onclick="event.stopPropagation()">
         <button class="photo-guide-close" onclick="closePhotoGuide()">&times;</button>
-        <h2>📸 So sollte dein Personenfoto aussehen</h2>
+        <h2><span data-lucide="camera" data-size="20"></span> So sollte dein Personenfoto aussehen</h2>
         <p>Für beste Ergebnisse mit der KI-Anprobe beachte diese Tipps:</p>
         <div class="guide-images">
           <div class="guide-image good">
             <img src="assets/gut.png" alt="Gutes Beispiel">
-            <span class="guide-label">✅ Gutes Beispiel</span>
+            <span class="guide-label"><span data-lucide="check-circle" data-size="14" style="color:var(--success)"></span> Gutes Beispiel</span>
             <ul>
               <li>Ganzkörperaufnahme</li>
               <li>Neutraler Hintergrund</li>
@@ -705,7 +705,7 @@
           </div>
           <div class="guide-image bad">
             <img src="assets/schlecht.jpg" alt="Schlechtes Beispiel">
-            <span class="guide-label">❌ Schlechtes Beispiel</span>
+            <span class="guide-label"><span data-lucide="x-circle" data-size="14" style="color:var(--danger)"></span> Schlechtes Beispiel</span>
             <ul>
               <li>Angeschnitten (Knie fehlen)</li>
               <li>Unruhiger Hintergrund</li>
@@ -720,12 +720,12 @@
     <div class="photo-guide-modal" id="clothingGuide" onclick="closeClothingGuide(event)">
       <div class="photo-guide-content" onclick="event.stopPropagation()">
         <button class="photo-guide-close" onclick="closeClothingGuide()">&times;</button>
-        <h2>👕 So sollten deine Kleidungsfotos aussehen</h2>
+        <h2><span data-lucide="shirt" data-size="20"></span> So sollten deine Kleidungsfotos aussehen</h2>
         <p>Für beste Ergebnisse mit der KI-Anprobe beachte diese Tipps:</p>
         <div class="guide-images">
           <div class="guide-image good">
             <img src="assets/gut.png" alt="Gutes Beispiel">
-            <span class="guide-label">✅ Gutes Beispiel</span>
+            <span class="guide-label"><span data-lucide="check-circle" data-size="14" style="color:var(--success)"></span> Gutes Beispiel</span>
             <ul>
               <li>Einzelnes Kleidungsstück</li>
               <li>Flach ausgebreitet, glatt</li>
@@ -735,7 +735,7 @@
           </div>
           <div class="guide-image bad">
             <img src="assets/schlecht.jpg" alt="Schlechtes Beispiel">
-            <span class="guide-label">❌ Schlechtes Beispiel</span>
+            <span class="guide-label"><span data-lucide="x-circle" data-size="14" style="color:var(--danger)"></span> Schlechtes Beispiel</span>
             <ul>
               <li>Mehrere Teile durcheinander</li>
               <li>Gefaltet oder zerknittert</li>
@@ -760,7 +760,7 @@
     <div class="settings-modal" id="settingsModal" onclick="if(event.target===this)closeSettings()">
       <div class="settings-content" onclick="event.stopPropagation()">
         <button class="settings-close" onclick="closeSettings()">&times;</button>
-        <h2>⚙️ Einstellungen</h2>
+        <h2><span data-lucide="settings" data-size="18"></span> Einstellungen</h2>
         <div class="settings-tabs">
           <button class="settings-tab active" data-panel="api">API-Key</button>
           <button class="settings-tab" data-panel="about">Über</button>
@@ -771,10 +771,10 @@
             <div class="settings-input-row">
               <input type="password" id="apiKeyInput" placeholder="sk-..." spellcheck="false" autocomplete="off" />
               <button class="key-toggle-btn" id="keyToggleBtn" onclick="toggleKeyVisibility()" title="Key anzeigen/verstecken">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                <span data-lucide="eye" data-size="16"></span>
               </button>
               <span class="status-dot" id="apiStatusDot" title="API-Key Status"></span>
-              <button class="btn btn-sm btn-outline" id="testKeyBtn" onclick="testApiKey()">🔍 Testen</button>
+              <button class="btn btn-sm btn-outline" id="testKeyBtn" onclick="testApiKey()"><span data-lucide="search" data-size="14"></span> Testen</button>
             </div>
           </div>
           <p class="settings-hint">
@@ -783,7 +783,7 @@
           </p>
         </div>
         <div class="settings-panel" data-panel="about">
-          <p class="about-text about-text--mb">✦ <strong>Virtual Try-On</strong> nutzt <strong>OpenAI GPT Image 2</strong> für fotorealistische Anprobebilder und <strong>GPT-4o-mini</strong> für Vinted-Verkaufstexte.</p>
+          <p class="about-text about-text--mb"><span data-lucide="sparkles" data-size="14"></span> <strong>Virtual Try-On</strong> nutzt <strong>OpenAI GPT Image 2</strong> für fotorealistische Anprobebilder und <strong>GPT-4o-mini</strong> für Vinted-Verkaufstexte.</p>
           <p class="about-text">Alle Bildverarbeitung läuft lokal im Browser. Dein API-Key wird ausschließlich in deinem <strong>localStorage</strong> gespeichert.</p>
         </div>
       </div>
@@ -801,7 +801,7 @@
 
     <div class="confirm-modal" id="deleteAccountModal">
       <div class="confirm-modal-content" onclick="event.stopPropagation()">
-        <h3><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Konto wirklich löschen?</h3>
+        <h3><span data-lucide="triangle-alert" data-size="20"></span> Konto wirklich löschen?</h3>
         <p>Diese Aktion kann nicht rückgängig gemacht werden. Alle deine Daten, inklusive Profil und Generierungen, werden dauerhaft gelöscht.</p>
         <div class="account-settings-field">
           <label for="deleteConfirmEmail">Bestätige mit deiner E-Mail-Adresse</label>
@@ -821,7 +821,7 @@
 
     <div class="confirm-modal" id="dataExportModal">
       <div class="confirm-modal-content" onclick="event.stopPropagation()">
-        <h3><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Daten exportieren</h3>
+        <h3><span data-lucide="download" data-size="20"></span> Daten exportieren</h3>
         <p style="font-size:.8rem;color:var(--text-3);margin-bottom:1rem">Hier siehst du alle Daten, die in deinem Export enthalten sind.</p>
         <div class="data-export-preview" id="dataExportPreview">
           <div class="skeleton skeleton-text"></div>

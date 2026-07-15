@@ -119,13 +119,15 @@ export function base64ToBlob(base64, mimeType) {
   return new Blob([byteArray], { type: mimeType });
 }
 
+import { icon } from './icons.js';
+
 export function showToast(message, type = 'info', duration = 6000) {
-  const icons = { error: '❌', success: '✅', warning: '⚠️', info: 'ℹ️' };
+  const icons = { error: icon('x-circle', 16), success: icon('check-circle', 16), warning: icon('triangle-alert', 16), info: icon('info', 16) };
   const container = document.getElementById('toastContainer');
   if (!container) return;
   const el = document.createElement('div');
   el.className = `toast ${type}`;
-  el.innerHTML = `<span class="toast-icon">${icons[type] || 'ℹ️'}</span><span class="toast-msg">${message}</span><button class="toast-close" onclick="this.parentElement.remove()">×</button>`;
+  el.innerHTML = `<span class="toast-icon">${icons[type] || icon('info', 16)}</span><span class="toast-msg">${message}</span><button class="toast-close" onclick="this.parentElement.remove()">×</button>`;
   container.appendChild(el);
   setTimeout(() => { if (el.parentElement) el.remove() }, duration);
 }

@@ -1,3 +1,4 @@
+import { icon } from './icons.js';
 import {
   TYPE_LABELS, TYPE_EN, COLORS, SIZES,
   $, $$, sleep, formatDate, generateId,
@@ -50,7 +51,7 @@ function saveSession() {
     localStorage.setItem(SESSION_KEY, JSON.stringify(data));
   } catch (e) {
     if (e.name === 'QuotaExceededError' || e.code === 22) {
-      showToast('⚠️ Session konnte nicht gespeichert werden (Speicher voll).', 'warning');
+      showToast(`Session konnte nicht gespeichert werden (Speicher voll).`, 'warning');
     }
   }
 }
@@ -116,7 +117,7 @@ function loadSession() {
       updateGenSummary();
     }
 
-    showToast('💾 Session wiederhergestellt', 'info');
+    showToast('Session wiederhergestellt', 'info');
     updateGenerateBtnState();
   } catch (_) {}
 }
@@ -210,7 +211,7 @@ function updateGenRemaining() {
   const used = userProfile.generationsUsed || 0;
   const limit = sub.limit;
   if (limit === -1) { el.classList.add('hidden'); return; }
-  el.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> ${used} von ${limit} ${subKey === 'free' ? 'Gratis-' : ''}Generierungen diesen Monat`;
+  el.innerHTML = `${icon('clock', 14)} ${used} von ${limit} ${subKey === 'free' ? 'Gratis-' : ''}Generierungen diesen Monat`;
   el.classList.remove('hidden');
 }
 
@@ -224,7 +225,7 @@ function updateGenLimitWarning() {
   if (subKey !== 'free' || limit === -1) { el.classList.add('hidden'); return; }
   const remaining = limit - used;
   if (remaining > 2) { el.classList.add('hidden'); return; }
-  el.textContent = `⚠️ Nur noch ${remaining} von ${limit} Gratis-Generierungen übrig – nach Limit keine Generierungen mehr möglich`;
+  el.innerHTML = `${icon('triangle-alert', 14)} Nur noch ${remaining} von ${limit} Gratis-Generierungen übrig – nach Limit keine Generierungen mehr möglich`;
   el.classList.remove('hidden');
 }
 
@@ -251,25 +252,25 @@ window.testApiKey = async function () {
   const btn = document.getElementById('testKeyBtn');
   if (!btn) return;
   btn.disabled = true;
-  btn.textContent = '⏳ Teste...';
+  btn.innerHTML = `${icon('hourglass', 14)} Teste...`;
   apiStatusDot.className = 'status-dot';
 
   try {
     await testApiKey(key);
     updateApiStatus(true);
-    showToast('✅ API-Key ist gültig!', 'success');
+    showToast('API-Key ist gültig!', 'success');
   } catch (err) {
     if (err instanceof OpenAIError && (err.status === 401 || err.status === 403)) {
       apiStatusDot.className = 'status-dot error';
-      showToast('🔑 Ungültiger API-Key. Prüfe den Key auf platform.openai.com/api-keys', 'error');
+      showToast('Ungültiger API-Key. Prüfe den Key auf platform.openai.com/api-keys', 'error');
     } else if (err.name === 'TimeoutError' || err.name === 'AbortError') {
-      showToast('⏱ Verbindung zu OpenAI dauert zu lange. Internet prüfen?', 'error');
+      showToast('Verbindung zu OpenAI dauert zu lange. Internet prüfen?', 'error');
     } else {
       apiStatusDot.className = 'status-dot error';
-      showToast(`🌐 ${err.message}`, 'error');
+      showToast(`${err.message}`, 'error');
     }
   } finally {
-    if (btn) { btn.disabled = false; btn.textContent = '🔍 Testen' }
+    if (btn) { btn.disabled = false; btn.innerHTML = `${icon('search', 14)} Testen` }
   }
 };
 
@@ -404,7 +405,7 @@ function renderClothingPreviews() {
     const html = `<select class="item-select ${field}" data-id="${id}">${options.map(o => `<option value="${o.value}"${o.value===current?' selected':''}>${o.label||o.value}</option>`).join('')}</select>`;
     const match = options.find(o => o.value === current);
     const lbl = match ? (match.label || match.value) : (options[0]?.label || '');
-    const trigger = `<button class="mobile-select-trigger" data-id="${id}" data-field="${field}"><span class="trigger-label">${lbl}</span><span class="trigger-chevron">▼</span></button>`;
+    const trigger = `<button class="mobile-select-trigger" data-id="${id}" data-field="${field}"><span class="trigger-label">${lbl}</span><span class="trigger-chevron">${icon('chevron-down', 10)}</span></button>`;
     return html + trigger;
   }
 
@@ -588,17 +589,17 @@ function updateGenSummary() {
   const est = estimateCost(activeCount, state.generationMode, state.selectedQuality);
   const sizeLabel = IMAGE_SIZES[state.selectedSize] || state.selectedSize;
   const items = [
-    { icon: '📸', label: 'Kleidungsstücke', val: `${totalCount}` },
-    { icon: '⚙️', label: 'Modus', val: mode },
-    { icon: '🌐', label: 'API-Aufrufe', val: est.calls },
-    { icon: '📐', label: 'Größe', val: sizeLabel },
+    { icon: icon('camera', 16), label: 'Kleidungsstücke', val: `${totalCount}` },
+    { icon: icon('settings', 16), label: 'Modus', val: mode },
+    { icon: icon('globe', 16), label: 'API-Aufrufe', val: est.calls },
+    { icon: icon('ruler', 16), label: 'Größe', val: sizeLabel },
   ];
   document.getElementById('genSummary').innerHTML =
     `<div class="gen-info-filled">${items.map(i => `<div class="gen-info-item"><span class="gen-info-icon">${i.icon}</span><span><strong>${i.val}</strong> <span class="gen-info-label">${i.label}</span></span></div>`).join('')}</div>`;
 
   const costEl = document.getElementById('costEstimate');
   costEl.classList.remove('hidden');
-  costEl.innerHTML = `<strong>💰 Geschätzte Kosten:</strong> ${est.calls} × $${est.perImage} = <strong>~$${est.total.toFixed(3)}</strong> (Qualität: ${QUALITY_PRICES[state.selectedQuality]?.label || 'Mittel'})<br><span class="cost-hint">OpenAI hat keinen Free Tier. Dir wird der Betrag von deinem Guthaben abgezogen.</span>`;
+  costEl.innerHTML = `<strong>${icon('wallet', 14)} Geschätzte Kosten:</strong> ${est.calls} × $${est.perImage} = <strong>~$${est.total.toFixed(3)}</strong> (Qualität: ${QUALITY_PRICES[state.selectedQuality]?.label || 'Mittel'})<br><span class="cost-hint">OpenAI hat keinen Free Tier. Dir wird der Betrag von deinem Guthaben abgezogen.</span>`;
 }
 
 // ============ GENERATE ============
@@ -614,24 +615,24 @@ const abortControllers = {};
 function addLog(msg, type = 'info') {
   const el = document.createElement('div');
   el.className = `log-entry ${type}`;
-  el.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+  el.innerHTML = `<span class="log-time">[${new Date().toLocaleTimeString()}]</span> ${msg}`;
   logArea.appendChild(el);
   logArea.scrollTop = logArea.scrollHeight;
 }
 
 function statusIcon(type) {
   if (type === 'done') {
-    return '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" opacity=".2" stroke="#10b981"/><polyline points="8 12 11 15 16 9"/></svg>';
+    return icon('check-circle', 20, 2.5).replace('stroke="currentColor"', 'stroke="#10b981"');
   }
   if (type === 'error') {
-    return '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" opacity=".2" stroke="#ef4444"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>';
+    return icon('x-circle', 20, 2.5).replace('stroke="currentColor"', 'stroke="#ef4444"');
   }
-  return '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#71717a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
+  return icon('clock', 20, 2).replace('stroke="currentColor"', 'stroke="#71717a"');
 }
 
 function showProgressItems(mode, items) {
   const container = document.getElementById('progressItems');
-  const cancelBtn = '<button class="btn btn-sm btn-danger cancel-btn-spacer" id="cancelGenBtn">✖ Generierung abbrechen</button>';
+  const cancelBtn = `<button class="btn btn-sm btn-danger cancel-btn-spacer" id="cancelGenBtn">${icon('x', 14)} Generierung abbrechen</button>`;
   if (mode === 'combined') {
     container.innerHTML = `
       <div class="progress-item" data-idx="0">
@@ -753,8 +754,8 @@ let generationCancelled = false;
 function cancelGeneration() {
   generationCancelled = true;
   Object.values(abortControllers).forEach(c => c.abort());
-  addLog('⛔ Generierung vom Benutzer abgebrochen', 'warn');
-  showToast('⛔ Generierung abgebrochen', 'warning');
+  addLog('Generierung vom Benutzer abgebrochen', 'warn');
+  showToast('Generierung abgebrochen', 'warning');
   Object.keys(progressTimers).forEach(k => stopItemProgress(k));
   if (activeLottie) { activeLottie.instance.destroy(); activeLottie = null; }
   state.isGenerating = false;
@@ -791,10 +792,10 @@ generateBtn.addEventListener('click', async () => {
   if (!DEV_MODE) {
     const allowed = await checkGenerationAllowed(currentUser?.uid);
     if (!allowed) {
-      showToast('🔒 Limit erreicht. Upgrade dein Abo für mehr Generierungen.', 'error'); return;
+      showToast('Limit erreicht. Upgrade dein Abo für mehr Generierungen.', 'error'); return;
     }
     if (!isEmailVerified()) {
-      showToast('🔒 Bitte bestätige zuerst deine E-Mail-Adresse. Prüfe dein Postfach.', 'error'); return;
+      showToast('Bitte bestätige zuerst deine E-Mail-Adresse. Prüfe dein Postfach.', 'error'); return;
     }
   }
 
@@ -857,28 +858,28 @@ generateBtn.addEventListener('click', async () => {
           });
           successCount++;
           stopItemProgress(i, true);
-          addLog(`✅ "${item.name}" erfolgreich generiert`, 'success');
+          addLog(`${icon('check-circle', 12).replace('stroke="currentColor"','stroke="#10b981"')} "${item.name}" erfolgreich generiert`, 'success');
         } catch (err) {
           if (err.name === 'AbortError') return;
           if (err instanceof OpenAIError && err.type === 'insufficient_quota') {
-            addLog(`💰 Guthaben aufgebraucht. Bitte Guthaben aufladen.`, 'error');
-            showToast('💰 OpenAI-Guthaben aufgebraucht.', 'error');
+            addLog(`${icon('wallet', 12)} Guthaben aufgebraucht. Bitte Guthaben aufladen.`, 'error');
+            showToast('OpenAI-Guthaben aufgebraucht.', 'error');
             stopItemProgress(i, false);
             failCount++;
           } else if (err instanceof OpenAIError && (err.status === 401 || err.status === 403)) {
-            addLog(`🔑 API-Key ungültig oder keine Berechtigung.`, 'error');
-            showToast('🔑 API-Key ungültig. Prüfe den Key.', 'error');
+            addLog(`${icon('key', 12)} API-Key ungültig oder keine Berechtigung.`, 'error');
+            showToast('API-Key ungültig. Prüfe den Key.', 'error');
             stopItemProgress(i, false);
             failCount++;
           } else if (err.name === 'TimeoutError' || err.name === 'AbortError') {
-            addLog(`⏱ Zeitüberschreitung bei "${item.name}" (180s).`, 'warn');
-            showToast(`⏱ "${item.name}" Zeitüberschreitung, übersprungen.`, 'warning');
+            addLog(`${icon('clock', 12)} Zeitüberschreitung bei "${item.name}" (180s).`, 'warn');
+            showToast(`"${item.name}" Zeitüberschreitung, übersprungen.`, 'warning');
             stopItemProgress(i, false);
             failCount++;
           } else {
             console.error(`Fehler "${item.name}":`, err);
-            addLog(`❌ ${err.message}`, 'error');
-            showToast(`❌ "${item.name}" fehlgeschlagen: ${err.message.slice(0, 80)}`, 'error');
+            addLog(`${icon('x-circle', 12)} ${err.message}`, 'error');
+            showToast(`"${item.name}" fehlgeschlagen: ${err.message.slice(0, 80)}`, 'error');
             stopItemProgress(i, false);
             failCount++;
           }
@@ -924,25 +925,25 @@ generateBtn.addEventListener('click', async () => {
         });
         successCount++;
         stopItemProgress(0, true);
-        addLog(`✅ Kombiniertes Bild erfolgreich generiert`, 'success');
+        addLog(`${icon('check-circle', 12)} Kombiniertes Bild erfolgreich generiert`, 'success');
       } catch (err) {
         if (err.name === 'AbortError') return;
         if (err instanceof OpenAIError && err.type === 'insufficient_quota') {
-          addLog(`💰 Guthaben aufgebraucht.`, 'error');
-          showToast('💰 OpenAI-Guthaben aufgebraucht.', 'error');
+          addLog(`${icon('wallet', 12)} Guthaben aufgebraucht.`, 'error');
+          showToast('OpenAI-Guthaben aufgebraucht.', 'error');
           failCount++;
         } else if (err instanceof OpenAIError && (err.status === 401 || err.status === 403)) {
-          addLog(`🔑 API-Key ungültig.`, 'error');
-          showToast('🔑 API-Key ungültig.', 'error');
+          addLog(`${icon('key', 12)} API-Key ungültig.`, 'error');
+          showToast('API-Key ungültig.', 'error');
           failCount++;
         } else if (err.name === 'TimeoutError' || err.name === 'AbortError') {
-          addLog(`⏱ Zeitüberschreitung (300s).`, 'error');
-          showToast(`⏱ Zeitüberschreitung. Internet prüfen.`, 'error');
+          addLog(`${icon('clock', 12)} Zeitüberschreitung (300s).`, 'error');
+          showToast(`Zeitüberschreitung. Internet prüfen.`, 'error');
           failCount++;
         } else {
           console.error('Fehler:', err);
-          addLog(`❌ ${err.message}`, 'error');
-          showToast(`❌ ${err.message}`, 'error');
+          addLog(`${icon('x-circle', 12)} ${err.message}`, 'error');
+          showToast(`${err.message}`, 'error');
           failCount++;
         }
         stopItemProgress(0, false);
@@ -956,8 +957,8 @@ generateBtn.addEventListener('click', async () => {
     if (generationCancelled) return;
 
     const resultMsg = successCount > 0
-      ? `✅ ${successCount}/${totalCalls} Bilder erfolgreich`
-      : '❌ Alle Generierungen fehlgeschlagen.';
+      ? `${icon('check-circle', 12)} ${successCount}/${totalCalls} Bilder erfolgreich`
+      : `${icon('x-circle', 12)} Alle Generierungen fehlgeschlagen.`;
     document.getElementById('progressOverall').textContent = resultMsg;
     addLog(resultMsg, successCount > 0 ? 'success' : 'error');
 
@@ -981,7 +982,7 @@ generateBtn.addEventListener('click', async () => {
       showToast(`${failCount} ${failCount === 1 ? 'Bild' : 'Bilder'} fehlgeschlagen. Details im Log.`, 'error');
     }
   } catch (err) {
-    addLog(`❌ Unerwarteter Fehler: ${err.message}`, 'error');
+    addLog(`${icon('x-circle', 12)} Unerwarteter Fehler: ${err.message}`, 'error');
     showToast('Ein unerwarteter Fehler ist aufgetreten.', 'error');
   } finally {
     Object.keys(progressTimers).forEach(k => stopItemProgress(k));
@@ -1007,12 +1008,12 @@ function renderResults() {
           <strong>${escapeHtml(img.clothingName)}</strong>
           <span>${img.clothingType === 'combined' ? 'Kombiniert' : TYPE_LABELS[img.clothingType]} · ${getImageSize(img.base64)} MB</span>
         </div>
-        <button class="collapse-toggle" aria-label="Ein-/ausklappen">▼</button>
+        <button class="collapse-toggle" aria-label="Ein-/ausklappen">${icon('chevron-down', 14)}</button>
       </div>
       <div class="result-card-body">
         <img src="${base64ToDataUrl(img.base64, img.mimeType)}" alt="${escapeHtml(img.name)}">
         <div class="result-card-actions">
-          <button class="btn btn-sm btn-primary download-btn">⬇ Herunterladen</button>
+          <button class="btn btn-sm btn-primary download-btn">${icon('download', 14)} Herunterladen</button>
         </div>
         <div class="result-sale-text${img.saleText ? '' : ' generating'}">
           <div class="sale-text-content"></div>
@@ -1035,7 +1036,7 @@ function renderResults() {
       if (contentDiv) contentDiv.textContent = img.saleText;
       const copyBtn = document.createElement('button');
       copyBtn.className = 'btn btn-sm btn-secondary copy-text-btn';
-      copyBtn.textContent = '📋 Kopieren';
+      copyBtn.innerHTML = `${icon('copy', 14)} Kopieren`;
       copyBtn.addEventListener('click', () => copySaleText(idx));
       card.querySelector('.result-sale-text').appendChild(copyBtn);
     }
@@ -1067,19 +1068,19 @@ async function generateAllSaleTexts() {
         textArea.appendChild(pre);
         const copyBtn = document.createElement('button');
         copyBtn.className = 'btn btn-sm btn-secondary copy-text-btn';
-        copyBtn.textContent = '📋 Kopieren';
+copyBtn.innerHTML = `${icon('copy', 14)} Kopieren`;
         copyBtn.addEventListener('click', () => copySaleText(i));
         textArea.appendChild(copyBtn);
-        addLog(`✅ Verkaufstext für "${img.clothingName}" generiert`, 'success');
+        addLog(`${icon('check-circle', 12)} Verkaufstext für "${img.clothingName}" generiert`, 'success');
       }
     } catch (err) {
       if (err instanceof OpenAIError && (err.status === 401 || err.status === 403)) {
-        addLog('🔑 API-Key ungültig.', 'error');
+        addLog(`${icon('key', 12)} API-Key ungültig.`, 'error');
       } else {
-        addLog(`❌ Fehler bei "${img.clothingName}": ${err.message}`, 'error');
+        addLog(`${icon('x-circle', 12)} Fehler bei "${img.clothingName}": ${err.message}`, 'error');
       }
       textArea.classList.remove('generating');
-      textArea.innerHTML = '<span class="gen-error-msg">❌ Textgenerierung fehlgeschlagen</span>';
+      textArea.innerHTML = `<span class="gen-error-msg">${icon('x-circle', 12)} Textgenerierung fehlgeschlagen</span>`;
     }
   }
 }
@@ -1110,7 +1111,7 @@ function downloadSingleImage(idx) {
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
-  showToast(`⬇ ${img.clothingName} wird heruntergeladen`, 'success');
+  showToast(`${img.clothingName} wird heruntergeladen`, 'success');
 }
 
 function copySaleText(idx) {
@@ -1118,10 +1119,10 @@ function copySaleText(idx) {
   if (!text) { showToast('Kein Verkaufstext vorhanden.', 'warning'); return }
   navigator.clipboard.writeText(text).then(() => {
     const btn = document.querySelector(`.result-card[data-idx="${idx}"] .copy-text-btn`);
-    if (btn) { btn.classList.add('copied'); btn.textContent = '✓ Kopiert'; setTimeout(() => { btn.classList.remove('copied'); btn.textContent = '📋 Kopieren'; }, 2000); }
-    showToast('📋 Verkaufstext kopiert!', 'success');
+    if (btn) { btn.classList.add('copied'); btn.innerHTML = `${icon('check', 14)} Kopiert`; setTimeout(() => { btn.innerHTML = `${icon('copy', 14)} Kopieren`; }, 2000); }
+    showToast('Verkaufstext kopiert!', 'success');
   }).catch(() => {
-    showToast('❌ Kopieren fehlgeschlagen.', 'error');
+    showToast('Kopieren fehlgeschlagen.', 'error');
   });
 }
 
@@ -1178,7 +1179,7 @@ async function downloadAllAsZip(title) {
     URL.revokeObjectURL(url);
 
     const size = (blob.size / 1024 / 1024).toFixed(2);
-    showToast(`📦 ${folder}.zip erfolgreich heruntergeladen (${size} MB)`, 'success');
+    showToast(`${folder}.zip erfolgreich heruntergeladen (${size} MB)`, 'success');
     return true;
   } catch (err) {
     showToast(`Fehler beim ZIP-Erstellen: ${err.message}`, 'error');
@@ -1190,7 +1191,7 @@ window.toggleLog = function () {
   const area = document.getElementById('logArea');
   area.classList.toggle('visible');
   const btn = document.querySelector('.log-toggle');
-  if (btn) btn.textContent = area.classList.contains('visible') ? '📂 Ausblenden' : '📂 Details';
+  if (btn) btn.innerHTML = (area.classList.contains('visible') ? '' : '') + `${icon('folder-open', 14)} ${area.classList.contains('visible') ? 'Ausblenden' : 'Details'}`;
 };
 
 window.openSelectOverlay = function ({ title, options, currentValue, currentValues, onChange, showDots, getDotColor, multi }) {
@@ -1204,7 +1205,7 @@ window.openSelectOverlay = function ({ title, options, currentValue, currentValu
       const isSelected = selected.includes(opt.value);
       const dot = showDots && getDotColor ? `<span class="select-overlay-dot" style="background:${getDotColor(opt.value)||'transparent'}"></span>` : '';
       return `<button class="select-overlay-option${isSelected?' multi-selected':''}" data-value="${opt.value}">${dot}<span class="multi-indicator"></span><span>${opt.label}</span></button>`;
-    }).join('') + '<button class="select-overlay-confirm">✓ Bestätigen</button>';
+    }).join('') + `<button class="select-overlay-confirm">${icon('check', 14)} Bestätigen</button>`;
 
     list.querySelectorAll('.select-overlay-option').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -1233,7 +1234,7 @@ window.openSelectOverlay = function ({ title, options, currentValue, currentValu
     list.innerHTML = options.map(opt => {
       const sel = opt.value === currentValue;
       const dot = showDots && getDotColor ? `<span class="select-overlay-dot" style="background:${getDotColor(opt.value)||'transparent'}"></span>` : '';
-      return `<button class="select-overlay-option${sel?' selected':''}" data-value="${opt.value}">${dot}<span>${opt.label}</span>${sel?'<span class=\"select-overlay-check\">✓</span>':''}</button>`;
+      return `<button class="select-overlay-option${sel?' selected':''}" data-value="${opt.value}">${dot}<span>${opt.label}</span>${sel?`<span class="select-overlay-check">${icon('check', 14)}</span>`:''}</button>`;
     }).join('');
     list.querySelectorAll('.select-overlay-option').forEach(btn => {
       btn.addEventListener('click', () => { onChange(btn.dataset.value); closeSelectOverlay(); });
@@ -1397,7 +1398,7 @@ function renderZipPreview() {
   const title = sessionTitle.value.trim() || 'VirtualTryOn';
   const imgCount = state.generatedImages.length;
   const textCount = state.generatedImages.filter(i => i.saleText).length;
-  zipPreview.textContent = `📦 ${imgCount} Bild${imgCount > 1 ? 'er' : ''}${textCount > 0 ? ` + ${textCount} Verkaufstext${textCount > 1 ? 'e' : ''}` : ''} · Bereit zum Download als "${title}_${formatDate()}.zip"`;
+  zipPreview.innerHTML = `${icon('package', 14)} ${imgCount} Bild${imgCount > 1 ? 'er' : ''}${textCount > 0 ? ` + ${textCount} Verkaufstext${textCount > 1 ? 'e' : ''}` : ''} · Bereit zum Download als "${title}_${formatDate()}.zip"`;
 }
 
 export function resetUploadUI() {
@@ -1453,11 +1454,11 @@ window.toggleKeyVisibility = function () {
   const btn = document.getElementById('keyToggleBtn');
   if (input.type === 'password') {
     input.type = 'text';
-    btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+    btn.innerHTML = icon('eye-off', 16);
     btn.title = 'Key verstecken';
   } else {
     input.type = 'password';
-    btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+    btn.innerHTML = icon('eye', 16);
     btn.title = 'Key anzeigen';
   }
 };
@@ -1502,7 +1503,7 @@ function renderHistory() {
     const raw = localStorage.getItem(HISTORY_KEY);
     const history = raw ? JSON.parse(raw) : [];
     if (history.length === 0) {
-      container.innerHTML = '<div class="empty-state empty-state--compact"><span class="empty-icon">📭</span><span class="empty-desc">Noch keine abgeschlossenen Sessions.</span></div>';
+      container.innerHTML = `<div class="empty-state empty-state--compact"><span class="empty-icon">${icon('mail', 24)}</span><span class="empty-desc">Noch keine abgeschlossenen Sessions.</span></div>`;
       return;
     }
     container.innerHTML = history.map((h, idx) => `
@@ -1512,7 +1513,7 @@ function renderHistory() {
           <span>${new Date(h.date).toLocaleDateString('de-DE')} · ${h.itemCount} Kleidungsstück${h.itemCount > 1 ? 'e' : ''} · ${h.mode === 'single' ? 'Einzeln' : 'Kombiniert'} · ${h.successCount} Bild${h.successCount > 1 ? 'er' : ''}</span>
           ${h.notes ? `<span class="history-notes">„${h.notes.slice(0, 30)}${h.notes.length > 30 ? '…' : ''}"</span>` : ''}
         </div>
-        <button class="btn btn-sm btn-outline" onclick="deleteHistoryEntry('${h.id}')" title="Eintrag löschen">✕</button>
+        <button class="btn btn-sm btn-outline" onclick="deleteHistoryEntry('${h.id}')" title="Eintrag löschen">${icon('x', 14)}</button>
       </div>
     `).join('');
   } catch (_) {
@@ -1605,14 +1606,14 @@ document.addEventListener('keydown', e => {
   }
 });
 
-console.log('✦ Virtual Try-On App (OpenAI) geladen');
-console.log(`API-Key ${state.apiKey ? '✓ vorhanden' : '✗ fehlt'}`);
+console.log('Virtual Try-On App (OpenAI) geladen');
+console.log(`API-Key ${state.apiKey ? 'vorhanden' : 'fehlt'}`);
 
 // Route-aware initialization
 onRouteChange((path) => {
   if (path === ROUTES.CREATE) {
     if (!DEV_MODE && currentUser && !isEmailVerified()) {
-      showToast('🔒 Bitte bestätige zuerst deine E-Mail-Adresse.', 'error');
+      showToast('Bitte bestätige zuerst deine E-Mail-Adresse.', 'error');
     }
     updateGenRemaining();
     updateGenLimitWarning();

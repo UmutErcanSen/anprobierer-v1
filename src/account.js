@@ -3,6 +3,7 @@ import { getUserGenerations, deleteGeneration } from './firestore.js';
 import { onRouteChange, getCurrentPath, navigateTo } from './router.js';
 import { PLANS } from './plans.js';
 import { showToast } from './utils.js';
+import { icon, renderIconElements } from './icons.js';
 
 const DEV_MODE = import.meta.env.VITE_DEV_MODE === 'true';
 
@@ -18,6 +19,33 @@ const MOCK_HISTORY = [
   { id: 'm9',  mode: 'combined', quality: 'mittel',  itemCount: 5, imageCount: 4, clothingType: 'Outfit',  notes: 'Ganzer Schrank',                 date: '2026-06-10' },
   { id: 'm10', mode: 'single',   quality: 'hoch',    itemCount: 1, imageCount: 1, clothingType: 'Bluse',   notes: 'Vintage Designerstück',          date: '2026-06-05' },
 ];
+
+let _statsTabVisited = false;
+
+function animateCounter(elId, target, duration = 2500) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  const start = performance.now();
+  let lastVal = -1;
+
+  function tick(now) {
+    const elapsed = now - start;
+    const progress = Math.min(elapsed / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    let display = Math.min(Math.round(target * eased), target);
+    if (display > lastVal + 1) display = lastVal + 1;
+    if (display < lastVal) display = lastVal;
+    lastVal = display;
+    el.textContent = display;
+
+    if (progress < 1) {
+      requestAnimationFrame(tick);
+    } else {
+      el.textContent = target;
+    }
+  }
+  requestAnimationFrame(tick);
+}
 
 function renderAccount(profile) {
   const emailEl = document.getElementById('accountEmail');
@@ -103,7 +131,7 @@ function renderAccount(profile) {
     let allEntries = [];
     let activeFilters = { mode: 'all', clothing: 'all', time: 'all', search: '' };
 
-    const renderStats = (entries) => {
+    const renderStats = (entries, animate = true) => {
       const now = new Date();
       const total = entries.length;
       const thisMonth = entries.filter(e => {
@@ -112,15 +140,28 @@ function renderAccount(profile) {
       }).length;
       const combined = entries.filter(e => e.mode === 'combined').length;
       const single = entries.filter(e => e.mode === 'single').length;
+      const today = entries.filter(e => {
+        const d = e.createdAt?.toDate ? e.createdAt.toDate() : new Date(e.date + 'T00:00:00');
+        return d.toDateString() === now.toDateString();
+      }).length;
 
-      const statTotal = document.getElementById('statTotal');
-      const statMonth = document.getElementById('statMonth');
-      const statCombined = document.getElementById('statCombined');
-      const statSingle = document.getElementById('statSingle');
-      if (statTotal) statTotal.textContent = total;
-      if (statMonth) statMonth.textContent = thisMonth;
-      if (statCombined) statCombined.textContent = combined;
-      if (statSingle) statSingle.textContent = single;
+      if (animate) {
+        animateCounter('statTotal', total);
+        animateCounter('statMonth', thisMonth);
+        animateCounter('statCombined', combined);
+        animateCounter('statSingle', single);
+      } else {
+        document.getElementById('statTotal').textContent = total;
+        document.getElementById('statMonth').textContent = thisMonth;
+        document.getElementById('statCombined').textContent = combined;
+        document.getElementById('statSingle').textContent = single;
+      }
+
+      const trendEl = document.getElementById('statTotalTrend');
+      if (trendEl) {
+        trendEl.textContent = today > 0 ? `+${today} heute` : '';
+        trendEl.style.display = today > 0 ? '' : 'none';
+      }
     };
 
     const renderClothingFilters = (entries) => {
@@ -183,7 +224,7 @@ function renderAccount(profile) {
       if (filtered.length === 0) {
         historyList.innerHTML = `
           <div class="account-history-empty">
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" stroke-width="1"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h6M8 16h4"/></svg>
+            ${icon('scroll-text', 40)}
             <span>${entries.length === 0 ? 'Noch keine Anzeigen erstellt' : 'Keine Ergebnisse für diese Filter'}</span>
             ${entries.length === 0 ? '<button class="btn btn-sm btn-primary" onclick="navigateTo(\'/anzeige-erstellen\')">Jetzt erste Anzeige erstellen</button>' : ''}
           </div>`;
@@ -218,7 +259,7 @@ function renderAccount(profile) {
           ${hasNotes ? `<div class="account-history-notes">„${notes}"</div>` : ''}
           <div class="account-history-actions">
             <button class="account-history-delete" data-id="${e.id}" title="Eintrag löschen">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              ${icon('trash-2', 14)}
               Löschen
             </button>
           </div>
@@ -357,13 +398,13 @@ function renderAccount(profile) {
       changeEmailBtn.disabled = true;
       try {
         await updateUserEmail(newEmail);
-        emailMessage.textContent = '✅ E-Mail geändert. Bitte neue Adresse bestätigen.'; emailMessage.className = 'account-settings-message success';
+        emailMessage.innerHTML = `${icon('check-circle', 14)} E-Mail geändert. Bitte neue Adresse bestätigen.`; emailMessage.className = 'account-settings-message success';
         await refreshUserProfile();
       } catch (err) {
         if (err.code === 'auth/requires-recent-login') {
-          emailMessage.textContent = '⚠️ Bitte zuerst abmelden und erneut einloggen, dann E-Mail ändern.'; emailMessage.className = 'account-settings-message error';
+          emailMessage.innerHTML = `${icon('alert-triangle', 14)} Bitte zuerst abmelden und erneut einloggen, dann E-Mail ändern.`; emailMessage.className = 'account-settings-message error';
         } else {
-          emailMessage.textContent = '❌ ' + (err.message || 'Fehler beim Ändern.'); emailMessage.className = 'account-settings-message error';
+          emailMessage.innerHTML = icon('x-circle', 14) + ' ' + (err.message || 'Fehler beim Ändern.'); emailMessage.className = 'account-settings-message error';
         }
       } finally {
         changeEmailBtn.disabled = false;
@@ -384,11 +425,11 @@ function renderAccount(profile) {
       changePasswordBtn.disabled = true;
       try {
         await changeUserPassword(current, newPw);
-        passwordMessage.textContent = '✅ Passwort geändert.'; passwordMessage.className = 'account-settings-message success';
+        passwordMessage.innerHTML = `${icon('check-circle', 14)} Passwort geändert.`; passwordMessage.className = 'account-settings-message success';
         currentPasswordInput.value = '';
         newPasswordInput.value = '';
       } catch (err) {
-        passwordMessage.textContent = '❌ ' + (err.code === 'auth/wrong-password' ? 'Aktuelles Passwort ist falsch.' : err.message || 'Fehler beim Ändern.'); passwordMessage.className = 'account-settings-message error';
+        passwordMessage.innerHTML = icon('x-circle', 14) + ' ' + (err.code === 'auth/wrong-password' ? 'Aktuelles Passwort ist falsch.' : err.message || 'Fehler beim Ändern.'); passwordMessage.className = 'account-settings-message error';
       } finally {
         changePasswordBtn.disabled = false;
       }
@@ -401,11 +442,12 @@ function renderAccount(profile) {
       if (!input) return;
       const isPassword = input.type === 'password';
       input.type = isPassword ? 'text' : 'password';
-      const svg = btn.querySelector('svg');
-      if (svg) {
-        svg.innerHTML = isPassword
-          ? '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>'
-          : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+      const svgWrapper = btn.querySelector('svg, [data-lucide]');
+      if (svgWrapper) {
+        const iconName = isPassword ? 'eye-off' : 'eye';
+        svgWrapper.outerHTML = icon(iconName, 16);
+      } else {
+        btn.innerHTML = icon(isPassword ? 'eye-off' : 'eye', 16) + btn.innerHTML;
       }
     });
   });
@@ -447,7 +489,7 @@ function renderAccount(profile) {
       if (!email || !password) { deleteAccountError.textContent = 'Bitte E-Mail und Passwort eingeben.'; return; }
       if (email !== profile?.email) { deleteAccountError.textContent = 'E-Mail stimmt nicht überein.'; return; }
       confirmDeleteBtn.disabled = true;
-      confirmDeleteBtn.textContent = '⏳ Wird gelöscht...';
+      confirmDeleteBtn.innerHTML = `${icon('hourglass', 14)} Wird gelöscht...`;
       try {
         await deleteAccount(password);
         deleteModal.classList.remove('visible');
@@ -455,7 +497,7 @@ function renderAccount(profile) {
         showToast('Konto erfolgreich gelöscht.', 'success');
         navigateTo('/');
       } catch (err) {
-        deleteAccountError.textContent = '❌ ' + (err.code === 'auth/wrong-password' ? 'Passwort ist falsch.' : err.message || 'Fehler beim Löschen.');
+        deleteAccountError.innerHTML = icon('x-circle', 14) + ' ' + (err.code === 'auth/wrong-password' ? 'Passwort ist falsch.' : err.message || 'Fehler beim Löschen.');
       } finally {
         confirmDeleteBtn.disabled = false;
         confirmDeleteBtn.textContent = 'Endgültig löschen';
@@ -595,6 +637,13 @@ function renderAccount(profile) {
                 donutFill.style.strokeDashoffset = donutFill.style.strokeDashoffset;
               });
             });
+          }
+        }
+        if (tab === 'stats') {
+          renderIconElements();
+          if (allEntries.length > 0) {
+            renderStats(allEntries, !_statsTabVisited);
+            _statsTabVisited = true;
           }
         }
       });

@@ -1,5 +1,6 @@
 import { requireAuth, currentUser, setPendingRedirect, waitForAuth } from './auth.js';
 import { PRIVACY, IMPRINT, renderLegalContent } from './legal-content.js';
+import { renderIconElements } from './icons.js';
 
 const DEV_MODE = import.meta.env.VITE_DEV_MODE === 'true';
 
@@ -64,6 +65,7 @@ function showRoute(path) {
     const container = document.getElementById('imprintContent');
     if (container) renderLegalContent(container, IMPRINT);
   }
+  renderIconElements();
 }
 
 export async function navigateTo(path) {

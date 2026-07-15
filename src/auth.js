@@ -17,6 +17,7 @@ import {
 import { auth } from './firebase.js';
 import { createUserProfile, getUserProfile, deleteUserData } from './firestore.js';
 import { validateEmailDomain } from './utils.js';
+import { icon } from './icons.js';
 
 const DEV_MODE = import.meta.env.VITE_DEV_MODE === 'true';
 
@@ -133,11 +134,11 @@ function showVerifyOverlay(mode, email) {
   if (verifySection) verifySection.classList.remove('hidden');
 
   if (mode === 'registered') {
-    verifyTitle.textContent = '✅ Registrierung erfolgreich';
+    verifyTitle.innerHTML = `${icon('check-circle', 16)} Registrierung erfolgreich`;
     verifyText.textContent = 'Wir haben eine Bestätigungs-E-Mail gesendet an:';
     verifyEmail.textContent = email;
   } else if (mode === 'unverified') {
-    verifyTitle.textContent = '⚠️ Bitte bestätige deine E-Mail-Adresse';
+    verifyTitle.innerHTML = `${icon('alert-triangle', 16)} Bitte bestätige deine E-Mail-Adresse`;
     verifyText.textContent = 'Du hast noch keine E-Mail-Adresse bestätigt. Bitte klicke auf den Link in unserer Bestätigungs-Mail an:';
     verifyEmail.textContent = email;
   }
@@ -149,16 +150,16 @@ function showVerifyOverlay(mode, email) {
     verifyOverlayListenersAttached = true;
     resendBtn?.addEventListener('click', async () => {
       resendBtn.disabled = true;
-      resendBtn.textContent = '⏳ Wird gesendet...';
+      resendBtn.innerHTML = `${icon('hourglass', 14)} Wird gesendet...`;
       if (verifyMsg) verifyMsg.textContent = '';
       try {
         await sendEmailVerification(auth.currentUser);
-        if (verifyMsg) { verifyMsg.textContent = '✅ Bestätigungs-E-Mail erneut gesendet.'; verifyMsg.className = 'login-success'; }
+        if (verifyMsg) { verifyMsg.innerHTML = `${icon('check-circle', 14)} Bestätigungs-E-Mail erneut gesendet.`; verifyMsg.className = 'login-success'; }
       } catch (err) {
-        if (verifyMsg) { verifyMsg.textContent = '❌ ' + (err.message || 'Fehler beim Senden.'); verifyMsg.className = 'login-error'; }
+        if (verifyMsg) { verifyMsg.innerHTML = icon('x-circle', 14) + ' ' + (err.message || 'Fehler beim Senden.'); verifyMsg.className = 'login-error'; }
       } finally {
         resendBtn.disabled = false;
-        resendBtn.textContent = '📧 Erneut senden';
+        resendBtn.innerHTML = `${icon('mail', 14)} Erneut senden`;
       }
     });
 
@@ -239,7 +240,7 @@ export function initAuthGuard() {
     loginOverlay.style.display = 'none';
     const badge = document.createElement('div');
     badge.id = 'devBadge';
-    badge.textContent = '🧪 DEV-Modus – Lokaler API-Key wird verwendet';
+    badge.innerHTML = `${icon('test-tube', 12)} DEV-Modus – Lokaler API-Key wird verwendet`;
     document.body.appendChild(badge);
     currentUser = { uid: 'dev-user', email: 'dev@local.dev' };
     const mockDate = new Date('2026-01-15');
@@ -443,12 +444,12 @@ function initLoginUI() {
     const email = resetEmail.value.trim();
     if (!email) { resetError.textContent = 'Bitte E-Mail-Adresse eingeben.'; return; }
     resetSubmitBtn.disabled = true;
-    resetSubmitBtn.textContent = '⏳ Wird gesendet...';
+    resetSubmitBtn.innerHTML = `${icon('hourglass', 14)} Wird gesendet...`;
     resetError.textContent = '';
     resetSuccess.textContent = '';
     try {
       await resetPassword(email);
-      resetSuccess.textContent = '✅ E-Mail zum Zurücksetzen gesendet. Bitte Postfach prüfen.';
+      resetSuccess.innerHTML = `${icon('mail', 14)} E-Mail zum Zurücksetzen gesendet. Bitte Postfach prüfen.`;
     } catch (err) {
       resetError.textContent = err.code === 'auth/user-not-found'
         ? 'Kein Konto mit dieser E-Mail-Adresse gefunden.'
@@ -473,7 +474,7 @@ function initLoginUI() {
     }
 
     submitBtn.disabled = true;
-    submitBtn.textContent = '⏳ ...';
+    submitBtn.innerHTML = `${icon('hourglass', 14)} ...`;
     errorEl.textContent = '';
     try {
       if (mode === 'login') {
@@ -504,7 +505,7 @@ function initLoginUI() {
 
   googleBtn?.addEventListener('click', async () => {
     googleBtn.disabled = true;
-    googleBtn.textContent = '⏳ ...';
+    googleBtn.innerHTML = `${icon('hourglass', 14)} ...`;
     errorEl.textContent = '';
     try {
       await loginWithGoogle();

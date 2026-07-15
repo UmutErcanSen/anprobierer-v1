@@ -1,19 +1,19 @@
 export const PLANS = {
   free: {
     label: 'Free', limit: 5, color: '#71717a',
-    emoji: '⭐', price: '0 €', quality: 'Mittel', support: 'Standard',
+    icon: 'star', price: '0 €', quality: 'Mittel', support: 'Standard',
     itemsPerImage: '1', vintedTexts: 'Nein',
     popular: false,
   },
   basic: {
     label: 'Basic', limit: 50, color: '#22c55e',
-    emoji: '💎', price: '9,99 €', annualPrice: '8,33 €', quality: 'Hoch', support: 'Priorität',
+    icon: 'layers', price: '9,99 €', annualPrice: '8,33 €', quality: 'Hoch', support: 'Priorität',
     itemsPerImage: 'Bis zu 5', vintedTexts: 'Ja',
     popular: true,
   },
   pro: {
     label: 'Pro', limit: -1, color: '#f59e0b',
-    emoji: '👑', price: '19,99 €', quality: 'Max', support: 'Premium',
+    icon: 'crown', price: '19,99 €', quality: 'Max', support: 'Premium',
     itemsPerImage: 'Unbegrenzt', vintedTexts: 'Ja',
     popular: false,
   },

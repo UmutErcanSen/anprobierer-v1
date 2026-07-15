@@ -10,8 +10,8 @@
 | Metrik | Wert |
 |--------|------|
 | Startdatum | 15.07.2026 |
-| Aktuelle Phase | Phase 2 — Fake Stripe Checkout |
-| Gesamtfortschritt | ███░░░░░░░ ~25% |
+| Aktuelle Phase | Phase 2 — Fake Stripe Checkout 🔄 in Arbeit |
+| Gesamtfortschritt | ███░░░░░░░ ~30% |
 
 ---
 
@@ -29,6 +29,11 @@
 | Preise-Seite (3-Tier Vergleich) | ✅ Fertig | |
 | Responsive Design (Mobile/Desktop) | ✅ Fertig | |
 | Desktop/Mobile Filter-Split | ✅ Fertig | |
+| Burger-Menü (Mobile/Desktop) | ✅ Fertig | |
+| Nutzer-Icon mit Glow + Initialen | ✅ Fertig | |
+| Rechtliche Seiten (Impressum/Datenschutz) | ✅ Fertig | |
+| Sticky Footer | ✅ Fertig | |
+| DSGVO-konformes Löschen + Datenexport | ✅ Fertig | |
 
 ---
 
@@ -46,15 +51,17 @@
 - [x] Feature-Gating: Vinted-Texte nur für Basic/Pro ✅ 15.07.
 - [x] Generierungs-Limit Enforcement (client-seitig) ✅ 15.07.
 
-### Phase 2: Fake Stripe Checkout
+### Phase 2: Fake Stripe Checkout 🔄 in Arbeit
 > Ziel: Simulierter Bezahlflow für Upgrade
 > Geplant: 15.07.2026
 
 - [ ] `src/checkout.js` — Checkout-Modal erstellen
-- [ ] Fake-Kreditkartenformular
+- [ ] Modal-HTML in `index.html` hinzufügen
+- [ ] Checkout-CSS-Styles in `styles.css`
+- [ ] Fake-Kreditkartenformular (Kartennummer, Ablaufdatum, CVC)
 - [ ] Loading-Animation + Erfolgs-Message
-- [ ] Integration mit Preise-Seite (Upgrade-Buttons)
-- [ ] Integration mit Account-Seite (Plan wechseln)
+- [ ] Upgrade-Callback auf `/preise`-Seite anpassen
+- [ ] Redirect zu `/account` nach erfolgreichem Upgrade
 
 ### Phase 3: Account-Seite Abo-Status
 > Ziel: Abo-Informationen und Verwaltung im Profil
@@ -64,7 +71,7 @@
 - [ ] Aktueller Plan + Status-Anzeige
 - [ ] Nächste Abbuchung / Ablaufdatum
 - [ ] Generierungsfortschritt (Balken)
-- [ ] "Plan wechseln" Button → Preise-Seite
+- [ ] "Plan wechseln" Button → öffnet Checkout-Modal
 - [ ] "Abo kündigen" Button → Bestätigungs-Modal
 - [ ] Kündigungs-Modal mit Warnung
 
@@ -88,6 +95,7 @@
 - [ ] DEV_MODE: Generierungen auch in Firestore speichern
 - [ ] Account-Seite: Echte Daten statt Mock-Daten
 - [ ] Kleidungsfilter mit echten Daten funktioniert
+- [ ] Header-Behavior auf allen Seiten vereinheitlichen
 
 ### Phase 6: E-Mail-Vorlagen
 > Ziel: HTML-Vorlagen für späteren Versand

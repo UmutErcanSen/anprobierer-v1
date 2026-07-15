@@ -73,9 +73,13 @@ function renderAccount(profile) {
   if (donutMax) donutMax.textContent = max;
 
   if (donutLabel) {
-    donutLabel.textContent = remaining === -1
-      ? `Unbegrenzte Generierungen`
-      : `Noch ${remaining} Generierungen`;
+    if (subKey === 'free') {
+      donutLabel.textContent = `${used} von ${max} Gratis-Generierungen`;
+    } else if (remaining === -1) {
+      donutLabel.textContent = `Unbegrenzte Generierungen`;
+    } else {
+      donutLabel.textContent = `Noch ${remaining} von ${max} Generierungen`;
+    }
   }
 
   if (donutFill) {

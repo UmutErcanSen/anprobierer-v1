@@ -15,7 +15,7 @@ import {
 
 import { currentUser, userProfile, onAuthChange, requireAuth, setPendingRedirect, isEmailVerified } from './auth.js';
 import { checkGenerationAllowed, incrementGenerationsUsed, saveGeneration } from './firestore.js';
-import { renderPlanComparison } from './plans.js';
+import { PLANS, renderPlanComparison } from './plans.js';
 import { onRouteChange, getCurrentPath, navigateTo, ROUTES } from './router.js';
 
 const DEV_MODE = import.meta.env.VITE_DEV_MODE === 'true';
@@ -66,6 +66,7 @@ function loadSession() {
       state.personPhoto = data.personPhoto;
       renderPersonPreview();
       ['step2','step3'].forEach(id => document.getElementById(id)?.classList.remove('hidden-zone'));
+      updateStepStepper();
     }
 
     // restore clothing items
@@ -107,6 +108,7 @@ function loadSession() {
       renderResults();
       renderZipPreview();
       document.getElementById('step4')?.classList.remove('hidden-zone');
+      updateStepStepper();
     }
 
     // update gen summary if clothing exists
@@ -180,6 +182,52 @@ function updateGenerateBtnState() {
   generateBtn.disabled = !(apiOk && photoOk && hasItems && itemsComplete);
 }
 
+function updateStepStepper() {
+  const stepper = document.getElementById('stepStepper');
+  if (!stepper) return;
+  const items = stepper.querySelectorAll('.step-stepper-item');
+  const lines = stepper.querySelectorAll('.step-stepper-line');
+  let activeStep = 1;
+  if (state.personPhoto) activeStep = 2;
+  if (state.clothingItems.length > 0 && state.clothingItems.every(i => i.type && i.size)) activeStep = 3;
+  if (state.generationDone) activeStep = 4;
+  items.forEach((item, idx) => {
+    const step = idx + 1;
+    item.classList.toggle('active', step === activeStep);
+    item.classList.toggle('done', step < activeStep);
+  });
+  lines.forEach((line, idx) => {
+    line.classList.toggle('done', idx + 1 < activeStep);
+  });
+}
+
+function updateGenRemaining() {
+  const el = document.getElementById('genRemaining');
+  if (!el) return;
+  if (!currentUser || !userProfile) { el.classList.add('hidden'); return; }
+  const subKey = userProfile.subscription || 'free';
+  const sub = PLANS[subKey] || PLANS.free;
+  const used = userProfile.generationsUsed || 0;
+  const limit = sub.limit;
+  if (limit === -1) { el.classList.add('hidden'); return; }
+  el.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> ${used} von ${limit} ${subKey === 'free' ? 'Gratis-' : ''}Generierungen diesen Monat`;
+  el.classList.remove('hidden');
+}
+
+function updateGenLimitWarning() {
+  const el = document.getElementById('genLimitWarning');
+  if (!el) return;
+  if (!currentUser || !userProfile) { el.classList.add('hidden'); return; }
+  const subKey = userProfile.subscription || 'free';
+  const used = userProfile.generationsUsed || 0;
+  const limit = PLANS[subKey]?.limit || 5;
+  if (subKey !== 'free' || limit === -1) { el.classList.add('hidden'); return; }
+  const remaining = limit - used;
+  if (remaining > 2) { el.classList.add('hidden'); return; }
+  el.textContent = `⚠️ Nur noch ${remaining} von ${limit} Gratis-Generierungen übrig – nach Limit keine Generierungen mehr möglich`;
+  el.classList.remove('hidden');
+}
+
 apiKeyInput.addEventListener('input', () => {
   const key = apiKeyInput.value.trim();
   if (validateApiKey(key)) {
@@ -246,6 +294,7 @@ async function handlePersonFile(file) {
     updateGenerateBtnState();
     saveSession();
     showToast('Personenfoto erfolgreich geladen', 'success');
+    updateStepStepper();
   } catch (err) {
     showToast(err.message, 'error');
   }
@@ -271,6 +320,7 @@ function renderPersonPreview() {
     personFileInput.value = '';
     updateGenerateBtnState();
     saveSession();
+    updateStepStepper();
   });
 }
 
@@ -313,6 +363,7 @@ async function handleClothingFiles(files) {
     updateGenerateBtnState();
     saveSession();
     showToast(`${promises.length} Kleidungsstück${promises.length > 1 ? 'e' : ''} hinzugefügt`, 'success');
+    updateStepStepper();
   } catch (err) {
     showToast('Fehler beim Verarbeiten der Bilder.', 'error');
   }
@@ -478,6 +529,7 @@ function renderClothingPreviews() {
       updateClothingBadge();
       updateGenerateBtnState();
       saveSession();
+      updateStepStepper();
     });
   });
 }
@@ -922,6 +974,7 @@ generateBtn.addEventListener('click', async () => {
       addHistoryEntry(items.length, mode, successCount, state.extraNotes);
       document.getElementById('step4')?.classList.remove('hidden-zone');
       document.getElementById('step4')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      updateStepStepper();
       showToast(`${successCount} von ${totalCalls} Bild${totalCalls > 1 ? 'ern' : ''} erfolgreich`, successCount === totalCalls ? 'success' : 'warning');
     }
     if (failCount > 0) {
@@ -1561,6 +1614,9 @@ onRouteChange((path) => {
     if (!DEV_MODE && currentUser && !isEmailVerified()) {
       showToast('🔒 Bitte bestätige zuerst deine E-Mail-Adresse.', 'error');
     }
+    updateGenRemaining();
+    updateGenLimitWarning();
+    updateStepStepper();
     window.scrollTo({ top: 0, behavior: 'instant' });
   }
   if (path === ROUTES.PREISE) {
@@ -1583,5 +1639,9 @@ onRouteChange((path) => {
 onAuthChange((user, profile) => {
   if (!user) {
     resetUploadUI();
+  }
+  if (getCurrentPath() === ROUTES.CREATE) {
+    updateGenRemaining();
+    updateGenLimitWarning();
   }
 });

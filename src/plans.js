@@ -1,8 +1,8 @@
 export const PLANS = {
-  pro: {
-    label: 'Pro', limit: -1, color: '#f59e0b',
-    emoji: '👑', price: '19,99 €', quality: 'Max', support: 'Premium',
-    itemsPerImage: 'Unbegrenzt', vintedTexts: 'Ja',
+  free: {
+    label: 'Free', limit: 5, color: '#71717a',
+    emoji: '⭐', price: '0 €', quality: 'Mittel', support: 'Standard',
+    itemsPerImage: '1', vintedTexts: 'Nein',
     popular: false,
   },
   basic: {
@@ -11,10 +11,10 @@ export const PLANS = {
     itemsPerImage: 'Bis zu 5', vintedTexts: 'Ja',
     popular: true,
   },
-  free: {
-    label: 'Free', limit: 5, color: '#71717a',
-    emoji: '⭐', price: '0 €', quality: 'Mittel', support: 'Standard',
-    itemsPerImage: '1', vintedTexts: 'Nein',
+  pro: {
+    label: 'Pro', limit: -1, color: '#f59e0b',
+    emoji: '👑', price: '19,99 €', quality: 'Max', support: 'Premium',
+    itemsPerImage: 'Unbegrenzt', vintedTexts: 'Ja',
     popular: false,
   },
 };
@@ -28,7 +28,7 @@ const ROWS = [
   { label: 'Support', key: p => p.support },
 ];
 
-const PLAN_KEYS = ['pro', 'basic', 'free'];
+const PLAN_KEYS = ['free', 'basic', 'pro'];
 
 export function renderPlanComparison(container, activePlan, options = {}) {
   const { showUpgradeBtn = true, onUpgrade } = options;

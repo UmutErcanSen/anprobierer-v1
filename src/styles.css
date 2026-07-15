@@ -1376,7 +1376,7 @@ header.header-compact{box-shadow:0 2px 24px rgba(0,0,0,.45)}
 .pricing-card-features{list-style:none;padding:0;margin:0 0 1.5rem;flex:1}
 .pricing-card-features li{display:flex;align-items:center;gap:.5rem;padding:.4rem 0;font-size:.9rem;color:var(--text-2)}
 .pricing-check{color:var(--success);font-weight:700;font-size:.85rem}
-.pricing-card--free{opacity:.75}
+.pricing-card--free{opacity:.92}
 .pricing-card-btn{width:100%;margin-top:auto;padding:.7rem 1.5rem;font-size:.95rem;border-radius:var(--radius-sm);justify-content:center}
 .pricing-free-warning{text-align:center;font-size:.72rem;color:#d97706;margin:.75rem 0 0;padding:.35rem .5rem;background:rgba(217,119,6,.08);border-radius:var(--radius-sm);border:1px solid rgba(217,119,6,.15)}
 .btn-gradient{background:linear-gradient(135deg,var(--primary),#a855f7);color:white;border:none}

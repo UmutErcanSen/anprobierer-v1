@@ -932,7 +932,8 @@ footer{text-align:center;padding:1.5rem 1rem;color:var(--text-3);font-size:.8rem
 .video-hero-media video{width:100%;height:100%;object-fit:cover;display:block}
 .video-hero-overlay{position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,0,0,.45),rgba(0,0,0,.15));z-index:1}
 .video-hero-motto{position:absolute;inset:0;z-index:2;display:flex;align-items:center;justify-content:center;text-align:center;padding:2rem}
-.video-hero-motto-text{font-size:clamp(2rem,5vw,4rem);font-weight:800;line-height:1.15;max-width:800px}
+.video-hero-motto-box{background:rgba(0,0,0,.25);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);padding:1rem 2.5rem;border-radius:999px;border:1px solid rgba(255,255,255,.15)}
+.video-hero-motto-text{font-size:clamp(2rem,5vw,4rem);font-weight:800;line-height:1.15}
 
 /* Hero section */
 .hero-section{

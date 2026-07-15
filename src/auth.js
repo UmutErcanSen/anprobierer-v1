@@ -247,8 +247,12 @@ export function initAuthGuard() {
     userProfile = {
       email: 'dev@local.dev',
       subscription: 'free',
-      generationsUsed: 3,
-      generationLimit: 5,
+      subscriptionStatus: 'active',
+      generationsUsed: 1,
+      generationLimit: 3,
+      currentPeriodStart: { toDate: () => mockDate },
+      currentPeriodEnd: null,
+      cancelAtPeriodEnd: false,
       createdAt: { toDate: () => mockDate },
     };
     notifyListeners(currentUser, userProfile);

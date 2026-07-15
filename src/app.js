@@ -14,10 +14,11 @@ import {
   callChatCompletion, testApiKey, estimateCost,
 } from './api.js';
 
-import { currentUser, userProfile, onAuthChange, requireAuth, setPendingRedirect, isEmailVerified } from './auth.js';
+import { currentUser, userProfile, onAuthChange, requireAuth, setPendingRedirect, isEmailVerified, refreshUserProfile } from './auth.js';
 import { checkGenerationAllowed, incrementGenerationsUsed, saveGeneration } from './firestore.js';
 import { PLANS, renderPlanComparison } from './plans.js';
 import { onRouteChange, getCurrentPath, navigateTo, ROUTES } from './router.js';
+import { getMaxItemsForPlan, getAllowedQualities, isVintedTextAllowed, checkAndResetMonthly } from './subscription.js';
 
 const DEV_MODE = import.meta.env.VITE_DEV_MODE === 'true';
 
@@ -221,12 +222,31 @@ function updateGenLimitWarning() {
   if (!currentUser || !userProfile) { el.classList.add('hidden'); return; }
   const subKey = userProfile.subscription || 'free';
   const used = userProfile.generationsUsed || 0;
-  const limit = PLANS[subKey]?.limit || 5;
+  const limit = PLANS[subKey]?.limit || 3;
   if (subKey !== 'free' || limit === -1) { el.classList.add('hidden'); return; }
   const remaining = limit - used;
   if (remaining > 2) { el.classList.add('hidden'); return; }
   el.innerHTML = `${icon('triangle-alert', 14)} Nur noch ${remaining} von ${limit} Gratis-Generierungen übrig – nach Limit keine Generierungen mehr möglich`;
   el.classList.remove('hidden');
+}
+
+function applyFeatureGating() {
+  const qualitySelect = document.getElementById('qualitySelect');
+  if (!qualitySelect) return;
+  const subKey = userProfile?.subscription || 'free';
+  const allowed = getAllowedQualities(subKey);
+  qualitySelect.querySelectorAll('option').forEach(opt => {
+    if (opt.value && !allowed.includes(opt.value)) {
+      opt.disabled = true;
+      opt.textContent += ' (Basic/Pro)';
+    } else {
+      opt.disabled = false;
+    }
+  });
+  if (!allowed.includes(state.selectedQuality)) {
+    state.selectedQuality = allowed[0] || 'medium';
+    qualitySelect.value = state.selectedQuality;
+  }
 }
 
 apiKeyInput.addEventListener('input', () => {
@@ -784,12 +804,29 @@ generateBtn.addEventListener('click', async () => {
   if (state.generationMode === 'combined' && items.length > 9) {
     showToast('Im kombinierten Modus werden max. 9 Kleidungsstücke unterstützt.', 'warning'); return;
   }
+
+  const subKey = userProfile?.subscription || 'free';
+  const maxItems = getMaxItemsForPlan(subKey);
+  if (items.length > maxItems) {
+    showToast(`${PLANS[subKey]?.label || 'Free'} erlaubt max. ${maxItems} Kleidungsstück${maxItems > 1 ? 'e' : ''} pro Bild. Upgrade dein Abo für mehr.`, 'warning');
+    return;
+  }
+
   const missing = items.filter(i => !i.type || !i.size);
   if (missing.length > 0) {
     showToast(`Bitte für ${missing.length} Kleidungsstück${missing.length>1?'e':''} Typ und Größe wählen.`, 'warning'); return;
   }
 
   if (!DEV_MODE) {
+    const resetResult = await checkAndResetMonthly(currentUser?.uid);
+    if (resetResult) {
+      if (resetResult.reason === 'canceled_expired') {
+        showToast('Dein Abo ist abgelaufen. Du bist jetzt auf Free zurückgestuft.', 'warning');
+      } else {
+        showToast('Generierungs-Zähler wurde zurückgesetzt.', 'info');
+      }
+      await refreshUserProfile();
+    }
     const allowed = await checkGenerationAllowed(currentUser?.uid);
     if (!allowed) {
       showToast('Limit erreicht. Upgrade dein Abo für mehr Generierungen.', 'error'); return;
@@ -966,7 +1003,9 @@ generateBtn.addEventListener('click', async () => {
       state.generationDone = true;
       renderResults();
       renderZipPreview();
-      generateAllSaleTexts();
+      if (isVintedTextAllowed(subKey)) {
+        generateAllSaleTexts();
+      }
       saveSession();
       if (!DEV_MODE && currentUser) {
         incrementGenerationsUsed(currentUser.uid);
@@ -1617,6 +1656,7 @@ onRouteChange((path) => {
     }
     updateGenRemaining();
     updateGenLimitWarning();
+    applyFeatureGating();
     updateStepStepper();
     window.scrollTo({ top: 0, behavior: 'instant' });
   }

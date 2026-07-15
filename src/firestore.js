@@ -10,8 +10,14 @@ export async function createUserProfile(uid, email, displayName) {
     email,
     displayName: displayName || '',
     subscription: 'free',
+    subscriptionStatus: 'active',
     generationsUsed: 0,
-    generationLimit: 5,
+    generationLimit: 3,
+    currentPeriodStart: serverTimestamp(),
+    currentPeriodEnd: null,
+    cancelAtPeriodEnd: false,
+    customerId: null,
+    subscriptionId: null,
     createdAt: serverTimestamp(),
   });
 }

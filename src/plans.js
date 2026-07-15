@@ -1,6 +1,6 @@
 export const PLANS = {
   free: {
-    label: 'Free', limit: 5, color: '#71717a',
+    label: 'Free', limit: 3, color: '#71717a',
     icon: 'star', price: '0 €', quality: 'Mittel', support: 'Standard',
     itemsPerImage: '1', vintedTexts: 'Nein',
     popular: false,
@@ -20,7 +20,7 @@ export const PLANS = {
 };
 
 const ROWS = [
-  { label: 'Generierungen / Monat', key: (p, key) => key === 'free' ? 'Nur 5' : p.limit === -1 ? 'Unbegrenzt' : `${p.limit}` },
+  { label: 'Generierungen / Monat', key: (p, key) => key === 'free' ? 'Nur 3' : p.limit === -1 ? 'Unbegrenzt' : `${p.limit}` },
   { label: 'Bildqualität', key: p => p.quality },
   { label: 'Kleidungsstücke pro Bild', key: p => p.itemsPerImage },
   { label: 'Vinted-Anzeigentexte', key: p => p.vintedTexts },

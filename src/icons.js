@@ -44,6 +44,8 @@ const L = {
   'wallet':         '<path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/>',
   'x':              '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
   'x-circle':       '<circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/>',
+  'zap':            '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
+  'alert-circle':   '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>',
 };
 
 export function icon(name, size = 16, strokeWidth = 2) {

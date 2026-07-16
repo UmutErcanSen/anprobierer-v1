@@ -984,7 +984,12 @@ generateBtn.addEventListener('click', async () => {
       generateAllSaleTexts();
       saveSession();
       if (currentUser) {
-        if (!DEV_MODE) incrementGenerationsUsed(currentUser.uid);
+        if (!DEV_MODE) {
+          await incrementGenerationsUsed(currentUser.uid);
+          if (userProfile) userProfile.generationsUsed = (userProfile.generationsUsed || 0) + 1;
+        }
+        updateGenRemaining();
+        updateGenLimitWarning();
         const first = state.generatedImages[0];
         const thumbnail = first?.base64 ? await createThumbnail(first.base64, first.mimeType) : null;
         saveGeneration(currentUser.uid, { mode, quality: state.selectedQuality, itemCount: items.length, notes: state.extraNotes, imageCount: successCount, thumbnail });
@@ -1401,6 +1406,10 @@ document.addEventListener('keydown', e => {
     if (sm.classList.contains('visible')) closeSettings();
     const so = document.getElementById('selectOverlay');
     if (so.classList.contains('visible')) closeSelectOverlay();
+    const cm = document.getElementById('checkoutModal');
+    if (cm.classList.contains('visible')) closeCheckout();
+    const um = document.getElementById('upgradeModal');
+    if (um.classList.contains('visible')) closeCheckout();
   }
   if (e.key === 'ArrowLeft') {
     const lb = document.getElementById('lightbox');

@@ -1,4 +1,4 @@
-import { currentUser, refreshUserProfile } from './auth.js';
+import { currentUser, userProfile, refreshUserProfile } from './auth.js';
 import { upgradePlan } from './subscription.js';
 import { PLANS } from './plans.js';
 import { showToast } from './utils.js';
@@ -96,6 +96,7 @@ function startPayment(planKey) {
   document.getElementById('checkoutCardNumber').value = '';
   document.getElementById('checkoutCardExpiry').value = '';
   document.getElementById('checkoutCardCvc').value = '';
+  document.getElementById('checkoutPayBtn').textContent = `Jetzt upgraden — ${plan.price}`;
   document.getElementById('checkoutModal').classList.add('visible');
   document.body.style.overflow = 'hidden';
 
@@ -180,3 +181,4 @@ if (document.readyState === 'loading') {
 }
 
 window.showUpgradeModal = showUpgradeModal;
+window.closeCheckout = closeCheckout;

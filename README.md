@@ -10,18 +10,20 @@ GitHub: https://github.com/UmutErcanSen/anprobierer-v1
 ## Features
 
 - **KI-Bildgenerierung**: Einzel- & Kombi-Modus mit Fortschrittsanzeige
-- **Vinted-Texte**: Automatische Anzeigentext-Generierung (Basic/Pro)
+- **Vinted-Texte**: Automatische Verkaufstexte für alle User
 - **ZIP-Download**: Bilder + Texte als ZIP herunterladen
 - **Account-System**: Email/Google-Login, E-Mail-Verifizierung, Profil-Verwaltung
-- **Abo-System**: Free (3/Monat), Basic (50/Monat), Pro (Unlimited)
-- **Feature-Gating**: Qualität, Items pro Bild, Vinted-Texte nach Plan
+- **Abo-System**: Free (3/Monat), Basic (25/Monat), Pro (Unlimited)
+- **Qualität pro Plan**: Niedrig (Free), Mittel (Basic), Hoch (Pro) — keine User-Auswahl
+- **History-Cards**: Thumbnails, Preview-Overlay, 2er-Grid auf Desktop
+- **Donut-Visualisierung**: Prozentualer Fortschritt mit gelb/orange/rot Glow
 - **Responsive**: Mobile & Desktop optimiert
 - **Burger-Menü**: Hamburger-Icon mit Dropdown-Overlay (Mobile/Desktop)
 - **Nutzer-Icon**: Glow-Effekt + erster Buchstabe des Displaynamens
 - **Rechtliche Seiten**: Impressum & Datenschutzerklärung
 - **Sticky Footer**: Bleibt immer unten, auch bei wenig Inhalt
 - **Header mit Scroll-Shadow**: Box-Shadow erscheint beim Scrollen
-- **Rechtschutzkonform**: DSGVO-konformes Löschen + Datenexport mit Vorschau-Modal
+- **DSGVO-konform**: Löschen + Datenexport mit Vorschau-Modal
 
 ---
 
@@ -106,24 +108,24 @@ src/
 ├── main.js              Einstiegspunkt
 ├── firebase.js          Firebase Init
 ├── auth.js              Login/Registrierung/Google + AuthGuard
-├── account.js           Account-Seite (Profil, Stats, History)
-├── firestore.js         Firestore CRUD (Profile, Generierungen)
-├── app.js               Hauptlogik (Upload, Generierung, Ergebnisse)
-├── api.js               OpenAI API-Aufrufe
-├── subscription.js      Abo-Management (Upgrade, Cancel, Reset)
+├── account.js           Account-Seite (Profil, Stats, History, Donut, Preview-Overlay)
+├── firestore.js         Firestore CRUD (Profile, Generierungen, Thumbnails)
+├── app.js               Hauptlogik (Upload, Generierung, Ergebnisse, createThumbnail)
+├── api.js               OpenAI API-Aufrufe (Bilder + Texte)
+├── subscription.js      Abo-Management (Upgrade, Cancel, Reset, Quality-Gating)
 ├── plans.js             Abo-Vergleich & Definitionen
 ├── legal-content.js     Rechtliche Seiten (Impressum, Datenschutz)
 ├── utils.js             Hilfsfunktionen
 ├── router.js            Client-seitige Navigation (6 Routes)
-├── icons.js             SVG-Icon-System
+├── icons.js             SVG-Icon-System (35+ Lucide-Icons)
 ├── checkout.js          Fake Stripe Checkout (Phase 2)
-└── styles.css           Styles
+└── styles.css           Styles (~1550 Zeilen)
 
 public/
 ├── assets/              Bilder (phone-preview, gut, schlecht, …)
 └── js/loading.json      Lottie-Animation
 
-index.html               HTML-Grundgerüst (841 Zeilen)
+index.html               HTML-Grundgerüst (884 Zeilen)
 firebase.json            Firebase Hosting Config
 .firebaserc              Firebase Projekt-Alias
 .env                     Basis-Umgebungsvariablen (committed)
@@ -138,12 +140,12 @@ ROADMAP.md               Entwicklungsroadmap & Fortschritt
 
 | Feature | Free | Basic (9,99 €/Mo) | Pro (19,99 €/Mo) |
 |---------|------|-------------------|-------------------|
-| Generierungen/Monat | 3 | 50 | Unbegrenzt |
-| Bildqualität | Mittel | Hoch | Max |
+| Generierungen/Monat | 3 | 25 | Unbegrenzt |
+| Bildqualität | Niedrig | Mittel | Hoch |
 | Kleidungsstücke/Bild | 1 | Bis zu 5 | Unbegrenzt |
 | Kombi-Modus | Ja (max 3) | Ja (max 9) | Ja (max 9) |
-| Vinted-Anzeigentexte | Nein | Ja | Ja |
-| Support | Standard | Prioritaet | Premium |
+| Vinted-Anzeigentexte | Ja | Ja | Ja |
+| Support | Standard | Priorität | Premium |
 
 ---
 
@@ -160,16 +162,20 @@ ROADMAP.md               Entwicklungsroadmap & Fortschritt
 ```
 User → Upload Fotos → OpenAI API → Generierte Bilder → Download
                                     ↓
-                              Firestore (Generierungs-Record)
+                              Firestore (users/{uid}/generations/{id})
+                              ├── mode, quality, itemCount, notes
+                              ├── imageCount, clothingType
+                              └── thumbnail (Base64 JPEG, max 150px)
 ```
 
 ### Abo-System
 
-- Free-User: 3 Generierungen/Monat, nur Mittelqualität, 1 Kleidungsstück
-- Basic-User: 50 Generierungen/Monat, Hochqualität, bis 5 Kleidungsstücke, Vinted-Texte
-- Pro-User: Unbegrenzt, Maxqualität, unbegrenzte Kleidungsstücke, Vinted-Texte
+- Free-User: 3 Generierungen/Monat, Niedrigqualität, 1 Kleidungsstück
+- Basic-User: 25 Generierungen/Monat, Mittelqualität, bis 5 Kleidungsstücke
+- Pro-User: Unbegrenzt, Hochqualität, unbegrenzte Kleidungsstücke
 - Monats-Reset: Wird beim nächsten Login geprüft (client-seitig)
-- Upgrade/Cancel: Wird in `src/subscription.js` verwaltet
+- Upgrade/Cancel: Wird in `src/subscription.js` + `src/checkout.js` verwaltet
+- Quality-Gating: `getQualityForPlan()` in `subscription.js`, kein User-Dropdown mehr
 
 ### Router-System (6 Routes)
 

@@ -176,12 +176,12 @@
               <p class="pricing-card-desc">Limitierte Testversion</p>
             </div>
             <ul class="pricing-card-features">
-              <li><span class="pricing-check"><span data-lucide="check" data-size="12" style="color:var(--success)"></span></span> Nur 5 – danach kein Zugriff mehr</li>
+              <li><span class="pricing-check"><span data-lucide="check" data-size="12" style="color:var(--success)"></span></span> Nur 3 – danach kein Zugriff mehr</li>
               <li><span class="pricing-check"><span data-lucide="check" data-size="12" style="color:var(--success)"></span></span> Mittlere Bildqualität</li>
               <li><span class="pricing-check"><span data-lucide="check" data-size="12" style="color:var(--success)"></span></span> Einzelne Kleidungsstücke</li>
               <li><span class="pricing-check"><span data-lucide="check" data-size="12" style="color:var(--success)"></span></span> Standard-Support</li>
             </ul>
-            <p class="pricing-free-warning">Nur 5 kostenlose Generierungen</p>
+            <p class="pricing-free-warning">Nur 3 kostenlose Generierungen</p>
             <button class="btn btn-primary pricing-card-btn" onclick="navigateTo('/anzeige-erstellen')">Jetzt ausprobieren</button>
           </div>
 
@@ -197,7 +197,7 @@
               <p class="pricing-card-desc">Für aktive Verkäufer</p>
             </div>
             <ul class="pricing-card-features">
-              <li><span class="pricing-check"><span data-lucide="check" data-size="12" style="color:var(--success)"></span></span> Bis zu 50 Generierungen / Monat</li>
+              <li><span class="pricing-check"><span data-lucide="check" data-size="12" style="color:var(--success)"></span></span> Bis zu 25 Generierungen / Monat</li>
               <li><span class="pricing-check"><span data-lucide="check" data-size="12" style="color:var(--success)"></span></span> Hohe Bildqualität</li>
               <li><span class="pricing-check"><span data-lucide="check" data-size="12" style="color:var(--success)"></span></span> Mehrere Kleidungsstücke</li>
               <li><span class="pricing-check"><span data-lucide="check" data-size="12" style="color:var(--success)"></span></span> Prioritäts-Support</li>
@@ -258,7 +258,7 @@
 
         <section class="pricing-cta">
           <h2>Bereit loszulegen?</h2>
-          <p>Free-Plan: Nur 5 Gratis-Generierungen – nach Upgrade kein Limit. Starte jetzt und upgrade jederzeit.</p>
+          <p>Free-Plan: Nur 3 Gratis-Generierungen – nach Upgrade kein Limit. Starte jetzt und upgrade jederzeit.</p>
           <button class="btn btn-gradient" onclick="navigateTo('/anzeige-erstellen')">Jetzt kostenlos starten</button>
         </section>
       </div>
@@ -832,6 +832,49 @@
         <div class="confirm-modal-actions">
           <button class="btn btn-outline btn-sm" id="cancelExportBtn">Schließen</button>
           <button class="btn btn-primary btn-sm" id="confirmExportBtn">Als JSON herunterladen</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="confirm-modal" id="checkoutModal">
+      <div class="confirm-modal-content checkout-content" onclick="event.stopPropagation()">
+        <h3><span data-lucide="credit-card" data-size="20"></span> Upgrade zu <span id="checkoutPlanName">Basic</span></h3>
+        <div class="checkout-summary">
+          <span class="checkout-plan-price" id="checkoutPlanPrice">9,99 €</span>
+          <span class="checkout-plan-period">/ Monat</span>
+        </div>
+        <div class="checkout-form">
+          <div class="checkout-field">
+            <label>Karteninhaber</label>
+            <input type="text" id="checkoutCardName" placeholder="Max Mustermann" autocomplete="off" />
+          </div>
+          <div class="checkout-field">
+            <label>Kartennummer</label>
+            <input type="text" id="checkoutCardNumber" placeholder="4242 4242 4242 4242" maxlength="19" autocomplete="off" />
+          </div>
+          <div class="checkout-row">
+            <div class="checkout-field">
+              <label>Ablaufdatum</label>
+              <input type="text" id="checkoutCardExpiry" placeholder="MM/JJ" maxlength="5" autocomplete="off" />
+            </div>
+            <div class="checkout-field">
+              <label>CVC</label>
+              <input type="text" id="checkoutCardCvc" placeholder="123" maxlength="3" autocomplete="off" />
+            </div>
+          </div>
+        </div>
+        <p class="checkout-message" id="checkoutMessage"></p>
+        <div class="checkout-loading hidden" id="checkoutLoading">
+          <div class="checkout-spinner"></div>
+          <span>Zahlung wird verarbeitet...</span>
+        </div>
+        <div class="checkout-success hidden" id="checkoutSuccess">
+          <span data-lucide="check-circle" data-size="32" style="color:var(--success)"></span>
+          <span>Upgrade erfolgreich!</span>
+        </div>
+        <div class="confirm-modal-actions" id="checkoutActions">
+          <button class="btn btn-outline btn-sm" id="checkoutCancelBtn">Abbrechen</button>
+          <button class="btn btn-primary btn-sm" id="checkoutPayBtn">Bezahlen</button>
         </div>
       </div>
     </div>

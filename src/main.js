@@ -5,6 +5,7 @@ import { initAuthGuard } from './auth.js';
 import './router.js';
 import './account.js';
 import './app.js';
+import './checkout.js';
 import { renderIconElements } from './icons.js';
 
 initAuthGuard();

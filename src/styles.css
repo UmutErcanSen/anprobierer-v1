@@ -1488,3 +1488,22 @@ header.header-compact{box-shadow:0 2px 24px rgba(0,0,0,.45)}
   .account-history-notes{font-size:.82rem}
   .account-history-delete{font-size:.82rem;padding:.5rem .75rem}
 }
+
+/* === CHECKOUT MODAL === */
+.checkout-content{max-width:460px}
+.checkout-summary{display:flex;align-items:baseline;justify-content:center;gap:.3rem;padding:.5rem 0 .75rem;border-bottom:1px solid var(--surface-2);margin-bottom:1.25rem}
+.checkout-plan-price{font-size:2rem;font-weight:800;color:var(--text)}
+.checkout-plan-period{font-size:.85rem;color:var(--text-3)}
+.checkout-form{display:flex;flex-direction:column;gap:.85rem;width:100%}
+.checkout-field{display:flex;flex-direction:column;gap:.25rem}
+.checkout-field label{font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--text-3)}
+.checkout-field input{padding:.7rem .85rem;border-radius:var(--radius-sm);border:1px solid var(--surface-3);background:var(--surface-2);color:var(--text);font-size:.95rem;outline:none;transition:border .2s,box-shadow .2s}
+.checkout-field input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(108,99,255,.12);background:var(--surface)}
+.checkout-field input::placeholder{color:var(--text-4)}
+.checkout-row{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.checkout-message{text-align:center;font-size:.82rem;min-height:0;margin:0}
+.checkout-message.error{color:var(--error)}
+.checkout-loading{display:flex;flex-direction:column;align-items:center;gap:.75rem;padding:1.5rem 0;color:var(--text-2);font-size:.9rem}
+.checkout-spinner{width:28px;height:28px;border:3px solid var(--surface-3);border-top-color:var(--primary);border-radius:50%;animation:checkout-spin .7s linear infinite}
+@keyframes checkout-spin{to{transform:rotate(360deg)}}
+.checkout-success{display:flex;flex-direction:column;align-items:center;gap:.5rem;padding:1.5rem 0;font-size:1.1rem;font-weight:700;color:var(--text)}

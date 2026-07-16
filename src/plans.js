@@ -6,7 +6,7 @@ export const PLANS = {
     popular: false,
   },
   basic: {
-    label: 'Basic', limit: 50, color: '#22c55e',
+    label: 'Basic', limit: 25, color: '#22c55e',
     icon: 'layers', price: '9,99 €', annualPrice: '8,33 €', quality: 'Hoch', support: 'Priorität',
     itemsPerImage: 'Bis zu 5', vintedTexts: 'Ja',
     popular: true,

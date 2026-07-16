@@ -19,6 +19,7 @@ import { checkGenerationAllowed, incrementGenerationsUsed, saveGeneration } from
 import { PLANS, renderPlanComparison } from './plans.js';
 import { onRouteChange, getCurrentPath, navigateTo, ROUTES } from './router.js';
 import { getMaxItemsForPlan, getAllowedQualities, isVintedTextAllowed, checkAndResetMonthly } from './subscription.js';
+import { openCheckout } from './checkout.js';
 
 const DEV_MODE = import.meta.env.VITE_DEV_MODE === 'true';
 
@@ -829,7 +830,9 @@ generateBtn.addEventListener('click', async () => {
     }
     const allowed = await checkGenerationAllowed(currentUser?.uid);
     if (!allowed) {
-      showToast('Limit erreicht. Upgrade dein Abo für mehr Generierungen.', 'error'); return;
+      const nextPlan = userProfile?.subscription === 'basic' ? 'pro' : 'basic';
+      openCheckout(nextPlan, 'generate');
+      return;
     }
     if (!isEmailVerified()) {
       showToast('Bitte bestätige zuerst deine E-Mail-Adresse. Prüfe dein Postfach.', 'error'); return;
@@ -1670,11 +1673,11 @@ onRouteChange((path) => {
     if (pricingTable) {
       renderPlanComparison(pricingTable, userProfile?.subscription || 'free', {
         showUpgradeBtn: true,
-        onUpgrade: async () => {
+        onUpgrade: async (planKey) => {
           if (!currentUser) {
             try { await requireAuth(); } catch { return; }
           }
-          navigateTo('/anzeige-erstellen');
+          openCheckout(planKey, 'upgrade-btn');
         },
       });
     }

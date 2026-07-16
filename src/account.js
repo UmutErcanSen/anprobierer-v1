@@ -90,23 +90,30 @@ function renderAccount(profile) {
   if (donutMax) donutMax.textContent = max;
 
   if (donutLabel) {
-    if (subKey === 'free') {
-      donutLabel.textContent = `${used} von ${max} Gratis-Generierungen`;
-    } else if (remaining === -1) {
-      donutLabel.textContent = `Unbegrenzte Generierungen`;
+    if (remaining === -1) {
+      donutLabel.textContent = `Unbegrenzte Anzeigen diesen Monat`;
     } else {
-      donutLabel.textContent = `Noch ${remaining} von ${max} Generierungen`;
+      donutLabel.textContent = `Du hast ${used} von ${max} Anzeigen diesen Monat erstellt`;
     }
   }
 
   if (donutFill) {
     const circumference = 314.159;
     const offset = circumference * (1 - pct / 100);
-    donutFill.classList.remove('account-donut-fill--critical', 'account-donut-fill--low');
-    if (remaining >= 0 && remaining <= 2) {
-      donutFill.classList.add('account-donut-fill--critical');
-    } else if (remaining >= 0 && remaining <= 5) {
-      donutFill.classList.add('account-donut-fill--low');
+    const container = donutFill.closest('.account-donut-container');
+    container?.classList.remove('account-donut-container--glow-attention', 'account-donut-container--glow-warning', 'account-donut-container--glow-critical');
+    donutFill.classList.remove('account-donut-fill--attention', 'account-donut-fill--warning', 'account-donut-fill--critical');
+    if (remaining !== -1) {
+      if (pct >= 100) {
+        donutFill.classList.add('account-donut-fill--critical');
+        container?.classList.add('account-donut-container--glow-critical');
+      } else if (pct >= 80) {
+        donutFill.classList.add('account-donut-fill--warning');
+        container?.classList.add('account-donut-container--glow-warning');
+      } else if (pct >= 60) {
+        donutFill.classList.add('account-donut-fill--attention');
+        container?.classList.add('account-donut-container--glow-attention');
+      }
     }
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
@@ -225,7 +232,7 @@ function renderAccount(profile) {
         const date = rawDate
           ? `${String(rawDate.getDate()).padStart(2,'0')}/${String(rawDate.getMonth()+1).padStart(2,'0')}/${rawDate.getFullYear()}`
           : '–';
-        const modeLabel = e.mode === 'combined' ? 'Kombiniert' : 'Einzelbilder';
+        const modeLabel = e.mode === 'combined' ? 'Kombiniert' : 'Einzelbild';
         const modeClass = e.mode === 'combined' ? 'combined' : 'single';
         const notes = e.notes || '';
         const hasNotes = notes.length > 0;
@@ -236,8 +243,8 @@ function renderAccount(profile) {
         const infoText = infoParts.join(' · ');
 
         return `<div class="ah-card ah-card--${modeClass}">
-          <div class="ah-thumb ah-thumb--${modeClass}">
-            ${icon(modeClass === 'combined' ? 'layers' : 'image', 22)}
+          <div class="ah-thumb${e.thumbnail ? '' : ' ah-thumb--' + modeClass}">
+            ${e.thumbnail ? `<img class="ah-thumb-img" src="${e.thumbnail}" alt="">` : icon(modeClass === 'combined' ? 'layers' : 'image', 22)}
           </div>
           <div class="ah-body">
             <div class="ah-top">
@@ -247,23 +254,48 @@ function renderAccount(profile) {
             ${infoText ? `<div class="ah-info">${infoText}</div>` : ''}
             ${hasNotes ? `<div class="ah-notes">"${notes}"</div>` : ''}
             <div class="ah-actions">
-              <button class="ah-btn ah-btn--dl" data-id="${e.id}" aria-label="Herunterladen">${icon('download', 16)}</button>
-              <button class="ah-btn ah-btn--del" data-id="${e.id}" aria-label="Löschen">${icon('trash-2', 16)}</button>
+              <button class="ah-btn ah-btn--dl" data-id="${e.id}" aria-label="Herunterladen">${icon('download', 20)}</button>
+              <button class="ah-btn ah-btn--preview" data-id="${e.id}" aria-label="Vorschau">${icon('eye', 20)}</button>
+              <button class="ah-btn ah-btn--del" data-id="${e.id}" aria-label="Löschen">${icon('trash-2', 20)}</button>
             </div>
           </div>
         </div>`;
       }).join('');
 
       historyList.innerHTML = cardsHtml + `
-        <button class="ah-new-btn" onclick="navigateTo('/anzeige-erstellen')">
-          <span class="ah-new-btn-icon">+</span>
-          Neue Anzeige erstellen
-        </button>`;
+        <div class="ah-card ah-card--new" onclick="navigateTo('/anzeige-erstellen')">
+          <span class="ah-new-icon">+</span>
+          <span>Neue Anzeige erstellen</span>
+        </div>`;
 
       historyList.querySelectorAll('.ah-btn--dl').forEach(btn => {
         btn.addEventListener('click', (ev) => {
           ev.stopPropagation();
           showToast('Download folgt in Kürze.', 'info');
+        });
+      });
+
+      historyList.querySelectorAll('.ah-btn--preview').forEach(btn => {
+        btn.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          const id = btn.dataset.id;
+          const entry = allEntries.find(e => e.id === id);
+          if (!entry) return;
+          const overlay = document.createElement('div');
+          overlay.className = 'ah-preview-overlay';
+          overlay.innerHTML = `<div class="ah-preview-content" onclick="event.stopPropagation()">
+            <div class="ah-preview-top">
+              <h3>Anzeigenvorschau</h3>
+              <button class="ah-preview-close" id="ahPreviewClose">${icon('x', 20)}</button>
+            </div>
+            ${entry.thumbnail ? `<img class="ah-preview-img" src="${entry.thumbnail}" alt="">` : '<div style="padding:2rem;text-align:center;color:var(--text-3)">Kein Vorschaubild vorhanden</div>'}
+          </div>`;
+          document.body.appendChild(overlay);
+          const onKey = (e) => { if (e.key === 'Escape') closeOverlay(); };
+          const closeOverlay = () => { document.removeEventListener('keydown', onKey); if (overlay.parentNode) overlay.remove(); };
+          overlay.querySelector('#ahPreviewClose').addEventListener('click', closeOverlay);
+          overlay.addEventListener('click', closeOverlay);
+          document.addEventListener('keydown', onKey);
         });
       });
 
@@ -554,7 +586,7 @@ function renderAccount(profile) {
       } else {
         generations.forEach(e => {
           const date = e.createdAt?.toDate?.()?.toLocaleDateString('de-DE') || e.date || '–';
-          const info = e.mode === 'combined' ? 'Kombiniert' : `${e.itemCount || '?'} Einzelbilder`;
+          const info = e.mode === 'combined' ? 'Kombiniert' : `${e.itemCount || '?'} Einzelbild`;
           html += `<div class="data-export-item"><span class="data-export-label">${date}</span><span class="data-export-value">${info} · ${e.quality || 'mittel'}</span></div>`;
         });
       }

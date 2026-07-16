@@ -541,7 +541,7 @@
                   <select id="filterModeMobile" class="account-history-select">
                     <option value="all">Alle</option>
                     <option value="combined">Kombiniert</option>
-                    <option value="single">Einzelbilder</option>
+                    <option value="single">Einzelbild</option>
                   </select>
                 </div>
                 <div class="account-history-select-group">
@@ -572,7 +572,7 @@
                   <div class="account-history-filters" id="filterModeDesktop">
                     <button class="account-filter-badge active" data-filter="all">Alle</button>
                     <button class="account-filter-badge" data-filter="combined">Kombiniert</button>
-                    <button class="account-filter-badge" data-filter="single">Einzelbilder</button>
+                    <button class="account-filter-badge" data-filter="single">Einzelbild</button>
                   </div>
                 </div>
                 <div class="account-history-filter-group">
@@ -608,10 +608,8 @@
             </div>
             <div class="account-settings-field">
               <label for="accountNewEmail">E-Mail-Adresse ändern</label>
-              <div class="account-settings-row">
-                <input type="email" id="accountNewEmail" placeholder="neue@email.de" />
-                <button class="btn btn-sm btn-primary" id="changeEmailBtn">Ändern</button>
-              </div>
+              <input type="email" id="accountNewEmail" placeholder="neue@email.de" />
+              <button class="btn btn-sm btn-primary account-pw-btn" id="changeEmailBtn">Ändern</button>
               <div class="account-settings-message" id="emailMessage"></div>
             </div>
             <div class="account-settings-field">
@@ -637,16 +635,16 @@
                 <span class="account-mgmt-desc">Lade eine Kopie all deiner Daten inklusive Verlauf herunter.</span>
               </button>
               <button class="account-mgmt-btn account-mgmt-btn--danger" id="deleteAccountBtn">
-                <span class="account-mgmt-label">Konto löschen</span>
+                <span class="account-mgmt-label"><span data-lucide="trash-2" data-size="18"></span> Konto löschen</span>
                 <span class="account-mgmt-desc">Lösche dein Konto unwiderruflich mit all deinen Daten.</span>
+              </button>
+              <button class="account-mgmt-btn account-mgmt-btn--logout" id="accountLogoutBtn">
+                <span class="account-mgmt-label"><span data-lucide="log-out" data-size="18"></span> Abmelden</span>
+                <span class="account-mgmt-desc">Melde dich von deinem Konto ab.</span>
               </button>
             </div>
           </div>
 
-        </div>
-
-        <div class="account-logout-zone">
-          <button class="account-logout-btn" id="accountLogoutBtn">Abmelden</button>
         </div>
 
         <div class="account-placeholder hidden" id="accountPlaceholder">

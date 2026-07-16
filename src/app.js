@@ -985,7 +985,9 @@ generateBtn.addEventListener('click', async () => {
       saveSession();
       if (currentUser) {
         if (!DEV_MODE) incrementGenerationsUsed(currentUser.uid);
-        saveGeneration(currentUser.uid, { mode, quality: state.selectedQuality, itemCount: items.length, notes: state.extraNotes, imageCount: successCount });
+        const first = state.generatedImages[0];
+        const thumbnail = first?.base64 ? await createThumbnail(first.base64, first.mimeType) : null;
+        saveGeneration(currentUser.uid, { mode, quality: state.selectedQuality, itemCount: items.length, notes: state.extraNotes, imageCount: successCount, thumbnail });
       }
       addHistoryEntry(items.length, mode, successCount, state.extraNotes);
       document.getElementById('step4')?.classList.remove('hidden-zone');
@@ -1596,6 +1598,24 @@ window.addEventListener('beforeunload', (e) => {
     e.returnValue = '';
   }
 });
+
+function createThumbnail(base64, mimeType, maxW = 150) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, maxW / img.width);
+      const w = Math.round(img.width * scale);
+      const h = Math.round(img.height * scale);
+      const c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      const ctx = c.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+      resolve(c.toDataURL('image/jpeg', 0.6));
+    };
+    img.onerror = () => resolve(null);
+    img.src = base64ToDataUrl(base64, mimeType);
+  });
+}
 
 // ============ INIT ============
 

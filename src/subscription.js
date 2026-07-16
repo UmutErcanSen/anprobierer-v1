@@ -127,9 +127,17 @@ export function getMaxItemsForPlan(subscription) {
 
 export function getAllowedQualities(subscription) {
   switch (subscription) {
-    case 'pro': return ['low', 'medium', 'high'];
-    case 'basic': return ['low', 'medium', 'high'];
-    default: return ['medium'];
+    case 'pro': return ['high'];
+    case 'basic': return ['medium'];
+    default: return ['low'];
+  }
+}
+
+export function getQualityForPlan(subscription) {
+  switch (subscription) {
+    case 'pro': return 'high';
+    case 'basic': return 'medium';
+    default: return 'low';
   }
 }
 

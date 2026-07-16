@@ -1,7 +1,7 @@
 # 🗺️ ROADMAP — Virtual Try-On
 
 > Live-Tracker für Entwicklungsfortschritt
-> Zuletzt aktualisiert: 15.07.2026
+> Zuletzt aktualisiert: 16.07.2026
 
 ---
 
@@ -10,8 +10,8 @@
 | Metrik | Wert |
 |--------|------|
 | Startdatum | 15.07.2026 |
-| Aktuelle Phase | Phase 2 — Fake Stripe Checkout 🔄 in Arbeit |
-| Gesamtfortschritt | ███░░░░░░░ ~30% |
+| Aktuelle Phase | Phase 3 — Account-Seite Abo-Status ⏳ |
+| Gesamtfortschritt | ████░░░░░░ ~40% |
 
 ---
 
@@ -51,27 +51,33 @@
 - [x] Feature-Gating: Vinted-Texte nur für Basic/Pro ✅ 15.07.
 - [x] Generierungs-Limit Enforcement (client-seitig) ✅ 15.07.
 
-### Phase 2: Fake Stripe Checkout 🔄 in Arbeit
+### Phase 2: Fake Stripe Checkout ✅ Fertig
 > Ziel: Simulierter Bezahlflow für Upgrade
-> Geplant: 15.07.2026
+> Geplant: 15.07.2026 | Fertig: 16.07.2026
 
-- [ ] `src/checkout.js` — Checkout-Modal erstellen
-- [ ] Modal-HTML in `index.html` hinzufügen
-- [ ] Checkout-CSS-Styles in `styles.css`
-- [ ] Fake-Kreditkartenformular (Kartennummer, Ablaufdatum, CVC)
-- [ ] Loading-Animation + Erfolgs-Message
-- [ ] Upgrade-Callback auf `/preise`-Seite anpassen
-- [ ] Redirect zu `/account` nach erfolgreichem Upgrade
+- [x] `src/checkout.js` — Checkout-Modal mit Kreditkartenformular ✅ 15.07.
+- [x] Checkout-HTML in `index.html` + CSS-Styles ✅ 15.07.
+- [x] Fake-Kreditkartenformular (Kartennummer, Ablaufdatum, CVC) ✅ 15.07.
+- [x] Loading-Animation + Erfolgs-Message ✅ 15.07.
+- [x] Upgrade-Callback auf `/preise`-Seite angepasst ✅ 15.07.
+- [x] Redirect zu `/account` nach erfolgreichem Upgrade ✅ 15.07.
+- [x] **Qualität pro Plan**: Free→niedrig, Basic→mittel, Pro→hoch ✅ 16.07.
+- [x] **Qualitäts-Dropdown entfernt** (`#qualitySelect` gelöscht) ✅ 16.07.
+- [x] **`applyFeatureGating()`** vereinfacht (kein DOM-Gating mehr) ✅ 16.07.
+- [x] **Cost-Estimate entfernt** (irrelevant innerhalb Abo) ✅ 16.07.
+- [x] **2-Stufiger Upgrade-Flow**: Upgrade-Modal (3 Plan-Karten) → Zahlung ✅ 16.07.
+- [x] **Upgrade-Modal** mit Plan-Cards + Features + Lucide-Icons ✅ 16.07.
+- [x] **`showUpgradeModal()`** statt `openCheckout()` ✅ 16.07.
 
-### Phase 3: Account-Seite Abo-Status
+### Phase 3: Account-Seite Abo-Status 🔄 in Arbeit
 > Ziel: Abo-Informationen und Verwaltung im Profil
 > Geplant: 16.07.2026
 
-- [ ] Abo-Status Section in Account-Seite
+- [x] **Plan-Badge mit Lucide-Icons** (star/layers/crown) + Farben ✅ 16.07.
 - [ ] Aktueller Plan + Status-Anzeige
 - [ ] Nächste Abbuchung / Ablaufdatum
 - [ ] Generierungsfortschritt (Balken)
-- [ ] "Plan wechseln" Button → öffnet Checkout-Modal
+- [ ] "Plan wechseln" Button → öffnet Upgrade-Modal
 - [ ] "Abo kündigen" Button → Bestätigungs-Modal
 - [ ] Kündigungs-Modal mit Warnung
 
@@ -142,6 +148,9 @@
 ## 📝 Notizen
 
 - Free-Plan: 3 Gratis-Generierungen (nicht 5)
+- Basic-Plan: 25 Generierungen/Monat (nicht 50)
+- Qualität pro Plan fest: Free=niedrig, Basic=mittel, Pro=hoch
+- Cost-Estimate entfernt (Abrechnung läuft über Abo, nicht pro Bild)
 - Kein 7-Tage-Trial
 - BYOK (Bring Your Own Key) für OpenAI bleibt bestehen
 - Fake Stripe Checkout für Dummy-Bezahlung

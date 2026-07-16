@@ -9,17 +9,17 @@ import {
 
 import {
   OPENAI_API, IMAGE_MODEL, TEXT_MODEL, OpenAIError,
-  QUALITY_PRICES, IMAGE_SIZES, COMBINED_PROMPT,
+  IMAGE_SIZES, COMBINED_PROMPT,
   buildTryOnPrompt, buildSalePrompt, callImageEdit,
-  callChatCompletion, testApiKey, estimateCost,
+  callChatCompletion, testApiKey,
 } from './api.js';
 
 import { currentUser, userProfile, onAuthChange, requireAuth, setPendingRedirect, isEmailVerified, refreshUserProfile, logout } from './auth.js';
 import { checkGenerationAllowed, incrementGenerationsUsed, saveGeneration } from './firestore.js';
 import { PLANS, renderPlanComparison } from './plans.js';
 import { onRouteChange, getCurrentPath, navigateTo, ROUTES } from './router.js';
-import { getMaxItemsForPlan, getAllowedQualities, isVintedTextAllowed, checkAndResetMonthly } from './subscription.js';
-import { openCheckout } from './checkout.js';
+import { getMaxItemsForPlan, getQualityForPlan, checkAndResetMonthly } from './subscription.js';
+import { showUpgradeModal } from './checkout.js';
 
 const DEV_MODE = import.meta.env.VITE_DEV_MODE === 'true';
 
@@ -46,7 +46,6 @@ function saveSession() {
       generationMode: state.generationMode,
       generatedImages: state.generatedImages.map(i => ({ ...i })),
       generationDone: state.generationDone,
-      selectedQuality: state.selectedQuality,
       selectedSize: state.selectedSize,
       extraNotes: state.extraNotes,
     };
@@ -92,11 +91,8 @@ function loadSession() {
         combined?.classList.remove('selected');
       }
     }
-    if (data.selectedQuality) state.selectedQuality = data.selectedQuality;
     if (data.selectedSize) state.selectedSize = data.selectedSize;
     if (data.extraNotes !== undefined) state.extraNotes = data.extraNotes;
-    const qs = document.getElementById('qualitySelect');
-    if (qs) qs.value = state.selectedQuality;
     const ss = document.getElementById('sizeSelect');
     if (ss) ss.value = state.selectedSize;
     const en = document.getElementById('extraNotes');
@@ -232,22 +228,8 @@ function updateGenLimitWarning() {
 }
 
 function applyFeatureGating() {
-  const qualitySelect = document.getElementById('qualitySelect');
-  if (!qualitySelect) return;
   const subKey = userProfile?.subscription || 'free';
-  const allowed = getAllowedQualities(subKey);
-  qualitySelect.querySelectorAll('option').forEach(opt => {
-    if (opt.value && !allowed.includes(opt.value)) {
-      opt.disabled = true;
-      opt.textContent += ' (Basic/Pro)';
-    } else {
-      opt.disabled = false;
-    }
-  });
-  if (!allowed.includes(state.selectedQuality)) {
-    state.selectedQuality = allowed[0] || 'medium';
-    qualitySelect.value = state.selectedQuality;
-  }
+  state.selectedQuality = getQualityForPlan(subKey);
 }
 
 apiKeyInput.addEventListener('input', () => {
@@ -585,11 +567,6 @@ $('#modeCombined').addEventListener('click', () => {
   saveSession();
 });
 
-$('#qualitySelect').addEventListener('change', () => {
-  state.selectedQuality = $('#qualitySelect').value;
-  updateGenSummary();
-  saveSession();
-});
 $('#sizeSelect').addEventListener('change', () => {
   state.selectedSize = $('#sizeSelect').value;
   updateGenSummary();
@@ -605,22 +582,17 @@ if (extraNotesEl) {
 
 function updateGenSummary() {
   const totalCount = state.clothingItems.length;
-  const activeCount = totalCount === 0 ? 0 : state.generationMode === 'single' ? totalCount : 1;
   const mode = state.generationMode === 'single' ? 'Einzeln' : 'Alle zusammen';
-  const est = estimateCost(activeCount, state.generationMode, state.selectedQuality);
+  const calls = totalCount === 0 ? 0 : state.generationMode === 'single' ? totalCount : 1;
   const sizeLabel = IMAGE_SIZES[state.selectedSize] || state.selectedSize;
   const items = [
     { icon: icon('camera', 16), label: 'Kleidungsstücke', val: `${totalCount}` },
     { icon: icon('settings', 16), label: 'Modus', val: mode },
-    { icon: icon('globe', 16), label: 'API-Aufrufe', val: est.calls },
+    { icon: icon('globe', 16), label: 'API-Aufrufe', val: calls },
     { icon: icon('ruler', 16), label: 'Größe', val: sizeLabel },
   ];
   document.getElementById('genSummary').innerHTML =
     `<div class="gen-info-filled">${items.map(i => `<div class="gen-info-item"><span class="gen-info-icon">${i.icon}</span><span><strong>${i.val}</strong> <span class="gen-info-label">${i.label}</span></span></div>`).join('')}</div>`;
-
-  const costEl = document.getElementById('costEstimate');
-  costEl.classList.remove('hidden');
-  costEl.innerHTML = `<strong>${icon('wallet', 14)} Geschätzte Kosten:</strong> ${est.calls} × $${est.perImage} = <strong>~$${est.total.toFixed(3)}</strong> (Qualität: ${QUALITY_PRICES[state.selectedQuality]?.label || 'Mittel'})<br><span class="cost-hint">OpenAI hat keinen Free Tier. Dir wird der Betrag von deinem Guthaben abgezogen.</span>`;
 }
 
 // ============ GENERATE ============
@@ -818,22 +790,25 @@ generateBtn.addEventListener('click', async () => {
     showToast(`Bitte für ${missing.length} Kleidungsstück${missing.length>1?'e':''} Typ und Größe wählen.`, 'warning'); return;
   }
 
-  if (!DEV_MODE) {
-    const resetResult = await checkAndResetMonthly(currentUser?.uid);
-    if (resetResult) {
-      if (resetResult.reason === 'canceled_expired') {
-        showToast('Dein Abo ist abgelaufen. Du bist jetzt auf Free zurückgestuft.', 'warning');
-      } else {
-        showToast('Generierungs-Zähler wurde zurückgesetzt.', 'info');
-      }
-      await refreshUserProfile();
+  const resetResult = await checkAndResetMonthly(currentUser?.uid);
+  if (resetResult) {
+    if (resetResult.reason === 'canceled_expired') {
+      showToast('Dein Abo ist abgelaufen. Du bist jetzt auf Free zurückgestuft.', 'warning');
+    } else {
+      showToast('Generierungs-Zähler wurde zurückgesetzt.', 'info');
     }
-    const allowed = await checkGenerationAllowed(currentUser?.uid);
-    if (!allowed) {
-      const nextPlan = userProfile?.subscription === 'basic' ? 'pro' : 'basic';
-      openCheckout(nextPlan, 'generate');
+    await refreshUserProfile();
+  }
+  const allowed = await checkGenerationAllowed(currentUser?.uid);
+  if (!allowed) {
+    showUpgradeModal('generate');
+    if (DEV_MODE) {
+      showToast('⚠️ Limit erreicht – in DEV dennoch generiert.', 'warning');
+    } else {
       return;
     }
+  }
+  if (!DEV_MODE) {
     if (!isEmailVerified()) {
       showToast('Bitte bestätige zuerst deine E-Mail-Adresse. Prüfe dein Postfach.', 'error'); return;
     }
@@ -1006,12 +981,10 @@ generateBtn.addEventListener('click', async () => {
       state.generationDone = true;
       renderResults();
       renderZipPreview();
-      if (isVintedTextAllowed(subKey)) {
-        generateAllSaleTexts();
-      }
+      generateAllSaleTexts();
       saveSession();
-      if (!DEV_MODE && currentUser) {
-        incrementGenerationsUsed(currentUser.uid);
+      if (currentUser) {
+        if (!DEV_MODE) incrementGenerationsUsed(currentUser.uid);
         saveGeneration(currentUser.uid, { mode, quality: state.selectedQuality, itemCount: items.length, notes: state.extraNotes, imageCount: successCount });
       }
       addHistoryEntry(items.length, mode, successCount, state.extraNotes);
@@ -1476,7 +1449,6 @@ export function resetUploadUI() {
   document.getElementById('progressOverall').textContent = '';
   const zp = document.getElementById('zipPreview');
   if (zp) zp.textContent = '';
-  document.getElementById('costEstimate')?.classList.add('hidden');
   $('#modeSingle').classList.add('selected');
   $('#modeCombined').classList.remove('selected');
   state.extraNotes = '';
@@ -1673,11 +1645,11 @@ onRouteChange((path) => {
     if (pricingTable) {
       renderPlanComparison(pricingTable, userProfile?.subscription || 'free', {
         showUpgradeBtn: true,
-        onUpgrade: async (planKey) => {
+        onUpgrade: async () => {
           if (!currentUser) {
             try { await requireAuth(); } catch { return; }
           }
-          openCheckout(planKey, 'upgrade-btn');
+          showUpgradeModal('upgrade-btn');
         },
       });
     }

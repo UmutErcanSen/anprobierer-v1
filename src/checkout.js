@@ -8,11 +8,81 @@ import { icon, renderIconElements } from './icons.js';
 let pendingPlan = null;
 let checkoutSource = null;
 
-export function openCheckout(planKey, source = 'upgrade-btn') {
+const PLAN_FEATURES = {
+  free: [
+    '3 Generierungen / Monat',
+    'Niedrige Qualität',
+    '1 Kleidungsstück',
+  ],
+  basic: [
+    '25 Generierungen / Monat',
+    'Mittlere Qualität',
+    'Bis zu 5 Kleidungsstücke',
+    'Vinted-Texte',
+  ],
+  pro: [
+    'Unbegrenzte Generierungen',
+    'Hohe Qualität',
+    'Unbegrenzt Kleidungsstücke',
+    'Vinted-Texte',
+    'Premium-Support',
+  ],
+};
+
+function renderUpgradePlans(activePlan) {
+  const container = document.getElementById('upgradePlans');
+  if (!container) return;
+  container.innerHTML = Object.entries(PLANS).map(([key, p]) => {
+    const isActive = activePlan === key;
+    const iconMap = { free: 'star', basic: 'layers', pro: 'crown' };
+    return `<div class="upgrade-plan-card${isActive ? ' upgrade-plan-card--active' : ''}" data-plan="${key}">
+      <span class="upgrade-plan-icon">${icon(iconMap[key] || 'star', 28)}</span>
+      <span class="upgrade-plan-name">${p.label}</span>
+      <span class="upgrade-plan-price">${p.price}</span>
+      <span class="upgrade-plan-period">/ Monat</span>
+      <ul class="upgrade-plan-features">${PLAN_FEATURES[key]?.map(f => `<li>${icon('check', 12)} ${f}</li>`).join('') || ''}</ul>
+      ${isActive
+        ? `<button class="upgrade-plan-btn upgrade-plan-btn--muted" disabled>Aktiv</button>`
+        : `<button class="upgrade-plan-btn upgrade-plan-btn--primary" data-plan="${key}">Upgraden</button>`
+      }
+    </div>`;
+  }).join('');
+
+  container.querySelectorAll('.upgrade-plan-btn--primary').forEach(btn => {
+    btn.addEventListener('click', () => startPayment(btn.dataset.plan));
+  });
+}
+
+export function showUpgradeModal(source = 'upgrade-btn') {
+  checkoutSource = source;
+  pendingPlan = null;
+
+  const subKey = currentUser ? (userProfile?.subscription || 'free') : 'free';
+
+  const heading = document.querySelector('#upgradeModal h3');
+  const sub = document.getElementById('upgradeSub');
+  if (source === 'generate') {
+    heading.textContent = 'Limit erreicht';
+    sub.textContent = subKey === 'free'
+      ? 'Du hast alle deine Gratis-Generierungen verbraucht. Upgrade für mehr.'
+      : 'Dein monatliches Limit ist erreicht. Upgrade für unbegrenzte Generierungen.';
+  } else {
+    heading.textContent = 'Tarif auswählen';
+    sub.textContent = 'Wähle den passenden Plan für deine Bedürfnisse.';
+  }
+
+  renderUpgradePlans(subKey);
+  document.getElementById('upgradeModal').classList.add('visible');
+  document.body.style.overflow = 'hidden';
+  renderIconElements();
+}
+
+function startPayment(planKey) {
   const plan = PLANS[planKey];
   if (!plan) return;
   pendingPlan = planKey;
-  checkoutSource = source;
+
+  document.getElementById('upgradeModal').classList.remove('visible');
 
   document.getElementById('checkoutPlanName').textContent = plan.label;
   document.getElementById('checkoutPlanPrice').textContent = plan.price;
@@ -34,6 +104,7 @@ export function openCheckout(planKey, source = 'upgrade-btn') {
 
 function closeCheckout() {
   document.getElementById('checkoutModal').classList.remove('visible');
+  document.getElementById('upgradeModal').classList.remove('visible');
   document.body.style.overflow = '';
   pendingPlan = null;
 }
@@ -96,6 +167,10 @@ function initCheckout() {
   document.getElementById('checkoutModal')?.addEventListener('click', (e) => {
     if (e.target === e.currentTarget) closeCheckout();
   });
+  document.getElementById('upgradeLaterBtn')?.addEventListener('click', closeCheckout);
+  document.getElementById('upgradeModal')?.addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) closeCheckout();
+  });
 }
 
 if (document.readyState === 'loading') {
@@ -104,4 +179,4 @@ if (document.readyState === 'loading') {
   initCheckout();
 }
 
-window.openCheckout = openCheckout;
+window.showUpgradeModal = showUpgradeModal;

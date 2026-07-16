@@ -41,7 +41,7 @@ export async function incrementGenerationsUsed(uid) {
 }
 
 export async function saveGeneration(uid, data) {
-  await addDoc(collection(db, 'generations', uid), {
+  await addDoc(collection(db, 'users', uid, 'generations'), {
     ...data,
     createdAt: serverTimestamp(),
   });
@@ -49,7 +49,7 @@ export async function saveGeneration(uid, data) {
 
 export async function getUserGenerations(uid, max = 20) {
   const q = query(
-    collection(db, 'generations', uid),
+    collection(db, 'users', uid, 'generations'),
     orderBy('createdAt', 'desc'),
     limit(max),
   );
@@ -58,11 +58,11 @@ export async function getUserGenerations(uid, max = 20) {
 }
 
 export async function deleteGeneration(uid, generationId) {
-  await deleteDoc(doc(db, 'generations', uid, generationId));
+  await deleteDoc(doc(db, 'users', uid, 'generations', generationId));
 }
 
 export async function deleteUserData(uid) {
-  const genSnap = await getDocs(collection(db, 'generations', uid));
+  const genSnap = await getDocs(collection(db, 'users', uid, 'generations'));
   const batch = [];
   genSnap.forEach(d => batch.push(deleteDoc(d.ref)));
   await Promise.all(batch);

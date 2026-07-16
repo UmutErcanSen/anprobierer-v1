@@ -7,19 +7,6 @@ import { icon, renderIconElements } from './icons.js';
 
 const DEV_MODE = import.meta.env.VITE_DEV_MODE === 'true';
 
-const MOCK_HISTORY = [
-  { id: 'm1',  mode: 'combined', quality: 'hoch',    itemCount: 3, imageCount: 2, clothingType: 'T-Shirt', notes: 'T-Shirt + Jeans für Sommerlook', date: '2026-07-12' },
-  { id: 'm2',  mode: 'single',   quality: 'mittel',  itemCount: 2, imageCount: 2, clothingType: 'Kleid',   notes: 'Kleid für Hochzeit',             date: '2026-07-11' },
-  { id: 'm3',  mode: 'combined', quality: 'hoch',    itemCount: 1, imageCount: 1, clothingType: 'Bluse',   notes: 'Bluse für Bewerbungsfoto',        date: '2026-07-10' },
-  { id: 'm4',  mode: 'single',   quality: 'niedrig', itemCount: 4, imageCount: 3, clothingType: 'Outfit',  notes: 'Komplettes Outfit',               date: '2026-07-08' },
-  { id: 'm5',  mode: 'combined', quality: 'hoch',    itemCount: 2, imageCount: 2, clothingType: 'Hose',    notes: '',                               date: '2026-07-05' },
-  { id: 'm6',  mode: 'single',   quality: 'mittel',  itemCount: 1, imageCount: 1, clothingType: 'Jacke',   notes: 'Schnelltest',                    date: '2026-06-28' },
-  { id: 'm7',  mode: 'combined', quality: 'hoch',    itemCount: 3, imageCount: 2, clothingType: 'Jacke',   notes: 'Winterjacke für Vinted',         date: '2026-06-20' },
-  { id: 'm8',  mode: 'single',   quality: 'niedrig', itemCount: 2, imageCount: 1, clothingType: 'Schuhe',  notes: '',                               date: '2026-06-15' },
-  { id: 'm9',  mode: 'combined', quality: 'mittel',  itemCount: 5, imageCount: 4, clothingType: 'Outfit',  notes: 'Ganzer Schrank',                 date: '2026-06-10' },
-  { id: 'm10', mode: 'single',   quality: 'hoch',    itemCount: 1, imageCount: 1, clothingType: 'Bluse',   notes: 'Vintage Designerstück',          date: '2026-06-05' },
-];
-
 let _statsTabVisited = false;
 
 function animateCounter(elId, target, duration = 2500) {
@@ -87,7 +74,9 @@ function renderAccount(profile) {
   const sub = PLANS[subKey] || PLANS.free;
 
   if (planBadge) {
-    planBadge.innerHTML = `${sub.label} <span class="plan-badge-limit">· ${sub.limit === -1 ? '∞' : sub.limit + '/Monat'}</span>`;
+    const iconMap = { free: 'star', basic: 'layers', pro: 'crown' };
+    const planIcon = icon(iconMap[subKey] || 'star', 16);
+    planBadge.innerHTML = `${planIcon} ${sub.label} <span class="plan-badge-limit">· ${sub.limit === -1 ? '∞' : sub.limit + '/Monat'}</span>`;
     planBadge.style.setProperty('--plan-color', sub.color);
     planBadge.style.setProperty('--plan-color-dim', `${sub.color}18`);
   }
@@ -231,42 +220,54 @@ function renderAccount(profile) {
         return;
       }
 
-      historyList.innerHTML = filtered.map(e => {
+      const cardsHtml = filtered.map(e => {
         const rawDate = e.createdAt?.toDate?.() || (e.date ? new Date(e.date + 'T00:00:00') : null);
         const date = rawDate
           ? `${String(rawDate.getDate()).padStart(2,'0')}/${String(rawDate.getMonth()+1).padStart(2,'0')}/${rawDate.getFullYear()}`
           : '–';
         const modeLabel = e.mode === 'combined' ? 'Kombiniert' : 'Einzelbilder';
         const modeClass = e.mode === 'combined' ? 'combined' : 'single';
-        const qualityDot = `account-history-quality-dot--${e.quality || 'mittel'}`;
         const notes = e.notes || '';
         const hasNotes = notes.length > 0;
         const infoParts = [];
         if (e.clothingType) infoParts.push(e.clothingType);
-        if (e.itemCount) infoParts.push(`${e.itemCount} Kleidungsstück${e.itemCount > 1 ? 'e' : ''}`);
-        if (e.imageCount) infoParts.push(`${e.imageCount} Bild${e.imageCount > 1 ? 'er' : ''}`);
+        if (e.itemCount) infoParts.push(`${e.itemCount} ${e.itemCount === 1 ? 'Kleidungsstück' : 'Kleidungsstücke'}`);
+        if (e.imageCount) infoParts.push(`${e.imageCount} ${e.imageCount === 1 ? 'Bild' : 'Bilder'}`);
         const infoText = infoParts.join(' · ');
 
-        return `<div class="account-history-card account-history-card--${modeClass}">
-          <div class="account-history-top">
-            <span class="account-history-badge account-history-badge--${modeClass}">${modeLabel}</span>
-            <span class="account-history-quality-dot ${qualityDot}"></span>
-            <span class="account-history-meta">
-              <span>${date}</span>
-            </span>
+        return `<div class="ah-card ah-card--${modeClass}">
+          <div class="ah-thumb ah-thumb--${modeClass}">
+            ${icon(modeClass === 'combined' ? 'layers' : 'image', 22)}
           </div>
-          ${infoText ? `<div class="account-history-info">${infoText}</div>` : ''}
-          ${hasNotes ? `<div class="account-history-notes">„${notes}"</div>` : ''}
-          <div class="account-history-actions">
-            <button class="account-history-delete" data-id="${e.id}" title="Eintrag löschen">
-              ${icon('trash-2', 14)}
-              Löschen
-            </button>
+          <div class="ah-body">
+            <div class="ah-top">
+              <span class="ah-badge ah-badge--${modeClass}">${modeLabel}</span>
+              <span class="ah-date">${date}</span>
+            </div>
+            ${infoText ? `<div class="ah-info">${infoText}</div>` : ''}
+            ${hasNotes ? `<div class="ah-notes">"${notes}"</div>` : ''}
+            <div class="ah-actions">
+              <button class="ah-btn ah-btn--dl" data-id="${e.id}" aria-label="Herunterladen">${icon('download', 16)}</button>
+              <button class="ah-btn ah-btn--del" data-id="${e.id}" aria-label="Löschen">${icon('trash-2', 16)}</button>
+            </div>
           </div>
         </div>`;
       }).join('');
 
-      historyList.querySelectorAll('.account-history-delete').forEach(btn => {
+      historyList.innerHTML = cardsHtml + `
+        <button class="ah-new-btn" onclick="navigateTo('/anzeige-erstellen')">
+          <span class="ah-new-btn-icon">+</span>
+          Neue Anzeige erstellen
+        </button>`;
+
+      historyList.querySelectorAll('.ah-btn--dl').forEach(btn => {
+        btn.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          showToast('Download folgt in Kürze.', 'info');
+        });
+      });
+
+      historyList.querySelectorAll('.ah-btn--del').forEach(btn => {
         btn.addEventListener('click', async (ev) => {
           ev.stopPropagation();
           const id = btn.dataset.id;
@@ -370,12 +371,12 @@ function renderAccount(profile) {
     };
 
     if (DEV_MODE) {
-      loadEntries(MOCK_HISTORY);
+      loadEntries([]);
     } else {
       getUserGenerations(currentUser.uid, 50).then(entries => {
-        loadEntries(entries.length > 0 ? entries : MOCK_HISTORY);
+        loadEntries(entries || []);
       }).catch(() => {
-        loadEntries(MOCK_HISTORY);
+        loadEntries([]);
       });
     }
   }
@@ -522,7 +523,7 @@ function renderAccount(profile) {
       let generations = [];
       try {
         generations = DEV_MODE
-          ? MOCK_HISTORY
+          ? []
           : await getUserGenerations(currentUser.uid, 100);
       } catch (_) {}
 
@@ -583,7 +584,7 @@ function renderAccount(profile) {
       let generations = [];
       try {
         generations = DEV_MODE
-          ? MOCK_HISTORY
+          ? []
           : await getUserGenerations(currentUser.uid, 100);
       } catch (_) {}
 
@@ -641,10 +642,8 @@ function renderAccount(profile) {
         }
         if (tab === 'stats') {
           renderIconElements();
-          if (allEntries.length > 0) {
-            renderStats(allEntries, !_statsTabVisited);
-            _statsTabVisited = true;
-          }
+          renderStats(allEntries, !_statsTabVisited);
+          _statsTabVisited = true;
         }
       });
     });

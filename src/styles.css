@@ -340,14 +340,6 @@ header h1 a:hover{opacity:.85}
   color:var(--text);cursor:pointer;
 }
 
-.cost-estimate{
-  margin-top:1rem;padding:.75rem 1rem;
-  background:var(--surface-2);border-radius:var(--radius-sm);
-  font-size:.82rem;color:var(--text-2);
-  border-left:3px solid var(--warning);
-}
-.cost-estimate strong{color:var(--text)}
-
 .gen-progress{margin:1.5rem 0;display:flex;flex-direction:column;gap:.75rem}
 .progress-overall{font-size:.9rem;color:var(--text-2);text-align:center}
 .progress-items{display:flex;flex-direction:column;gap:.5rem}
@@ -673,27 +665,31 @@ footer{text-align:center;padding:1.5rem 1rem;color:var(--text-3);font-size:.8rem
 .account-history-stats{font-size:.78rem;color:var(--text-3);margin-bottom:.6rem;font-weight:500}
 .account-history-list{max-height:400px;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:.5rem}
 .account-history-empty{display:flex;flex-direction:column;align-items:center;gap:.6rem;padding:1.5rem 0;font-size:.82rem;color:var(--text-3)}
-.account-history-card{display:flex;flex-direction:column;gap:.35rem;padding:.65rem .75rem;background:var(--surface-2);border-radius:var(--radius-sm);border:1px solid var(--surface-3);transition:var(--transition)}
-.account-history-card--combined{border-left:3px solid var(--primary)}
-.account-history-card--single{border-left:3px solid var(--tertiary)}
-.account-history-card:hover{border-color:var(--surface-3)}
-.account-history-card--combined:hover{border-left-color:var(--primary)}
-.account-history-card--single:hover{border-left-color:var(--tertiary)}
-.account-history-top{display:flex;align-items:center;gap:.4rem;flex-wrap:wrap}
-.account-history-badge{display:inline-flex;align-items:center;gap:.25rem;padding:.15rem .45rem;border-radius:4px;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em}
-.account-history-badge--combined{background:rgba(108,99,255,.12);color:var(--primary)}
-.account-history-badge--single{background:rgba(6,182,212,.12);color:var(--tertiary)}
-.account-history-quality-dot{width:7px;height:7px;border-radius:50%;display:inline-block;flex-shrink:0}
-.account-history-quality-dot--hoch{background:var(--primary)}
-.account-history-quality-dot--mittel{background:#f59e0b}
-.account-history-quality-dot--niedrig{background:var(--text-3)}
-.account-history-meta{font-size:.75rem;color:var(--text-3);margin-left:auto;display:flex;align-items:center;gap:.5rem}
-.account-history-notes{font-size:.75rem;color:var(--text-3);font-style:italic;padding-left:.15rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
-.account-history-info{font-size:.78rem;color:var(--text-2);padding-left:.15rem}
-.account-history-delete{background:none;border:1px solid var(--error);cursor:pointer;padding:.5rem .75rem;min-height:44px;display:inline-flex;align-items:center;gap:.35rem;color:var(--error);border-radius:var(--radius-sm);transition:var(--transition);font-size:.78rem;font-weight:600}
-.account-history-delete:hover{background:rgba(239,68,68,.12);color:#f87171}
-.account-history-delete svg{width:16px;height:16px}
-.account-history-actions{display:flex;justify-content:flex-end;margin-top:.25rem}
+/* === HISTORY CARDS (modern) === */
+.ah-card{display:flex;gap:.75rem;padding:.6rem .75rem;background:var(--surface-2);border-radius:var(--radius-sm);border:1px solid var(--surface-3);transition:var(--transition);align-items:flex-start}
+.ah-card--combined{border-left:3px solid var(--primary)}
+.ah-card--single{border-left:3px solid var(--tertiary)}
+.ah-card:hover{border-color:var(--surface-3)}
+.ah-thumb{width:56px;height:56px;border-radius:10px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.ah-thumb--combined{background:linear-gradient(135deg,rgba(108,99,255,.28),rgba(108,99,255,.06));color:var(--primary)}
+.ah-thumb--single{background:linear-gradient(135deg,rgba(6,182,212,.28),rgba(6,182,212,.06));color:var(--tertiary)}
+.ah-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:.2rem}
+.ah-top{display:flex;align-items:center;gap:.4rem}
+.ah-badge{display:inline-flex;align-items:center;padding:.12rem .4rem;border-radius:4px;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;line-height:1.3}
+.ah-badge--combined{background:rgba(108,99,255,.12);color:var(--primary)}
+.ah-badge--single{background:rgba(6,182,212,.12);color:var(--tertiary)}
+.ah-date{font-size:.72rem;color:var(--text-3);margin-left:auto;white-space:nowrap}
+.ah-info{font-size:.75rem;color:var(--text-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ah-notes{font-size:.72rem;color:var(--text-3);font-style:italic;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ah-actions{display:flex;gap:.25rem;justify-content:flex-end;margin-top:.15rem}
+.ah-btn{background:none;border:none;cursor:pointer;padding:.3rem;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;color:var(--text-3);transition:var(--transition);line-height:1}
+.ah-btn:hover{background:var(--surface-3)}
+.ah-btn--del:hover{color:var(--error);background:rgba(239,68,68,.1)}
+.ah-btn--dl:hover{color:var(--primary);background:rgba(108,99,255,.1)}
+.ah-new-btn{display:flex;align-items:center;justify-content:center;gap:.5rem;padding:.85rem 1.5rem;border:none;border-radius:var(--radius-sm);font-size:.95rem;font-weight:700;color:#fff;cursor:pointer;transition:var(--transition);background:linear-gradient(135deg,var(--primary),#f43f5e);box-shadow:0 0 20px rgba(108,99,255,.25)}
+.ah-new-btn:hover{box-shadow:0 0 28px rgba(108,99,255,.4);transform:translateY(-1px)}
+.ah-new-btn:active{transform:translateY(0);box-shadow:0 0 12px rgba(108,99,255,.2)}
+.ah-new-btn-icon{font-size:1.2rem;font-weight:400;line-height:1}
 .account-placeholder{padding:2rem 0;text-align:center}
 .account-hint{font-size:.85rem;color:var(--text-3)}
 
@@ -1479,14 +1475,12 @@ header.header-compact{box-shadow:0 2px 24px rgba(0,0,0,.45)}
   .account-history-search{padding:1rem 1rem 1rem 2.75rem;font-size:1rem;min-height:52px}
   .account-history-select-row{flex-direction:column;gap:.75rem}
   .account-history-select{padding:.7rem .75rem .7rem 1rem;font-size:.95rem;min-height:48px}
-  .account-history-meta{margin-left:0}
-  .account-history-top{justify-content:flex-start}
   .account-history-list{max-height:none;overflow-y:visible}
-  .account-history-card{padding:.85rem 1rem}
-  .account-history-badge{font-size:.72rem;padding:.2rem .5rem}
-  .account-history-info{font-size:.85rem}
-  .account-history-notes{font-size:.82rem}
-  .account-history-delete{font-size:.82rem;padding:.5rem .75rem}
+  .ah-card{padding:.75rem .85rem}
+  .ah-thumb{width:48px;height:48px}
+  .ah-badge{font-size:.7rem;padding:.15rem .45rem}
+  .ah-info{font-size:.82rem}
+  .ah-notes{font-size:.78rem}
 }
 
 /* === CHECKOUT MODAL === */
@@ -1507,3 +1501,26 @@ header.header-compact{box-shadow:0 2px 24px rgba(0,0,0,.45)}
 .checkout-spinner{width:28px;height:28px;border:3px solid var(--surface-3);border-top-color:var(--primary);border-radius:50%;animation:checkout-spin .7s linear infinite}
 @keyframes checkout-spin{to{transform:rotate(360deg)}}
 .checkout-success{display:flex;flex-direction:column;align-items:center;gap:.5rem;padding:1.5rem 0;font-size:1.1rem;font-weight:700;color:var(--text)}
+
+/* === UPGRADE MODAL === */
+.upgrade-content{max-width:600px}
+.upgrade-content h3{font-size:1.2rem;text-align:center;margin-bottom:.25rem}
+.upgrade-sub{text-align:center;font-size:.88rem;color:var(--text-3);margin-bottom:1.25rem}
+.upgrade-plans{display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;margin-bottom:1rem}
+.upgrade-plan-card{display:flex;flex-direction:column;align-items:center;gap:.4rem;padding:1rem .75rem;border-radius:16px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.07);text-align:center;transition:transform .2s,box-shadow .2s}
+.upgrade-plan-card:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(0,0,0,.15)}
+.upgrade-plan-card--active{background:rgba(108,99,255,.1);border-color:var(--primary)}
+.upgrade-plan-icon{color:var(--text-3)}
+.upgrade-plan-name{font-size:.9rem;font-weight:700;color:var(--text)}
+.upgrade-plan-price{font-size:1.5rem;font-weight:800;color:var(--text)}
+.upgrade-plan-period{font-size:.7rem;color:var(--text-3)}
+.upgrade-plan-features{list-style:none;padding:0;margin:.25rem 0;display:flex;flex-direction:column;gap:.2rem;width:100%}
+.upgrade-plan-features li{font-size:.72rem;color:var(--text-2);display:flex;align-items:center;gap:.25rem;justify-content:center}
+.upgrade-plan-btn{margin-top:auto;width:100%;padding:.5rem;border-radius:var(--radius-sm);font-size:.8rem;font-weight:600;cursor:pointer;border:none;transition:var(--transition)}
+.upgrade-plan-btn--primary{background:var(--primary);color:#fff}
+.upgrade-plan-btn--primary:hover{filter:brightness(1.1)}
+.upgrade-plan-btn--muted{background:var(--surface-2);color:var(--text-3);cursor:default}
+
+@media(max-width:600px){
+  .upgrade-plans{grid-template-columns:1fr;max-width:320px;margin:0 auto 1rem}
+}

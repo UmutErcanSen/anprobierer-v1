@@ -495,14 +495,14 @@
               </div>
               <div class="account-donut-label" id="accountDonutLabel">0 von 5 Gratis-Generierungen</div>
               <div class="account-upgrade-banner hidden" id="accountUpgradeBanner">
-                <div class="account-upgrade-banner-inner">
-                  <span data-lucide="zap" data-size="18"></span>
-                  <div class="account-upgrade-banner-text">
-                    <strong>Limit erreicht</strong>
-                    <span>Upgrade für mehr Generierungen pro Monat.</span>
+                  <div class="account-upgrade-banner-inner">
+                    <span data-lucide="zap" data-size="18"></span>
+                    <div class="account-upgrade-banner-text">
+                      <strong id="bannerTitle">Limit erreicht</strong>
+                      <span id="bannerDesc">Upgrade für mehr Generierungen pro Monat.</span>
+                    </div>
+                    <button class="btn btn-primary btn-sm" onclick="showUpgradeModal('account')">Upgraden</button>
                   </div>
-                  <button class="btn btn-primary btn-sm" onclick="showUpgradeModal('account')">Upgraden</button>
-                </div>
               </div>
             </div>
             <div class="account-tab-content" id="tabStats">

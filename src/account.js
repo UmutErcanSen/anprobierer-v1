@@ -141,6 +141,26 @@ function renderAccount(profile) {
     }
   }
 
+  const continueCard = document.getElementById('accountContinueCard');
+  if (continueCard) {
+    try {
+      const raw = localStorage.getItem('vto_session');
+      if (raw) {
+        const session = JSON.parse(raw);
+        if (session.personPhoto) {
+          continueCard.classList.remove('hidden');
+          const count = session.clothingItems?.length || 0;
+          const iconEl = continueCard.querySelector('.account-continue-icon');
+          if (iconEl) iconEl.innerHTML = icon('play', 28);
+          const btn = continueCard.querySelector('#accountContinueBtn');
+          if (btn) {
+            btn.onclick = () => navigateTo('/anzeige-erstellen');
+          }
+        }
+      }
+    } catch (_) {}
+  }
+
   const historyStats = document.getElementById('accountHistoryStats');
   if (historyList && currentUser) {
     let allEntries = [];

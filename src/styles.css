@@ -659,6 +659,15 @@ footer{text-align:center;padding:1.5rem 1rem;color:var(--text-3);font-size:.8rem
 .as-label{color:var(--text-3)}
 .as-value{font-weight:600;color:var(--text)}
 .as-actions{display:flex;gap:.5rem;margin-top:1rem;flex-wrap:wrap}
+.account-continue-card{background:var(--surface);border:1px solid var(--surface-2);border-radius:var(--radius);padding:1.25rem 1.5rem;grid-column:1/-1}
+.account-continue-inner{display:flex;align-items:center;gap:1rem}
+.account-continue-icon{flex-shrink:0;width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(108,99,255,.15),rgba(108,99,255,.06));color:var(--primary)}
+.account-continue-icon svg{width:24px;height:24px}
+.account-continue-text{flex:1;min-width:0}
+.account-continue-text strong{font-size:.9rem;color:var(--text);display:block}
+.account-continue-text span{font-size:.8rem;color:var(--text-3);display:block;margin-top:.15rem}
+.account-continue-inner .btn{flex-shrink:0}
+@media(max-width:500px){.account-continue-inner{gap:.65rem;flex-wrap:wrap}.account-continue-inner .btn{width:100%}}
 .cancel-content{max-width:420px}
 .cancel-content h3{display:flex;align-items:center;gap:.4rem}
 .cancel-content p{font-size:.88rem;color:var(--text-2);line-height:1.5;margin-bottom:.5rem}

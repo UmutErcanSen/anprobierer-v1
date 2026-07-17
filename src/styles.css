@@ -1584,10 +1584,20 @@ header.header-compact{box-shadow:0 2px 24px rgba(0,0,0,.45)}
 .upgrade-plan-btn--muted{background:var(--surface-2);color:var(--text-3);cursor:default}
 
 @media(max-width:600px){
-  .upgrade-plans{grid-template-columns:1fr;margin:0 0 1.25rem}
-  .upgrade-plan-card{padding:1.1rem .75rem}
-  .upgrade-content{max-width:95vw}
-  .upgrade-content .confirm-modal-actions{margin-top:0}
+  .upgrade-content{padding:1.25rem 1rem;max-width:95vw;max-height:88vh;overflow-y:auto}
+  .upgrade-content h3{font-size:1.1rem;margin-bottom:0}
+  .upgrade-sub{font-size:.82rem;margin-bottom:.75rem}
+  .upgrade-plans{grid-template-columns:1fr;margin:0 0 .75rem}
+  .upgrade-plan-card{padding:.85rem .6rem;gap:.35rem}
+  .upgrade-plan-icon svg{width:22px;height:22px}
+  .upgrade-plan-name{font-size:.85rem}
+  .upgrade-plan-price{font-size:1.35rem}
+  .upgrade-plan-period{font-size:.68rem}
+  .upgrade-plan-features{gap:.2rem}
+  .upgrade-plan-features li{font-size:.7rem}
+  .upgrade-plan-btn{padding:.5rem;font-size:.78rem}
+  .upgrade-content .confirm-modal-actions{margin-top:0;position:sticky;bottom:-.25rem;background:var(--surface);padding:.5rem 0 0}
+  .confirm-modal{padding:.5rem}
   .checkout-content{max-width:95vw}
 }
 

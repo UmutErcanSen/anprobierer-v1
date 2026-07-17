@@ -1127,6 +1127,7 @@ function renderResults() {
         <img src="${base64ToDataUrl(img.base64, img.mimeType)}" alt="${escapeHtml(img.name)}">
         <div class="result-card-actions">
           <button class="btn btn-sm btn-primary download-btn">${icon('download', 14)} Herunterladen</button>
+          <button class="btn btn-sm btn-outline refresh-btn">${icon('refresh-cw', 14)} Neu</button>
         </div>
         <div class="result-sale-text${img.saleText ? '' : ' generating'}">
           <div class="sale-text-content"></div>
@@ -1141,7 +1142,7 @@ function renderResults() {
     bodyImg.addEventListener('click', () => openLightbox(img, idx));
     card.querySelector('.download-btn').addEventListener('click', () => downloadSingleImage(idx));
     card.querySelector('.result-card-header').addEventListener('click', (e) => {
-      if (e.target.closest('.download-btn') || e.target.closest('.copy-text-btn')) return;
+      if (e.target.closest('.download-btn') || e.target.closest('.copy-text-btn') || e.target.closest('.refresh-btn') || e.target.closest('.retry-text-btn')) return;
       card.classList.toggle('collapsed');
     });
     if (img.saleText) {
@@ -1152,7 +1153,13 @@ function renderResults() {
       copyBtn.innerHTML = `${icon('copy', 14)} Kopieren`;
       copyBtn.addEventListener('click', () => copySaleText(idx));
       card.querySelector('.result-sale-text').appendChild(copyBtn);
+      const retryTextBtn = document.createElement('button');
+      retryTextBtn.className = 'btn btn-sm btn-outline retry-text-btn';
+      retryTextBtn.innerHTML = `${icon('refresh-cw', 12)} Neu`;
+      retryTextBtn.addEventListener('click', () => regenerateSaleText(idx));
+      card.querySelector('.result-sale-text').appendChild(retryTextBtn);
     }
+    card.querySelector('.refresh-btn')?.addEventListener('click', () => regenerateImage(idx));
   });
 }
 
@@ -1238,6 +1245,102 @@ function copySaleText(idx) {
   }).catch(() => {
     showToast('Kopieren fehlgeschlagen.', 'error');
   });
+}
+
+async function regenerateImage(idx) {
+  if (!currentUser) return;
+  const allowed = await checkGenerationAllowed(currentUser.uid, userProfile?.subscription);
+  if (!allowed) {
+    showUpgradeModal('generate');
+    return;
+  }
+  if (!confirm('Eine erneute Generierung verbraucht 1 deiner monatlichen Generierungen. Fortfahren?')) return;
+
+  const img = state.generatedImages[idx];
+  if (!img) return;
+  const isCombined = state.generationMode === 'combined';
+  const item = isCombined ? null : state.clothingItems[idx];
+  const items = isCombined ? state.clothingItems : (item ? [item] : []);
+  if (!items.length) { showToast('Keine Kleidungsstücke für die Regeneration gefunden.', 'error'); return }
+  const prompt = isCombined
+    ? COMBINED_PROMPT + (state.extraNotes ? `\n\nZusätzliche Anweisungen des Nutzers: ${state.extraNotes}` : '')
+    : buildTryOnPrompt(item.type, item.size, state.extraNotes);
+
+  const card = document.querySelector(`.result-card[data-idx="${idx}"]`);
+  const btn = card?.querySelector('.refresh-btn');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>'; }
+
+  try {
+    const data = await callImageEdit({
+      personPhoto: state.personPhoto,
+      clothingItems: items,
+      prompt,
+      apiKey: state.apiKey,
+      size: state.selectedSize,
+      quality: state.selectedQuality,
+    });
+    const newData = data.data?.[0];
+    if (!newData?.b64_json) throw new Error('Keine Bilddaten in der API-Antwort.');
+
+    img.base64 = newData.b64_json;
+    img.mimeType = 'image/png';
+    img.saleText = '';
+
+    await incrementGenerationsUsed(currentUser.uid);
+    if (userProfile) userProfile.generationsUsed = (userProfile.generationsUsed || 0) + 1;
+    updateGenRemaining();
+    updateGenLimitWarning();
+
+    renderResults();
+    saveSession();
+    showToast('Bild neu generiert.', 'success');
+  } catch (err) {
+    if (err instanceof OpenAIError && err.type === 'insufficient_quota') {
+      showToast('OpenAI-Guthaben aufgebraucht.', 'error');
+    } else if (err instanceof OpenAIError && (err.status === 401 || err.status === 403)) {
+      showToast('API-Key ungültig.', 'error');
+    } else if (err.name === 'AbortError' || err.name === 'TimeoutError') {
+      showToast('Zeitüberschreitung.', 'warning');
+    } else {
+      showToast('Fehler: ' + (err.message?.slice(0, 80) || 'Bitte versuche es erneut.'), 'error');
+    }
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = `${icon('refresh-cw', 14)} Neu`; }
+  }
+}
+
+async function regenerateSaleText(idx) {
+  const img = state.generatedImages[idx];
+  if (!img) return;
+  const card = document.querySelector(`.result-card[data-idx="${idx}"]`);
+  const textArea = card?.querySelector('.result-sale-text');
+  if (!textArea) return;
+
+  img.saleText = '';
+  textArea.classList.add('generating');
+  textArea.innerHTML = '<span class="spinner"></span> Generiere Verkaufstext...';
+
+  try {
+    const text = await generateSaleTextForImage(img);
+    img.saleText = text || '';
+    textArea.classList.remove('generating');
+    textArea.innerHTML = `<div class="sale-text-content">${escapeHtml(img.saleText)}</div>`;
+    const copyBtn = document.createElement('button');
+    copyBtn.className = 'btn btn-sm btn-secondary copy-text-btn';
+    copyBtn.innerHTML = `${icon('copy', 14)} Kopieren`;
+    copyBtn.addEventListener('click', () => copySaleText(idx));
+    textArea.appendChild(copyBtn);
+    const retryBtn = document.createElement('button');
+    retryBtn.className = 'btn btn-sm btn-outline retry-text-btn';
+    retryBtn.innerHTML = `${icon('refresh-cw', 12)} Neu`;
+    retryBtn.addEventListener('click', () => regenerateSaleText(idx));
+    textArea.appendChild(retryBtn);
+    addLog(`Verkaufstext für "${img.clothingName}" neu generiert.`, 'success');
+    saveSession();
+  } catch (err) {
+    textArea.classList.remove('generating');
+    textArea.innerHTML = `<span class="gen-error-msg">${icon('x-circle', 12)} Fehler: ${escapeHtml(err.message?.slice(0, 60) || 'Unbekannter Fehler')}</span>`;
+  }
 }
 
 async function downloadAllAsZip(title) {
@@ -1775,3 +1878,53 @@ onAuthChange((user, profile) => {
     updateGenLimitWarning();
   }
 });
+
+// ============ THEME TOGGLE ============
+
+const THEME_KEY = 'vto_theme';
+
+function getPreferredTheme() {
+  const stored = localStorage.getItem(THEME_KEY);
+  if (stored === 'dark' || stored === 'light') return stored;
+  return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+}
+
+function applyTheme(theme) {
+  const html = document.documentElement;
+  if (theme === 'system') {
+    const prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+    html.setAttribute('data-theme', prefersLight ? 'light' : 'dark');
+    localStorage.setItem(THEME_KEY, 'system');
+  } else {
+    html.setAttribute('data-theme', theme);
+    localStorage.setItem(THEME_KEY, theme);
+  }
+  updateThemeIcon();
+}
+
+function toggleTheme() {
+  const html = document.documentElement;
+  const current = html.getAttribute('data-theme') || 'dark';
+  applyTheme(current === 'light' ? 'dark' : 'light');
+}
+
+function updateThemeIcon() {
+  const html = document.documentElement;
+  const isLight = html.getAttribute('data-theme') === 'light';
+  const iconEl = document.getElementById('themeIcon');
+  if (iconEl) {
+    iconEl.outerHTML = icon(isLight ? 'moon' : 'sun', 16);
+  }
+}
+
+function initTheme() {
+  applyTheme(getPreferredTheme());
+  window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => {
+    const stored = localStorage.getItem(THEME_KEY);
+    if (stored === 'system' || !stored) applyTheme('system');
+  });
+}
+
+document.addEventListener('DOMContentLoaded', initTheme);
+window.toggleTheme = toggleTheme;
+window.applyTheme = applyTheme;

@@ -17,6 +17,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
     <script>if(location.pathname==='/account')document.documentElement.id='account-route';else if(location.pathname==='/anzeige-erstellen')document.documentElement.id='create-route'</script>
+    <script>(function(){const t=localStorage.getItem('vto_theme');if(t==='light'){document.documentElement.setAttribute('data-theme','light')}else if(t==='dark'){document.documentElement.setAttribute('data-theme','dark')}else if(window.matchMedia('(prefers-color-scheme: light)').matches){document.documentElement.setAttribute('data-theme','light')}})();</script>
   </head>
   <body>
     <!-- Login Overlay (visible when not authenticated) -->
@@ -83,6 +84,9 @@
         <div class="header-btn-group">
           <button class="settings-btn" id="userBtn" onclick="navigateTo('/account')">
             <span data-lucide="user" data-size="18"></span>
+          </button>
+          <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Design umschalten">
+            <span id="themeIcon"><span data-lucide="sun" data-size="16"></span></span>
           </button>
           <div class="burger-wrapper">
             <button class="burger-btn" id="burgerBtn" onclick="toggleBurgerMenu()">
@@ -797,6 +801,7 @@
         <h2><span data-lucide="settings" data-size="18"></span> Einstellungen</h2>
         <div class="settings-tabs">
           <button class="settings-tab active" data-panel="api">API-Key</button>
+          <button class="settings-tab" data-panel="design">Design</button>
           <button class="settings-tab" data-panel="about">Über</button>
         </div>
         <div class="settings-panel visible" data-panel="api">
@@ -815,6 +820,15 @@
             Key unter <a href="https://platform.openai.com/api-keys" target="_blank">platform.openai.com/api-keys</a>
             · Guthaben erforderlich · Key liegt nur in deinem localStorage
           </p>
+        </div>
+        <div class="settings-panel" data-panel="design">
+          <label style="font-size:.95rem;font-weight:600;margin-bottom:.25rem;display:block">Farbschema</label>
+          <p style="font-size:.8rem;color:var(--text-2);margin-bottom:.4rem">Wähle dein bevorzugtes Design.</p>
+          <div class="theme-options">
+            <button class="theme-option" data-theme-val="dark" onclick="applyTheme('dark')"><span data-lucide="moon" data-size="14"></span> Dunkel</button>
+            <button class="theme-option" data-theme-val="light" onclick="applyTheme('light')"><span data-lucide="sun" data-size="14"></span> Hell</button>
+            <button class="theme-option" data-theme-val="system" onclick="applyTheme('system')"><span data-lucide="monitor" data-size="14"></span> System</button>
+          </div>
         </div>
         <div class="settings-panel" data-panel="about">
           <p class="about-text about-text--mb"><span data-lucide="sparkles" data-size="14"></span> <strong>Virtual Try-On</strong> nutzt <strong>OpenAI GPT Image 2</strong> für fotorealistische Anprobebilder und <strong>GPT-4o-mini</strong> für Vinted-Verkaufstexte.</p>

@@ -10,8 +10,8 @@
 | Metrik | Wert |
 |--------|------|
 | Startdatum | 15.07.2026 |
-| Aktuelle Phase | Phase 6 — E-Mail-Vorlagen |
-| Gesamtfortschritt | ████████░░ ~80% |
+| Aktuelle Phase | Phase 10–12 — Regenerieren & Design |
+| Gesamtfortschritt | █████████░ ~90% |
 
 ---
 
@@ -53,6 +53,10 @@
 | Console.logs entfernt (9 Stück) | Fertig | 17.07. |
 | SEO & Meta (OG/Twitter-Tags, Favicon, robots.txt, sitemap.xml) | Fertig | 17.07. |
 | beforeunload-Popup entfernt | Fertig | 17.07. |
+| Per-Image Regenerieren (Limit-Check + Warning + max 3x) | Fertig | 17.07. |
+| Per-Text Regenerieren (free, unlimited) | Fertig | 17.07. |
+| Light/Dark Mode Toggle (Header + Settings, localStorage persist) | Fertig | 17.07. |
+| Flicker-Protection Script in <head> | Fertig | 17.07. |
 
 ---
 
@@ -132,7 +136,40 @@
 - [x] Toast: Kündigung zurückgenommen (in account.js)
 - [x] Banner-Varianten: `banner-shimmer-warning` / `banner-shimmer-danger`
 
-### Phase 6: E-Mail-Vorlagen 🔄
+### Phase 10: Per-Image Regenerieren ✅ Fertig
+> Ziel: Einzelbild-Regeneration mit Limit-Warnung
+> Geplant: 17.07.2026 | Fertig: 17.07.2026
+
+- [x] `regenerateImage(idx)` in app.js – async, API-Call, Limit-Inkrement, DOM-Update
+- [x] `incrementGenerationsUsed()` aufrufen bei jeder Regeneration
+- [x] Warnung via `confirm()` vor Verbrauch
+- [x] Refresh-Button in `.result-card-actions`
+- [x] Loading-Spinner auf Button, deaktiviert während API-Call
+- [x] Fehlerbehandlung (Quota, Auth/403, Timeout)
+
+### Phase 11: Per-Text Regenerieren ✅ Fertig
+> Ziel: Verkaufstext-Regeneration ohne Limit-Verbrauch
+> Geplant: 17.07.2026 | Fertig: 17.07.2026
+
+- [x] `regenerateSaleText(idx)` in app.js – free, unlimited
+- [x] Ruft `generateSaleTextForImage()` direkt auf
+- [x] DOM-Update in-place (kein vollständiges Re-Render)
+- [x] Retry-Button neben Copy-Button im `.result-sale-text`
+- [x] Loading-Status + Fehleranzeige
+
+### Phase 12: Light/Dark Mode ✅ Fertig
+> Ziel: Theme-Umschalter mit localStorage-Persistenz
+> Geplant: 17.07.2026 | Fertig: 17.07.2026
+
+- [x] `[data-theme="light"]` CSS-Block mit überschriebenen `:root`-Variablen
+- [x] Flicker-Protection Script in `<head>` (vor Render)
+- [x] Theme-Toggle-Button in Header (zwischen User-Icon und Burger)
+- [x] 3 Optionen im Settings-Modal (Dunkel/Hell/System)
+- [x] `localStorage('vto_theme')` + `matchMedia('prefers-color-scheme')` Fallback
+- [x] `toggleTheme()`, `applyTheme()`, `updateThemeIcon()` Funktionen
+- [x] System-Theme-Change-Listener für Live-Wechsel
+
+### Phase 13: E-Mail-Vorlagen 🔄
 > Ziel: HTML-Vorlagen für späteren Versand
 > Geplant: 17.07.2026
 
@@ -200,5 +237,6 @@
 15.07. Phase 1+2:     Abo-System + Checkout
 16.07. Phase 2+3:     Checkout-Fixes, History-Redesign, Firestore-Fixes, Donut-Visualisierung, Abo-Verwaltung (begonnen)
 17.07. Phase 4+5+8:   Abo-Verwaltung (fertig), Benachrichtigungen, SEO & Meta
-18.07. Phase 6+7:     E-Mail-Vorlagen + Security Rules
+17.07. Phase 10+11+12: Bild-Regenerieren, Text-Regenerieren, Light/Dark Mode
+18.07. Phase 13+14:   E-Mail-Vorlagen + Security Rules
 ```

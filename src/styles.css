@@ -663,6 +663,7 @@ footer{text-align:center;padding:1.5rem 1rem;color:var(--text-3);font-size:.8rem
 .cancel-content h3{display:flex;align-items:center;gap:.4rem}
 .cancel-content p{font-size:.88rem;color:var(--text-2);line-height:1.5;margin-bottom:.5rem}
 .cancel-warning{font-size:.82rem!important;color:#f59e0b!important;background:rgba(245,158,11,.08);padding:.6rem .85rem;border-radius:var(--radius-sm)}
+@media(max-width:480px){.cancel-content{max-width:90vw}}
 .account-tabs{display:flex;gap:0;border-bottom:1px solid var(--surface-2);margin:-1.25rem -1.5rem .75rem}
 .account-tab{flex:1;display:flex;align-items:center;justify-content:center;gap:.4rem;padding:.75rem .5rem;background:none;border:none;color:var(--text-3);font-size:.84rem;font-weight:600;cursor:pointer;transition:var(--transition);position:relative;border-bottom:2px solid transparent}
 .account-tab:hover{color:var(--text);background:var(--surface-2)}

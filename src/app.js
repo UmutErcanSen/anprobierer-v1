@@ -1064,7 +1064,6 @@ generateBtn.addEventListener('click', async () => {
     const resultMsg = successCount > 0
       ? `${icon('check-circle', 12)} ${successCount}/${totalCalls} Bilder erfolgreich`
       : `${icon('x-circle', 12)} Alle Generierungen fehlgeschlagen.`;
-    document.getElementById('progressOverall').textContent = resultMsg;
     addLog(resultMsg, successCount > 0 ? 'success' : 'error');
 
     if (successCount > 0) {
@@ -1153,12 +1152,12 @@ function renderResults() {
       copyBtn.innerHTML = `${icon('copy', 14)} Kopieren`;
       copyBtn.addEventListener('click', () => copySaleText(idx));
       card.querySelector('.result-sale-text').appendChild(copyBtn);
-      const retryTextBtn = document.createElement('button');
-      retryTextBtn.className = 'btn btn-sm btn-outline retry-text-btn';
-      retryTextBtn.innerHTML = `${icon('refresh-cw', 12)} Neu`;
-      retryTextBtn.addEventListener('click', () => regenerateSaleText(idx));
-      card.querySelector('.result-sale-text').appendChild(retryTextBtn);
     }
+    const retryTextBtn = document.createElement('button');
+    retryTextBtn.className = 'btn btn-sm btn-outline retry-text-btn';
+    retryTextBtn.innerHTML = `${icon('rotate-ccw', 12)} Neu`;
+    retryTextBtn.addEventListener('click', () => regenerateSaleText(idx));
+    card.querySelector('.result-sale-text').appendChild(retryTextBtn);
     card.querySelector('.refresh-btn')?.addEventListener('click', () => regenerateImage(idx));
   });
 }
@@ -1188,9 +1187,14 @@ async function generateAllSaleTexts() {
         textArea.appendChild(pre);
         const copyBtn = document.createElement('button');
         copyBtn.className = 'btn btn-sm btn-secondary copy-text-btn';
-copyBtn.innerHTML = `${icon('copy', 14)} Kopieren`;
+        copyBtn.innerHTML = `${icon('copy', 14)} Kopieren`;
         copyBtn.addEventListener('click', () => copySaleText(i));
         textArea.appendChild(copyBtn);
+        const retryBtn = document.createElement('button');
+        retryBtn.className = 'btn btn-sm btn-outline retry-text-btn';
+        retryBtn.innerHTML = `${icon('rotate-ccw', 12)} Neu`;
+        retryBtn.addEventListener('click', () => regenerateSaleText(i));
+        textArea.appendChild(retryBtn);
         addLog(`${icon('check-circle', 12)} Verkaufstext für "${img.clothingName}" generiert`, 'success');
       }
     } catch (err) {
@@ -1254,7 +1258,27 @@ async function regenerateImage(idx) {
     showUpgradeModal('generate');
     return;
   }
-  if (!confirm('Eine erneute Generierung verbraucht 1 deiner monatlichen Generierungen. Fortfahren?')) return;
+  const confirmed = await new Promise(resolve => {
+    const overlay = document.createElement('div');
+    overlay.className = 'confirm-modal visible';
+    overlay.style.zIndex = '10002';
+    overlay.innerHTML = `<div class="confirm-modal-content regenerate-modal" onclick="event.stopPropagation()">
+      <button class="modal-close-x" onclick="this.closest('.confirm-modal').remove()">&times;</button>
+      <h3>${icon('refresh-cw', 20)} Bild neu generieren</h3>
+      <p>Eine erneute Generierung verbraucht <strong>1 deiner monatlichen Generierungen</strong>.</p>
+      <p class="regenerate-modal-hint">Möchtest du fortfahren?</p>
+      <div class="confirm-modal-actions">
+        <button class="btn btn-outline btn-sm" id="regModalCancel">Abbrechen</button>
+        <button class="btn btn-primary btn-sm" id="regModalConfirm">${icon('refresh-cw', 14)} Neu generieren</button>
+      </div>
+    </div>`;
+    document.body.appendChild(overlay);
+    document.getElementById('regModalCancel').addEventListener('click', () => { overlay.remove(); resolve(false); });
+    document.getElementById('regModalConfirm').addEventListener('click', () => { overlay.remove(); resolve(true); });
+    overlay.addEventListener('click', () => { overlay.remove(); resolve(false); });
+    overlay.querySelector('.confirm-modal-content').addEventListener('click', e => e.stopPropagation());
+  });
+  if (!confirmed) return;
 
   const img = state.generatedImages[idx];
   if (!img) return;
@@ -1340,6 +1364,11 @@ async function regenerateSaleText(idx) {
   } catch (err) {
     textArea.classList.remove('generating');
     textArea.innerHTML = `<span class="gen-error-msg">${icon('x-circle', 12)} Fehler: ${escapeHtml(err.message?.slice(0, 60) || 'Unbekannter Fehler')}</span>`;
+    const retryBtn = document.createElement('button');
+    retryBtn.className = 'btn btn-sm btn-outline retry-text-btn';
+    retryBtn.innerHTML = `${icon('rotate-ccw', 12)} Wiederholen`;
+    retryBtn.addEventListener('click', () => regenerateSaleText(idx));
+    textArea.appendChild(retryBtn);
   }
 }
 
@@ -1912,9 +1941,9 @@ function updateThemeIcon() {
   const html = document.documentElement;
   const isLight = html.getAttribute('data-theme') === 'light';
   const iconEl = document.getElementById('themeIcon');
-  if (iconEl) {
-    iconEl.outerHTML = icon(isLight ? 'moon' : 'sun', 16);
-  }
+  if (iconEl) iconEl.innerHTML = icon(isLight ? 'moon' : 'sun', 16);
+  const burgerIcon = document.getElementById('burgerThemeIcon');
+  if (burgerIcon) burgerIcon.innerHTML = icon(isLight ? 'moon' : 'sun', 14);
 }
 
 function initTheme() {

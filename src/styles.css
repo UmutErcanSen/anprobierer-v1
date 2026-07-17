@@ -645,6 +645,11 @@ footer{text-align:center;padding:1.5rem 1rem;color:var(--text-3);font-size:.8rem
 .account-plan-badge{display:inline-flex;align-items:center;gap:.35rem;padding:.35rem .85rem;border-radius:999px;font-size:.85rem;font-weight:700;border:1px solid var(--plan-color,#71717a);background:var(--plan-color-dim,rgba(113,113,122,.1));color:var(--plan-color,#71717a);cursor:pointer;transition:var(--transition)}
 .account-plan-badge:hover{filter:brightness(1.2);transform:scale(1.05);box-shadow:0 2px 12px rgba(108,99,255,.3)}
 .account-plan-badge:hover::after{opacity:1;transform:translateX(2px)}
+.account-plan-badge--pro{position:relative;overflow:hidden;background:rgba(245,158,11,.08);border-color:rgba(245,158,11,.35);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);animation:pro-glow 4s ease-in-out infinite}
+.account-plan-badge--pro::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent 0%,rgba(245,158,11,.18) 50%,transparent 100%);animation:pro-shimmer 3.5s ease-in-out infinite;pointer-events:none;border-radius:inherit}
+.account-plan-badge--pro:hover{box-shadow:0 2px 16px rgba(245,158,11,.35)}
+@keyframes pro-shimmer{0%{transform:translateX(-120%)}50%{transform:translateX(120%)}100%{transform:translateX(-120%)}}
+@keyframes pro-glow{0%,100%{box-shadow:0 0 6px 2px rgba(245,158,11,.08)}50%{box-shadow:0 0 14px 5px rgba(245,158,11,.2)}}
 .plan-badge-limit{font-weight:400;opacity:.7;font-size:.78rem}
 .account-card--merged{grid-column:1/-1}
 .account-card--subscription{background:var(--surface);border:1px solid var(--surface-2);border-radius:var(--radius);padding:1.25rem 1.5rem;grid-column:1/-1}

@@ -80,6 +80,7 @@ function renderAccount(profile) {
     planBadge.innerHTML = `${planIcon} ${sub.label} <span class="plan-badge-limit">· ${sub.limit === -1 ? '∞' : sub.limit + '/Monat'}</span>`;
     planBadge.style.setProperty('--plan-color', sub.color);
     planBadge.style.setProperty('--plan-color-dim', `${sub.color}18`);
+    planBadge.classList.toggle('account-plan-badge--pro', subKey === 'pro');
   }
 
   const used = profile.generationsUsed || 0;

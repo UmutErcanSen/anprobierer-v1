@@ -300,7 +300,7 @@ function renderAccount(profile) {
               <h3>Anzeigenvorschau</h3>
               <button class="ah-preview-close" id="ahPreviewClose">${icon('x', 20)}</button>
             </div>
-            ${entry.thumbnail ? `<img class="ah-preview-img" src="${entry.thumbnail}" alt="">` : '<div style="padding:2rem;text-align:center;color:var(--text-3)">Kein Vorschaubild vorhanden</div>'}
+            ${entry.previewImage || entry.thumbnail ? `<img class="ah-preview-img" src="${entry.previewImage || entry.thumbnail}" alt="">` : '<div style="padding:2rem;text-align:center;color:var(--text-3)">Kein Vorschaubild vorhanden</div>'}
           </div>`;
           document.body.appendChild(overlay);
           const onKey = (e) => { if (e.key === 'Escape') closeOverlay(); };

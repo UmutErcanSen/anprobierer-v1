@@ -1082,7 +1082,8 @@ generateBtn.addEventListener('click', async () => {
         updateGenLimitWarning();
         const first = state.generatedImages[0];
         const thumbnail = first?.base64 ? await createThumbnail(first.base64, first.mimeType) : null;
-        saveGeneration(currentUser.uid, { mode, quality: state.selectedQuality, itemCount: items.length, notes: state.extraNotes, imageCount: successCount, thumbnail });
+        const previewImage = first?.base64 ? await createThumbnail(first.base64, first.mimeType, 600) : null;
+        saveGeneration(currentUser.uid, { mode, quality: state.selectedQuality, itemCount: items.length, notes: state.extraNotes, imageCount: successCount, thumbnail, previewImage });
       }
       addHistoryEntry(items.length, mode, successCount, state.extraNotes);
       document.getElementById('step4')?.classList.remove('hidden-zone');

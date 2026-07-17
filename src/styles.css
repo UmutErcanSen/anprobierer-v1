@@ -689,7 +689,8 @@ footer{text-align:center;padding:1.5rem 1rem;color:var(--text-3);font-size:.8rem
 
 .account-donut{width:100%;height:100%;border-radius:50%}
 .account-donut-bg{stroke:var(--surface-2)}
-.account-donut-fill{stroke:url(#donutGradient);transition:stroke-dashoffset .8s cubic-bezier(.22,1,.36,1);transform-origin:60px 60px;animation:donut-bar-spin 2s linear infinite}
+.account-donut-fill{stroke:#22c55e;transition:stroke-dashoffset .8s cubic-bezier(.22,1,.36,1);transform-origin:60px 60px}
+.account-donut-fill--pro{stroke:url(#donutGradient);animation:donut-bar-spin 2s linear infinite}
 @keyframes donut-bar-spin{from{transform:rotate(-90deg)}to{transform:rotate(270deg)}}
 .account-donut-fill--attention{stroke:#eab308!important}
 .account-donut-fill--warning{stroke:#f97316!important}

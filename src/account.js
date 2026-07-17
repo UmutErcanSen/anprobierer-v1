@@ -81,6 +81,7 @@ function renderAccount(profile) {
     planBadge.style.setProperty('--plan-color', sub.color);
     planBadge.style.setProperty('--plan-color-dim', `${sub.color}18`);
     planBadge.classList.toggle('account-plan-badge--pro', subKey === 'pro');
+    if (donutFill) donutFill.classList.toggle('account-donut-fill--pro', subKey === 'pro');
   }
 
   const used = profile.generationsUsed || 0;

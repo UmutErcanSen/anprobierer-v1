@@ -1196,6 +1196,7 @@ copyBtn.innerHTML = `${icon('copy', 14)} Kopieren`;
       textArea.innerHTML = `<span class="gen-error-msg">${icon('x-circle', 12)} Textgenerierung fehlgeschlagen</span>`;
     }
   }
+  saveSession();
 }
 
 async function generateSaleTextForImage(img) {

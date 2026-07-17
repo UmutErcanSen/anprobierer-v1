@@ -126,9 +126,15 @@ function renderAccount(profile) {
   renderSubscriptionInfo(profile, subKey, sub);
   const upgradeBanner = document.getElementById('accountUpgradeBanner');
   if (upgradeBanner) {
-    const limitReached = sub.limit !== -1 && used >= sub.limit;
-    if (limitReached && subKey === 'free') {
+    if (subKey === 'free') {
       upgradeBanner.classList.remove('hidden');
+      const limitReached = sub.limit !== -1 && used >= sub.limit;
+      const t = upgradeBanner.querySelector('#bannerTitle');
+      const d = upgradeBanner.querySelector('#bannerDesc');
+      if (t) t.textContent = limitReached ? 'Limit erreicht' : 'Bereit für mehr?';
+      if (d) d.textContent = limitReached
+        ? 'Upgrade für mehr Generierungen pro Monat.'
+        : 'Schalte höhere Limits und mehr Features frei.';
     } else {
       upgradeBanner.classList.add('hidden');
     }

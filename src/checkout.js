@@ -36,7 +36,7 @@ function renderUpgradePlans(activePlan) {
     const isActive = activePlan === key;
     const iconMap = { free: 'star', basic: 'layers', pro: 'crown' };
     return `<div class="upgrade-plan-card${isActive ? ' upgrade-plan-card--active' : ''}" data-plan="${key}">
-      <span class="upgrade-plan-icon">${icon(iconMap[key] || 'star', 28)}</span>
+      <span class="upgrade-plan-icon" style="color:${p.color}">${icon(iconMap[key] || 'star', 28)}</span>
       <span class="upgrade-plan-name">${p.label}</span>
       <span class="upgrade-plan-price">${p.price}</span>
       <span class="upgrade-plan-period">/ Monat</span>

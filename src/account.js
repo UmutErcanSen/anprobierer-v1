@@ -1,6 +1,6 @@
 import { onAuthChange, refreshUserProfile, currentUser, userProfile, logout, updateUserEmail, changeUserPassword, deleteAccount, reauthenticateUser } from './auth.js';
 import { getUserGenerations, deleteGeneration } from './firestore.js';
-import { cancelPlan, reactivatePlan } from './subscription.js';
+import { cancelPlan, reactivatePlan, applyScheduledDowngrade } from './subscription.js';
 import { onRouteChange, getCurrentPath, navigateTo } from './router.js';
 import { PLANS } from './plans.js';
 import { showToast } from './utils.js';
@@ -61,6 +61,16 @@ function renderAccount(profile) {
   if (skeleton) skeleton.classList.add('hidden');
   if (cards) cards.classList.remove('hidden');
   if (placeholder) placeholder.classList.add('hidden');
+
+  if (currentUser?.uid) {
+    applyScheduledDowngrade(currentUser.uid).then(result => {
+      if (result) {
+        refreshUserProfile().then(newProfile => {
+          renderAccount(newProfile);
+        });
+      }
+    });
+  }
 
   if (emailEl) emailEl.textContent = profile.email || 'Keine E-Mail';
   if (emailDisplayEl) emailDisplayEl.textContent = profile.email || 'Keine E-Mail';
@@ -131,13 +141,30 @@ function renderAccount(profile) {
     if (subKey === 'free' || subKey === 'basic') {
       upgradeBanner.classList.remove('hidden');
       const limitReached = sub.limit !== -1 && used >= sub.limit;
+      const limitNear = sub.limit !== -1 && used >= sub.limit * 0.8 && used < sub.limit;
       const t = upgradeBanner.querySelector('#bannerTitle');
       const d = upgradeBanner.querySelector('#bannerDesc');
       const nextPlan = subKey === 'free' ? 'Basic' : 'Pro';
-      if (t) t.textContent = limitReached ? 'Limit erreicht' : 'Bereit für mehr?';
-      if (d) d.textContent = limitReached
-        ? 'Upgrade für mehr Generierungen pro Monat.'
-        : `Wechsle zu ${nextPlan} für höhere Limits und mehr Features.`;
+      const inner = upgradeBanner.querySelector('.account-upgrade-banner-inner');
+      if (inner) {
+        inner.classList.remove('banner--danger', 'banner--warning');
+        if (limitReached) inner.classList.add('banner--danger');
+        else if (limitNear) inner.classList.add('banner--warning');
+      }
+      if (t) {
+        if (limitReached) t.textContent = 'Limit erreicht';
+        else if (limitNear) t.textContent = 'Fast am Limit';
+        else t.textContent = 'Bereit für mehr?';
+      }
+      if (d) {
+        if (limitReached) d.textContent = 'Du hast dein monatliches Limit ausgeschöpft. Upgrade für mehr Generierungen.';
+        else if (limitNear) d.textContent = `Du hast bereits ${used} von ${sub.limit} Generierungen genutzt. Upgrade für unbegrenztes Erstellen.`;
+        else d.textContent = `Wechsle zu ${nextPlan} für höhere Limits und mehr Features.`;
+      }
+      if (limitNear && !window._limitToastShown) {
+        window._limitToastShown = true;
+        setTimeout(() => showToast(`Noch ${sub.limit - used} Generierungen übrig diesen Monat.`, 'warning'), 500);
+      }
     } else {
       upgradeBanner.classList.add('hidden');
     }

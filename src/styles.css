@@ -709,6 +709,10 @@ footer{text-align:center;padding:1.5rem 1rem;color:var(--text-3);font-size:.8rem
 .account-upgrade-banner{margin-top:.75rem}
 .account-upgrade-banner-inner{display:flex;align-items:center;gap:.75rem;padding:.75rem 1rem;background:linear-gradient(135deg,rgba(108,99,255,.1),rgba(108,99,255,.04));border:1px solid rgba(108,99,255,.2);border-radius:var(--radius);animation:banner-shimmer 3s ease-in-out infinite}
 @keyframes banner-shimmer{0%,100%{box-shadow:0 0 8px 2px rgba(108,99,255,.06)}50%{box-shadow:0 0 18px 5px rgba(108,99,255,.14)}}
+.account-upgrade-banner-inner.banner--warning{border-color:rgba(234,179,8,.35);background:linear-gradient(135deg,rgba(234,179,8,.1),rgba(234,179,8,.03));animation-name:banner-shimmer-warning}
+.account-upgrade-banner-inner.banner--danger{border-color:rgba(239,68,68,.35);background:linear-gradient(135deg,rgba(239,68,68,.1),rgba(239,68,68,.03));animation-name:banner-shimmer-danger}
+@keyframes banner-shimmer-warning{0%,100%{box-shadow:0 0 8px 2px rgba(234,179,8,.08)}50%{box-shadow:0 0 18px 5px rgba(234,179,8,.18)}}
+@keyframes banner-shimmer-danger{0%,100%{box-shadow:0 0 8px 2px rgba(239,68,68,.1)}50%{box-shadow:0 0 18px 5px rgba(239,68,68,.25)}}
 .account-upgrade-banner-inner svg{color:var(--primary);flex-shrink:0}
 .account-upgrade-banner-text{flex:1;display:flex;flex-direction:column;gap:.15rem;font-size:.85rem;color:var(--text-1)}
 .account-upgrade-banner-text span{color:var(--text-2);font-size:.8rem}
@@ -1598,6 +1602,16 @@ header.header-compact{box-shadow:0 2px 24px rgba(0,0,0,.45)}
 .upgrade-plan-btn--primary{background:linear-gradient(135deg,var(--primary),#7c6aff);color:#fff;box-shadow:0 2px 12px rgba(108,99,255,.25)}
 .upgrade-plan-btn--primary:hover{filter:brightness(1.1);transform:translateY(-1px);box-shadow:0 4px 16px rgba(108,99,255,.35)}
 .upgrade-plan-btn--muted{background:var(--surface-2);color:var(--text-3);cursor:default}
+.upgrade-plan-btn--secondary{background:var(--surface-3);color:var(--text);box-shadow:0 2px 8px rgba(0,0,0,.12)}
+.upgrade-plan-btn--secondary:hover{filter:brightness(1.1);transform:translateY(-1px)}
+.downgrade-diff{padding:.5rem 0}
+.downgrade-hint{font-size:.85rem;color:var(--text-2);margin-bottom:.85rem;line-height:1.5}
+.downgrade-table{width:100%;border-collapse:collapse;font-size:.82rem;margin-bottom:.85rem}
+.downgrade-table th{text-align:left;padding:.4rem .5rem;color:var(--text-3);font-weight:600;border-bottom:1px solid var(--surface-3);font-size:.75rem}
+.downgrade-table td{padding:.4rem .5rem;border-bottom:1px solid var(--surface-3)}
+.downgrade-from{color:var(--text);font-weight:600}
+.downgrade-to{color:#ef4444;font-weight:600}
+.downgrade-note{font-size:.82rem;color:var(--text-3);padding:.5rem;background:rgba(234,179,8,.08);border-radius:var(--radius-sm);line-height:1.5}
 
 @media(max-width:600px){
   .upgrade-content{padding:1.25rem 1rem;max-width:95vw;max-height:88vh;overflow-y:auto}

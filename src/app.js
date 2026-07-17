@@ -1738,9 +1738,6 @@ document.addEventListener('keydown', e => {
   }
 });
 
-console.log('Virtual Try-On App (OpenAI) geladen');
-console.log(`API-Key ${state.apiKey ? 'vorhanden' : 'fehlt'}`);
-
 // Route-aware initialization
 onRouteChange((path) => {
   window.scrollTo({ top: 0, behavior: 'instant' });

@@ -186,14 +186,11 @@ async function onUserLoggedIn(user) {
   notifyListeners(user, userProfile);
   updateUserBtn(true);
 
-  console.log('[auth] onUserLoggedIn emailVerified=', user.emailVerified, 'DEV_MODE=', DEV_MODE);
   if (!user.emailVerified && !DEV_MODE) {
-    console.log('[auth] → showVerifyOverlay (unverified)');
     showVerifyOverlay('unverified', user.email);
     return;
   }
 
-  console.log('[auth] → hideLoginOverlay (verified or DEV_MODE)');
   hideLoginOverlay();
   const hadExplicitLogin = !!authResolve;
   if (authResolve) {
@@ -260,8 +257,6 @@ export function initAuthGuard() {
     return;
   }
 
-  console.log('[auth] initAuthGuard DEV_MODE =', DEV_MODE);
-
   loginOverlay.addEventListener('click', (e) => {
     if (e.target === loginOverlay) {
       if (verifyOverlayMode) return;
@@ -285,7 +280,6 @@ export function initAuthGuard() {
   });
 
   onAuthStateChanged(auth, async user => {
-    console.log('[auth] onAuthStateChanged user=', user ? user.email : null, 'emailVerified=', user?.emailVerified);
     if (!authStateResolved) {
       authStateResolved = true;
       firstAuthResolve(user);
@@ -485,9 +479,7 @@ function initLoginUI() {
         await loginWithEmail(email, password);
       } else {
         const cred = await registerWithEmail(email, password);
-        console.log('[auth] Registration successful, sending verification email...');
         await sendEmailVerification(cred.user);
-        console.log('[auth] Verification email sent, calling showVerifyOverlay("registered")');
         showVerifyOverlay('registered', email);
       }
     } catch (err) {

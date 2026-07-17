@@ -1,5 +1,5 @@
 import { currentUser, userProfile, refreshUserProfile } from './auth.js';
-import { upgradePlan } from './subscription.js';
+import { upgradePlan, downgradePlan, getFeatureDiff } from './subscription.js';
 import { PLANS } from './plans.js';
 import { showToast } from './utils.js';
 import { navigateTo } from './router.js';
@@ -32,25 +32,90 @@ const PLAN_FEATURES = {
 function renderUpgradePlans(activePlan) {
   const container = document.getElementById('upgradePlans');
   if (!container) return;
-  container.innerHTML = Object.entries(PLANS).map(([key, p]) => {
+  const planOrder = ['free', 'basic', 'pro'];
+  const activeIdx = planOrder.indexOf(activePlan);
+  container.innerHTML = planOrder.map((key, i) => {
+    const p = PLANS[key];
     const isActive = activePlan === key;
     const iconMap = { free: 'star', basic: 'layers', pro: 'crown' };
+    const isUpgrade = i > activeIdx;
+    const isDowngrade = i < activeIdx;
+    let btnHtml;
+    if (isActive) {
+      btnHtml = `<button class="upgrade-plan-btn upgrade-plan-btn--muted" disabled>Aktiv</button>`;
+    } else if (isUpgrade) {
+      btnHtml = `<button class="upgrade-plan-btn upgrade-plan-btn--primary" data-plan="${key}">Upgraden</button>`;
+    } else if (isDowngrade) {
+      btnHtml = `<button class="upgrade-plan-btn upgrade-plan-btn--secondary" data-plan="${key}">Wechseln</button>`;
+    }
     return `<div class="upgrade-plan-card${isActive ? ' upgrade-plan-card--active' : ''}" data-plan="${key}">
       <span class="upgrade-plan-icon" style="color:${p.color}">${icon(iconMap[key] || 'star', 28)}</span>
       <span class="upgrade-plan-name">${p.label}</span>
       <span class="upgrade-plan-price">${p.price}</span>
       <span class="upgrade-plan-period">/ Monat</span>
       <ul class="upgrade-plan-features">${PLAN_FEATURES[key]?.map(f => `<li>${icon('check', 12)} ${f}</li>`).join('') || ''}</ul>
-      ${isActive
-        ? `<button class="upgrade-plan-btn upgrade-plan-btn--muted" disabled>Aktiv</button>`
-        : `<button class="upgrade-plan-btn upgrade-plan-btn--primary" data-plan="${key}">Upgraden</button>`
-      }
+      ${btnHtml}
     </div>`;
   }).join('');
 
   container.querySelectorAll('.upgrade-plan-btn--primary').forEach(btn => {
     btn.addEventListener('click', () => startPayment(btn.dataset.plan));
   });
+  container.querySelectorAll('.upgrade-plan-btn--secondary').forEach(btn => {
+    btn.addEventListener('click', () => showDowngradeModal(btn.dataset.plan));
+  });
+}
+
+function showDowngradeModal(targetKey) {
+  const currentKey = userProfile?.subscription || 'free';
+  const target = PLANS[targetKey];
+  const current = PLANS[currentKey];
+  if (!target || !current) return;
+
+  const periodEnd = userProfile?.currentPeriodEnd?.toDate?.();
+  const periodEndStr = periodEnd ? periodEnd.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '–';
+  const diff = getFeatureDiff(currentKey, targetKey);
+
+  const modal = document.createElement('div');
+  modal.className = 'confirm-modal visible';
+  modal.style.zIndex = '10002';
+  modal.innerHTML = `<div class="confirm-modal-content upgrade-content" onclick="event.stopPropagation()">
+    <button class="modal-close-x" onclick="this.closest('.confirm-modal').remove()">&times;</button>
+    <h3>${icon('arrow-down', 18)} Zu ${target.label} wechseln?</h3>
+    <div class="downgrade-diff">
+      <p class="downgrade-hint">Deine aktuellen Vorteile (<strong>${current.label}</strong>) bleiben bis zum <strong>${periodEndStr}</strong> erhalten. Danach gelten diese Limits:</p>
+      <table class="downgrade-table">
+        <tr><th>Feature</th><th>Bisher (${current.label})</th><th>Neu (${target.label})</th></tr>
+        ${diff.map(d => `<tr><td>${d.label}</td><td class="downgrade-from">${d.from}</td><td class="downgrade-to">${d.to}</td></tr>`).join('')}
+      </table>
+      <p class="downgrade-note">Bis zum <strong>${periodEndStr}</strong> kannst du alle ${current.label}-Funktionen wie gewohnt nutzen. Danach wird automatisch umgestellt.</p>
+    </div>
+    <div class="confirm-modal-actions">
+      <button class="btn btn-outline btn-sm" id="ddAbortBtn">Abbrechen</button>
+      <button class="btn btn-danger btn-sm" id="ddConfirmBtn">Zu ${target.label} wechseln</button>
+    </div>
+  </div>`;
+
+  document.body.appendChild(modal);
+
+  document.getElementById('ddAbortBtn').addEventListener('click', () => modal.remove());
+  document.getElementById('ddConfirmBtn').addEventListener('click', async () => {
+    document.getElementById('ddConfirmBtn').disabled = true;
+    try {
+      await downgradePlan(currentUser.uid, targetKey);
+      await refreshUserProfile();
+      modal.remove();
+      document.getElementById('upgradeModal').classList.remove('visible');
+      document.body.style.overflow = '';
+      showToast(`Wechsel zu ${target.label} zum ${periodEndStr} eingeplant.`, 'success');
+    } catch (err) {
+      showToast('Fehler beim Wechsel: ' + (err.message || 'Bitte versuche es erneut.'), 'error');
+    } finally {
+      document.getElementById('ddConfirmBtn').disabled = false;
+    }
+  });
+  modal.querySelector('.confirm-modal-content').addEventListener('click', (e) => e.stopPropagation());
+  modal.addEventListener('click', () => modal.remove());
 }
 
 export function showUpgradeModal(source = 'upgrade-btn') {
@@ -66,12 +131,15 @@ export function showUpgradeModal(source = 'upgrade-btn') {
     sub.textContent = subKey === 'free'
       ? 'Du hast alle deine Gratis-Generierungen verbraucht. Upgrade für mehr.'
       : 'Dein monatliches Limit ist erreicht. Upgrade für unbegrenzte Generierungen.';
+  } else if (source === 'account') {
+    heading.textContent = 'Plan auswählen oder wechseln';
+    sub.textContent = 'Wähle einen höheren Plan zum Upgraden oder einen günstigeren Plan zum Wechseln (gilt ab nächstem Monat).';
   } else {
     heading.textContent = 'Tarif auswählen';
     sub.textContent = 'Wähle den passenden Plan für deine Bedürfnisse.';
   }
 
-  renderUpgradePlans(subKey);
+  renderUpgradePlans(subKey, source);
   document.getElementById('upgradeModal').classList.add('visible');
   document.body.style.overflow = 'hidden';
   renderIconElements();
@@ -108,6 +176,9 @@ function closeCheckout() {
   document.getElementById('upgradeModal').classList.remove('visible');
   document.body.style.overflow = '';
   pendingPlan = null;
+  document.querySelectorAll('.confirm-modal.visible').forEach(m => {
+    if (m.id !== 'cancelModal' && m.id !== 'upgradeModal' && m.id !== 'checkoutModal') m.remove();
+  });
 }
 
 function validateForm() {

@@ -1584,8 +1584,10 @@ header.header-compact{box-shadow:0 2px 24px rgba(0,0,0,.45)}
 .upgrade-plan-btn--muted{background:var(--surface-2);color:var(--text-3);cursor:default}
 
 @media(max-width:600px){
-  .upgrade-plans{grid-template-columns:1fr;max-width:340px;margin:0 auto 1.25rem}
+  .upgrade-plans{grid-template-columns:1fr;margin:0 0 1.25rem}
+  .upgrade-plan-card{padding:1.1rem .75rem}
   .upgrade-content{max-width:95vw}
+  .upgrade-content .confirm-modal-actions{margin-top:0}
   .checkout-content{max-width:95vw}
 }
 

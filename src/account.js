@@ -283,7 +283,7 @@ function renderAccount(profile) {
       historyList.querySelectorAll('.ah-btn--dl').forEach(btn => {
         btn.addEventListener('click', (ev) => {
           ev.stopPropagation();
-          showToast('Download folgt in Kürze.', 'info');
+          showToast('Download wird in Kürze implementiert.', 'info');
         });
       });
 

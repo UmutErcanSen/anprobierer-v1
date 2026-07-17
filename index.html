@@ -384,6 +384,13 @@
             </div>
             <div class="gen-remaining hidden" id="genRemaining"></div>
             <div class="gen-limit-warning hidden" id="genLimitWarning"></div>
+            <div class="gen-upgrade-cta hidden" id="genUpgradeCta">
+              <div class="gen-upgrade-cta-inner">
+                <span data-lucide="zap" data-size="16"></span>
+                <span>Dein Limit ist erreicht. Upgrade für mehr Generierungen.</span>
+                <button class="btn btn-primary btn-sm" onclick="showUpgradeModal('generate')">Upgraden</button>
+              </div>
+            </div>
             <div class="gen-action">
               <button class="btn btn-primary gen-btn" id="generateBtn" disabled>
                 <span class="gen-btn-icon gen-btn-icon--left"><span data-lucide="sparkles" data-size="14"></span></span>
@@ -487,6 +494,16 @@
                 </div>
               </div>
               <div class="account-donut-label" id="accountDonutLabel">0 von 5 Gratis-Generierungen</div>
+              <div class="account-upgrade-banner hidden" id="accountUpgradeBanner">
+                <div class="account-upgrade-banner-inner">
+                  <span data-lucide="zap" data-size="18"></span>
+                  <div class="account-upgrade-banner-text">
+                    <strong>Limit erreicht</strong>
+                    <span>Upgrade für mehr Generierungen pro Monat.</span>
+                  </div>
+                  <button class="btn btn-primary btn-sm" onclick="showUpgradeModal('account')">Upgraden</button>
+                </div>
+              </div>
             </div>
             <div class="account-tab-content" id="tabStats">
               <div class="stats-grid" id="accountStatsGrid">
@@ -832,6 +849,7 @@
 
     <div class="confirm-modal" id="upgradeModal">
       <div class="confirm-modal-content upgrade-content" onclick="event.stopPropagation()">
+        <button class="modal-close-x" onclick="closeCheckout()">&times;</button>
         <h3>Limit erreicht</h3>
         <p class="upgrade-sub" id="upgradeSub">Du hast alle deine Gratis-Generierungen verbraucht.</p>
         <div class="upgrade-plans" id="upgradePlans"></div>
@@ -843,6 +861,7 @@
 
     <div class="confirm-modal" id="checkoutModal">
       <div class="confirm-modal-content checkout-content" onclick="event.stopPropagation()">
+        <button class="modal-close-x" onclick="closeCheckout()">&times;</button>
         <h3><span data-lucide="credit-card" data-size="20"></span> Upgrade zu <span id="checkoutPlanName">Basic</span></h3>
         <div class="checkout-summary">
           <span class="checkout-plan-price" id="checkoutPlanPrice">9,99 €</span>

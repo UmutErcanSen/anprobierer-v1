@@ -124,6 +124,15 @@ function renderAccount(profile) {
   }
 
   renderSubscriptionInfo(profile, subKey, sub);
+  const upgradeBanner = document.getElementById('accountUpgradeBanner');
+  if (upgradeBanner) {
+    const limitReached = sub.limit !== -1 && used >= sub.limit;
+    if (limitReached && subKey === 'free') {
+      upgradeBanner.classList.remove('hidden');
+    } else {
+      upgradeBanner.classList.add('hidden');
+    }
+  }
 
   const historyStats = document.getElementById('accountHistoryStats');
   if (historyList && currentUser) {

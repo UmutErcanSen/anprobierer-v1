@@ -181,6 +181,77 @@ function updateGenerateBtnState() {
   generateBtn.disabled = !(apiOk && photoOk && hasItems && itemsComplete);
 }
 
+function highlightField(el, msg) {
+  if (!el) return;
+  el.classList.add('field-error');
+  let errEl = el.parentElement?.querySelector('.field-error-msg');
+  if (!errEl) {
+    errEl = document.createElement('div');
+    errEl.className = 'field-error-msg';
+    el.insertAdjacentElement('afterend', errEl);
+  }
+  errEl.innerHTML = `${icon('alert-circle', 12)} ${msg}`;
+  el.addEventListener('input', () => clearFieldHighlight(el), { once: true });
+  el.addEventListener('change', () => clearFieldHighlight(el), { once: true });
+}
+
+function clearFieldHighlight(el) {
+  if (!el) return;
+  el.classList.remove('field-error');
+  const errEl = el.parentElement?.querySelector('.field-error-msg');
+  if (errEl) errEl.remove();
+}
+
+function highlightUploadZone(el, msg) {
+  if (!el) return;
+  el.classList.add('field-error');
+  let errEl = el.nextElementSibling;
+  if (!errEl || !errEl.classList.contains('field-error-msg')) {
+    errEl = document.createElement('div');
+    errEl.className = 'field-error-msg';
+    el.insertAdjacentElement('afterend', errEl);
+  }
+  errEl.innerHTML = `${icon('alert-circle', 12)} ${msg}`;
+  el.addEventListener('click', () => {
+    el.classList.remove('field-error');
+    if (errEl && errEl.classList.contains('field-error-msg')) errEl.remove();
+  }, { once: true });
+  el.addEventListener('dragover', () => {
+    el.classList.remove('field-error');
+    if (errEl && errEl.classList.contains('field-error-msg')) errEl.remove();
+  }, { once: true });
+}
+
+function highlightClothingItem(index, msg) {
+  const card = document.querySelectorAll('#clothingPreviewGrid .preview-card')[index];
+  if (!card) return;
+  card.classList.add('clothing-card-invalid');
+  const selects = card.querySelectorAll('select');
+  selects.forEach(s => {
+    if (!s.value) s.classList.add('clothing-select-invalid');
+  });
+  let errEl = card.querySelector('.field-error-msg');
+  if (!errEl) {
+    errEl = document.createElement('div');
+    errEl.className = 'field-error-msg';
+    card.appendChild(errEl);
+  }
+  errEl.innerHTML = `${icon('alert-circle', 12)} ${msg}`;
+  const clearHandler = () => {
+    card.classList.remove('clothing-card-invalid');
+    selects.forEach(s => s.classList.remove('clothing-select-invalid'));
+    if (errEl && errEl.classList.contains('field-error-msg')) errEl.remove();
+  };
+  selects.forEach(s => s.addEventListener('change', clearHandler, { once: true }));
+}
+
+function clearAllFieldHighlights() {
+  document.querySelectorAll('.field-error').forEach(el => el.classList.remove('field-error'));
+  document.querySelectorAll('.field-error-msg').forEach(el => el.remove());
+  document.querySelectorAll('.clothing-card-invalid').forEach(el => el.classList.remove('clothing-card-invalid'));
+  document.querySelectorAll('.clothing-select-invalid').forEach(el => el.classList.remove('clothing-select-invalid'));
+}
+
 function updateStepStepper() {
   const stepper = document.getElementById('stepStepper');
   if (!stepper) return;
@@ -215,16 +286,20 @@ function updateGenRemaining() {
 
 function updateGenLimitWarning() {
   const el = document.getElementById('genLimitWarning');
+  const cta = document.getElementById('genUpgradeCta');
   if (!el) return;
-  if (!currentUser || !userProfile) { el.classList.add('hidden'); return; }
+  if (!currentUser || !userProfile) { el.classList.add('hidden'); if (cta) cta.classList.add('hidden'); return; }
   const subKey = userProfile.subscription || 'free';
   const used = userProfile.generationsUsed || 0;
   const limit = PLANS[subKey]?.limit || 3;
-  if (subKey !== 'free' || limit === -1) { el.classList.add('hidden'); return; }
+  if (subKey !== 'free' || limit === -1) { el.classList.add('hidden'); if (cta) cta.classList.add('hidden'); return; }
   const remaining = limit - used;
-  if (remaining > 2) { el.classList.add('hidden'); return; }
+  if (remaining > 2) { el.classList.add('hidden'); if (cta) cta.classList.add('hidden'); return; }
   el.innerHTML = `${icon('triangle-alert', 14)} Nur noch ${remaining} von ${limit} Gratis-Generierungen übrig – nach Limit keine Generierungen mehr möglich`;
   el.classList.remove('hidden');
+  if (cta) {
+    if (remaining <= 0) { cta.classList.remove('hidden'); } else { cta.classList.add('hidden'); }
+  }
 }
 
 function applyFeatureGating() {
@@ -766,11 +841,20 @@ function cancelGeneration() {
 
 generateBtn.addEventListener('click', async () => {
   if (state.isGenerating) return;
+  clearAllFieldHighlights();
   if (!state.apiKey || !validateApiKey(state.apiKey)) {
     showToast('Bitte gültigen OpenAI API-Key eingeben.', 'error'); return
   }
-  if (!state.personPhoto) { showToast('Kein Personenfoto vorhanden.', 'error'); return }
-  if (state.clothingItems.length === 0) { showToast('Keine Kleidungsstücke vorhanden.', 'error'); return }
+  if (!state.personPhoto) {
+    showToast('Kein Personenfoto vorhanden.', 'error');
+    highlightUploadZone(document.getElementById('personDropZone'), 'Bitte ein Personenfoto hochladen');
+    return;
+  }
+  if (state.clothingItems.length === 0) {
+    showToast('Keine Kleidungsstücke vorhanden.', 'error');
+    highlightUploadZone(document.getElementById('clothingDropZone'), 'Bitte mindestens ein Kleidungsstück hochladen');
+    return;
+  }
 
   let items = state.clothingItems;
 
@@ -787,7 +871,13 @@ generateBtn.addEventListener('click', async () => {
 
   const missing = items.filter(i => !i.type || !i.size);
   if (missing.length > 0) {
-    showToast(`Bitte für ${missing.length} Kleidungsstück${missing.length>1?'e':''} Typ und Größe wählen.`, 'warning'); return;
+    showToast(`Bitte für ${missing.length} Kleidungsstück${missing.length>1?'e':''} Typ und Größe wählen.`, 'warning');
+    items.forEach((item, idx) => {
+      if (!item.type || !item.size) {
+        highlightClothingItem(idx, 'Typ und Größe wählen');
+      }
+    });
+    return;
   }
 
   const resetResult = await checkAndResetMonthly(currentUser?.uid);
@@ -984,7 +1074,12 @@ generateBtn.addEventListener('click', async () => {
       generateAllSaleTexts();
       saveSession();
       if (currentUser) {
-        if (!DEV_MODE) incrementGenerationsUsed(currentUser.uid);
+        if (!DEV_MODE) {
+          await incrementGenerationsUsed(currentUser.uid);
+          if (userProfile) userProfile.generationsUsed = (userProfile.generationsUsed || 0) + 1;
+        }
+        updateGenRemaining();
+        updateGenLimitWarning();
         const first = state.generatedImages[0];
         const thumbnail = first?.base64 ? await createThumbnail(first.base64, first.mimeType) : null;
         saveGeneration(currentUser.uid, { mode, quality: state.selectedQuality, itemCount: items.length, notes: state.extraNotes, imageCount: successCount, thumbnail });
@@ -1401,6 +1496,10 @@ document.addEventListener('keydown', e => {
     if (sm.classList.contains('visible')) closeSettings();
     const so = document.getElementById('selectOverlay');
     if (so.classList.contains('visible')) closeSelectOverlay();
+    const cm = document.getElementById('checkoutModal');
+    if (cm.classList.contains('visible')) closeCheckout();
+    const um = document.getElementById('upgradeModal');
+    if (um.classList.contains('visible')) closeCheckout();
   }
   if (e.key === 'ArrowLeft') {
     const lb = document.getElementById('lightbox');

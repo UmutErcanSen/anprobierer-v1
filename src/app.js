@@ -1126,7 +1126,7 @@ function renderResults() {
         <img src="${base64ToDataUrl(img.base64, img.mimeType)}" alt="${escapeHtml(img.name)}">
         <div class="result-card-actions">
           <button class="btn btn-sm btn-primary download-btn">${icon('download', 14)} Herunterladen</button>
-          <button class="btn btn-sm btn-outline refresh-btn">${icon('refresh-cw', 14)} Neu</button>
+          <button class="btn btn-sm btn-outline refresh-btn">${icon('refresh-cw', 14)} Neues Bild</button>
         </div>
         <div class="result-sale-text${img.saleText ? '' : ' generating'}">
           <div class="sale-text-content"></div>
@@ -1155,9 +1155,9 @@ function renderResults() {
     }
     const retryTextBtn = document.createElement('button');
     retryTextBtn.className = 'btn btn-sm btn-outline retry-text-btn';
-    retryTextBtn.innerHTML = `${icon('rotate-ccw', 12)} Neu`;
-    retryTextBtn.addEventListener('click', () => regenerateSaleText(idx));
-    card.querySelector('.result-sale-text').appendChild(retryTextBtn);
+retryTextBtn.innerHTML = `${icon('rotate-ccw', 12)} Neuer Text`;
+  retryTextBtn.addEventListener('click', () => regenerateSaleText(idx));
+  card.querySelector('.result-sale-text').appendChild(retryTextBtn);
     card.querySelector('.refresh-btn')?.addEventListener('click', () => regenerateImage(idx));
   });
 }
@@ -1192,7 +1192,7 @@ async function generateAllSaleTexts() {
         textArea.appendChild(copyBtn);
         const retryBtn = document.createElement('button');
         retryBtn.className = 'btn btn-sm btn-outline retry-text-btn';
-        retryBtn.innerHTML = `${icon('rotate-ccw', 12)} Neu`;
+        retryBtn.innerHTML = `${icon('rotate-ccw', 12)} Neuer Text`;
         retryBtn.addEventListener('click', () => regenerateSaleText(i));
         textArea.appendChild(retryBtn);
         addLog(`${icon('check-circle', 12)} Verkaufstext für "${img.clothingName}" generiert`, 'success');
@@ -1269,7 +1269,7 @@ async function regenerateImage(idx) {
       <p class="regenerate-modal-hint">Möchtest du fortfahren?</p>
       <div class="confirm-modal-actions">
         <button class="btn btn-outline btn-sm" id="regModalCancel">Abbrechen</button>
-        <button class="btn btn-primary btn-sm" id="regModalConfirm">${icon('refresh-cw', 14)} Neu generieren</button>
+        <button class="btn btn-primary btn-sm" id="regModalConfirm">${icon('refresh-cw', 14)} Neues Bild erstellen</button>
       </div>
     </div>`;
     document.body.appendChild(overlay);
@@ -1329,7 +1329,7 @@ async function regenerateImage(idx) {
       showToast('Fehler: ' + (err.message?.slice(0, 80) || 'Bitte versuche es erneut.'), 'error');
     }
   } finally {
-    if (btn) { btn.disabled = false; btn.innerHTML = `${icon('refresh-cw', 14)} Neu`; }
+    if (btn) { btn.disabled = false; btn.innerHTML = `${icon('refresh-cw', 14)} Neues Bild`; }
   }
 }
 
@@ -1356,7 +1356,7 @@ async function regenerateSaleText(idx) {
     textArea.appendChild(copyBtn);
     const retryBtn = document.createElement('button');
     retryBtn.className = 'btn btn-sm btn-outline retry-text-btn';
-    retryBtn.innerHTML = `${icon('refresh-cw', 12)} Neu`;
+    retryBtn.innerHTML = `${icon('refresh-cw', 12)} Neuer Text`;
     retryBtn.addEventListener('click', () => regenerateSaleText(idx));
     textArea.appendChild(retryBtn);
     addLog(`Verkaufstext für "${img.clothingName}" neu generiert.`, 'success');
@@ -1366,7 +1366,7 @@ async function regenerateSaleText(idx) {
     textArea.innerHTML = `<span class="gen-error-msg">${icon('x-circle', 12)} Fehler: ${escapeHtml(err.message?.slice(0, 60) || 'Unbekannter Fehler')}</span>`;
     const retryBtn = document.createElement('button');
     retryBtn.className = 'btn btn-sm btn-outline retry-text-btn';
-    retryBtn.innerHTML = `${icon('rotate-ccw', 12)} Wiederholen`;
+    retryBtn.innerHTML = `${icon('rotate-ccw', 12)} Neuer Text`;
     retryBtn.addEventListener('click', () => regenerateSaleText(idx));
     textArea.appendChild(retryBtn);
   }

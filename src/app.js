@@ -1692,14 +1692,6 @@ window.openLightbox = function (img, idx) {
   origOpenLightbox(img, idx);
 };
 
-// beforeunload warning on unsaved state
-window.addEventListener('beforeunload', (e) => {
-  if (state.generatedImages.length > 0 && !state.generationDone) {
-    e.preventDefault();
-    e.returnValue = '';
-  }
-});
-
 function createThumbnail(base64, mimeType, maxW = 150) {
   return new Promise((resolve) => {
     const img = new Image();

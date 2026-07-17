@@ -645,6 +645,11 @@
             </div>
           </div>
 
+          <div class="account-card account-card--subscription" id="accountSubscriptionCard">
+            <h3><span data-lucide="credit-card" data-size="18"></span> Abo-Verwaltung</h3>
+            <div id="accountSubscriptionContent"></div>
+          </div>
+
         </div>
 
         <div class="account-placeholder hidden" id="accountPlaceholder">
@@ -875,6 +880,18 @@
         <div class="confirm-modal-actions" id="checkoutActions">
           <button class="btn btn-outline btn-sm" id="checkoutCancelBtn">Abbrechen</button>
           <button class="btn btn-primary btn-sm" id="checkoutPayBtn">Bezahlen</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="confirm-modal" id="cancelModal">
+      <div class="confirm-modal-content cancel-content" onclick="event.stopPropagation()">
+        <h3><span data-lucide="alert-triangle" data-size="20"></span> Abo kündigen?</h3>
+        <p>Dein Abo läuft noch bis zum <strong id="cancelEndDate">–</strong>. Danach wirst du automatisch auf den Free-Plan zurückgesetzt.</p>
+        <p class="cancel-warning">Bereits erstellte Anzeigen bleiben erhalten, aber du kannst danach nur noch <strong>3 Anzeigen pro Monat</strong> erstellen.</p>
+        <div class="confirm-modal-actions">
+          <button class="btn btn-outline btn-sm" id="cancelModalAbort">Abbrechen</button>
+          <button class="btn btn-danger btn-sm" id="cancelModalConfirm">Kündigen</button>
         </div>
       </div>
     </div>

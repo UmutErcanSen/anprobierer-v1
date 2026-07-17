@@ -1,5 +1,6 @@
 import { onAuthChange, refreshUserProfile, currentUser, userProfile, logout, updateUserEmail, changeUserPassword, deleteAccount, reauthenticateUser } from './auth.js';
 import { getUserGenerations, deleteGeneration } from './firestore.js';
+import { cancelPlan, reactivatePlan } from './subscription.js';
 import { onRouteChange, getCurrentPath, navigateTo } from './router.js';
 import { PLANS } from './plans.js';
 import { showToast } from './utils.js';
@@ -121,6 +122,8 @@ function renderAccount(profile) {
       });
     });
   }
+
+  renderSubscriptionInfo(profile, subKey, sub);
 
   const historyStats = document.getElementById('accountHistoryStats');
   if (historyList && currentUser) {
@@ -682,6 +685,90 @@ function renderAccount(profile) {
   }
 }
 
+function renderSubscriptionInfo(profile, subKey, sub) {
+  const container = document.getElementById('accountSubscriptionContent');
+  if (!container) return;
+
+  const isPro = subKey === 'pro';
+  const isFree = subKey === 'free';
+  const cancelAtEnd = profile.cancelAtPeriodEnd === true;
+  const periodEnd = profile.currentPeriodEnd?.toDate?.();
+  const periodEndStr = periodEnd ? periodEnd.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' }) : null;
+
+  let statusText, statusClass;
+  if (isFree) {
+    statusText = 'Free · Kein aktives Abo';
+    statusClass = 'as-status--free';
+  } else if (cancelAtEnd && periodEndStr) {
+    statusText = `Gekündigt · Läuft aus am ${periodEndStr}`;
+    statusClass = 'as-status--canceling';
+  } else {
+    statusText = `${sub.label} · Aktiv`;
+    statusClass = 'as-status--active';
+  }
+
+  const used = profile.generationsUsed || 0;
+  const limit = sub.limit === -1 ? '∞' : sub.limit;
+
+  let html = `<div class="as-status"><span class="as-status-badge ${statusClass}">${statusText}</span></div>`;
+
+  if (!isFree) {
+    const subEnd = periodEnd || (() => {
+      const d = new Date(); d.setMonth(d.getMonth() + 1); return d;
+    })();
+    const subEndStr = subEnd.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    if (cancelAtEnd) {
+      html += `<div class="as-row"><span class="as-label">Läuft ab</span><span class="as-value">${subEndStr}</span></div>`;
+    } else {
+      html += `<div class="as-row"><span class="as-label">Nächste Abbuchung</span><span class="as-value">${subEndStr}</span></div>`;
+    }
+  }
+
+  if (sub.limit !== -1 && periodEnd) {
+    const resetStr = periodEnd.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    html += `<div class="as-row"><span class="as-label">Nächster Reset</span><span class="as-value">${resetStr}</span></div>`;
+  }
+
+  html += `<div class="as-row"><span class="as-label">Verbraucht</span><span class="as-value">${used} / ${limit}</span></div>`;
+
+  html += '<div class="as-actions">';
+  if (isFree) {
+    html += `<button class="btn btn-primary btn-sm" id="asUpgradeBtn">Jetzt upgraden</button>`;
+  } else if (cancelAtEnd) {
+    html += `<button class="btn btn-outline btn-sm" id="asReactivateBtn">Kündigung zurücknehmen</button>`;
+  } else {
+    html += `<button class="btn btn-outline btn-sm" id="asChangePlanBtn">Plan wechseln</button>`;
+    html += `<button class="btn btn-danger btn-sm" id="asCancelBtn">Abo kündigen</button>`;
+  }
+  html += '</div>';
+
+  container.innerHTML = html;
+
+  document.getElementById('asUpgradeBtn')?.addEventListener('click', () => {
+    window.showUpgradeModal('account');
+  });
+  document.getElementById('asChangePlanBtn')?.addEventListener('click', () => {
+    window.showUpgradeModal('account');
+  });
+  document.getElementById('asReactivateBtn')?.addEventListener('click', async () => {
+    try {
+      await reactivatePlan(currentUser.uid);
+      await refreshUserProfile();
+      renderAccount(userProfile);
+      showToast('Kündigung zurückgenommen.', 'success');
+    } catch (_) {
+      showToast('Fehler beim Reaktivieren.', 'error');
+    }
+  });
+  document.getElementById('asCancelBtn')?.addEventListener('click', () => {
+    const modal = document.getElementById('cancelModal');
+    const endDate = document.getElementById('cancelEndDate');
+    if (periodEndStr) endDate.textContent = periodEndStr;
+    modal.classList.add('visible');
+    document.body.style.overflow = 'hidden';
+  });
+}
+
 onAuthChange((user, profile) => {
   if (getCurrentPath() === '/account') {
     renderAccount(profile);
@@ -701,3 +788,39 @@ onRouteChange((path) => {
     });
   }
 });
+
+function initCancelModal() {
+  const modal = document.getElementById('cancelModal');
+  if (!modal) return;
+  document.getElementById('cancelModalAbort')?.addEventListener('click', () => {
+    modal.classList.remove('visible');
+    document.body.style.overflow = '';
+  });
+  document.getElementById('cancelModalConfirm')?.addEventListener('click', async () => {
+    document.getElementById('cancelModalConfirm').disabled = true;
+    try {
+      await cancelPlan(currentUser.uid);
+      await refreshUserProfile();
+      modal.classList.remove('visible');
+      document.body.style.overflow = '';
+      renderAccount(userProfile);
+      showToast('Abo gekündigt. Läuft am Ende des Zeitraums aus.', 'success');
+    } catch (_) {
+      showToast('Fehler beim Kündigen.', 'error');
+    } finally {
+      document.getElementById('cancelModalConfirm').disabled = false;
+    }
+  });
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      modal.classList.remove('visible');
+      document.body.style.overflow = '';
+    }
+  });
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initCancelModal);
+} else {
+  initCancelModal();
+}

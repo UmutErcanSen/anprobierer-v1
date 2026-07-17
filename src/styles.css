@@ -646,10 +646,9 @@ footer{text-align:center;padding:1.5rem 1rem;color:var(--text-3);font-size:.8rem
 .account-plan-badge:hover{filter:brightness(1.2);transform:scale(1.05);box-shadow:0 2px 12px rgba(108,99,255,.3)}
 .account-plan-badge:hover::after{opacity:1;transform:translateX(2px)}
 .account-plan-badge--pro{position:relative;overflow:visible;background:linear-gradient(135deg,rgba(245,158,11,.15),rgba(255,215,0,.08));border-color:rgba(255,215,0,.45);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);animation:pro-glow 4s ease-in-out infinite}
-.account-plan-badge--pro::after{content:'';position:absolute;inset:-2px;border-radius:inherit;padding:2px;background:conic-gradient(transparent,rgba(255,215,0,.08),rgba(255,215,0,.5),rgba(255,215,0,.08),transparent);-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);mask-composite:exclude;animation:border-spin 3s linear infinite;pointer-events:none}
-.account-plan-badge--pro:hover{box-shadow:0 2px 20px rgba(255,215,0,.35)}
-@keyframes pro-glow{0%,100%{box-shadow:0 0 6px 2px rgba(245,158,11,.08)}50%{box-shadow:0 0 18px 6px rgba(255,215,0,.2)}}
-@keyframes border-spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.account-plan-badge--pro:hover{box-shadow:0 0 20px rgba(255,215,0,.25),0 0 40px rgba(245,158,11,.15)}
+@keyframes pro-glow{0%,100%{box-shadow:0 0 4px 1px rgba(245,158,11,.08),0 0 12px 0px rgba(245,158,11,.05),0 0 24px 0px rgba(255,215,0,.03)}50%{box-shadow:0 0 8px 3px rgba(255,215,0,.18),0 0 24px 6px rgba(245,158,11,.1),0 0 48px 12px rgba(255,215,0,.05)}}
+@keyframes pro-card-glow{0%,100%{box-shadow:0 0 4px 1px rgba(245,158,11,.04)}50%{box-shadow:0 0 12px 4px rgba(255,215,0,.08),0 0 30px 8px rgba(245,158,11,.04)}}
 .plan-badge-limit{font-weight:400;opacity:.7;font-size:.78rem}
 .account-card--merged{grid-column:1/-1}
 .account-card--subscription{background:var(--surface);border:1px solid var(--surface-2);border-radius:var(--radius);padding:1.25rem 1.5rem;grid-column:1/-1}
@@ -1445,8 +1444,8 @@ header.header-compact{box-shadow:0 2px 24px rgba(0,0,0,.45)}
 .pricing-card{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:2rem 1.5rem;display:flex;flex-direction:column;transition:var(--transition);min-height:420px}
 .pricing-card:hover{border-color:var(--border-light);box-shadow:0 8px 30px rgba(0,0,0,.15);transform:translateY(-2px)}
 .pricing-card--pro{position:relative;border-color:rgba(255,215,0,.25);background:linear-gradient(135deg,var(--surface),rgba(245,158,11,.04))}
-.pricing-card--pro::after{content:'';position:absolute;inset:-1px;border-radius:inherit;padding:1px;background:conic-gradient(transparent 0deg,rgba(255,215,0,.15) 90deg,rgba(255,215,0,.6) 180deg,rgba(255,215,0,.15) 270deg,transparent 360deg);-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);mask-composite:exclude;animation:border-spin 4s linear infinite;pointer-events:none}
-.pricing-card--pro:hover{border-color:rgba(255,215,0,.4);box-shadow:0 8px 30px rgba(255,215,0,.1)}
+.pricing-card--pro{animation:pro-card-glow 4s ease-in-out infinite}
+.pricing-card--pro:hover{border-color:rgba(255,215,0,.4);box-shadow:0 8px 30px rgba(255,215,0,.15)}
 .pricing-card--popular{
   background:
     linear-gradient(var(--surface),var(--surface)) padding-box,

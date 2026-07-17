@@ -15,8 +15,11 @@ GitHub: https://github.com/UmutErcanSen/anprobierer-v1
 - **Account-System**: Email/Google-Login, E-Mail-Verifizierung, Profil-Verwaltung
 - **Abo-System**: Free (3/Monat), Basic (25/Monat), Pro (Unlimited)
 - **Qualität pro Plan**: Niedrig (Free), Mittel (Basic), Hoch (Pro) — keine User-Auswahl
+- **Plan-Wechseln-Flow**: Upgrade via Checkout, Downgrade (deferred bis Periodenende) mit Feature-Vergleich-Modal
+- **Pro-Badge**: Goldener Box-Shadow-Glow (ohne sichtbaren Rahmen), rotiert nur bei Pro
+- **Donut-Visualisierung**: Prozentual mit grün→gelb→orange→rot, Rotation nur bei Pro
 - **History-Cards**: Thumbnails, Preview-Overlay, 2er-Grid auf Desktop
-- **Donut-Visualisierung**: Prozentualer Fortschritt mit gelb/orange/rot Glow
+- **In-App-Benachrichtigungen**: Banner-Varianten (info/warning/danger) bei Limit-Status, Toast bei 80%
 - **Responsive**: Mobile & Desktop optimiert
 - **Burger-Menü**: Hamburger-Icon mit Dropdown-Overlay (Mobile/Desktop)
 - **Nutzer-Icon**: Glow-Effekt + erster Buchstabe des Displaynamens
@@ -24,6 +27,7 @@ GitHub: https://github.com/UmutErcanSen/anprobierer-v1
 - **Sticky Footer**: Bleibt immer unten, auch bei wenig Inhalt
 - **Header mit Scroll-Shadow**: Box-Shadow erscheint beim Scrollen
 - **DSGVO-konform**: Löschen + Datenexport mit Vorschau-Modal
+- **SEO**: Meta-Tags (OG/Twitter), robots.txt, sitemap.xml, SVG-Favicon
 
 ---
 
@@ -108,24 +112,26 @@ src/
 ├── main.js              Einstiegspunkt
 ├── firebase.js          Firebase Init
 ├── auth.js              Login/Registrierung/Google + AuthGuard
-├── account.js           Account-Seite (Profil, Stats, History, Donut, Preview-Overlay)
+├── account.js           Account-Seite (Profil, Stats, History, Donut, Preview-Overlay, Upgrade-Banner)
 ├── firestore.js         Firestore CRUD (Profile, Generierungen, Thumbnails)
 ├── app.js               Hauptlogik (Upload, Generierung, Ergebnisse, createThumbnail)
 ├── api.js               OpenAI API-Aufrufe (Bilder + Texte)
-├── subscription.js      Abo-Management (Upgrade, Cancel, Reset, Quality-Gating)
+├── subscription.js      Abo-Management (Upgrade, Cancel, Deferred Downgrade, Reset, Quality-Gating)
 ├── plans.js             Abo-Vergleich & Definitionen
 ├── legal-content.js     Rechtliche Seiten (Impressum, Datenschutz)
 ├── utils.js             Hilfsfunktionen
 ├── router.js            Client-seitige Navigation (6 Routes)
 ├── icons.js             SVG-Icon-System (35+ Lucide-Icons)
-├── checkout.js          Fake Stripe Checkout (Phase 2)
-└── styles.css           Styles (~1550 Zeilen)
+├── checkout.js          Fake Stripe Checkout + Plan-Wechseln-Flow mit Downgrade-Modal
+└── styles.css           Styles (~1630 Zeilen)
 
 public/
 ├── assets/              Bilder (phone-preview, gut, schlecht, …)
-└── js/loading.json      Lottie-Animation
+├── js/loading.json      Lottie-Animation
+├── robots.txt           Suchmaschinen-Crawler-Richtlinien
+└── sitemap.xml          XML-Sitemap (5 URLs)
 
-index.html               HTML-Grundgerüst (884 Zeilen)
+index.html               HTML-Grundgerüst (~930 Zeilen)
 firebase.json            Firebase Hosting Config
 .firebaserc              Firebase Projekt-Alias
 .env                     Basis-Umgebungsvariablen (committed)
@@ -146,6 +152,8 @@ ROADMAP.md               Entwicklungsroadmap & Fortschritt
 | Kombi-Modus | Ja (max 3) | Ja (max 9) | Ja (max 9) |
 | Vinted-Anzeigentexte | Ja | Ja | Ja |
 | Support | Standard | Priorität | Premium |
+| Donut-Rotation | Nein | Nein | Ja |
+| Pro-Badge | – | – | Goldener Glow |
 
 ---
 
@@ -174,7 +182,9 @@ User → Upload Fotos → OpenAI API → Generierte Bilder → Download
 - Basic-User: 25 Generierungen/Monat, Mittelqualität, bis 5 Kleidungsstücke
 - Pro-User: Unbegrenzt, Hochqualität, unbegrenzte Kleidungsstücke
 - Monats-Reset: Wird beim nächsten Login geprüft (client-seitig)
-- Upgrade/Cancel: Wird in `src/subscription.js` + `src/checkout.js` verwaltet
+- Upgrade: Sofort wirksam via Checkout (Fake Stripe)
+- Downgrade: Deferred bis Periodenende (`scheduledDowngrade` + `downgradeAt` in Firestore)
+- Cancel: `cancelAtPeriodEnd: true`, automatischer Fallback auf Free am Periodenende
 - Quality-Gating: `getQualityForPlan()` in `subscription.js`, kein User-Dropdown mehr
 
 ### Router-System (6 Routes)

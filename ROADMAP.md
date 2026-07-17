@@ -1,7 +1,7 @@
 # ROADMAP — Virtual Try-On
 
 > Live-Tracker für Entwicklungsfortschritt
-> Zuletzt aktualisiert: 16.07.2026
+> Zuletzt aktualisiert: 17.07.2026
 
 ---
 
@@ -10,8 +10,8 @@
 | Metrik | Wert |
 |--------|------|
 | Startdatum | 15.07.2026 |
-| Aktuelle Phase | Phase 4 — Abo-Verwaltung im Account |
-| Gesamtfortschritt | ██████░░░░ ~60% |
+| Aktuelle Phase | Phase 6 — E-Mail-Vorlagen |
+| Gesamtfortschritt | ████████░░ ~80% |
 
 ---
 
@@ -35,11 +35,24 @@
 | Sticky Footer | Fertig | |
 | DSGVO-konformes Löschen + Datenexport | Fertig | |
 | History-Cards Redesign (Thumbnails, Preview, 2er-Grid) | Fertig | 16.07. |
-| Donut-Glow (gelb→orange→rot, prozentual) | Fertig | 16.07. |
+| Donut-Visualisierung (grün→gelb→orange→rot, Rotation nur bei Pro) | Fertig | 16.07.–17.07. |
 | Firestore-Pfad-Fix (generations→users/{uid}/generations) | Fertig | 16.07. |
 | Thumbnail-Generierung (150px JPEG in Firestore) | Fertig | 16.07. |
 | Limit-Upgrade-Modal (2-Stufig) | Fertig | 16.07. |
 | Feature-Gating entfernt (Qualität fix pro Plan) | Fertig | 16.07. |
+| Verkaufstext-Persistenz (saveSession in generateAllSaleTexts) | Fertig | 16.07. |
+| Upgrade-Banner immer sichtbar (free+basic), dynamischer Text | Fertig | 16.07. |
+| Weiter-machen-Button (Session-Check) | Fertig | 16.07. |
+| Abo-Verwaltung Card (über Einstellungen positioniert) | Fertig | 16.07. |
+| Pro-Badge Gold-Glow (Box-Shadow, kein Rahmen, kein Shimmer) | Fertig | 16.07.–17.07. |
+| Donut-Rotation nur für Pro (per CSS-Klasse) | Fertig | 17.07. |
+| Plan-Wechseln-Flow (Upgrade + Deferred Downgrade) | Fertig | 17.07. |
+| Downgrade-Modal (Feature-Vergleich, Ablaufdatum-Hinweis) | Fertig | 17.07. |
+| Firestore `scheduledDowngrade` + `downgradeAt` + `applyScheduledDowngrade()` | Fertig | 17.07. |
+| In-App-Banner-Varianten (info/warning/danger) | Fertig | 17.07. |
+| Console.logs entfernt (9 Stück) | Fertig | 17.07. |
+| SEO & Meta (OG/Twitter-Tags, Favicon, robots.txt, sitemap.xml) | Fertig | 17.07. |
+| beforeunload-Popup entfernt | Fertig | 17.07. |
 
 ---
 
@@ -67,53 +80,59 @@
 - [x] Loading-Animation + Erfolgs-Message
 - [x] Upgrade-Callback auf /preise-Seite angepasst
 - [x] Redirect zu /account nach erfolgreichem Upgrade
-- [x] **Qualität pro Plan**: Free→niedrig, Basic→mittel, Pro→hoch
-- [x] **Qualitäts-Dropdown entfernt** (`#qualitySelect` gelöscht)
-- [x] **`applyFeatureGating()`** vereinfacht (kein DOM-Gating mehr)
-- [x] **Cost-Estimate entfernt** (irrelevant innerhalb Abo)
-- [x] **2-Stufiger Upgrade-Flow**: Upgrade-Modal (3 Karten) → Zahlung
-- [x] **Upgrade-Modal** mit Plan-Cards + Features + Lucide-Icons
-- [x] **`showUpgradeModal()`** statt `openCheckout()`
+- [x] Qualität pro Plan: Free→niedrig, Basic→mittel, Pro→hoch
+- [x] Qualitäts-Dropdown entfernt (`#qualitySelect` gelöscht)
+- [x] `applyFeatureGating()` vereinfacht (kein DOM-Gating mehr)
+- [x] Cost-Estimate entfernt (irrelevant innerhalb Abo)
+- [x] 2-Stufiger Upgrade-Flow: Upgrade-Modal (3 Karten) → Zahlung
+- [x] Upgrade-Modal mit Plan-Cards + Features + Lucide-Icons
+- [x] `showUpgradeModal()` statt `openCheckout()`
 
 ### Phase 3: Account-Seite UI, History-Redesign & Firebase-Fixes
 > Ziel: Moderne History-Cards, richtige Thumbnails, Donut-Visualisierung, Firebase-Korrekturen
 > Geplant: 16.07.2026 | Fertig: 16.07.2026
 
-- [x] **Firestore-Pfad** von `generations/{uid}` → `users/{uid}/generations` (4 Stellen)
-- [x] **History-Karten-Redesign**: Thumbnails, Lucide-Actions, Preview-Overlay, 2er-Grid Desktop
-- [x] **Thumbnail-Generierung** via Canvas (max 150px, JPEG q0.6) in `createThumbnail()`
-- [x] **"Einzelbilder"** → **"Einzelbild"** (Badges, Filter, Export)
-- [x] **"+ Neue Anzeige erstellen"** als Card mit großem Plus-Symbol
-- [x] **Donut-Glow** prozentual (60% gelb, 80% orange, 100% rot) – kein Rechteck-Flackern mehr
-- [x] **Label Variante B**: "Du hast X von Y Anzeigen diesen Monat erstellt"
-- [x] **DEV Mode**: Upgrade-Modal + Toast, aber keine Blockierung (kein `return`)
-- [x] **Account-UI**: Abmelden in Kontoverwaltung, E-Mail-Button unter Input, Lucide-Icons
-- [x] **Preview-Overlay**: Modal mit Thumbnail + Verkaufstext + Escape/Click-Close
-- [x] **Button-Position**: Action-Buttons rechts unten via `margin-top: auto`
-- [x] **Responsive**: Mobile 100px Thumbnails, Desktop 130px, angepasste Padding/Grid
+- [x] Firestore-Pfad von `generations/{uid}` → `users/{uid}/generations` (4 Stellen)
+- [x] History-Karten-Redesign: Thumbnails, Lucide-Actions, Preview-Overlay, 2er-Grid Desktop
+- [x] Thumbnail-Generierung via Canvas (max 150px, JPEG q0.6) in `createThumbnail()`
+- [x] "Einzelbilder" → "Einzelbild" (Badges, Filter, Export)
+- [x] "+ Neue Anzeige erstellen" als Card mit großem Plus-Symbol
+- [x] Donut-Glow prozentual (60% gelb, 80% orange, 100% rot) – grüne Default-Farbe
+- [x] Donut-Rotation via CSS (`donut-bar-spin`) nur für Pro
+- [x] Label Variante B: "Du hast X von Y Anzeigen diesen Monat erstellt"
+- [x] DEV Mode: Upgrade-Modal + Toast, aber keine Blockierung (kein `return`)
+- [x] Account-UI: Abmelden in Kontoverwaltung, E-Mail-Button unter Input, Lucide-Icons
+- [x] Preview-Overlay: Modal mit Thumbnail + Verkaufstext + Escape/Click-Close
+- [x] Button-Position: Action-Buttons rechts unten via `margin-top: auto`
+- [x] Responsive: Mobile 100px Thumbnails, Desktop 130px, angepasste Padding/Grid
 
-### Phase 4: Account-Abo-Verwaltung 🔄 in Arbeit
+### Phase 4: Account-Abo-Verwaltung ✅ Fertig
 > Ziel: Verwaltung des laufenden Abos (kündigen, wechseln, nächste Abbuchung)
-> Geplant: 16.07.2026
+> Geplant: 16.07.2026 | Fertig: 17.07.2026
 
-- [x] **Plan-Badge mit Lucide-Icons** (star/layers/crown) + Farben
-- [ ] "Plan wechseln" Button → Upgrade-Modal
-- [ ] "Abo kündigen" Button → Bestätigungs-Modal
-- [ ] Nächste Abbuchung / Ablaufdatum anzeigen
-- [ ] Monats-Reset-Datum im Profil
+- [x] Plan-Badge mit Lucide-Icons (star/layers/crown) + Farben + Pro-Gold-Glow
+- [x] "Plan wechseln" Button → Upgrade-Modal mit Downgrade-Erkennung
+- [x] Downgrade-Modal: Feature-Vergleich (Tabelle), Ablaufdatum-Hinweis, deferred-Umsetzung
+- [x] Firestore: `scheduledDowngrade` + `downgradeAt` + `applyScheduledDowngrade()`
+- [x] "Abo kündigen" Button → Bestätigungs-Modal (fertig)
+- [x] Nächste Abbuchung / Ablaufdatum anzeigen
+- [x] Monats-Reset-Datum im Profil
+- [x] Cancel/Reaktivieren via `cancelPlan()` / `reactivatePlan()`
 
-### Phase 5: In-App Benachrichtigungen
+### Phase 5: In-App Benachrichtigungen ✅ Fertig
 > Ziel: Kontextuelle Hinweise für Abo-Status
-> Geplant: 17.07.2026
+> Geplant: 17.07.2026 | Fertig: 17.07.2026
 
-- [ ] Banner: Limit erreicht (rot)
-- [ ] Toast: Limit fast erreicht (gelb)
-- [ ] Toast: Upgrade erfolgreich (grün)
-- [ ] Banner: Abo gekündigt (gelb)
-- [ ] Banner: Abo abgelaufen (rot)
-- [ ] Modal: Premium-Feature blockiert
+- [x] Banner: Limit erreicht (rot, `.banner--danger`)
+- [x] Banner: Fast am Limit (gelb, `.banner--warning`)
+- [x] Banner: Bereit für mehr? (default primary shimmer)
+- [x] Toast: Limit fast erreicht bei ≥80% (einmalig pro Session)
+- [x] Toast: Upgrade erfolgreich (grün, in checkout.js)
+- [x] Toast: Abo gekündigt (in account.js)
+- [x] Toast: Kündigung zurückgenommen (in account.js)
+- [x] Banner-Varianten: `banner-shimmer-warning` / `banner-shimmer-danger`
 
-### Phase 6: E-Mail-Vorlagen
+### Phase 6: E-Mail-Vorlagen 🔄
 > Ziel: HTML-Vorlagen für späteren Versand
 > Geplant: 17.07.2026
 
@@ -125,7 +144,7 @@
 - [ ] Limit-Warnung-E-Mail
 - [ ] Zahlung-fehlgeschlagen-E-Mail
 
-### Phase 7: Firestore Security Rules
+### Phase 7: Firestore Security Rules 🔄
 > Ziel: Server-seitige Zugriffskontrolle
 > Geplant: 18.07.2026
 
@@ -135,14 +154,14 @@
 - [ ] Rules testen in Firebase Console
 - [ ] Rules deployen
 
-### Phase 8: SEO & Meta
+### Phase 8: SEO & Meta ✅ Fertig
 > Ziel: Auffindbarkeit und Sharing
-> Geplant: 18.07.2026
+> Geplant: 18.07.2026 | Fertig: 17.07.2026
 
-- [ ] Meta-Tags (description, OG, Twitter)
-- [ ] Favicon
-- [ ] robots.txt
-- [ ] sitemap.xml
+- [x] Meta-Tags (description, OG, Twitter)
+- [x] SVG-Favicon (inline Data-URI)
+- [x] robots.txt
+- [x] sitemap.xml
 
 ### Phase 9: Firebase Functions (optional)
 > Ziel: Server-seitiger Monats-Reset und E-Mail-Versand
@@ -168,6 +187,10 @@
 - Thumbnails werden client-seitig via Canvas erstellt und als Base64-JPEG in Firestore gespeichert
 - Firebase Functions kommen später
 - Glow-Effekt nutzt `box-shadow` auf Container (`border-radius: 50%`), nicht SVG `filter: drop-shadow`
+- **Downgrade-Mechanismus**: `scheduledDowngrade` + `downgradeAt` in Firestore; `applyScheduledDowngrade()` prüft beim Account-Laden ob Fälligkeit erreicht ist
+- **Pro-Badge**: 3-fach geschichteter `box-shadow` in `@keyframes pro-glow` – kein `::before`/`::after` mehr
+- **Donut-Farben**: Default `stroke:#22c55e` (grün), + Farbklassen mit `!important`, Rotation nur via `.account-donut-fill--pro`
+- **Plan-Wechseln**: `showUpgradeModal('account')` erkennt Upgrade/Downgrade automatisch anhand Plan-Reihenfolge; Downgrade-Modal wird dynamisch erzeugt
 
 ---
 
@@ -175,7 +198,7 @@
 
 ```
 15.07. Phase 1+2:     Abo-System + Checkout
-16.07. Phase 2 abschluss + Phase 3: Checkout-Fixes, History-Redesign, Firestore-Fixes, Donut-Visualisierung
-17.07. Phase 4+5:     Abo-Verwaltung + Benachrichtigungen
-18.07. Phase 6+7+8:   E-Mail-Vorlagen + Security Rules + SEO
+16.07. Phase 2+3:     Checkout-Fixes, History-Redesign, Firestore-Fixes, Donut-Visualisierung, Abo-Verwaltung (begonnen)
+17.07. Phase 4+5+8:   Abo-Verwaltung (fertig), Benachrichtigungen, SEO & Meta
+18.07. Phase 6+7:     E-Mail-Vorlagen + Security Rules
 ```

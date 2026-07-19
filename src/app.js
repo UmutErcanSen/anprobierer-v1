@@ -101,6 +101,7 @@ function loadSession() {
     // restore generated images
     if (data.generatedImages && data.generatedImages.length > 0) {
       state.generatedImages = data.generatedImages;
+      state.generatedImages.forEach(img => { if (img.textRegenCount === undefined) img.textRegenCount = 0; });
     }
     if (data.generationDone !== undefined) state.generationDone = data.generationDone;
     if (data.generatedImages && data.generatedImages.length > 0 && state.generationDone) {
@@ -960,6 +961,7 @@ generateBtn.addEventListener('click', async () => {
             size: item.size,
             colors: [...(item.colors || [])],
             saleText: '',
+            textRegenCount: 0,
           });
           successCount++;
           stopItemProgress(i, true);
@@ -1155,9 +1157,11 @@ function renderResults() {
     }
     const retryTextBtn = document.createElement('button');
     retryTextBtn.className = 'btn btn-sm btn-outline retry-text-btn';
-retryTextBtn.innerHTML = `${icon('rotate-ccw', 12)} Neuer Text`;
-  retryTextBtn.addEventListener('click', () => regenerateSaleText(idx));
-  card.querySelector('.result-sale-text').appendChild(retryTextBtn);
+    const tCount = img.textRegenCount ?? 0;
+    retryTextBtn.disabled = tCount >= 3;
+    retryTextBtn.innerHTML = `${icon('rotate-ccw', 12)} Neuer Text (${tCount}/3)`;
+    retryTextBtn.addEventListener('click', () => regenerateSaleText(idx));
+    card.querySelector('.result-sale-text').appendChild(retryTextBtn);
     card.querySelector('.refresh-btn')?.addEventListener('click', () => regenerateImage(idx));
   });
 }
@@ -1192,7 +1196,9 @@ async function generateAllSaleTexts() {
         textArea.appendChild(copyBtn);
         const retryBtn = document.createElement('button');
         retryBtn.className = 'btn btn-sm btn-outline retry-text-btn';
-        retryBtn.innerHTML = `${icon('rotate-ccw', 12)} Neuer Text`;
+        const gCount = img.textRegenCount ?? 0;
+        retryBtn.disabled = gCount >= 3;
+        retryBtn.innerHTML = `${icon('rotate-ccw', 12)} Neuer Text (${gCount}/3)`;
         retryBtn.addEventListener('click', () => regenerateSaleText(i));
         textArea.appendChild(retryBtn);
         addLog(`${icon('check-circle', 12)} Verkaufstext für "${img.clothingName}" generiert`, 'success');
@@ -1336,6 +1342,11 @@ async function regenerateImage(idx) {
 async function regenerateSaleText(idx) {
   const img = state.generatedImages[idx];
   if (!img) return;
+  const count = img.textRegenCount ?? 0;
+  if (count >= 3) {
+    showToast('Maximale Anzahl an Text-Änderungen erreicht (3/3).', 'warning');
+    return;
+  }
   const card = document.querySelector(`.result-card[data-idx="${idx}"]`);
   const textArea = card?.querySelector('.result-sale-text');
   if (!textArea) return;
@@ -1356,17 +1367,22 @@ async function regenerateSaleText(idx) {
     textArea.appendChild(copyBtn);
     const retryBtn = document.createElement('button');
     retryBtn.className = 'btn btn-sm btn-outline retry-text-btn';
-    retryBtn.innerHTML = `${icon('refresh-cw', 12)} Neuer Text`;
+    const rCount = img.textRegenCount ?? 0;
+    retryBtn.disabled = rCount >= 3;
+    retryBtn.innerHTML = `${icon('refresh-cw', 12)} Neuer Text (${rCount}/3)`;
     retryBtn.addEventListener('click', () => regenerateSaleText(idx));
     textArea.appendChild(retryBtn);
     addLog(`Verkaufstext für "${img.clothingName}" neu generiert.`, 'success');
+    img.textRegenCount = (img.textRegenCount ?? 0) + 1;
     saveSession();
   } catch (err) {
     textArea.classList.remove('generating');
     textArea.innerHTML = `<span class="gen-error-msg">${icon('x-circle', 12)} Fehler: ${escapeHtml(err.message?.slice(0, 60) || 'Unbekannter Fehler')}</span>`;
     const retryBtn = document.createElement('button');
     retryBtn.className = 'btn btn-sm btn-outline retry-text-btn';
-    retryBtn.innerHTML = `${icon('rotate-ccw', 12)} Neuer Text`;
+    const eCount = img.textRegenCount ?? 0;
+    retryBtn.disabled = eCount >= 3;
+    retryBtn.innerHTML = `${icon('rotate-ccw', 12)} Neuer Text (${eCount}/3)`;
     retryBtn.addEventListener('click', () => regenerateSaleText(idx));
     textArea.appendChild(retryBtn);
   }

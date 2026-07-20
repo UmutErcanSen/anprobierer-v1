@@ -127,7 +127,7 @@ export function showToast(message, type = 'info', duration = 6000) {
   if (!container) return;
   const el = document.createElement('div');
   el.className = `toast ${type}`;
-  el.innerHTML = `<span class="toast-icon">${icons[type] || icon('info', 16)}</span><span class="toast-msg">${message}</span><button class="toast-close" onclick="this.parentElement.remove()">×</button>`;
+  el.innerHTML = `<span class="toast-icon">${icons[type] || icon('info', 16)}</span><span class="toast-msg">${escapeHtml(message)}</span><button class="toast-close" onclick="this.parentElement.remove()">×</button>`;
   container.appendChild(el);
   setTimeout(() => { if (el.parentElement) el.remove() }, duration);
 }

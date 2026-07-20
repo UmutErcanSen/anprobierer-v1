@@ -44,7 +44,13 @@ function saveSession() {
       personPhoto: state.personPhoto,
       clothingItems: state.clothingItems.map(i => ({ ...i })),
       generationMode: state.generationMode,
-      generatedImages: state.generatedImages.map(i => ({ ...i })),
+      generatedImages: state.generatedImages.map(i => ({
+        clothingType: i.clothingType, clothingName: i.clothingName,
+        size: i.size, colors: i.colors ? [...i.colors] : [],
+        saleText: i.saleText || '', textRegenCount: i.textRegenCount ?? 0,
+        mimeType: i.mimeType,
+        name: i.name,
+      })),
       generationDone: state.generationDone,
       selectedSize: state.selectedSize,
       extraNotes: state.extraNotes,
@@ -866,7 +872,9 @@ generateBtn.addEventListener('click', async () => {
   const subKey = userProfile?.subscription || 'free';
   const maxItems = getMaxItemsForPlan(subKey);
   if (items.length > maxItems) {
-    showToast(`${PLANS[subKey]?.label || 'Free'} erlaubt max. ${maxItems} Kleidungsstück${maxItems > 1 ? 'e' : ''} pro Bild. Upgrade dein Abo für mehr.`, 'warning');
+    const label = PLANS[subKey]?.label || 'Free';
+    const limitText = maxItems === Infinity ? 'unbegrenzt' : `max. ${maxItems}`;
+    showToast(`${label} erlaubt ${limitText} Kleidungsstück${maxItems > 1 ? 'e' : ''} pro Bild. Upgrade dein Abo für mehr.`, 'warning');
     return;
   }
 
@@ -984,7 +992,7 @@ generateBtn.addEventListener('click', async () => {
             stopItemProgress(i, false);
             failCount++;
           } else {
-            console.error(`Fehler "${item.name}":`, err);
+            if (DEV_MODE) console.error(`Fehler "${item.name}":`, err);
             addLog(`${icon('x-circle', 12)} ${err.message}`, 'error');
             showToast(`"${item.name}" fehlgeschlagen: ${err.message.slice(0, 80)}`, 'error');
             stopItemProgress(i, false);
@@ -1048,7 +1056,7 @@ generateBtn.addEventListener('click', async () => {
           showToast(`Zeitüberschreitung. Internet prüfen.`, 'error');
           failCount++;
         } else {
-          console.error('Fehler:', err);
+          if (DEV_MODE) console.error('Fehler:', err);
           addLog(`${icon('x-circle', 12)} ${err.message}`, 'error');
           showToast(`${err.message}`, 'error');
           failCount++;
@@ -1075,7 +1083,7 @@ generateBtn.addEventListener('click', async () => {
       saveSession();
       if (currentUser) {
         if (!DEV_MODE) {
-          await incrementGenerationsUsed(currentUser.uid);
+          await incrementGenerationsUsed(currentUser.uid, successCount);
           if (userProfile) userProfile.generationsUsed = (userProfile.generationsUsed || 0) + 1;
         }
         updateGenRemaining();
@@ -1094,7 +1102,6 @@ generateBtn.addEventListener('click', async () => {
       } else {
         generateAllSaleTexts();
       }
-      addHistoryEntry(items.length, mode, successCount, state.extraNotes);
       document.getElementById('step4')?.classList.remove('hidden-zone');
       document.getElementById('step4')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       updateStepStepper();
@@ -1464,7 +1471,7 @@ window.toggleLog = function () {
   if (btn) btn.innerHTML = (area.classList.contains('visible') ? '' : '') + `${icon('folder-open', 14)} ${area.classList.contains('visible') ? 'Ausblenden' : 'Details'}`;
 };
 
-window.openSelectOverlay = function ({ title, options, currentValue, currentValues, onChange, showDots, getDotColor, multi }) {
+window.openSelectOverlay = function ({ title, options, currentValue, currentValues, onChange, showDots, getDotColor, multi, maxSelections }) {
   const overlay = document.getElementById('selectOverlay');
   document.getElementById('selectOverlayTitle').textContent = title;
   const list = document.getElementById('selectOverlayList');
@@ -1481,13 +1488,25 @@ window.openSelectOverlay = function ({ title, options, currentValue, currentValu
       btn.addEventListener('click', () => {
         const val = btn.dataset.value;
         if (!val) return;
+        if (val === 'all') {
+          selected.length = 0;
+          selected.push('all');
+          list.querySelectorAll('.select-overlay-option').forEach(b => b.classList.toggle('multi-selected', b.dataset.value === 'all'));
+          return;
+        }
         const idx = selected.indexOf(val);
         if (idx >= 0) {
           selected.splice(idx, 1);
           btn.classList.remove('multi-selected');
         } else {
-          if (selected.length >= 2) {
-            showToast('Maximal 2 Farben auswählbar.', 'warning');
+          if (selected.includes('all')) {
+            const allIdx = selected.indexOf('all');
+            selected.splice(allIdx, 1);
+            list.querySelector('.select-overlay-option[data-value="all"]')?.classList.remove('multi-selected');
+          }
+          const limit = maxSelections !== undefined ? maxSelections : 2;
+          if (limit > 0 && selected.length >= limit) {
+            showToast(`Maximal ${limit} auswählbar.`, 'warning');
             return;
           }
           selected.push(val);
@@ -1751,68 +1770,6 @@ document.querySelectorAll('.settings-tab').forEach(tab => {
     if (panel) panel.classList.add('visible');
   });
 });
-
-// ============ SESSION HISTORY ============
-
-const HISTORY_KEY = 'vto_history';
-
-function addHistoryEntry(itemCount, mode, successCount, notes) {
-  try {
-    const raw = localStorage.getItem(HISTORY_KEY);
-    const history = raw ? JSON.parse(raw) : [];
-    history.unshift({
-      id: generateId(),
-      date: new Date().toISOString(),
-      itemCount,
-      mode,
-      successCount,
-      notes: notes || '',
-    });
-    if (history.length > 20) history.length = 20;
-    localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
-    renderHistory();
-  } catch (_) {}
-}
-
-function renderHistory() {
-  const container = document.getElementById('historyList');
-  if (!container) return;
-  try {
-    const raw = localStorage.getItem(HISTORY_KEY);
-    const history = raw ? JSON.parse(raw) : [];
-    if (history.length === 0) {
-      container.innerHTML = `<div class="empty-state empty-state--compact"><span class="empty-icon">${icon('mail', 24)}</span><span class="empty-desc">Noch keine abgeschlossenen Sessions.</span></div>`;
-      return;
-    }
-    container.innerHTML = history.map((h, idx) => `
-      <div class="history-item">
-        <div class="history-item-info">
-          <strong>Session ${history.length - idx}</strong>
-          <span>${new Date(h.date).toLocaleDateString('de-DE')} · ${h.itemCount} Kleidungsstück${h.itemCount > 1 ? 'e' : ''} · ${h.mode === 'single' ? 'Einzeln' : 'Kombiniert'} · ${h.successCount} Bild${h.successCount > 1 ? 'er' : ''}</span>
-          ${h.notes ? `<span class="history-notes">„${h.notes.slice(0, 30)}${h.notes.length > 30 ? '…' : ''}"</span>` : ''}
-        </div>
-        <button class="btn btn-sm btn-outline" onclick="deleteHistoryEntry('${h.id}')" title="Eintrag löschen">${icon('x', 14)}</button>
-      </div>
-    `).join('');
-  } catch (_) {
-    container.innerHTML = '';
-  }
-}
-
-window.deleteHistoryEntry = function (id) {
-  try {
-    const raw = localStorage.getItem(HISTORY_KEY);
-    const history = raw ? JSON.parse(raw) : [];
-    localStorage.setItem(HISTORY_KEY, JSON.stringify(history.filter(h => h.id !== id)));
-    renderHistory();
-  } catch (_) {}
-};
-
-window.clearHistory = function () {
-  if (!confirm('Gesamten Verlauf löschen?')) return;
-  localStorage.removeItem(HISTORY_KEY);
-  renderHistory();
-};
 
 // Header shrink on scroll (RAF-throttled)
 let headerRafPending = false;

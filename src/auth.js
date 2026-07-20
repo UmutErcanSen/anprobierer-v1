@@ -449,9 +449,7 @@ function initLoginUI() {
       await resetPassword(email);
       resetSuccess.innerHTML = `${icon('mail', 14)} E-Mail zum Zurücksetzen gesendet. Bitte Postfach prüfen.`;
     } catch (err) {
-      resetError.textContent = err.code === 'auth/user-not-found'
-        ? 'Kein Konto mit dieser E-Mail-Adresse gefunden.'
-        : err.message || 'Fehler beim Senden der E-Mail.';
+      resetError.textContent = 'E-Mail oder Passwort ist falsch.'
     } finally {
       resetSubmitBtn.disabled = false;
       resetSubmitBtn.textContent = 'Reset-Link senden';
@@ -483,13 +481,11 @@ function initLoginUI() {
         showVerifyOverlay('registered', email);
       }
     } catch (err) {
-      const msg = err.code === 'auth/user-not-found' ? 'Kein Konto mit dieser E-Mail-Adresse gefunden.'
-        : err.code === 'auth/wrong-password' ? 'Falsches Passwort.'
-        : err.code === 'auth/email-already-in-use' ? 'E-Mail bereits registriert. Bitte melde dich an.'
+      const msg = err.code === 'auth/email-already-in-use' ? 'E-Mail bereits registriert. Bitte melde dich an.'
         : err.code === 'auth/weak-password' ? 'Passwort zu kurz (min. 6 Zeichen).'
-        : err.code === 'auth/invalid-credential' ? 'Ungültige Anmeldedaten. Prüfe E-Mail und Passwort.'
         : err.code === 'auth/too-many-requests' ? 'Zu viele Versuche. Bitte warte kurz und versuche es erneut.'
         : err.code === 'auth/popup-closed-by-user' ? 'Google-Anmeldung abgebrochen.'
+        : err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' ? 'E-Mail oder Passwort ist falsch.'
         : err.message || 'Ein Fehler ist aufgetreten.';
       errorEl.textContent = msg;
       errorEl.className = 'login-error';

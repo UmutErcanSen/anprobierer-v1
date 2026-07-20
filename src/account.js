@@ -193,7 +193,9 @@ function renderAccount(profile) {
   const historyStats = document.getElementById('accountHistoryStats');
   if (historyList && currentUser) {
     let allEntries = [];
-    let activeFilters = { mode: 'all', clothing: 'all', time: 'all', search: '' };
+    let activeFilters = { mode: 'all', clothing: ['all'], time: 'all', search: '' };
+    let currentPage = 1;
+    const PAGE_SIZE = 10;
 
     const renderStats = (entries, animate = true) => {
       const now = new Date();
@@ -245,11 +247,26 @@ function renderAccount(profile) {
       if (desktopContainer) {
         desktopContainer.innerHTML = `<button class="account-filter-badge active" data-filter="all">${icon('shirt', 12)} Alle</button>` +
           types.map(t => `<button class="account-filter-badge" data-filter="${t}">${icon('shirt', 12)} ${TYPE_LABELS[t]}</button>`).join('');
+        syncBadgesFromFilters();
         desktopContainer.querySelectorAll('.account-filter-badge').forEach(btn => {
           btn.addEventListener('click', () => {
-            desktopContainer.querySelectorAll('.account-filter-badge').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            activeFilters.clothing = btn.dataset.filter;
+            const val = btn.dataset.filter;
+            if (val === 'all') {
+              activeFilters.clothing = ['all'];
+            } else {
+              if (activeFilters.clothing.includes('all')) {
+                activeFilters.clothing = [val];
+              } else {
+                const idx = activeFilters.clothing.indexOf(val);
+                if (idx >= 0) {
+                  activeFilters.clothing.splice(idx, 1);
+                  if (activeFilters.clothing.length === 0) activeFilters.clothing = ['all'];
+                } else {
+                  activeFilters.clothing.push(val);
+                }
+              }
+            }
+            syncBadgesFromFilters();
             syncSelectsFromFilters();
             applyFilters();
           });
@@ -260,9 +277,10 @@ function renderAccount(profile) {
     const filterEntries = (entries) => {
       return entries.filter(e => {
         if (activeFilters.mode !== 'all' && e.mode !== activeFilters.mode) return false;
-        if (activeFilters.clothing !== 'all') {
+        const clothing = activeFilters.clothing;
+        if (!clothing.includes('all') && clothing.length > 0) {
           const entryTypes = e.clothingTypes || [];
-          if (!entryTypes.includes(activeFilters.clothing)) return false;
+          if (!entryTypes.some(t => clothing.includes(t))) return false;
         }
         if (activeFilters.search) {
           const q = activeFilters.search.toLowerCase();
@@ -280,13 +298,74 @@ function renderAccount(profile) {
       });
     };
 
+    const goToPage = (page) => {
+      currentPage = page;
+      renderHistoryCards(allEntries);
+    };
+
+    window.goToPage = goToPage;
+
+    const renderPagination = () => {
+      const filtered = filterEntries(allEntries);
+      const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+      let container = document.getElementById('accountPagination');
+      if (totalPages <= 1) { if (container) container.remove(); return; }
+      if (!container) {
+        container = document.createElement('div');
+        container.id = 'accountPagination';
+        historyList.after(container);
+      }
+
+      const isMobile = window.innerWidth < 768;
+      let pages = [];
+
+      if (isMobile) {
+        container.innerHTML = `<div class="pagination">
+          <button class="pagination-btn" ${currentPage <= 1 ? 'disabled' : ''} onclick="goToPage(${currentPage - 1})">${icon('chevron-left', 14)}</button>
+          <span class="pagination-info">${currentPage}/${totalPages}</span>
+          <button class="pagination-btn" ${currentPage >= totalPages ? 'disabled' : ''} onclick="goToPage(${currentPage + 1})">${icon('chevron-right', 14)}</button>
+        </div>`;
+        return;
+      }
+
+      const maxVisible = 5;
+      if (totalPages <= maxVisible + 2) {
+        for (let i = 1; i <= totalPages; i++) pages.push(i);
+      } else {
+        pages.push(1);
+        let start = Math.max(2, currentPage - 1);
+        let end = Math.min(totalPages - 1, currentPage + 1);
+        if (currentPage <= 3) { start = 2; end = Math.min(maxVisible, totalPages - 1); }
+        if (currentPage >= totalPages - 2) { start = Math.max(2, totalPages - maxVisible + 1); end = totalPages - 1; }
+        if (start > 2) pages.push('ellipsis');
+        for (let i = start; i <= end; i++) pages.push(i);
+        if (end < totalPages - 1) pages.push('ellipsis');
+        pages.push(totalPages);
+      }
+
+      container.innerHTML = `<div class="pagination">
+        <button class="pagination-btn" ${currentPage <= 1 ? 'disabled' : ''} onclick="goToPage(${currentPage - 1})">${icon('chevron-left', 14)}</button>
+        ${pages.map(p => p === 'ellipsis' ? '<span class="pagination-ellipsis">…</span>' : `<button class="pagination-num${p === currentPage ? ' active' : ''}" onclick="goToPage(${p})">${p}</button>`).join('')}
+        <button class="pagination-btn" ${currentPage >= totalPages ? 'disabled' : ''} onclick="goToPage(${currentPage + 1})">${icon('chevron-right', 14)}</button>
+      </div>`;
+    };
+
     const renderHistoryCards = (entries) => {
       const filtered = filterEntries(entries);
+      const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+      if (currentPage > totalPages && totalPages > 0) currentPage = totalPages;
+      const start = (currentPage - 1) * PAGE_SIZE;
+      const end = Math.min(start + PAGE_SIZE, filtered.length);
+      const pageEntries = filtered.slice(start, end);
+
       const historyCount = document.getElementById('accountHistoryCount');
       if (historyCount) {
-        historyCount.textContent = filtered.length === entries.length
+        const countText = filtered.length === entries.length
           ? `${entries.length} Anzeige${entries.length !== 1 ? 'n' : ''}`
           : `${filtered.length} von ${entries.length} Anzeigen`;
+        historyCount.textContent = totalPages > 1
+          ? `Seite ${currentPage} von ${totalPages} · ${countText}`
+          : countText;
       }
 
       if (filtered.length === 0) {
@@ -296,10 +375,11 @@ function renderAccount(profile) {
             <span>${entries.length === 0 ? 'Noch keine Anzeigen erstellt' : 'Keine Ergebnisse für diese Filter'}</span>
             ${entries.length === 0 ? '<button class="btn btn-sm btn-primary" onclick="navigateTo(\'/anzeige-erstellen\')">Jetzt erste Anzeige erstellen</button>' : ''}
           </div>`;
+        renderPagination();
         return;
       }
 
-      const cardsHtml = filtered.map(e => {
+      const cardsHtml = pageEntries.map(e => {
         const rawDate = e.createdAt?.toDate?.() || (e.date ? new Date(e.date + 'T00:00:00') : null);
         const date = rawDate
           ? `${String(rawDate.getDate()).padStart(2,'0')}/${String(rawDate.getMonth()+1).padStart(2,'0')}/${rawDate.getFullYear()}`
@@ -345,6 +425,7 @@ function renderAccount(profile) {
           <span class="ah-new-icon">+</span>
           <span>Neue Anzeige erstellen</span>
         </div>`;
+      renderPagination();
 
       historyList.querySelectorAll('.ah-btn--dl').forEach(btn => {
         btn.addEventListener('click', (ev) => {
@@ -396,14 +477,18 @@ function renderAccount(profile) {
       });
     };
 
-    const applyFilters = () => renderHistoryCards(allEntries);
+    const applyFilters = () => { currentPage = 1; renderHistoryCards(allEntries); };
 
     const syncSelectsFromFilters = () => {
       const modeSel = document.getElementById('filterModeMobile');
       const clothingSel = document.getElementById('filterClothingMobile');
       const timeSel = document.getElementById('filterTimeMobile');
       if (modeSel) { modeSel.value = activeFilters.mode; updateTriggerLabel('mode', modeSel); }
-      if (clothingSel) { clothingSel.value = activeFilters.clothing; updateTriggerLabel('clothing', clothingSel); }
+      if (clothingSel) {
+        const c = activeFilters.clothing;
+        clothingSel.value = c.includes('all') ? 'all' : (c.length === 1 ? c[0] : 'all');
+        updateTriggerLabel('clothing', clothingSel);
+      }
       if (timeSel) { timeSel.value = activeFilters.time; updateTriggerLabel('time', timeSel); }
     };
 
@@ -424,7 +509,8 @@ function renderAccount(profile) {
       const clothingContainer = document.getElementById('filterClothingDesktop');
       if (clothingContainer) {
         clothingContainer.querySelectorAll('.account-filter-badge').forEach(btn => {
-          btn.classList.toggle('active', btn.dataset.filter === activeFilters.clothing);
+          const val = btn.dataset.filter;
+          btn.classList.toggle('active', val === 'all' ? activeFilters.clothing.includes('all') : activeFilters.clothing.includes(val));
         });
       }
     };
@@ -443,7 +529,7 @@ function renderAccount(profile) {
     document.querySelectorAll('.account-history-mobile-trigger').forEach(trigger => {
       trigger.addEventListener('click', () => {
         const type = trigger.dataset.filterType;
-        let title, options, currentValue;
+        let title, options, currentValue, currentValues, multi, maxSelections;
         if (type === 'mode') {
           title = 'Modus auswählen';
           options = [
@@ -452,11 +538,14 @@ function renderAccount(profile) {
             { value: 'single', label: 'Einzelbild' },
           ];
           currentValue = activeFilters.mode;
+          multi = false;
         } else if (type === 'clothing') {
           title = 'Kleidung auswählen';
           const sel = document.getElementById('filterClothingMobile');
           options = sel ? [...sel.options].map(o => ({ value: o.value, label: o.textContent })) : [{ value: 'all', label: 'Alle' }];
-          currentValue = activeFilters.clothing;
+          currentValues = activeFilters.clothing;
+          multi = true;
+          maxSelections = 0;
         } else if (type === 'time') {
           title = 'Zeitraum auswählen';
           options = [
@@ -465,16 +554,40 @@ function renderAccount(profile) {
             { value: 'month', label: 'Monat' },
           ];
           currentValue = activeFilters.time;
+          multi = false;
         }
         window.openSelectOverlay({
-          title, options, currentValue,
-          multi: false,
+          title, options, currentValue, currentValues,
+          multi, maxSelections,
           onChange: (val) => {
-            activeFilters[type] = val;
+            if (type === 'clothing') {
+              if (val.includes('all')) {
+                const others = val.filter(v => v !== 'all');
+                activeFilters.clothing = others.length > 0 ? others : ['all'];
+              } else {
+                activeFilters.clothing = val;
+              }
+            } else {
+              activeFilters[type] = val;
+            }
             const label = document.getElementById(`filter${type.charAt(0).toUpperCase() + type.slice(1)}Label`);
-            if (label) label.textContent = options.find(o => o.value === val)?.label || val;
+            if (label) {
+              if (type === 'clothing') {
+                const c = activeFilters.clothing;
+                label.textContent = c.includes('all') ? 'Alle' : `${c.length} ausgewählt`;
+              } else {
+                label.textContent = options.find(o => o.value === val)?.label || val;
+              }
+            }
             const sel = document.getElementById(`filter${type.charAt(0).toUpperCase() + type.slice(1)}Mobile`);
-            if (sel) sel.value = val;
+            if (sel) {
+              if (type === 'clothing') {
+                const c = activeFilters.clothing;
+                sel.value = c.includes('all') ? 'all' : (c.length === 1 ? c[0] : 'all');
+              } else {
+                sel.value = val;
+              }
+            }
             syncBadgesFromFilters();
             applyFilters();
           },

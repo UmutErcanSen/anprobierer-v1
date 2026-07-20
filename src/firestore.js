@@ -34,9 +34,9 @@ export async function checkGenerationAllowed(uid) {
   return profile.generationsUsed < profile.generationLimit;
 }
 
-export async function incrementGenerationsUsed(uid) {
+export async function incrementGenerationsUsed(uid, count = 1) {
   await updateDoc(doc(db, 'users', uid), {
-    generationsUsed: increment(1),
+    generationsUsed: increment(count),
   });
 }
 

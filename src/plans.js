@@ -1,7 +1,7 @@
 export const PLANS = {
   free: {
     label: 'Free', limit: 3, color: '#71717a',
-    icon: 'star', price: '0 €', quality: 'Mittel', support: 'Standard',
+    icon: 'star', price: '0 €', quality: 'Niedrig', support: 'Standard',
     itemsPerImage: '1', vintedTexts: 'Nein',
     popular: false,
   },

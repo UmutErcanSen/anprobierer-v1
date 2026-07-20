@@ -185,11 +185,9 @@ export async function checkAndResetMonthly(uid) {
 }
 
 export function getMaxItemsForPlan(subscription) {
-  switch (subscription) {
-    case 'pro': return Infinity;
-    case 'basic': return 5;
-    default: return 1;
-  }
+  if (subscription === 'pro') return Infinity;
+  if (subscription === 'basic') return 5;
+  return 1;
 }
 
 export function getAllowedQualities(subscription) {
@@ -206,8 +204,4 @@ export function getQualityForPlan(subscription) {
     case 'basic': return 'medium';
     default: return 'low';
   }
-}
-
-export function isVintedTextAllowed(subscription) {
-  return subscription === 'basic' || subscription === 'pro';
 }

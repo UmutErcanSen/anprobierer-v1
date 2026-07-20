@@ -9,9 +9,11 @@
     <meta property="og:description" content="Professionelle Vinted-Anzeigen mit KI – Foto hochladen, Kleidung auswählen, Anzeige erstellen." />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://virtualtryon.de" />
+    <meta property="og:image" content="https://virtualtryon.de/og-image.jpg" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Virtual Try-On – KI Anzeigen Erstellung" />
     <meta name="twitter:description" content="Professionelle Vinted-Anzeigen mit KI – Foto hochladen, Kleidung auswählen, Anzeige erstellen." />
+    <meta name="twitter:image" content="https://virtualtryon.de/og-image.jpg" />
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%236c63ff'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-size='18' font-family='Arial' fill='white' font-weight='bold'%3EVT%3C/text%3E%3C/svg%3E" />
     <title>Virtual Try-On – KI Anzeigen Erstellung</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -721,6 +723,15 @@
 
       <div id="route-impressum" class="hidden legal-page">
         <div class="container legal-container" id="imprintContent"></div>
+      </div>
+
+      <div id="route-404" class="hidden">
+        <section style="min-height:60vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;padding:2rem;text-align:center">
+          <span style="font-size:5rem;font-weight:200;color:var(--text-3);line-height:1">404</span>
+          <h2 style="margin:0;font-size:1.3rem">Seite nicht gefunden</h2>
+          <p style="max-width:400px;color:var(--text-2);font-size:.9rem">Die angeforderte Seite existiert nicht oder wurde verschoben.</p>
+          <button class="btn btn-primary" onclick="navigateTo('/')">Zur Startseite</button>
+        </section>
       </div>
 
     </div><!-- /appContainer -->

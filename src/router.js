@@ -11,6 +11,7 @@ export const ROUTES = {
   PREISE: '/preise',
   PRIVACY: '/datenschutz',
   IMPRINT: '/impressum',
+  NOT_FOUND: '/404',
 };
 
 function isRouteProtected(path) {
@@ -44,19 +45,23 @@ const ROUTE_TITLES = {
 
 function showRoute(path) {
   document.documentElement.removeAttribute('id');
-  document.title = ROUTE_TITLES[path] || 'Virtual Try-On';
+  const isValid = Object.values(ROUTES).includes(path);
+  if (!isValid) path = ROUTES.NOT_FOUND;
+  document.title = ROUTE_TITLES[path] || 'Seite nicht gefunden – Virtual Try-On';
   const homeEl = document.getElementById('route-home');
   const createEl = document.getElementById('route-create');
   const accountEl = document.getElementById('route-account');
   const preiseEl = document.getElementById('route-preise');
   const privacyEl = document.getElementById('route-datenschutz');
   const imprintEl = document.getElementById('route-impressum');
+  const notFoundEl = document.getElementById('route-404');
   if (homeEl) homeEl.classList.toggle('hidden', path !== ROUTES.HOME);
   if (createEl) createEl.classList.toggle('hidden', path !== ROUTES.CREATE);
   if (accountEl) accountEl.classList.toggle('hidden', path !== ROUTES.ACCOUNT);
   if (preiseEl) preiseEl.classList.toggle('hidden', path !== ROUTES.PREISE);
   if (privacyEl) privacyEl.classList.toggle('hidden', path !== ROUTES.PRIVACY);
   if (imprintEl) imprintEl.classList.toggle('hidden', path !== ROUTES.IMPRINT);
+  if (notFoundEl) notFoundEl.classList.toggle('hidden', path !== ROUTES.NOT_FOUND);
   if (path === ROUTES.PRIVACY) {
     const container = document.getElementById('privacyContent');
     if (container) renderLegalContent(container, PRIVACY);
@@ -86,16 +91,17 @@ export async function navigateTo(path) {
 
 function handlePopState(e) {
   const path = e.state?.path || window.location.pathname || '/';
-  currentPath = path;
-  showRoute(path);
-  notify(path);
+  const validPaths = Object.values(ROUTES);
+  currentPath = validPaths.includes(path) ? path : ROUTES.NOT_FOUND;
+  showRoute(currentPath);
+  notify(currentPath);
 }
 
 async function initRouter() {
   window.addEventListener('popstate', handlePopState);
   const validPaths = Object.values(ROUTES);
   if (!validPaths.includes(currentPath)) {
-    currentPath = ROUTES.HOME;
+    currentPath = ROUTES.NOT_FOUND;
     window.history.replaceState({ path: currentPath }, '', currentPath);
   }
   if (!DEV_MODE && isRouteProtected(currentPath)) {

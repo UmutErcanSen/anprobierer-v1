@@ -102,7 +102,7 @@
       <a class="burger-item" onclick="navigateTo('/datenschutz'); closeBurgerMenu()">Datenschutz</a>
       <a class="burger-item" onclick="navigateTo('/impressum'); closeBurgerMenu()">Impressum</a>
       <a class="burger-item" onclick="toggleSettings(); closeBurgerMenu()">Einstellungen</a>
-      <a class="burger-item" id="burgerThemeBtn" onclick="toggleTheme(); closeBurgerMenu()"><span id="burgerThemeIcon"><span data-lucide="sun" data-size="14"></span></span> Design</a>
+      <a class="burger-item" id="burgerThemeBtn" onclick="toggleTheme(); closeBurgerMenu()"><span id="burgerThemeIcon"><span data-lucide="sun" data-size="14"></span></span> Hell / Dunkel</a>
       <div class="burger-divider"></div>
       <a class="burger-item burger-item--danger" id="burgerLogoutBtn" onclick="handleBurgerLogout()">Abmelden</a>
     </div>
@@ -583,26 +583,37 @@
               </div>
               <div class="account-history-select-row">
                 <div class="account-history-select-group">
-                  <label class="account-filter-label" for="filterModeMobile">Modus</label>
-                  <select id="filterModeMobile" class="account-history-select">
+                  <label class="account-filter-label">Modus</label>
+                  <button class="account-history-mobile-trigger" data-filter-type="mode">
+                    <span class="trigger-label" id="filterModeLabel">Alle</span>
+                    <span class="trigger-chevron"><span data-lucide="chevron-down" data-size="12"></span></span>
+                  </button>
+                  <select id="filterModeMobile" class="account-history-select account-history-select--hidden">
                     <option value="all">Alle</option>
                     <option value="combined">Kombiniert</option>
                     <option value="single">Einzelbild</option>
                   </select>
                 </div>
                 <div class="account-history-select-group">
-                  <label class="account-filter-label" for="filterClothingMobile">Kleidung</label>
-                  <select id="filterClothingMobile" class="account-history-select">
+                  <label class="account-filter-label">Kleidung</label>
+                  <button class="account-history-mobile-trigger" data-filter-type="clothing">
+                    <span class="trigger-label" id="filterClothingLabel">Alle</span>
+                    <span class="trigger-chevron"><span data-lucide="chevron-down" data-size="12"></span></span>
+                  </button>
+                  <select id="filterClothingMobile" class="account-history-select account-history-select--hidden">
                     <option value="all">Alle</option>
                   </select>
                 </div>
                 <div class="account-history-select-group">
-                  <label class="account-filter-label" for="filterTimeMobile">Zeitraum</label>
-                  <select id="filterTimeMobile" class="account-history-select">
+                  <label class="account-filter-label">Zeitraum</label>
+                  <button class="account-history-mobile-trigger" data-filter-type="time">
+                    <span class="trigger-label" id="filterTimeLabel">Alle</span>
+                    <span class="trigger-chevron"><span data-lucide="chevron-down" data-size="12"></span></span>
+                  </button>
+                  <select id="filterTimeMobile" class="account-history-select account-history-select--hidden">
                     <option value="all">Alle</option>
                     <option value="week">Woche</option>
                     <option value="month">Monat</option>
-                    <option value="older">Älter</option>
                   </select>
                 </div>
               </div>
@@ -616,9 +627,9 @@
                 <div class="account-history-filter-group">
                   <span class="account-filter-label">Modus</span>
                   <div class="account-history-filters" id="filterModeDesktop">
-                    <button class="account-filter-badge active" data-filter="all">Alle</button>
-                    <button class="account-filter-badge" data-filter="combined">Kombiniert</button>
-                    <button class="account-filter-badge" data-filter="single">Einzelbild</button>
+                    <button class="account-filter-badge active" data-filter="all"><span data-lucide="layers" data-size="12"></span> Alle</button>
+                    <button class="account-filter-badge" data-filter="combined"><span data-lucide="layers" data-size="12"></span> Kombiniert</button>
+                    <button class="account-filter-badge" data-filter="single"><span data-lucide="image" data-size="12"></span> Einzelbild</button>
                   </div>
                 </div>
                 <div class="account-history-filter-group">
@@ -628,10 +639,9 @@
                 <div class="account-history-filter-group">
                   <span class="account-filter-label">Zeitraum</span>
                   <div class="account-history-filters" id="filterTimeDesktop">
-                    <button class="account-filter-badge active" data-filter="all">Alle</button>
-                    <button class="account-filter-badge" data-filter="week">Woche</button>
-                    <button class="account-filter-badge" data-filter="month">Monat</button>
-                    <button class="account-filter-badge" data-filter="older">Älter</button>
+                    <button class="account-filter-badge active" data-filter="all"><span data-lucide="clock" data-size="12"></span> Alle</button>
+                    <button class="account-filter-badge" data-filter="week"><span data-lucide="calendar" data-size="12"></span> Woche</button>
+                    <button class="account-filter-badge" data-filter="month"><span data-lucide="calendar" data-size="12"></span> Monat</button>
                   </div>
                 </div>
               </div>

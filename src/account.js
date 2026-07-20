@@ -3,7 +3,7 @@ import { getUserGenerations, deleteGeneration } from './firestore.js';
 import { cancelPlan, reactivatePlan, applyScheduledDowngrade } from './subscription.js';
 import { onRouteChange, getCurrentPath, navigateTo } from './router.js';
 import { PLANS } from './plans.js';
-import { showToast } from './utils.js';
+import { showToast, TYPE_LABELS } from './utils.js';
 import { icon, renderIconElements } from './icons.js';
 
 const DEV_MODE = import.meta.env.VITE_DEV_MODE === 'true';
@@ -229,20 +229,22 @@ function renderAccount(profile) {
     };
 
     const renderClothingFilters = (entries) => {
-      const types = [...new Set(entries.map(e => e.clothingType).filter(Boolean))].sort();
-      const options = `<option value="all">Alle</option>` + types.map(t => `<option value="${t}">${t}</option>`).join('');
+      const types = Object.keys(TYPE_LABELS).sort((a, b) => TYPE_LABELS[a].localeCompare(TYPE_LABELS[b]));
+      const options = `<option value="all">Alle</option>` + types.map(t => `<option value="${t}">${TYPE_LABELS[t]}</option>`).join('');
 
       const mobileSel = document.getElementById('filterClothingMobile');
       if (mobileSel) {
         const prev = mobileSel.value;
         mobileSel.innerHTML = options;
         mobileSel.value = types.includes(prev) ? prev : 'all';
+        const label = document.getElementById('filterClothingLabel');
+        if (label) label.textContent = mobileSel.options[mobileSel.selectedIndex]?.textContent || 'Alle';
       }
 
       const desktopContainer = document.getElementById('filterClothingDesktop');
       if (desktopContainer) {
-        desktopContainer.innerHTML = `<button class="account-filter-badge active" data-filter="all">Alle</button>` +
-          types.map(t => `<button class="account-filter-badge" data-filter="${t}">${t}</button>`).join('');
+        desktopContainer.innerHTML = `<button class="account-filter-badge active" data-filter="all">${icon('shirt', 12)} Alle</button>` +
+          types.map(t => `<button class="account-filter-badge" data-filter="${t}">${icon('shirt', 12)} ${TYPE_LABELS[t]}</button>`).join('');
         desktopContainer.querySelectorAll('.account-filter-badge').forEach(btn => {
           btn.addEventListener('click', () => {
             desktopContainer.querySelectorAll('.account-filter-badge').forEach(b => b.classList.remove('active'));
@@ -258,19 +260,21 @@ function renderAccount(profile) {
     const filterEntries = (entries) => {
       return entries.filter(e => {
         if (activeFilters.mode !== 'all' && e.mode !== activeFilters.mode) return false;
-        if (activeFilters.clothing !== 'all' && e.clothingType !== activeFilters.clothing) return false;
+        if (activeFilters.clothing !== 'all') {
+          const entryTypes = e.clothingTypes || [];
+          if (!entryTypes.includes(activeFilters.clothing)) return false;
+        }
         if (activeFilters.search) {
           const q = activeFilters.search.toLowerCase();
           const notes = (e.notes || '').toLowerCase();
-          const type = (e.clothingType || '').toLowerCase();
-          if (!notes.includes(q) && !type.includes(q)) return false;
+          const types = (e.clothingTypes || []).map(t => (TYPE_LABELS[t] || t).toLowerCase()).join(' ');
+          if (!notes.includes(q) && !types.includes(q)) return false;
         }
         if (activeFilters.time !== 'all') {
           const d = e.createdAt?.toDate ? e.createdAt.toDate() : new Date(e.date + 'T00:00:00');
           const diffDays = (new Date() - d) / (1000 * 60 * 60 * 24);
           if (activeFilters.time === 'week' && diffDays > 7) return false;
-          if (activeFilters.time === 'month' && (diffDays <= 7 || diffDays > 30)) return false;
-          if (activeFilters.time === 'older' && diffDays <= 30) return false;
+          if (activeFilters.time === 'month' && diffDays > 30) return false;
         }
         return true;
       });
@@ -304,11 +308,15 @@ function renderAccount(profile) {
         const modeClass = e.mode === 'combined' ? 'combined' : 'single';
         const notes = e.notes || '';
         const hasNotes = notes.length > 0;
+        const types = (e.clothingTypes || []).filter(t => t !== 'combined' && t !== '');
+        const clothingBadge = types.length === 1 ? `<span class="ah-badge ah-badge--clothing">${TYPE_LABELS[types[0]] || types[0]}</span>` : '';
         const infoParts = [];
-        if (e.clothingType) infoParts.push(e.clothingType);
+        if (types.length > 1) infoParts.push(types.map(t => TYPE_LABELS[t] || t).join(', '));
         if (e.itemCount) infoParts.push(`${e.itemCount} ${e.itemCount === 1 ? 'Kleidungsstück' : 'Kleidungsstücke'}`);
         if (e.imageCount) infoParts.push(`${e.imageCount} ${e.imageCount === 1 ? 'Bild' : 'Bilder'}`);
         const infoText = infoParts.join(' · ');
+        const saleText = e.saleText || '';
+        const displaySaleText = saleText.length > 150 ? saleText.slice(0, 150).replace(/\n---\n/g, ' · ').replace(/\n/g, ' ') + '…' : saleText.replace(/\n---\n/g, ' · ').replace(/\n/g, ' ');
 
         return `<div class="ah-card ah-card--${modeClass}">
           <div class="ah-thumb${e.thumbnail ? '' : ' ah-thumb--' + modeClass}">
@@ -317,10 +325,12 @@ function renderAccount(profile) {
           <div class="ah-body">
             <div class="ah-top">
               <span class="ah-badge ah-badge--${modeClass}">${modeLabel}</span>
+              ${clothingBadge}
               <span class="ah-date">${date}</span>
             </div>
             ${infoText ? `<div class="ah-info">${infoText}</div>` : ''}
             ${hasNotes ? `<div class="ah-notes">"${notes}"</div>` : ''}
+            ${saleText ? `<div class="ah-sale-text">${displaySaleText}</div>` : ''}
             <div class="ah-actions">
               <button class="ah-btn ah-btn--dl" data-id="${e.id}" aria-label="Herunterladen">${icon('download', 20)}</button>
               <button class="ah-btn ah-btn--preview" data-id="${e.id}" aria-label="Vorschau">${icon('eye', 20)}</button>
@@ -392,9 +402,14 @@ function renderAccount(profile) {
       const modeSel = document.getElementById('filterModeMobile');
       const clothingSel = document.getElementById('filterClothingMobile');
       const timeSel = document.getElementById('filterTimeMobile');
-      if (modeSel) modeSel.value = activeFilters.mode;
-      if (clothingSel) clothingSel.value = activeFilters.clothing;
-      if (timeSel) timeSel.value = activeFilters.time;
+      if (modeSel) { modeSel.value = activeFilters.mode; updateTriggerLabel('mode', modeSel); }
+      if (clothingSel) { clothingSel.value = activeFilters.clothing; updateTriggerLabel('clothing', clothingSel); }
+      if (timeSel) { timeSel.value = activeFilters.time; updateTriggerLabel('time', timeSel); }
+    };
+
+    const updateTriggerLabel = (type, sel) => {
+      const label = document.getElementById(`filter${type.charAt(0).toUpperCase() + type.slice(1)}Label`);
+      if (label) label.textContent = sel.options[sel.selectedIndex]?.textContent || 'Alle';
     };
 
     const syncBadgesFromFilters = () => {
@@ -425,22 +440,46 @@ function renderAccount(profile) {
     if (searchMobile) searchMobile.addEventListener('input', handleSearch);
     if (searchDesktop) searchDesktop.addEventListener('input', handleSearch);
 
-    document.getElementById('filterModeMobile')?.addEventListener('change', (e) => {
-      activeFilters.mode = e.target.value;
-      syncBadgesFromFilters();
-      applyFilters();
-    });
-
-    document.getElementById('filterClothingMobile')?.addEventListener('change', (e) => {
-      activeFilters.clothing = e.target.value;
-      syncBadgesFromFilters();
-      applyFilters();
-    });
-
-    document.getElementById('filterTimeMobile')?.addEventListener('change', (e) => {
-      activeFilters.time = e.target.value;
-      syncBadgesFromFilters();
-      applyFilters();
+    document.querySelectorAll('.account-history-mobile-trigger').forEach(trigger => {
+      trigger.addEventListener('click', () => {
+        const type = trigger.dataset.filterType;
+        let title, options, currentValue;
+        if (type === 'mode') {
+          title = 'Modus auswählen';
+          options = [
+            { value: 'all', label: 'Alle' },
+            { value: 'combined', label: 'Kombiniert' },
+            { value: 'single', label: 'Einzelbild' },
+          ];
+          currentValue = activeFilters.mode;
+        } else if (type === 'clothing') {
+          title = 'Kleidung auswählen';
+          const sel = document.getElementById('filterClothingMobile');
+          options = sel ? [...sel.options].map(o => ({ value: o.value, label: o.textContent })) : [{ value: 'all', label: 'Alle' }];
+          currentValue = activeFilters.clothing;
+        } else if (type === 'time') {
+          title = 'Zeitraum auswählen';
+          options = [
+            { value: 'all', label: 'Alle' },
+            { value: 'week', label: 'Woche' },
+            { value: 'month', label: 'Monat' },
+          ];
+          currentValue = activeFilters.time;
+        }
+        window.openSelectOverlay({
+          title, options, currentValue,
+          multi: false,
+          onChange: (val) => {
+            activeFilters[type] = val;
+            const label = document.getElementById(`filter${type.charAt(0).toUpperCase() + type.slice(1)}Label`);
+            if (label) label.textContent = options.find(o => o.value === val)?.label || val;
+            const sel = document.getElementById(`filter${type.charAt(0).toUpperCase() + type.slice(1)}Mobile`);
+            if (sel) sel.value = val;
+            syncBadgesFromFilters();
+            applyFilters();
+          },
+        });
+      });
     });
 
     document.querySelectorAll('#filterModeDesktop .account-filter-badge').forEach(btn => {
@@ -775,7 +814,20 @@ function renderSubscriptionInfo(profile, subKey, sub) {
   const used = profile.generationsUsed || 0;
   const limit = sub.limit === -1 ? '∞' : sub.limit;
 
-  let html = `<div class="as-status"><span class="as-status-badge ${statusClass}">${statusText}</span></div>`;
+  let html = '';
+
+  const scheduledDowngrade = profile.scheduledDowngrade;
+  const downgradeAt = profile.downgradeAt?.toDate?.();
+  if (scheduledDowngrade && downgradeAt && downgradeAt > new Date()) {
+    const targetPlan = PLANS[scheduledDowngrade] || { label: scheduledDowngrade };
+    const downgradeStr = downgradeAt.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    html += `<div class="as-warning">
+      ${icon('info', 16)}
+      <span>Dein Plan wechselt am <strong>${downgradeStr}</strong> zu <strong>${targetPlan.label}</strong>.</span>
+    </div>`;
+  }
+
+  html += `<div class="as-status"><span class="as-status-badge ${statusClass}">${statusText}</span></div>`;
 
   if (!isFree) {
     const subEnd = periodEnd || (() => {

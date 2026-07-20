@@ -15,7 +15,7 @@ import {
 } from './api.js';
 
 import { currentUser, userProfile, onAuthChange, requireAuth, setPendingRedirect, isEmailVerified, refreshUserProfile, logout } from './auth.js';
-import { checkGenerationAllowed, incrementGenerationsUsed, saveGeneration } from './firestore.js';
+import { checkGenerationAllowed, incrementGenerationsUsed, saveGeneration, updateGeneration } from './firestore.js';
 import { PLANS, renderPlanComparison } from './plans.js';
 import { onRouteChange, getCurrentPath, navigateTo, ROUTES } from './router.js';
 import { getMaxItemsForPlan, getQualityForPlan, checkAndResetMonthly } from './subscription.js';
@@ -1072,7 +1072,6 @@ generateBtn.addEventListener('click', async () => {
       state.generationDone = true;
       renderResults();
       renderZipPreview();
-      generateAllSaleTexts();
       saveSession();
       if (currentUser) {
         if (!DEV_MODE) {
@@ -1084,7 +1083,16 @@ generateBtn.addEventListener('click', async () => {
         const first = state.generatedImages[0];
         const thumbnail = first?.base64 ? await createThumbnail(first.base64, first.mimeType) : null;
         const previewImage = first?.base64 ? await createThumbnail(first.base64, first.mimeType, 600) : null;
-        saveGeneration(currentUser.uid, { mode, quality: state.selectedQuality, itemCount: items.length, notes: state.extraNotes, imageCount: successCount, thumbnail, previewImage });
+        const clothingTypes = [...new Set(state.generatedImages.map(g => g.clothingType).filter(Boolean))];
+        const genRef = await saveGeneration(currentUser.uid, { mode, quality: state.selectedQuality, itemCount: items.length, notes: state.extraNotes, imageCount: successCount, thumbnail, previewImage, clothingTypes });
+        generateAllSaleTexts().then(() => {
+          const saleText = state.generatedImages.filter(g => g.saleText).map(g => g.saleText).join('\n---\n');
+          if (saleText) {
+            updateGeneration(currentUser.uid, genRef.id, { saleText });
+          }
+        });
+      } else {
+        generateAllSaleTexts();
       }
       addHistoryEntry(items.length, mode, successCount, state.extraNotes);
       document.getElementById('step4')?.classList.remove('hidden-zone');

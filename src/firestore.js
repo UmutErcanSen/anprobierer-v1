@@ -41,10 +41,15 @@ export async function incrementGenerationsUsed(uid) {
 }
 
 export async function saveGeneration(uid, data) {
-  await addDoc(collection(db, 'users', uid, 'generations'), {
+  const docRef = await addDoc(collection(db, 'users', uid, 'generations'), {
     ...data,
     createdAt: serverTimestamp(),
   });
+  return docRef;
+}
+
+export async function updateGeneration(uid, generationId, data) {
+  await updateDoc(doc(db, 'users', uid, 'generations', generationId), data);
 }
 
 export async function getUserGenerations(uid, max = 20) {

@@ -744,7 +744,7 @@ footer{text-align:center;padding:1.5rem 1rem;color:var(--text-3);font-size:.8rem
 .account-history-list{max-height:400px;overflow-y:auto;overflow-x:hidden;gap:.5rem}
 .account-history-empty{display:flex;flex-direction:column;align-items:center;gap:.6rem;padding:1.5rem 0;font-size:.82rem;color:var(--text-3)}
 /* === HISTORY CARDS (modern) === */
-.ah-card{display:flex;gap:.75rem;padding:.6rem .75rem;background:var(--surface-2);border-radius:var(--radius-sm);border:1px solid var(--surface-3);transition:transform .25s ease,box-shadow .25s ease,border-color .25s ease}
+.ah-card{display:flex;min-width:0;gap:.75rem;padding:.6rem .75rem;background:var(--surface-2);border-radius:var(--radius-sm);border:1px solid var(--surface-3);transition:transform .25s ease,box-shadow .25s ease,border-color .25s ease}
 .ah-card--combined{border-left:3px solid var(--primary)}
 .ah-card--single{border-left:3px solid var(--tertiary)}
 .ah-card:hover{border-color:var(--surface-3)}
@@ -835,7 +835,7 @@ footer{text-align:center;padding:1.5rem 1rem;color:var(--text-3);font-size:.8rem
   .account-filter-badge{flex-shrink:0;padding:.3rem .7rem;border-radius:999px;font-size:.78rem;font-weight:600;border:1px solid var(--surface-3);background:var(--surface-2);color:var(--text-3);cursor:pointer;transition:var(--transition);white-space:nowrap;display:inline-flex;align-items:center;gap:.3rem}
   .account-filter-badge:hover{border-color:var(--primary);color:var(--primary)}
   .account-filter-badge.active{border-color:var(--primary);background:var(--primary-dim);color:var(--primary)}
-  .account-history-list{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;max-height:none;overflow-y:visible}
+  .account-history-list{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;max-height:none;overflow-x:visible;overflow-y:visible}
   .ah-card{padding:1rem 1.15rem}
   .ah-thumb{width:130px;height:130px;border-radius:14px}
   .ah-badge{font-size:.72rem;padding:.18rem .5rem}
@@ -1583,7 +1583,7 @@ header.header-compact{box-shadow:0 2px 24px rgba(0,0,0,.45)}
   .account-history-search{padding:1rem 1rem 1rem 2.75rem;font-size:1rem;min-height:52px}
   .account-history-select-row{flex-direction:column;gap:.75rem}
   .account-history-select{padding:.7rem .75rem .7rem 1rem;font-size:.95rem;min-height:48px}
-  .account-history-list{max-height:none;overflow-y:visible;display:flex;flex-direction:column;gap:.5rem}
+  .account-history-list{max-height:none;overflow-x:hidden;overflow-y:visible;display:flex;flex-direction:column;gap:.5rem}
   .ah-card{padding:.75rem .85rem}
   .ah-thumb{width:100px;height:100px}
   .ah-badge{font-size:.7rem;padding:.15rem .45rem}

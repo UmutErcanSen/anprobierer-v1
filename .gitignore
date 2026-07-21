@@ -3,3 +3,6 @@ dist
 .env.local
 .env.*.local
 .firebase
+
+# Firebase-Emulator-Artefakte (entstehen bei npm run test:rules)
+*-debug.log

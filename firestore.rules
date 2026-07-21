@@ -1,0 +1,111 @@
+rules_version = '2';
+
+// ============================================================================
+// Firestore Security Rules — Phase 0 (Absicherung der Altanwendung)
+//
+// ZWECK: Nutzerdaten voneinander isolieren. Bis hierhin existierten keine
+// Rules im Repo; standen live noch Test-Mode-Rules, waren alle Profile und
+// Generierungen öffentlich les- und schreibbar (DSGVO-relevant).
+//
+// BEWUSSTE LÜCKE: Die Abo-Felder (subscription, generationLimit,
+// generationsUsed) bleiben für den Eigentümer schreibbar. Grund: Die
+// Altanwendung schreibt sie an 8 Stellen ausschließlich clientseitig
+// (src/subscription.js) — ein Schreibverbot würde sie sofort funktionsunfähig
+// machen. Wirtschaftlich kostet die Lücke derzeit nichts: die Bildgenerierung
+// läuft über den eigenen OpenAI-Key des Nutzers (BYOK) und der Checkout ist
+// eine Attrappe, es gibt also weder Kosten- noch Umsatzrisiko.
+// Strukturell behoben wird das in Phase 2/3, wenn diese Schreibzugriffe
+// serverseitig hinter Supabase/Stripe wandern.
+//
+// Was hier trotzdem erzwungen wird: Isolation, Enumerierungsschutz,
+// Typprüfung, Größenbremsen und plausible Wertebereiche.
+// ============================================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isOwner(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+
+    function unchanged(field) {
+      return request.resource.data[field] == resource.data[field];
+    }
+
+    match /users/{uid} {
+
+      // get, nicht list: verhindert das Durchzählen der Nutzerbasis.
+      allow get: if isOwner(uid);
+      allow list: if false;
+
+      // Neuanlage nur mit Free-Defaults — kein Start als "pro".
+      allow create: if isOwner(uid)
+        && request.resource.data.subscription == 'free'
+        && request.resource.data.generationsUsed == 0
+        && request.resource.data.generationLimit == 3
+        && request.resource.data.email is string
+        && request.resource.data.email.size() <= 320
+        && request.resource.data.displayName is string
+        && request.resource.data.displayName.size() <= 100;
+
+      allow update: if isOwner(uid)
+        // E-Mail ist die Identität und wird über Firebase Auth geändert,
+        // nicht über das Profildokument.
+        && unchanged('email')
+        && request.resource.data.displayName is string
+        && request.resource.data.displayName.size() <= 100
+        // Nur bekannte Pläne, keine erfundenen Werte.
+        && request.resource.data.subscription in ['free', 'basic', 'pro']
+        && request.resource.data.subscriptionStatus in ['active', 'canceled', 'past_due']
+        // Zähler bleiben plausibel: keine negativen Werte, keine Mondzahlen.
+        && request.resource.data.generationsUsed is int
+        && request.resource.data.generationsUsed >= 0
+        && request.resource.data.generationsUsed <= 100000
+        && request.resource.data.generationLimit is int
+        && request.resource.data.generationLimit >= -1
+        && request.resource.data.generationLimit <= 100000
+        && request.resource.data.cancelAtPeriodEnd is bool;
+
+      // DSGVO Art. 17: Der Nutzer muss sein Konto selbst löschen können.
+      allow delete: if isOwner(uid);
+
+      match /generations/{genId} {
+
+        // read deckt get und list ab. Die Abfrage ist bereits auf die
+        // Subcollection des Nutzers beschränkt, daher unkritisch.
+        allow read: if isOwner(uid);
+
+        // Größenbremse: thumbnail (150px) und previewImage (600px) liegen als
+        // Base64 IM Dokument (src/app.js:1092). Ohne Deckel reißt ein einziger
+        // Schreibvorgang das 1-MiB-Dokumentlimit von Firestore.
+        allow create: if isOwner(uid)
+          && request.resource.data.mode in ['single', 'combined']
+          && request.resource.data.imageCount is int
+          && request.resource.data.imageCount >= 0
+          && request.resource.data.imageCount <= 50
+          && (!('thumbnail' in request.resource.data.keys())
+              || request.resource.data.thumbnail == null
+              || request.resource.data.thumbnail.size() <= 60000)
+          && (!('previewImage' in request.resource.data.keys())
+              || request.resource.data.previewImage == null
+              || request.resource.data.previewImage.size() <= 400000)
+          && (!('notes' in request.resource.data.keys())
+              || request.resource.data.notes == null
+              || request.resource.data.notes.size() <= 2000);
+
+        // Nachtrag des Verkaufstexts (src/app.js:1099).
+        allow update: if isOwner(uid)
+          && (!('saleText' in request.resource.data.keys())
+              || request.resource.data.saleText == null
+              || request.resource.data.saleText.size() <= 20000);
+
+        allow delete: if isOwner(uid);
+      }
+    }
+
+    // Alles, was hier nicht ausdrücklich erlaubt ist, ist verboten.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

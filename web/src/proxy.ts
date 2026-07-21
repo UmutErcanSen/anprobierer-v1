@@ -42,10 +42,39 @@ export async function proxy(request: NextRequest) {
   // Bewusst getUser() und nicht getSession(): getUser() prüft das Token beim
   // Auth-Server nach. getSession() liest es nur aus dem Cookie und ist damit
   // fälschbar — als Grundlage für Zugriffsentscheidungen ungeeignet.
-  await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const pfad = request.nextUrl.pathname;
+  const istGeschuetzt = GESCHUETZTE_PFADE.some(
+    (p) => pfad === p || pfad.startsWith(`${p}/`),
+  );
+
+  if (istGeschuetzt && !user) {
+    const url = request.nextUrl.clone();
+    url.pathname = '/anmelden';
+    url.search = '';
+    return NextResponse.redirect(url);
+  }
+
+  // Angemeldete Nutzer haben auf den Auth-Seiten nichts verloren.
+  if (user && (pfad === '/anmelden' || pfad === '/registrieren')) {
+    const url = request.nextUrl.clone();
+    url.pathname = '/konto';
+    url.search = '';
+    return NextResponse.redirect(url);
+  }
 
   return supabaseResponse;
 }
+
+/*
+ * Der Proxy ist die erste Verteidigungslinie, nicht die einzige. Jede
+ * geschützte Seite prüft zusätzlich selbst — siehe konto/page.tsx. Eine
+ * vergessene Zeile in dieser Liste darf keine Daten preisgeben.
+ */
+const GESCHUETZTE_PFADE = ['/konto', '/anzeige-erstellen'];
 
 export const config = {
   matcher: [

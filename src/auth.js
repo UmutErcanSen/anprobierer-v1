@@ -469,6 +469,11 @@ function initLoginUI() {
       return;
     }
 
+    if (mode === 'register') {
+      if (password.length < 8) { errorEl.textContent = 'Passwort muss mindestens 8 Zeichen lang sein.'; errorEl.className = 'login-error'; return }
+      if (!/[a-zA-Z]/.test(password) || !/\d/.test(password)) { errorEl.textContent = 'Passwort muss mindestens einen Buchstaben und eine Zahl enthalten.'; errorEl.className = 'login-error'; return }
+    }
+
     submitBtn.disabled = true;
     submitBtn.innerHTML = `${icon('hourglass', 14)} ...`;
     errorEl.textContent = '';

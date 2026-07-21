@@ -28,6 +28,15 @@ GitHub: https://github.com/UmutErcanSen/anprobierer-v1
 - **Header mit Scroll-Shadow**: Box-Shadow erscheint beim Scrollen
 - **DSGVO-konform**: Löschen + Datenexport mit Vorschau-Modal
 - **SEO**: Meta-Tags (OG/Twitter), robots.txt, sitemap.xml, SVG-Favicon
+- **CDN→NPM Migration**: lottie-web + jszip via npm statt CDN (Security + Bundle-Kontrolle)
+- **Code-Splitting**: App-Code (130 kB) + vendor-animation (405 kB) + vendor-firebase (497 kB) — ~87% weniger initiale Ladezeit
+- **Breadcrumb-Navigation**: Auf Account/Preise/Datenschutz/Impressum
+- **Skip-to-Content Link**: Accessibility (Sprungmarke zum Hauptinhalt)
+- **Lazy Loading**: History-Thumbnails mit `loading="lazy"`
+- **Loading-Balken**: Oberer Fortschrittsbalken bei Routenwechseln
+- **Fokus-Management**: Automatischer Fokus auf Hauptcontainer nach Seitenwechsel
+- **Passwort-Validierung**: Min. 8 Zeichen, mindestens 1 Buchstabe + 1 Zahl
+- **Mobile Overflow-Fix**: `-webkit-text-size-adjust:100%`, `overflow:hidden` auf Cards
 
 ---
 
@@ -111,27 +120,28 @@ cmd /c "git add -A && git commit -m "Beschreibung" && git push"
 src/
 ├── main.js              Einstiegspunkt
 ├── firebase.js          Firebase Init
-├── auth.js              Login/Registrierung/Google + AuthGuard
-├── account.js           Account-Seite (Profil, Stats, History, Donut, Preview-Overlay, Upgrade-Banner)
+├── auth.js              Login/Registrierung/Google + AuthGuard, Passwort-Validierung
+├── account.js           Account-Seite (Profil, Stats, History, Donut, Preview-Overlay, Upgrade-Banner, lazy loading)
 ├── firestore.js         Firestore CRUD (Profile, Generierungen, Thumbnails)
-├── app.js               Hauptlogik (Upload, Generierung, Ergebnisse, createThumbnail)
+├── app.js               Hauptlogik (Upload, Generierung, Ergebnisse, createThumbnail, lottie+JSZip)
 ├── api.js               OpenAI API-Aufrufe (Bilder + Texte)
 ├── subscription.js      Abo-Management (Upgrade, Cancel, Deferred Downgrade, Reset, Quality-Gating)
 ├── plans.js             Abo-Vergleich & Definitionen
 ├── legal-content.js     Rechtliche Seiten (Impressum, Datenschutz)
 ├── utils.js             Hilfsfunktionen
-├── router.js            Client-seitige Navigation (6 Routes)
-├── icons.js             SVG-Icon-System (35+ Lucide-Icons)
+├── router.js            Client-seitige Navigation (6 Routes) + Route-Loader + Fokus-Management
+├── icons.js             SVG-Icon-System (38+ Lucide-Icons)
 ├── checkout.js          Fake Stripe Checkout + Plan-Wechseln-Flow mit Downgrade-Modal
-└── styles.css           Styles (~1630 Zeilen)
+└── styles.css           Styles (~1700 Zeilen) + Skip-Link + Breadcrumb + Route-Loader
 
 public/
 ├── assets/              Bilder (phone-preview, gut, schlecht, …)
 ├── js/loading.json      Lottie-Animation
 ├── robots.txt           Suchmaschinen-Crawler-Richtlinien
-└── sitemap.xml          XML-Sitemap (5 URLs)
+└── sitemap.xml          XML-Sitemap (6 URLs, /erstellen ergänzt)
 
-index.html               HTML-Grundgerüst (~930 Zeilen)
+index.html               HTML-Grundgerüst (~935 Zeilen) + Skip-Link + Breadcrumbs + Route-Loader
+vite.config.js           Vite-Konfiguration mit Code-Splitting (manualChunks)
 firebase.json            Firebase Hosting Config
 .firebaserc              Firebase Projekt-Alias
 .env                     Basis-Umgebungsvariablen (committed)
@@ -160,6 +170,7 @@ ROADMAP.md               Entwicklungsroadmap & Fortschritt
 ## 🏗 Architektur
 
 - **Frontend**: Vanilla JS (kein Framework), Vite 6
+- **Build**: Vite mit Code-Splitting (3 Chunks: app, vendor-animation, vendor-firebase)
 - **Backend**: Firebase (Auth, Firestore, Hosting)
 - **KI**: OpenAI GPT Image 2 (Bilder), GPT-4o-mini (Texte)
 - **API-Key**: BYOK (Bring Your Own Key) — User bringt eigenen OpenAI-Key
@@ -197,6 +208,18 @@ User → Upload Fotos → OpenAI API → Generierte Bilder → Download
 | `/preise` | Preisvergleich |
 | `/datenschutz` | Datenschutzerklärung |
 | `/impressum` | Impressum |
+
+### Build & Code-Splitting
+
+Vite teilt den Build automatisch in 3 Chunks per `manualChunks` (`vite.config.js`):
+
+| Chunk | Größe | Inhalt |
+|-------|-------|--------|
+| `index-*.js` | ~130 kB | App-Code (UI, Logik, Routing) |
+| `vendor-animation-*.js` | ~405 kB | lottie-web + jszip |
+| `vendor-firebase-*.js` | ~497 kB | Firebase SDK |
+
+→ **~87% weniger Code** beim initialen Laden (130 kB statt 1,1 MB)
 
 ### Modal-Pattern
 

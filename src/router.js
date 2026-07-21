@@ -43,6 +43,30 @@ const ROUTE_TITLES = {
   [ROUTES.IMPRINT]: 'Impressum – Virtual Try-On',
 };
 
+const loader = document.getElementById('routeLoader');
+let loaderTimer = null;
+
+function showLoader() {
+  if (!loader) return;
+  loader.classList.add('active');
+  if (loaderTimer) clearTimeout(loaderTimer);
+  loaderTimer = setTimeout(() => loader.classList.remove('active'), 800);
+}
+
+function hideLoader() {
+  if (!loader) return;
+  loader.classList.remove('active');
+  if (loaderTimer) clearTimeout(loaderTimer);
+}
+
+function focusAppContainer() {
+  const el = document.getElementById('appContainer');
+  if (el) {
+    el.focus({ preventScroll: true });
+    if (!el.hasAttribute('tabindex')) el.setAttribute('tabindex', '-1');
+  }
+}
+
 function showRoute(path) {
   document.documentElement.removeAttribute('id');
   const isValid = Object.values(ROUTES).includes(path);
@@ -71,15 +95,19 @@ function showRoute(path) {
     if (container) renderLegalContent(container, IMPRINT);
   }
   renderIconElements();
+  hideLoader();
+  focusAppContainer();
 }
 
 export async function navigateTo(path) {
   if (path === currentPath) return;
+  showLoader();
   if (!DEV_MODE && isRouteProtected(path) && !currentUser) {
     try {
       setPendingRedirect(path);
       await requireAuth();
     } catch {
+      hideLoader();
       return;
     }
   }

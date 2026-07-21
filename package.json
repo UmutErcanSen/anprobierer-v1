@@ -10,7 +10,9 @@
     "deploy": "npm run build && firebase deploy"
   },
   "dependencies": {
-    "firebase": "^11.6.0"
+    "firebase": "^11.6.0",
+    "jszip": "^3.10.1",
+    "lottie-web": "^5.13.0"
   },
   "devDependencies": {
     "vite": "^6.3.2"

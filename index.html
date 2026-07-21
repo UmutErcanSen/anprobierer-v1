@@ -16,12 +16,12 @@
     <meta name="twitter:image" content="https://virtualtryon.de/og-image.jpg" />
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%236c63ff'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-size='18' font-family='Arial' fill='white' font-weight='bold'%3EVT%3C/text%3E%3C/svg%3E" />
     <title>Virtual Try-On – KI Anzeigen Erstellung</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
     <script>if(location.pathname==='/account')document.documentElement.id='account-route';else if(location.pathname==='/anzeige-erstellen')document.documentElement.id='create-route'</script>
     <script>(function(){const t=localStorage.getItem('vto_theme');if(t==='light'){document.documentElement.setAttribute('data-theme','light')}else if(t==='dark'){document.documentElement.setAttribute('data-theme','dark')}else if(window.matchMedia('(prefers-color-scheme: light)').matches){document.documentElement.setAttribute('data-theme','light')}})();</script>
   </head>
   <body>
+    <a href="#appContainer" class="skip-link">Zum Inhalt springen</a>
+    <div class="route-loader" id="routeLoader"><div class="route-loader-spinner"></div></div>
     <!-- Login Overlay (visible when not authenticated) -->
     <div class="login-overlay" id="loginOverlay">
       <div class="login-card">
@@ -79,7 +79,7 @@
     </div>
 
     <!-- App Container -->
-    <div id="appContainer">
+    <div id="appContainer" tabindex="-1">
     <header>
       <div class="header-inner">
         <h1><a href="/" onclick="event.preventDefault(); navigateTo('/')"><span class="gradient-text"><span data-lucide="sparkles" data-size="16"></span></span> <span class="gradient-text">Virtual Try-On</span></a></h1>
@@ -179,6 +179,7 @@
 
     <div id="route-preise" class="hidden">
       <div class="container">
+        <nav class="breadcrumb" aria-label="Breadcrumb"><a href="/" onclick="event.preventDefault();navigateTo('/')">Startseite</a><span class="breadcrumb-sep">›</span><span aria-current="page">Preise</span></nav>
         <section class="pricing-hero">
           <span class="pricing-hero-badge">Preise</span>
           <h1 class="pricing-hero-title">Wähle den <span class="gradient-text">passenden Plan</span></h1>
@@ -461,6 +462,7 @@
     <!-- /account page -->
     <div id="route-account" class="hidden">
       <div class="container account-page">
+        <nav class="breadcrumb" aria-label="Breadcrumb"><a href="/" onclick="event.preventDefault();navigateTo('/')">Startseite</a><span class="breadcrumb-sep">›</span><span aria-current="page">Mein Konto</span></nav>
         <div class="account-header-row">
           <h2 class="account-heading"><span id="accountHeadingIcon"><span data-lucide="user" data-size="24"></span></span> Mein Konto</h2>
           <button class="btn btn-ghost account-back" onclick="navigateTo('/')"><span data-lucide="arrow-left" data-size="16"></span> Zurück</button>
@@ -718,11 +720,17 @@
 
       <!-- Legal pages (hidden by default, shown via router) -->
       <div id="route-datenschutz" class="hidden legal-page">
-        <div class="container legal-container" id="privacyContent"></div>
+        <div class="container">
+          <nav class="breadcrumb" aria-label="Breadcrumb"><a href="/" onclick="event.preventDefault();navigateTo('/')">Startseite</a><span class="breadcrumb-sep">›</span><span aria-current="page">Datenschutz</span></nav>
+          <div class="legal-container" id="privacyContent"></div>
+        </div>
       </div>
 
       <div id="route-impressum" class="hidden legal-page">
-        <div class="container legal-container" id="imprintContent"></div>
+        <div class="container">
+          <nav class="breadcrumb" aria-label="Breadcrumb"><a href="/" onclick="event.preventDefault();navigateTo('/')">Startseite</a><span class="breadcrumb-sep">›</span><span aria-current="page">Impressum</span></nav>
+          <div class="legal-container" id="imprintContent"></div>
+        </div>
       </div>
 
       <div id="route-404" class="hidden">

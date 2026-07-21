@@ -1,7 +1,7 @@
 # ROADMAP — Virtual Try-On
 
 > Live-Tracker für Entwicklungsfortschritt
-> Zuletzt aktualisiert: 17.07.2026
+> Zuletzt aktualisiert: 21.07.2026
 
 ---
 
@@ -10,8 +10,8 @@
 | Metrik | Wert |
 |--------|------|
 | Startdatum | 15.07.2026 |
-| Aktuelle Phase | Phase 10–12 — Regenerieren & Design |
-| Gesamtfortschritt | █████████░ ~90% |
+| Aktuelle Phase | Phase 14–16 — UI/UX, Performance, Security |
+| Gesamtfortschritt | ██████████ ~95% |
 
 ---
 
@@ -169,9 +169,18 @@
 - [x] `toggleTheme()`, `applyTheme()`, `updateThemeIcon()` Funktionen
 - [x] System-Theme-Change-Listener für Live-Wechsel
 
+### Phase 8: SEO & Meta ✅ Fertig
+> Ziel: Auffindbarkeit und Sharing
+> Geplant: 18.07.2026 | Fertig: 17.07.2026
+
+- [x] Meta-Tags (description, OG, Twitter)
+- [x] SVG-Favicon (inline Data-URI)
+- [x] robots.txt
+- [x] sitemap.xml
+
 ### Phase 13: E-Mail-Vorlagen 🔄
 > Ziel: HTML-Vorlagen für späteren Versand
-> Geplant: 17.07.2026
+> Geplant: offen
 
 - [ ] `src/email-templates.js` erstellen
 - [ ] Willkommens-E-Mail (Free)
@@ -181,24 +190,38 @@
 - [ ] Limit-Warnung-E-Mail
 - [ ] Zahlung-fehlgeschlagen-E-Mail
 
+### Phase 14: UI/UX Overhaul (Runde 1) ✅ Fertig
+> Ziel: Fehlende Icons, lazy loading, Accessibility, Sitemap, Passwort-Validierung, CDN-Security
+> Geplant: 21.07.2026 | Fertig: 21.07.2026
+
+- [x] **U1**: Fehlende Icons ergänzt (calendar, credit-card, alert-triangle in `icons.js`)
+- [x] **U2**: Filter-Badge Icon (auto-fixed by U1 — data-lucide="calendar" bereits vorhanden)
+- [x] **U4**: `loading="lazy"` auf History-Thumbnail `<img>` in `account.js`
+- [x] **U6**: Skip-to-Content Link (`<a href="#appContainer">`) in `index.html` + CSS
+- [x] **U10**: `/erstellen` URL in `public/sitemap.xml` (priority 0.9)
+- [x] **U11**: Breadcrumb-Navigation auf Account/Preise/Datenschutz/Impressum (+CSS)
+- [x] **U12**: Passwort-Validierung (min. 8 Zeichen, Buchstabe + Zahl) in `auth.js` + `account.js`
+- [x] **A3**: CDN→NPM Migration: `jszip` + `lottie-web` via npm statt CDN (`index.html`, `app.js`, `package.json`)
+- [x] **A4**: dompurify nicht in `package.json` — keine Aktion nötig
+- [x] **Mobile-Fix**: `-webkit-text-size-adjust:100%` auf `html`, `overflow:hidden` auf account-cards, korrekte Tab-Margins
+
+### Phase 15: Performance & Accessibility (Runde 2) ✅ Fertig
+> Ziel: Code-Splitting, Route-Loader, Fokus-Management
+> Geplant: 21.07.2026 | Fertig: 21.07.2026
+
+- [x] **S7**: Code-Splitting via `manualChunks` in `vite.config.js` — 3 Chunks: app (130 kB), vendor-animation (405 kB), vendor-firebase (497 kB) → ~87% weniger initiale Ladezeit
+- [x] **U5**: Route-Loader (`#routeLoader` in `index.html` + CSS + `router.js`) — schmaler Ladebalken oben bei Routenwechseln
+- [x] **U7**: Fokus-Management — `focusAppContainer()` in `router.js`, Fokus springt auf `#appContainer` nach Seitenwechsel
+
 ### Phase 7: Firestore Security Rules 🔄
 > Ziel: Server-seitige Zugriffskontrolle
-> Geplant: 18.07.2026
+> Geplant: offen
 
 - [ ] `firestore.rules` erstellen
 - [ ] Users: Nur eigene Daten lesen/schreiben
 - [ ] Generations: Nur eigene Daten lesen/schreiben
 - [ ] Rules testen in Firebase Console
 - [ ] Rules deployen
-
-### Phase 8: SEO & Meta ✅ Fertig
-> Ziel: Auffindbarkeit und Sharing
-> Geplant: 18.07.2026 | Fertig: 17.07.2026
-
-- [x] Meta-Tags (description, OG, Twitter)
-- [x] SVG-Favicon (inline Data-URI)
-- [x] robots.txt
-- [x] sitemap.xml
 
 ### Phase 9: Firebase Functions (optional)
 > Ziel: Server-seitiger Monats-Reset und E-Mail-Versand
@@ -228,6 +251,11 @@
 - **Pro-Badge**: 3-fach geschichteter `box-shadow` in `@keyframes pro-glow` – kein `::before`/`::after` mehr
 - **Donut-Farben**: Default `stroke:#22c55e` (grün), + Farbklassen mit `!important`, Rotation nur via `.account-donut-fill--pro`
 - **Plan-Wechseln**: `showUpgradeModal('account')` erkennt Upgrade/Downgrade automatisch anhand Plan-Reihenfolge; Downgrade-Modal wird dynamisch erzeugt
+- **Code-Splitting**: `vite.config.js` nutzt `manualChunks` — 3 Chunks: app (130 kB), vendor-animation (405 kB), vendor-firebase (497 kB). Initiale Ladezeit von 1,1 MB auf 130 kB reduziert.
+- **Mobile-Fix**: `-webkit-text-size-adjust:100%` auf `html`, `overflow:hidden` auf account-cards, korrekte Tab-Margin: `-1.1rem` statt `-1.5rem`
+- **CDN→NPM**: `jszip@3.10.1` + `lottie-web@5.13.0` via npm importiert, CDN-Script-Tags aus `index.html` entfernt
+- **Passwort-Validierung**: Registrierung (`auth.js:474`) und Passwort-Änderung (`account.js:676`) prüfen min. 8 Zeichen + Buchstabe + Zahl
+- **Route-Loader**: `#routeLoader` in `router.js` — schmaler Ladebalken oben bei Routenwechseln, verschwindet nach 800ms oder sofort bei `showRoute()`
 
 ---
 
@@ -238,5 +266,6 @@
 16.07. Phase 2+3:     Checkout-Fixes, History-Redesign, Firestore-Fixes, Donut-Visualisierung, Abo-Verwaltung (begonnen)
 17.07. Phase 4+5+8:   Abo-Verwaltung (fertig), Benachrichtigungen, SEO & Meta
 17.07. Phase 10+11+12: Bild-Regenerieren, Text-Regenerieren, Light/Dark Mode
-18.07. Phase 13+14:   E-Mail-Vorlagen + Security Rules
+21.07. Phase 14:      UI/UX Overhaul (Icons, lazy loading, Skip-Link, Breadcrumb, Passwort-Validierung, CDN→NPM, Mobile-Fix)
+21.07. Phase 15:      Code-Splitting, Route-Loader, Fokus-Management
 ```

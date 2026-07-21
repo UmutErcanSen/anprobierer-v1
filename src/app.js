@@ -17,6 +17,8 @@ import {
 import { currentUser, userProfile, onAuthChange, requireAuth, setPendingRedirect, isEmailVerified, refreshUserProfile, logout } from './auth.js';
 import { checkGenerationAllowed, incrementGenerationsUsed, saveGeneration, updateGeneration } from './firestore.js';
 import { PLANS, renderPlanComparison } from './plans.js';
+import JSZip from 'jszip';
+import lottie from 'lottie-web';
 import { onRouteChange, getCurrentPath, navigateTo, ROUTES } from './router.js';
 import { getMaxItemsForPlan, getQualityForPlan, checkAndResetMonthly } from './subscription.js';
 import { showUpgradeModal } from './checkout.js';
@@ -765,18 +767,16 @@ function updateProgressItem(idx, pct, status) {
   } else if (status === 'generating') {
     statusEl.innerHTML = '<div class="status-lottie"></div>';
     statusEl.title = 'Wird erstellt...';
-    if (typeof lottie !== 'undefined') {
-      activeLottie = {
-        idx,
-        instance: lottie.loadAnimation({
-          container: statusEl.querySelector('.status-lottie'),
-          renderer: 'svg',
-          loop: true,
-          autoplay: true,
-          path: 'js/loading.json',
-        }),
-      };
-    }
+    activeLottie = {
+      idx,
+      instance: lottie.loadAnimation({
+        container: statusEl.querySelector('.status-lottie'),
+        renderer: 'svg',
+        loop: true,
+        autoplay: true,
+        path: 'js/loading.json',
+      }),
+    };
   } else {
     statusEl.innerHTML = statusIcon('');
     statusEl.title = 'Wartet...';

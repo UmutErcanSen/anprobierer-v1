@@ -400,7 +400,7 @@ function renderAccount(profile) {
 
         return `<div class="ah-card ah-card--${modeClass}">
           <div class="ah-thumb${e.thumbnail ? '' : ' ah-thumb--' + modeClass}">
-            ${e.thumbnail ? `<img class="ah-thumb-img" src="${e.thumbnail}" alt="">` : icon(modeClass === 'combined' ? 'layers' : 'image', 22)}
+            ${e.thumbnail ? `<img class="ah-thumb-img" src="${e.thumbnail}" alt="" loading="lazy">` : icon(modeClass === 'combined' ? 'layers' : 'image', 22)}
           </div>
           <div class="ah-body">
             <div class="ah-top">
@@ -674,7 +674,8 @@ function renderAccount(profile) {
       const current = currentPasswordInput.value;
       const newPw = newPasswordInput.value;
       if (!current || !newPw) { passwordMessage.textContent = 'Bitte beide Felder ausfüllen.'; passwordMessage.className = 'account-settings-message error'; return; }
-      if (newPw.length < 6) { passwordMessage.textContent = 'Neues Passwort muss min. 6 Zeichen lang sein.'; passwordMessage.className = 'account-settings-message error'; return; }
+      if (newPw.length < 8) { passwordMessage.textContent = 'Neues Passwort muss mindestens 8 Zeichen lang sein.'; passwordMessage.className = 'account-settings-message error'; return; }
+      if (!/[a-zA-Z]/.test(newPw) || !/\d/.test(newPw)) { passwordMessage.textContent = 'Passwort muss mindestens einen Buchstaben und eine Zahl enthalten.'; passwordMessage.className = 'account-settings-message error'; return; }
       changePasswordBtn.disabled = true;
       try {
         await changeUserPassword(current, newPw);

@@ -1,34 +1,29 @@
-import { redirect } from 'next/navigation';
-import type { Metadata } from 'next';
-import { createClient } from '@/lib/supabase/server';
-import { GenerateForm } from '@/components/generation/generate-form';
+import { redirect } from "next/navigation";
+import type { Metadata } from "next";
+import { createClient } from "@/lib/supabase/server";
+import { AppHeader } from "@/components/site/app-header";
+import { GenerateStepper } from "@/components/generation/generate-stepper";
 
-export const metadata: Metadata = {
-  title: 'Anzeige erstellen',
-};
+export const metadata: Metadata = { title: "Anzeige erstellen" };
 
 export default async function AnzeigeErstellenPage() {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) redirect('/anmelden');
+  if (!user) redirect("/anmelden");
 
   const { data: balance } = await supabase
-    .from('credit_balances')
-    .select('balance')
+    .from("credit_balances")
+    .select("balance")
     .maybeSingle();
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-lg flex-col gap-8 px-6 py-16">
-      <div className="flex flex-col gap-2">
-        <h1 className="text-2xl font-semibold tracking-tight">Anzeige erstellen</h1>
-        <p className="text-sm opacity-70">
-          Guthaben: {balance?.balance ?? 0} Credits
-        </p>
-      </div>
-
-      <GenerateForm />
-    </main>
+    <>
+      <AppHeader credits={balance?.balance ?? 0} />
+      <main className="mx-auto w-full max-w-xl flex-1 px-6 py-12">
+        <GenerateStepper credits={balance?.balance ?? 0} />
+      </main>
+    </>
   );
 }

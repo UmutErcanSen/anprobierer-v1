@@ -37,6 +37,23 @@ export function isClothingType(value: unknown): value is ClothingType {
 }
 
 /**
+ * Konfektionsgrößen für das Pflicht-Dropdown, aus der Altanwendung übernommen.
+ * Format: Buchstabengröße mit deutscher/internationaler Entsprechung.
+ */
+export const SIZES = [
+  'XXS (30/2)',
+  'XS (34/6)',
+  'S (36/8)',
+  'M (38/10)',
+  'L (40/12)',
+  'XL (42/14)',
+  'XXL (44/16)',
+  '3XL (46/18)',
+  '4XL (48/20)',
+  '5XL (50/22)',
+] as const;
+
+/**
  * Qualität wird NICHT vom Nutzer gewählt, sondern folgt dem Plan. So kann
  * niemand über das Formular eine teurere Stufe erzwingen. Free und Starter
  * teilen sich Standard; HD ist Pro vorbehalten.

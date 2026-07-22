@@ -2,14 +2,10 @@
 
 import { useActionState } from 'react';
 import type { AuthState } from '@/lib/auth/actions';
+import { Button } from '@/components/ui/button';
+import { Field, inputClasses } from '@/components/ui/field';
 
-/*
- * Bewusst schlicht gehalten. Das Design-System entsteht in Phase 4 — hier
- * geht es zuerst darum, dass der Ablauf funktioniert und zugänglich ist.
- * Aufwand in Optik zu stecken, die ohnehin ersetzt wird, wäre verschwendet.
- */
-
-type Field = {
+type FieldDef = {
   name: string;
   label: string;
   type: string;
@@ -20,7 +16,7 @@ type Field = {
 
 type Props = {
   action: (prev: AuthState, formData: FormData) => Promise<AuthState>;
-  fields: Field[];
+  fields: FieldDef[];
   submitLabel: string;
   pendingLabel: string;
 };
@@ -31,34 +27,27 @@ export function AuthForm({ action, fields, submitLabel, pendingLabel }: Props) {
   return (
     <form action={formAction} className="flex flex-col gap-5" noValidate>
       {state.error && (
-        <p
-          role="alert"
-          className="rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-200"
-        >
+        <p role="alert" className="rounded-lg border border-line bg-surface px-4 py-3 text-sm text-accent">
           {state.error}
         </p>
       )}
 
       {state.notice && (
-        <p
-          role="status"
-          className="rounded-lg border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-200"
-        >
+        <p role="status" className="rounded-lg border border-line bg-surface px-4 py-3 text-sm text-ink">
           {state.notice}
         </p>
       )}
 
       {fields.map((field) => {
-        const errorId = `${field.name}-error`;
-        const hintId = `${field.name}-hint`;
         const fieldError = state.fieldErrors?.[field.name];
-
         return (
-          <div key={field.name} className="flex flex-col gap-1.5">
-            <label htmlFor={field.name} className="text-sm font-medium">
-              {field.label}
-            </label>
-
+          <Field
+            key={field.name}
+            label={field.label}
+            htmlFor={field.name}
+            hint={field.hint}
+            error={fieldError}
+          >
             <input
               id={field.name}
               name={field.name}
@@ -66,36 +55,15 @@ export function AuthForm({ action, fields, submitLabel, pendingLabel }: Props) {
               autoComplete={field.autoComplete}
               required={field.required}
               aria-invalid={fieldError ? true : undefined}
-              aria-describedby={
-                [fieldError ? errorId : null, field.hint ? hintId : null]
-                  .filter(Boolean)
-                  .join(' ') || undefined
-              }
-              className="rounded-lg border border-black/15 bg-transparent px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-current dark:border-white/20"
+              className={inputClasses}
             />
-
-            {field.hint && (
-              <p id={hintId} className="text-xs opacity-60">
-                {field.hint}
-              </p>
-            )}
-
-            {fieldError && (
-              <p id={errorId} className="text-xs text-red-700 dark:text-red-300">
-                {fieldError}
-              </p>
-            )}
-          </div>
+          </Field>
         );
       })}
 
-      <button
-        type="submit"
-        disabled={pending}
-        className="rounded-lg bg-foreground px-4 py-2.5 text-sm font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-50"
-      >
+      <Button type="submit" disabled={pending} className="mt-1 w-full" size="lg">
         {pending ? pendingLabel : submitLabel}
-      </button>
+      </Button>
     </form>
   );
 }

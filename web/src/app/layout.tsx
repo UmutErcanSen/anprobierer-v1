@@ -23,6 +23,10 @@ export const metadata: Metadata = {
     "Lade ein Foto von dir und ein Kleidungsstück hoch und erhalte realistische Anprobebilder samt fertigem Verkaufstext — in unter einer Minute.",
 };
 
+// Setzt data-theme VOR dem ersten Paint, damit Dunkelmodus nicht kurz als
+// Hell aufblitzt. Laeuft synchron im <head>, bevor der Body rendert.
+const themeScript = `try{if(localStorage.getItem('theme')==='dark')document.documentElement.setAttribute('data-theme','dark')}catch(e){}`;
+
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
@@ -31,6 +35,9 @@ export default function RootLayout({
       lang="de"
       className={`${geistSans.variable} ${geistMono.variable} ${instrumentSerif.variable} h-full`}
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );

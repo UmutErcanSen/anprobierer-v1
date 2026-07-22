@@ -1,25 +1,25 @@
 import Link from "next/link";
 import { LinkButton } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/site/theme-toggle";
+import { MobileNav } from "@/components/site/mobile-nav";
 
 /*
-  Marketing-Navigation. Bewusst minimal: Wortmarke links, wenige Links,
-  eine gefuellte Aktion rechts. Der Name ist ein Platzhalter bis Phase 5
-  (Rebranding) und liegt zentral hier, damit der Austausch eine Stelle ist.
+  Marketing-Navigation. Wortmarke links, wenige Links, eine gefuellte Aktion
+  rechts. Auf Mobil klappt die Navigation ins Overlay (MobileNav), damit auch
+  dort alle Ziele — inkl. Anmelden — erreichbar sind.
 */
 
 const NAV = [
   { href: "/#so-gehts", label: "So funktioniert's" },
   { href: "/preise", label: "Preise" },
+  { href: "/anmelden", label: "Anmelden" },
 ];
 
 export function SiteHeader() {
   return (
     <header className="sticky top-0 z-50 border-b border-line bg-paper/85 backdrop-blur-md">
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-6">
-        <Link
-          href="/"
-          className="text-[15px] font-medium uppercase tracking-[0.16em] text-ink"
-        >
+        <Link href="/" className="text-[15px] font-medium uppercase tracking-[0.16em] text-ink">
           Anprobierer
         </Link>
 
@@ -29,14 +29,15 @@ export function SiteHeader() {
               {item.label}
             </Link>
           ))}
-          <Link href="/anmelden" className="transition-colors hover:text-ink">
-            Anmelden
-          </Link>
         </nav>
 
-        <LinkButton href="/registrieren" size="md">
-          Kostenlos starten
-        </LinkButton>
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <LinkButton href="/registrieren" size="md" className="hidden sm:inline-flex">
+            Kostenlos starten
+          </LinkButton>
+          <MobileNav items={[...NAV, { href: "/registrieren", label: "Kostenlos starten" }]} />
+        </div>
       </div>
     </header>
   );

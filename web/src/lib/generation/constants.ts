@@ -37,6 +37,17 @@ export function isClothingType(value: unknown): value is ClothingType {
 }
 
 /**
+ * Farben für die Verkaufstext-Angabe. Fließt bewusst NICHT in die Bild-
+ * generierung ein (dort zu fehleranfällig), sondern nur in den Verkaufstext —
+ * genau wie in der Altanwendung.
+ */
+export const COLORS = [
+  'Schwarz', 'Weiß', 'Grau', 'Rot', 'Blau', 'Grün', 'Gelb', 'Pink', 'Lila',
+  'Orange', 'Braun', 'Beige', 'Navy', 'Türkis', 'Bordeaux', 'Silber', 'Gold',
+  'Denim', 'Mehrfarbig',
+] as const;
+
+/**
  * Konfektionsgrößen für das Pflicht-Dropdown, aus der Altanwendung übernommen.
  * Format: Buchstabengröße mit deutscher/internationaler Entsprechung.
  */

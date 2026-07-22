@@ -8,6 +8,7 @@ import { Field, Select, Textarea } from '@/components/ui/field';
 import {
   CLOTHING_TYPES,
   SIZES,
+  COLORS,
   CREDITS_PER_QUALITY,
   maxItemsForPlan,
   qualityForPlan,
@@ -22,7 +23,7 @@ import {
 */
 
 type Status = 'idle' | 'generating' | 'done' | 'error';
-type ClothingItem = { id: number; file: File | null; type: string; size: string };
+type ClothingItem = { id: number; file: File | null; type: string; size: string; color: string };
 
 const PROGRESS = [
   'Personenfoto analysieren',
@@ -35,7 +36,7 @@ const PROGRESS = [
 ];
 
 let nextId = 1;
-const newItem = (): ClothingItem => ({ id: nextId++, file: null, type: '', size: '' });
+const newItem = (): ClothingItem => ({ id: nextId++, file: null, type: '', size: '', color: '' });
 
 function usePreview(file: File | null) {
   const [url, setUrl] = useState<string | null>(null);
@@ -82,6 +83,24 @@ function PhotoField({
   );
 }
 
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      // Zwischenablage nicht verfuegbar — Nutzer kann den Text manuell markieren.
+    }
+  }
+  return (
+    <button type="button" onClick={copy} className="text-xs text-muted underline underline-offset-4 transition-colors hover:text-ink">
+      {copied ? 'Kopiert' : 'Kopieren'}
+    </button>
+  );
+}
+
 export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey }) {
   const maxItems = maxItemsForPlan(plan);
   const unitCost = CREDITS_PER_QUALITY[qualityForPlan(plan)];
@@ -95,7 +114,7 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
   const [progressIdx, setProgressIdx] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [results, setResults] = useState<string[]>([]);
-  const personPreview = usePreview(person);
+  const [saleTexts, setSaleTexts] = useState<(string | null)[]>([]);
 
   const filledItems = items.filter((i) => i.file);
   const imageCount = mode === 'combined' ? (filledItems.length ? 1 : 0) : filledItems.length;
@@ -126,6 +145,7 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
   function reset() {
     setStatus('idle');
     setResults([]);
+    setSaleTexts([]);
     setError(null);
     setPerson(null);
     setItems([newItem()]);
@@ -146,6 +166,7 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
         if (mode === 'single') {
           form.append('clothingType', item.type);
           form.append('size', item.size);
+          form.append('color', item.color); // leer erlaubt, haelt die Indizes ausgerichtet
         }
       }
       const res = await fetch('/api/generate', { method: 'POST', body: form });
@@ -156,6 +177,7 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
         return;
       }
       setResults(data.resultUrls ?? []);
+      setSaleTexts(data.saleTexts ?? []);
       setStatus('done');
     } catch {
       setError('Netzwerkfehler. Bitte versuch es erneut.');
@@ -173,16 +195,30 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
             {results.length} {results.length === 1 ? 'Bild' : 'Bilder'} erstellt · Restguthaben {credits - cost}
           </p>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="flex flex-col gap-8">
           {results.map((url, i) => (
-            <figure key={url} className="flex flex-col gap-2">
-              <div className="overflow-hidden rounded-xl border border-line">
-                <Image src={url} alt={`Anprobebild ${i + 1}`} width={512} height={768} className="h-auto w-full" unoptimized />
-              </div>
-              <a href={url} download={`anprobe-${i + 1}.png`} className="text-sm text-ink underline underline-offset-4">
-                Herunterladen
-              </a>
-            </figure>
+            <div key={url} className="grid gap-4 sm:grid-cols-2">
+              <figure className="flex flex-col gap-2">
+                <div className="overflow-hidden rounded-xl border border-line">
+                  <Image src={url} alt={`Anprobebild ${i + 1}`} width={512} height={768} className="h-auto w-full" unoptimized />
+                </div>
+                <a href={url} download={`anprobe-${i + 1}.png`} className="text-sm text-ink underline underline-offset-4">
+                  Bild herunterladen
+                </a>
+              </figure>
+
+              {saleTexts[i] && (
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-ink">Verkaufstext</span>
+                    <CopyButton text={saleTexts[i]!} />
+                  </div>
+                  <p className="whitespace-pre-wrap rounded-xl border border-line bg-surface p-4 text-sm text-ink-soft">
+                    {saleTexts[i]}
+                  </p>
+                </div>
+              )}
+            </div>
           ))}
         </div>
         <div>
@@ -284,6 +320,12 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
                       <Select id={`size-${item.id}`} value={item.size} onChange={(e) => updateItem(item.id, { size: e.target.value })}>
                         <option value="" disabled>Bitte wählen …</option>
                         {SIZES.map((s) => <option key={s} value={s}>{s}</option>)}
+                      </Select>
+                    </Field>
+                    <Field label="Farbe (optional, für den Verkaufstext)" htmlFor={`color-${item.id}`}>
+                      <Select id={`color-${item.id}`} value={item.color} onChange={(e) => updateItem(item.id, { color: e.target.value })}>
+                        <option value="">Keine Angabe</option>
+                        {COLORS.map((c) => <option key={c} value={c}>{c}</option>)}
                       </Select>
                     </Field>
                   </>

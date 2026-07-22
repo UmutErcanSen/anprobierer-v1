@@ -2,9 +2,10 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { generateTryOn, OpenAIError, type TryOnResult } from '@/lib/openai/images';
+import { generateTryOn, OpenAIError } from '@/lib/openai/images';
+import { generateSaleText } from '@/lib/openai/text';
 import { prepareImage } from '@/lib/generation/prepare-image';
-import { buildTryOnPrompt, COMBINED_PROMPT } from '@/lib/generation/prompts';
+import { buildTryOnPrompt, buildSalePrompt, COMBINED_PROMPT } from '@/lib/generation/prompts';
 import {
   ALLOWED_UPLOAD_MIME,
   CREDITS_PER_QUALITY,
@@ -76,6 +77,7 @@ export async function POST(request: Request) {
   // Parallele Arrays zu den Kleidungsdateien (nur im Einzelmodus genutzt).
   const types = form.getAll('clothingType').map(String);
   const sizes = form.getAll('size').map(String);
+  const colors = form.getAll('color').map(String); // nur fuer den Verkaufstext
 
   if (!(person instanceof File) || clothing.length === 0) {
     return NextResponse.json({ error: 'Bitte lade ein Personenfoto und mindestens ein Kleidungsstück hoch.' }, { status: 400 });
@@ -136,27 +138,50 @@ export async function POST(request: Request) {
       upsert: true,
     });
 
-    const results: TryOnResult[] = [];
+    // Ein erzeugtes Bild samt (optionalem) Verkaufstext.
+    type Produced = { image: Buffer; mimeType: string; model: string; costUsd: number | null; saleText: string | null };
+    const produced: Produced[] = [];
     let failures = 0;
 
     if (mode === 'combined') {
+      // Kombiniert: ein Bild aus allen Stuecken, kein per-Stueck-Verkaufstext.
       const clothingInputs = await Promise.all(clothing.map((c, i) => prepare(c, `${dir}/clothing-${i}`)));
       try {
-        results.push(await generateTryOn({ person: personInput, clothing: clothingInputs, prompt: COMBINED_PROMPT, quality }));
+        const r = await generateTryOn({ person: personInput, clothing: clothingInputs, prompt: COMBINED_PROMPT, quality });
+        produced.push({ ...r, saleText: null });
       } catch (err) {
         console.error('[generate] combined fehlgeschlagen', genId, err);
         failures = 1;
       }
     } else {
-      // Einzeln: pro Stueck ein eigener Aufruf. Ein Fehlschlag stoppt die
-      // anderen nicht.
+      // Einzeln: pro Stueck ein Bild UND ein Verkaufstext. Ein Fehlschlag
+      // stoppt die anderen nicht.
       for (let i = 0; i < clothing.length; i++) {
         const type = types[i];
         if (!isClothingType(type)) { failures++; continue; }
         try {
           const clothingInput = await prepare(clothing[i], `${dir}/clothing-${i}`);
-          const prompt = buildTryOnPrompt(type, sizes[i], notes);
-          results.push(await generateTryOn({ person: personInput, clothing: [clothingInput], prompt, quality }));
+          const r = await generateTryOn({
+            person: personInput,
+            clothing: [clothingInput],
+            prompt: buildTryOnPrompt(type, sizes[i], notes),
+            quality,
+          });
+
+          // Verkaufstext ist "best effort": scheitert er, bleibt das Bild
+          // trotzdem gueltig (der Nutzer hat dafuer bezahlt).
+          let saleText: string | null = null;
+          try {
+            saleText = await generateSaleText({
+              prompt: buildSalePrompt(type, sizes[i], colors[i] ? [colors[i]] : null, notes),
+              imageBytes: clothingInput.bytes,
+              mimeType: clothingInput.mimeType,
+            });
+          } catch (textErr) {
+            console.error('[generate] Verkaufstext', i, 'fehlgeschlagen', genId, textErr);
+          }
+
+          produced.push({ ...r, saleText });
         } catch (err) {
           console.error('[generate] single item', i, 'fehlgeschlagen', genId, err);
           failures++;
@@ -165,7 +190,7 @@ export async function POST(request: Request) {
     }
 
     // Alle fehlgeschlagen -> kompletter Auftrag zurueck.
-    if (results.length === 0) {
+    if (produced.length === 0) {
       await admin.rpc('refund_generation', { p_generation_id: genId, p_error_message: 'Alle Bilder fehlgeschlagen.' });
       await admin.storage.from('uploads').remove([personUpload, ...clothing.map((_, i) => `${dir}/clothing-${i}`)]);
       return NextResponse.json(
@@ -174,23 +199,30 @@ export async function POST(request: Request) {
       );
     }
 
-    // Erfolgreiche Ergebnisse dauerhaft speichern.
+    // Erfolgreiche Bilder dauerhaft speichern; Verkaufstexte bleiben ausgerichtet.
     const resultPaths: string[] = [];
-    for (let i = 0; i < results.length; i++) {
+    const saleTexts: (string | null)[] = [];
+    for (let i = 0; i < produced.length; i++) {
       const path = `${dir}/${i}.png`;
-      const { error: upErr } = await admin.storage.from('results').upload(path, results[i].image, {
-        contentType: results[i].mimeType,
+      const { error: upErr } = await admin.storage.from('results').upload(path, produced[i].image, {
+        contentType: produced[i].mimeType,
         upsert: true,
       });
-      if (!upErr) resultPaths.push(path);
+      if (!upErr) {
+        resultPaths.push(path);
+        saleTexts.push(produced[i].saleText);
+      }
     }
 
-    const costUsd = results.reduce((sum, r) => sum + (r.costUsd ?? 0), 0);
+    const costUsd = produced.reduce((sum, r) => sum + (r.costUsd ?? 0), 0);
+    // Verkaufstexte zusammengefuehrt in der DB ablegen (fuer die Historie).
+    const savedText = saleTexts.filter(Boolean).join('\n---\n') || null;
 
     await admin.from('generations').update({
       status: 'succeeded',
       result_paths: resultPaths,
-      model: results[0].model,
+      sale_text: savedText,
+      model: produced[0].model,
       cost_usd: costUsd || null,
       person_image_path: null,
       completed_at: new Date().toISOString(),
@@ -211,8 +243,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       generationId: genId,
-      resultUrls: signed.map((s) => s.data?.signedUrl ?? null).filter(Boolean),
-      creditsCharged: (results.length) * unitCost,
+      resultUrls: signed.map((s) => s.data?.signedUrl ?? null),
+      saleTexts,
+      creditsCharged: produced.length * unitCost,
       failures,
     });
   } catch (err) {

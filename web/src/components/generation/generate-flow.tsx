@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { X } from 'lucide-react';
+import { Loader2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Field, Select, Textarea } from '@/components/ui/field';
 import {
@@ -102,6 +103,7 @@ function CopyButton({ text }: { text: string }) {
 }
 
 export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey }) {
+  const router = useRouter();
   const maxItems = maxItemsForPlan(plan);
   const unitCost = CREDITS_PER_QUALITY[qualityForPlan(plan)];
 
@@ -115,6 +117,10 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
   const [error, setError] = useState<string | null>(null);
   const [results, setResults] = useState<string[]>([]);
   const [saleTexts, setSaleTexts] = useState<(string | null)[]>([]);
+  // Guthaben-Schnappschuss zum Zeitpunkt der Erstellung — die Prop aktualisiert
+  // sich nach router.refresh(), fuer die Ergebnisanzeige brauchen wir den Wert
+  // von genau diesem Moment.
+  const [remaining, setRemaining] = useState(0);
 
   const filledItems = items.filter((i) => i.file);
   const imageCount = mode === 'combined' ? (filledItems.length ? 1 : 0) : filledItems.length;
@@ -176,9 +182,14 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
         setStatus('error');
         return;
       }
+      const charged = data.creditsCharged ?? cost;
       setResults(data.resultUrls ?? []);
       setSaleTexts(data.saleTexts ?? []);
+      setRemaining(credits - charged);
       setStatus('done');
+      // Aktualisiert die Guthaben-Anzeige im Header (Server-Komponente),
+      // damit sie sofort den neuen Stand zeigt — nicht erst beim naechsten Laden.
+      router.refresh();
     } catch {
       setError('Netzwerkfehler. Bitte versuch es erneut.');
       setStatus('error');
@@ -192,7 +203,7 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-ink">Fertig</h1>
           <p className="mt-1 text-sm text-muted">
-            {results.length} {results.length === 1 ? 'Bild' : 'Bilder'} erstellt · Restguthaben {credits - cost}
+            {results.length} {results.length === 1 ? 'Bild' : 'Bilder'} erstellt · Restguthaben {remaining}
           </p>
         </div>
         <div className="flex flex-col gap-8">
@@ -230,19 +241,43 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
 
   // Wartephase
   if (status === 'generating') {
+    const pct = Math.round(((progressIdx + 1) / PROGRESS.length) * 100);
     return (
-      <div className="flex flex-col gap-3 rounded-xl border border-line p-6">
-        <h1 className="text-lg font-medium text-ink">Deine Anprobe entsteht …</h1>
-        <ul className="flex flex-col gap-2">
-          {PROGRESS.map((label, i) => (
-            <li key={label} className={`flex items-center gap-2 text-sm ${i <= progressIdx ? 'text-ink' : 'text-muted'}`}>
-              <span className={`flex h-4 w-4 items-center justify-center rounded-full text-[10px] ${i < progressIdx ? 'bg-ink text-on-ink' : i === progressIdx ? 'border border-ink' : 'border border-line'}`}>
-                {i < progressIdx ? '✓' : ''}
-              </span>
-              {label}
-            </li>
-          ))}
+      <div className="flex flex-col gap-5 rounded-xl border border-line p-6">
+        <div className="flex items-center gap-3">
+          <Loader2 size={18} className="animate-spin text-ink" aria-hidden />
+          <h1 className="text-lg font-medium text-ink">Deine Anprobe entsteht …</h1>
+        </div>
+
+        {/* Fortschrittsbalken */}
+        <div className="h-1 w-full overflow-hidden rounded-full bg-line">
+          <div className="h-full rounded-full bg-ink transition-all duration-700 ease-out" style={{ width: `${pct}%` }} />
+        </div>
+
+        <ul className="flex flex-col gap-2.5">
+          {PROGRESS.map((label, i) => {
+            const done = i < progressIdx;
+            const active = i === progressIdx;
+            return (
+              <li
+                key={label}
+                className={`flex items-center gap-3 text-sm transition-colors ${
+                  done ? 'text-muted' : active ? 'font-medium text-ink' : 'text-muted/60'
+                }`}
+              >
+                <span
+                  className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] ${
+                    done ? 'bg-ink text-on-ink' : active ? 'border-2 border-ink' : 'border border-line'
+                  }`}
+                >
+                  {done ? '✓' : active ? <Loader2 size={11} className="animate-spin" aria-hidden /> : ''}
+                </span>
+                {label}
+              </li>
+            );
+          })}
         </ul>
+
         <p className="text-xs text-muted">
           {imageCount > 1 ? `${imageCount} Bilder — das dauert ein paar Minuten.` : 'Das dauert in der Regel unter einer Minute.'}
         </p>

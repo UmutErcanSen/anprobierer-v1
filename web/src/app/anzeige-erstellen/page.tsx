@@ -2,7 +2,8 @@ import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { AppHeader } from "@/components/site/app-header";
-import { GenerateStepper } from "@/components/generation/generate-stepper";
+import { GenerateFlow } from "@/components/generation/generate-flow";
+import type { PlanKey } from "@/lib/generation/constants";
 
 export const metadata: Metadata = { title: "Anzeige erstellen" };
 
@@ -13,16 +14,19 @@ export default async function AnzeigeErstellenPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/anmelden");
 
-  const { data: balance } = await supabase
-    .from("credit_balances")
-    .select("balance")
-    .maybeSingle();
+  const [{ data: profile }, { data: balance }] = await Promise.all([
+    supabase.from("profiles").select("plan").single(),
+    supabase.from("credit_balances").select("balance").maybeSingle(),
+  ]);
+
+  const credits = balance?.balance ?? 0;
+  const plan = (profile?.plan ?? "free") as PlanKey;
 
   return (
     <>
-      <AppHeader credits={balance?.balance ?? 0} />
+      <AppHeader credits={credits} />
       <main className="mx-auto w-full max-w-xl flex-1 px-6 py-12">
-        <GenerateStepper credits={balance?.balance ?? 0} />
+        <GenerateFlow credits={credits} plan={plan} />
       </main>
     </>
   );

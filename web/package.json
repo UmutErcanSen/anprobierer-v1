@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:credits": "node --env-file=.env.local --experimental-strip-types --test tests/credit-concurrency.test.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",

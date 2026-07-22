@@ -19,6 +19,7 @@
   --line: #e9e9e9;         /* Haarlinie */
   --line-strong: #d4d4d4;  /* betonte Trennung */
   --on-ink: #ffffff;       /* Text auf dunkler Vollflaeche */
+  --accent: #c2410c;       /* Terrakotta — einziger Farbakzent, nur auf Display-Kursive */
 }
 
 [data-theme="dark"] {
@@ -30,6 +31,7 @@
   --line: #1f1f1f;
   --line-strong: #2e2e2e;
   --on-ink: #0a0a0a;
+  --accent: #ea7a4f;       /* auf dunklem Grund etwas heller, damit der Kontrast stimmt */
 }
 
 /* Semantische Tokens -> Tailwind-Utilities (bg-paper, text-ink, border-line …). */
@@ -42,6 +44,7 @@
   --color-line: var(--line);
   --color-line-strong: var(--line-strong);
   --color-on-ink: var(--on-ink);
+  --color-accent: var(--accent);
 
   --font-sans: var(--font-geist-sans);
   --font-display: var(--font-instrument-serif);
@@ -75,6 +78,7 @@ body {
   font-style: italic;
   font-weight: 400;
   letter-spacing: -0.01em;
+  color: var(--accent);
 }
 
 /* Kicker: kleines, weit gesperrtes Label ueber Ueberschriften. */

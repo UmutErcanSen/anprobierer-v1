@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Check, ImagePlus, Loader2, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -132,8 +132,13 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
   const [progressIdx, setProgressIdx] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [cards, setCards] = useState<ResultCard[]>([]);
+  const [liveCards, setLiveCards] = useState<ResultCard[]>([]); // Zwischenstand waehrend des Pollens
   const [failures, setFailures] = useState(0);
   const [remaining, setRemaining] = useState(0);
+
+  // Verhindert, dass ein noch laufender Poll nach reset()/Unmount weiterlaeuft
+  // und veraltete Daten in einen neuen Durchlauf schreibt.
+  const pollToken = useRef(0);
 
   const filledItems = items.filter((i) => i.file);
   const imageCount = mode === 'combined' ? (filledItems.length ? 1 : 0) : filledItems.length;
@@ -179,8 +184,10 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
     setItems((prev) => (prev.length > 1 ? prev.filter((i) => i.id !== id) : prev));
   }
   function reset() {
+    pollToken.current++; // laufenden Poll stilllegen
     setStatus('idle');
     setCards([]);
+    setLiveCards([]);
     setFailures(0);
     setError(null);
     setPerson(null);
@@ -188,10 +195,55 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
     setNotes('');
   }
 
+  useEffect(() => () => { pollToken.current++; }, []); // Poll stoppen beim Verlassen der Seite
+
+  /**
+   * Fragt den Status einer laufenden Generierung ab, bis sie fertig ist oder
+   * fehlschlägt. Läuft unabhängig vom ursprünglichen POST — genau das macht
+   * die Generierung serverseitig nicht mehr blockierend: der POST kehrt
+   * sofort zurück, hier wird nur der Fortschritt beobachtet.
+   */
+  async function poll(generationId: string, myToken: number) {
+    while (pollToken.current === myToken) {
+      let res: Response;
+      try {
+        res = await fetch(`/api/generate/${generationId}`);
+      } catch {
+        await new Promise((r) => setTimeout(r, 3000));
+        continue; // kurzer Netzwerkfehler — einfach erneut versuchen
+      }
+      if (pollToken.current !== myToken) return; // inzwischen verworfen
+
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? 'Die Generierung wurde nicht gefunden.');
+        setStatus('error');
+        return;
+      }
+
+      if (data.status === 'succeeded' || data.status === 'failed') {
+        setCards(data.cards ?? []);
+        setFailures(data.failures ?? 0);
+        setRemaining(credits - (data.creditsCharged ?? 0));
+        setStatus(data.cards?.length ? 'done' : 'error');
+        if (!data.cards?.length) setError('Die Generierung ist fehlgeschlagen. Deine Credits wurden zurückgebucht.');
+        router.refresh(); // Guthaben im Header sofort aktualisieren
+        return;
+      }
+
+      // Noch in Arbeit: Zwischenstand zeigen, dann erneut abfragen.
+      setLiveCards(data.cards ?? []);
+      await new Promise((r) => setTimeout(r, 3000));
+    }
+  }
+
   async function generate() {
     if (!person) return;
     setStatus('generating');
     setError(null);
+    setLiveCards([]);
+    const myToken = ++pollToken.current;
+
     try {
       const form = new FormData();
       form.set('mode', mode);
@@ -203,6 +255,8 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
         form.append('size', item.size);
         form.append('color', item.color);
       }
+      // Kehrt sofort zurueck (202) — die eigentliche Generierung laeuft
+      // serverseitig im Hintergrund weiter, siehe POST /api/generate.
       const res = await fetch('/api/generate', { method: 'POST', body: form });
       const data = await res.json();
       if (!res.ok) {
@@ -210,12 +264,7 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
         setStatus('error');
         return;
       }
-      const charged = data.creditsCharged ?? cost;
-      setCards(data.cards ?? []);
-      setFailures(data.failures ?? 0);
-      setRemaining(credits - charged);
-      setStatus('done');
-      router.refresh(); // Guthaben im Header sofort aktualisieren
+      void poll(data.generationId, myToken);
     } catch {
       setError('Netzwerkfehler. Bitte versuch es erneut.');
       setStatus('error');
@@ -270,7 +319,11 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
         </ul>
 
         <p className="text-xs text-muted">
-          {imageCount > 1 ? `${imageCount} Bilder — das dauert ein paar Minuten.` : 'Das dauert in der Regel unter einer Minute.'}
+          {imageCount > 1
+            ? liveCards.filter((c) => c.imageUrl).length > 0
+              ? `${liveCards.filter((c) => c.imageUrl).length} von ${imageCount} Bildern fertig …`
+              : `${imageCount} Bilder — das dauert ein paar Minuten.`
+            : 'Das dauert in der Regel unter einer Minute.'}
         </p>
       </div>
     );

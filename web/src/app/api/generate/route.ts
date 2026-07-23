@@ -1,11 +1,10 @@
 import { NextResponse } from 'next/server';
+import { after } from 'next/server';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { generateTryOn, OpenAIError } from '@/lib/openai/images';
-import { generateSaleText } from '@/lib/openai/text';
 import { prepareImage } from '@/lib/generation/prepare-image';
-import { buildTryOnPrompt, buildSalePrompt, COMBINED_PROMPT } from '@/lib/generation/prompts';
+import { processGeneration, type PreparedImage } from '@/lib/generation/process';
 import {
   ALLOWED_UPLOAD_MIME,
   CREDITS_PER_QUALITY,
@@ -17,18 +16,29 @@ import {
 } from '@/lib/generation/constants';
 
 /*
-  Serverseitige Generierung fuer beide Modi:
+  Serverseitige Generierung fuer beide Modi — asynchron:
 
-    Einzeln (single):     N Kleidungsstuecke -> N Bilder -> N × Credits
-    Kombiniert (combined): mehrere Stuecke   -> 1 Bild   -> 1 × Credits
+    Einzeln (single):      N Kleidungsstuecke -> N Bilder -> N × Credits
+    Kombiniert (combined): mehrere Stuecke    -> 1 Bild   -> 1 × Credits
 
-  Reihenfolge: Auth + Validierung VOR jeder Abbuchung. Erst danach bucht
-  spend_credits (Kosten pro Bild × Bildanzahl) atomar ab. Scheitern im
-  Einzelmodus einzelne Bilder, werden nur diese per refund_credits erstattet;
-  scheitern alle, wird der komplette Auftrag zurueckgebucht.
+  Dieser Handler validiert, bucht Credits atomar ab und liefert SOFORT die
+  generation_id zurueck. Die eigentliche Bildgenerierung (bis zu mehreren
+  Minuten bei mehreren Stuecken) laeuft danach in after() weiter, ohne dass
+  der Client darauf wartet -- der Client pollt GET /api/generate/[id].
+  Grund: Ein einzelner Request, der 1-2 Minuten offen bleibt, uebersteigt auf
+  den meisten Hosting-Plattformen das Zeitlimit fuer eine Anfrage.
+
+  WICHTIG: after() verlaengert die Lebensdauer der Server-Funktion nur bis zur
+  konfigurierten maxDuration der Plattform (siehe unten). Bei Selbst-Hosting
+  (Node-Server/Docker) gibt es kein Limit; bei klassischem Kurzzeit-Serverless
+  (z.B. Vercel Hobby, hart bei 60s) reicht das fuer mehrere Bilder NICHT aus.
+  Das ist ein echter Faktor fuer die noch offene Hosting-Entscheidung.
 */
 
 export const runtime = 'nodejs';
+// Obergrenze, die die meisten Plattformen mit erweiterter Funktionsdauer
+// unterstuetzen (z.B. Vercel Pro/Fluid). Selbst-Hosting ignoriert das Limit.
+export const maxDuration = 300;
 
 const scalarSchema = z.object({
   mode: z.enum(['single', 'combined']),
@@ -42,7 +52,9 @@ function fileError(file: File): string | null {
   return null;
 }
 
-async function prepare(file: File, filename: string) {
+/** Liest die Datei sofort in einen Buffer — nötig, weil nach der Antwort
+ *  (in after()) der ursprüngliche Request-Stream nicht mehr existiert. */
+async function toPrepared(file: File, filename: string): Promise<PreparedImage> {
   const p = await prepareImage(Buffer.from(await file.arrayBuffer()));
   return { bytes: p.bytes, filename, mimeType: p.mimeType };
 }
@@ -72,38 +84,38 @@ export async function POST(request: Request) {
   if (!scalar.success) return NextResponse.json({ error: 'Angaben unvollständig oder ungültig.' }, { status: 400 });
   const { mode, notes } = scalar.data;
 
-  const person = form.get('person');
-  const clothing = form.getAll('clothing').filter((c): c is File => c instanceof File);
-  // Parallele Arrays zu den Kleidungsdateien (nur im Einzelmodus genutzt).
+  const personFile = form.get('person');
+  const clothingFiles = form.getAll('clothing').filter((c): c is File => c instanceof File);
   const types = form.getAll('clothingType').map(String);
   const sizes = form.getAll('size').map(String);
   const colors = form.getAll('color').map(String); // nur fuer den Verkaufstext
 
-  if (!(person instanceof File) || clothing.length === 0) {
+  if (!(personFile instanceof File) || clothingFiles.length === 0) {
     return NextResponse.json({ error: 'Bitte lade ein Personenfoto und mindestens ein Kleidungsstück hoch.' }, { status: 400 });
   }
 
   const maxItems = maxItemsForPlan(plan);
-  if (clothing.length > maxItems) {
+  if (clothingFiles.length > maxItems) {
     return NextResponse.json({ error: `Dein Tarif erlaubt höchstens ${maxItems} Kleidungsstück(e) pro Anprobe.` }, { status: 403 });
   }
 
-  for (const file of [person, ...clothing]) {
+  for (const file of [personFile, ...clothingFiles]) {
     const err = fileError(file);
     if (err) return NextResponse.json({ error: err }, { status: 400 });
   }
 
   // Typ und Groesse sind in BEIDEN Modi Pflicht: Sie speisen den Verkaufstext,
   // den es pro Kleidungsstueck gibt — unabhaengig von der Bildanzahl.
-  for (let i = 0; i < clothing.length; i++) {
+  for (let i = 0; i < clothingFiles.length; i++) {
     if (!isClothingType(types[i]) || !sizes[i]) {
       return NextResponse.json({ error: 'Bitte gib zu jedem Kleidungsstück Typ und Größe an.' }, { status: 400 });
     }
   }
 
-  const imageCount = mode === 'combined' ? 1 : clothing.length;
+  const imageCount = mode === 'combined' ? 1 : clothingFiles.length;
 
-  // Abbuchen: Kosten pro Bild × Bildanzahl, atomar.
+  // Abbuchen: Kosten pro Bild × Bildanzahl, atomar. Ab hier ist bezahlt --
+  // jeder Fehlerpfad danach muss zurückbuchen.
   const admin = createAdminClient();
   const { data: generation, error: spendError } = await admin.rpc('spend_credits', {
     p_user_id: user.id,
@@ -127,164 +139,36 @@ export async function POST(request: Request) {
   }
 
   const genId: string = generation.id;
-  const dir = `${user.id}/${genId}`;
-  const personUpload = `${dir}/person`;
 
+  // Dateien SOFORT einlesen — nach dem Return ist der Request-Stream weg.
+  let person: PreparedImage;
+  let clothing: PreparedImage[];
   try {
-    const personInput = await prepare(person, personUpload);
-    await admin.storage.from('uploads').upload(personInput.filename, personInput.bytes, {
-      contentType: personInput.mimeType,
-      upsert: true,
-    });
-
-    // Alle Kleidungsbilder einmal vorbereiten — sie werden fuer die
-    // Bildgenerierung UND die Verkaufstexte gebraucht.
-    const clothingInputs = await Promise.all(clothing.map((c, i) => prepare(c, `${dir}/clothing-${i}`)));
-
-    // itemIndex haelt fest, zu welchem Kleidungsstueck ein Bild gehoert —
-    // noetig, um Bild und Verkaufstext spaeter zu paaren, auch wenn einzelne
-    // Bilder fehlschlagen. -1 = kombiniertes Bild (gehoert zu allen).
-    type Produced = { itemIndex: number; image: Buffer; mimeType: string; model: string; costUsd: number | null };
-    const produced: Produced[] = [];
-    let failures = 0;
-
-    if (mode === 'combined') {
-      try {
-        const r = await generateTryOn({ person: personInput, clothing: clothingInputs, prompt: COMBINED_PROMPT, quality });
-        produced.push({ itemIndex: -1, ...r });
-      } catch (err) {
-        console.error('[generate] combined fehlgeschlagen', genId, err);
-        failures = 1;
-      }
-    } else {
-      // Einzeln: pro Stueck ein Bild. Ein Fehlschlag stoppt die anderen nicht.
-      for (let i = 0; i < clothingInputs.length; i++) {
-        const type = types[i];
-        if (!isClothingType(type)) { failures++; continue; }
-        try {
-          const r = await generateTryOn({
-            person: personInput,
-            clothing: [clothingInputs[i]],
-            prompt: buildTryOnPrompt(type, sizes[i], notes),
-            quality,
-          });
-          produced.push({ itemIndex: i, ...r });
-        } catch (err) {
-          console.error('[generate] single item', i, 'fehlgeschlagen', genId, err);
-          failures++;
-        }
-      }
-    }
-
-    // Alle fehlgeschlagen -> kompletter Auftrag zurueck.
-    if (produced.length === 0) {
-      await admin.rpc('refund_generation', { p_generation_id: genId, p_error_message: 'Alle Bilder fehlgeschlagen.' });
-      await admin.storage.from('uploads').remove([personUpload, ...clothing.map((_, i) => `${dir}/clothing-${i}`)]);
-      return NextResponse.json(
-        { error: 'Die Generierung ist fehlgeschlagen. Deine Credits wurden zurückgebucht.' },
-        { status: 502 },
-      );
-    }
-
-    // Verkaufstext je Kleidungsstueck — in BEIDEN Modi, denn verkauft wird
-    // jedes Stueck einzeln, egal ob es in einem oder mehreren Bildern steckt.
-    // "Best effort": scheitert ein Text, bleibt das bezahlte Bild gueltig.
-    const saleTexts: (string | null)[] = [];
-    for (let i = 0; i < clothingInputs.length; i++) {
-      const type = types[i];
-      if (!isClothingType(type)) { saleTexts.push(null); continue; }
-      try {
-        saleTexts.push(
-          await generateSaleText({
-            prompt: buildSalePrompt(type, sizes[i], colors[i] ? [colors[i]] : null, notes),
-            imageBytes: clothingInputs[i].bytes,
-            mimeType: clothingInputs[i].mimeType,
-          }),
-        );
-      } catch (textErr) {
-        console.error('[generate] Verkaufstext', i, 'fehlgeschlagen', genId, textErr);
-        saleTexts.push(null);
-      }
-    }
-
-    // Erfolgreiche Bilder dauerhaft speichern — mit Zuordnung zum Stueck.
-    const uploaded: { itemIndex: number; path: string }[] = [];
-    for (let i = 0; i < produced.length; i++) {
-      const path = `${dir}/${i}.png`;
-      const { error: upErr } = await admin.storage.from('results').upload(path, produced[i].image, {
-        contentType: produced[i].mimeType,
-        upsert: true,
-      });
-      if (!upErr) uploaded.push({ itemIndex: produced[i].itemIndex, path });
-    }
-    const resultPaths = uploaded.map((u) => u.path);
-
-    const costUsd = produced.reduce((sum, r) => sum + (r.costUsd ?? 0), 0);
-    // Verkaufstexte zusammengefuehrt in der DB ablegen (fuer die Historie).
-    const savedText = saleTexts.filter(Boolean).join('\n---\n') || null;
-
-    await admin.from('generations').update({
-      status: 'succeeded',
-      result_paths: resultPaths,
-      sale_text: savedText,
-      model: produced[0].model,
-      cost_usd: costUsd || null,
-      person_image_path: null,
-      completed_at: new Date().toISOString(),
-    }).eq('id', genId);
-
-    // Teil-Rueckerstattung fuer fehlgeschlagene Einzelbilder.
-    if (failures > 0) {
-      await admin.rpc('refund_credits', { p_generation_id: genId, p_credits: failures * unitCost });
-    }
-
-    // Uploads entfernen (Datensparsamkeit).
-    await admin.storage.from('uploads').remove([personUpload, ...clothing.map((_, i) => `${dir}/clothing-${i}`)]);
-
-    // Signierte Links auf die privaten Ergebnisse.
-    const signed = await Promise.all(
-      uploaded.map((u) => admin.storage.from('results').createSignedUrl(u.path, 60 * 60)),
-    );
-    const urlByItem = new Map<number, string>();
-    uploaded.forEach((u, idx) => {
-      const url = signed[idx].data?.signedUrl;
-      if (url) urlByItem.set(u.itemIndex, url);
-    });
-
-    /*
-      Karten: Bild und Verkaufstext gehoeren zusammen, damit der Nutzer beides
-      als Einheit sieht und herunterladen kann.
-        Einzeln    — eine Karte je Stueck (Bild + eigener Text)
-        Kombiniert — eine Karte mit dem gemeinsamen Bild, danach je Stueck
-                     eine Karte mit dem Verkaufstext
-    */
-    type Card = { title: string; imageUrl: string | null; saleText: string | null };
-    const cards: Card[] = [];
-
-    if (mode === 'combined') {
-      cards.push({ title: 'Kombiniertes Bild', imageUrl: urlByItem.get(-1) ?? null, saleText: null });
-      for (let i = 0; i < clothingInputs.length; i++) {
-        if (saleTexts[i]) cards.push({ title: `Stück ${i + 1}`, imageUrl: null, saleText: saleTexts[i] });
-      }
-    } else {
-      for (let i = 0; i < clothingInputs.length; i++) {
-        const url = urlByItem.get(i) ?? null;
-        if (!url && !saleTexts[i]) continue;
-        cards.push({ title: `Stück ${i + 1}`, imageUrl: url, saleText: saleTexts[i] });
-      }
-    }
-
-    return NextResponse.json({
-      generationId: genId,
-      cards,
-      creditsCharged: produced.length * unitCost,
-      failures,
-    });
+    const dir = `${user.id}/${genId}`;
+    person = await toPrepared(personFile, `${dir}/person`);
+    clothing = await Promise.all(clothingFiles.map((c, i) => toPrepared(c, `${dir}/clothing-${i}`)));
   } catch (err) {
-    console.error('[generate] unerwarteter Fehler', genId, err);
-    await admin.rpc('refund_generation', { p_generation_id: genId, p_error_message: 'Unerwarteter Fehler.' });
-    await admin.storage.from('uploads').remove([personUpload, ...clothing.map((_, i) => `${dir}/clothing-${i}`)]).catch(() => {});
-    void err;
-    return NextResponse.json({ error: 'Die Generierung ist fehlgeschlagen. Deine Credits wurden zurückgebucht.' }, { status: 502 });
+    console.error('[generate] Bildvorbereitung fehlgeschlagen', genId, err);
+    await admin.rpc('refund_generation', { p_generation_id: genId, p_error_message: 'Bildvorbereitung fehlgeschlagen.' });
+    return NextResponse.json({ error: 'Die Fotos konnten nicht verarbeitet werden.' }, { status: 400 });
   }
+
+  // Verarbeitung laeuft nach dem Response weiter -- der Client wartet nicht.
+  after(() =>
+    processGeneration({
+      generationId: genId,
+      userId: user.id,
+      mode,
+      quality,
+      notes,
+      unitCost,
+      person,
+      clothing,
+      types,
+      sizes,
+      colors,
+    }),
+  );
+
+  return NextResponse.json({ generationId: genId }, { status: 202 });
 }

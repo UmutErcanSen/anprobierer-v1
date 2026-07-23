@@ -15,7 +15,7 @@ export function AppHeader({ credits }: { credits?: number }) {
           Anprobierer
         </Link>
 
-        <div className="flex items-center gap-2 sm:gap-4">
+        <div className="flex items-center gap-3 sm:gap-4">
           {typeof credits === "number" && (
             <Link
               href="/preise"
@@ -25,13 +25,23 @@ export function AppHeader({ credits }: { credits?: number }) {
               <span className="text-muted">{credits === 1 ? "Credit" : "Credits"}</span>
             </Link>
           )}
-          <Link href="/anzeige-erstellen" className="text-sm text-muted transition-colors hover:text-ink">
-            Erstellen
-          </Link>
-          <Link href="/konto" className="hidden text-sm text-muted transition-colors hover:text-ink sm:inline">
-            Konto
-          </Link>
+
+          <nav className="flex items-center gap-5 text-sm text-muted">
+            <Link href="/anzeige-erstellen" className="transition-colors hover:text-ink">
+              Erstellen
+            </Link>
+            <Link href="/konto" className="hidden transition-colors hover:text-ink sm:inline">
+              Konto
+            </Link>
+          </nav>
+
+          {/* Trennlinie isoliert die Utility-Icons (Theme) von den Textlinks
+              und der Abmelden-Aktion — vorher stand der Umschalter unvermittelt
+              zwischen zwei Textlinks. */}
+          <span className="hidden h-5 w-px bg-line sm:inline-block" aria-hidden="true" />
+
           <ThemeToggle />
+
           <form action={signOutAction}>
             <button type="submit" className="text-sm text-muted transition-colors hover:text-ink">
               Abmelden

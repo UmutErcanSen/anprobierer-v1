@@ -25,7 +25,10 @@ export default async function AnzeigeErstellenPage() {
   return (
     <>
       <AppHeader credits={credits} />
-      <main className="mx-auto w-full max-w-xl flex-1 px-6 py-12">
+      {/* max-w-xl auf Mobil (schmales Formular wie bisher), auf md+ deutlich
+          breiter -- die Editorial-Aufteilung (Foto | Einstellungen) braucht
+          Platz nebeneinander, sonst wirkt sie gequetscht. */}
+      <main className="mx-auto w-full max-w-xl flex-1 px-6 py-10 md:max-w-5xl md:py-12">
         <GenerateFlow credits={credits} plan={plan} />
       </main>
     </>

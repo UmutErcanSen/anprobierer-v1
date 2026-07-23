@@ -31,8 +31,10 @@ export function SiteHeader() {
           ))}
         </nav>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <ThemeToggle />
+          {/* Trennlinie isoliert den Theme-Umschalter von der CTA. */}
+          <span className="hidden h-5 w-px bg-line sm:inline-block" aria-hidden="true" />
           <LinkButton href="/registrieren" size="md" className="hidden sm:inline-flex">
             Kostenlos starten
           </LinkButton>

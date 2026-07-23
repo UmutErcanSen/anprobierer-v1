@@ -59,6 +59,13 @@ function usePreview(file: File | null) {
  * auch mit Bild — damit erkennbar ist, dass man hier jederzeit ein neues Foto
  * hineinziehen kann. Mehrere gleichzeitig fallengelassene Dateien reicht das
  * Feld nach oben durch (der Aufrufer verteilt sie auf weitere Stuecke).
+ *
+ * `panelOverlay`: für das Personenfoto, das auf md+ zu einer bildfüllenden
+ * Spalte wird (Editorial-Layout) — zeigt dann ein Kicker-Label und einen
+ * "Foto ändern"-Hinweis über dem Bild. Bewusst über CSS-Breakpoints gelöst
+ * (keine JS-Breakpoint-Erkennung): dasselbe <label>-Element mit denselben
+ * Handlern wechselt per `md:`-Klassen die Optik, statt zwei Instanzen mit
+ * potenziell abweichendem Tab-Verhalten zu rendern.
  */
 function PhotoField({
   id,
@@ -66,12 +73,14 @@ function PhotoField({
   file,
   onFiles,
   className = 'h-full min-h-44',
+  panelOverlay = false,
 }: {
   id: string;
   label: string;
   file: File | null;
   onFiles: (files: File[]) => void;
   className?: string;
+  panelOverlay?: boolean;
 }) {
   const preview = usePreview(file);
   const [over, setOver] = useState(false);
@@ -89,13 +98,23 @@ function PhotoField({
       onDragOver={(e) => { e.preventDefault(); setOver(true); }}
       onDragLeave={() => setOver(false)}
       onDrop={handleDrop}
-      className={`flex ${className} w-full cursor-pointer flex-col items-center justify-center gap-1 overflow-hidden rounded-xl border-2 border-dashed p-1.5 text-center transition-colors ${
+      className={`relative flex ${className} w-full cursor-pointer flex-col items-center justify-center gap-1 overflow-hidden rounded-xl border-2 border-dashed p-1.5 text-center transition-colors ${
         over ? 'border-ink bg-surface' : 'border-line-strong bg-surface hover:border-ink'
-      }`}
+      } ${panelOverlay ? 'md:rounded-none md:border-0 md:p-0' : ''}`}
     >
+      {panelOverlay && (
+        <span className="pointer-events-none absolute left-6 top-6 hidden rounded-full bg-paper/90 px-3.5 py-1.5 text-xs uppercase tracking-[0.14em] text-ink md:inline-block">
+          {label}
+        </span>
+      )}
+
       {preview ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={preview} alt={label} className="h-full w-full rounded-lg object-cover" />
+        <img
+          src={preview}
+          alt={label}
+          className={`h-full w-full object-cover ${panelOverlay ? 'rounded-lg md:rounded-none md:object-top' : 'rounded-lg'}`}
+        />
       ) : (
         <>
           <ImagePlus size={18} className="text-muted" aria-hidden />
@@ -106,6 +125,13 @@ function PhotoField({
           </span>
         </>
       )}
+
+      {panelOverlay && preview && (
+        <span className="pointer-events-none absolute bottom-6 left-6 hidden rounded-full bg-ink px-4 py-2 text-xs font-medium text-on-ink md:inline-block">
+          Foto ändern
+        </span>
+      )}
+
       <input
         id={id}
         type="file"
@@ -330,8 +356,30 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
   }
 
   // ----------------------------------------------------------------- Eingabe
+  //
+  // Layout: auf Mobil ein einziger vertikaler Fluss (Standardverhalten von
+  // flex-col — unverändert zum bisherigen Aufbau). Ab md wird daraus ein
+  // Zweispalter: links das Personenfoto als bildfüllende Spalte (Editorial-
+  // Stil, wie auf der Landingpage), rechts die Einstellungen. Bewusst reines
+  // CSS (`md:grid`) statt einer JS-Breakpoint-Abfrage — ein Redesign für
+  // größere Bildschirme, keine zwei parallele Implementierungen.
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-8 md:grid md:grid-cols-[0.9fr_1.4fr] md:items-stretch md:gap-0">
+      <section className="flex flex-col gap-3 md:border-r md:border-line">
+        <h2 className="text-sm font-medium text-ink md:hidden">Dein Foto</h2>
+        <div className="w-40 md:h-full md:w-full">
+          <PhotoField
+            id="person"
+            label="Personenfoto"
+            file={person}
+            onFiles={(files) => setPerson(files[0] ?? null)}
+            className="aspect-[3/4] md:aspect-auto md:h-full md:min-h-[420px]"
+            panelOverlay
+          />
+        </div>
+      </section>
+
+      <div className="flex flex-col gap-8 md:px-10 md:py-10">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight text-ink">Anprobe erstellen</h1>
         <p className="mt-1 text-sm text-muted">Guthaben: {credits} Credits</p>
@@ -340,19 +388,6 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
       {error && (
         <p role="alert" className="rounded-lg border border-line bg-surface px-4 py-3 text-sm text-accent">{error}</p>
       )}
-
-      <section className="flex flex-col gap-3">
-        <h2 className="text-sm font-medium text-ink">Dein Foto</h2>
-        <div className="w-40">
-          <PhotoField
-            id="person"
-            label="Personenfoto"
-            file={person}
-            onFiles={(files) => setPerson(files[0] ?? null)}
-            className="aspect-[3/4]"
-          />
-        </div>
-      </section>
 
       <section className="flex flex-col gap-3">
         <h2 className="text-sm font-medium text-ink">Modus</h2>
@@ -457,6 +492,7 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
         {mode === 'single' && filledItems.length > 1 && (
           <span className="text-xs text-muted">{filledItems.length} Stücke = {filledItems.length} Bilder</span>
         )}
+      </div>
       </div>
     </div>
   );

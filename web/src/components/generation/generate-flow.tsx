@@ -308,7 +308,9 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
       {/* Modus */}
       <section className="flex flex-col gap-3">
         <h2 className="text-sm font-medium text-ink">Modus</h2>
-        <div className="inline-flex rounded-full border border-line p-1 text-sm">
+        {/* self-start: ohne das streckt der flex-col-Container die Pille auf
+            volle Breite (align-items: stretch schlaegt inline-flex). */}
+        <div className="inline-flex self-start rounded-full border border-line p-1 text-sm">
           <button
             type="button"
             onClick={() => setMode('single')}
@@ -337,8 +339,16 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
         <div className="flex flex-col gap-4">
           {items.map((item, idx) => (
             <div key={item.id} className="flex gap-4 rounded-xl border border-line p-4">
+              {/* Fuellt die Kartenhoehe statt festem Seitenverhaeltnis — sonst
+                  bleibt unter dem Foto Leerraum, wenn die Feldspalte hoeher ist. */}
               <div className="w-28 shrink-0">
-                <PhotoField id={`item-${item.id}`} label="Foto" file={item.file} onChange={(f) => updateItem(item.id, { file: f })} />
+                <PhotoField
+                  id={`item-${item.id}`}
+                  label="Foto"
+                  file={item.file}
+                  onChange={(f) => updateItem(item.id, { file: f })}
+                  aspect="h-full min-h-36"
+                />
               </div>
               <div className="flex flex-1 flex-col gap-3">
                 {mode === 'single' ? (

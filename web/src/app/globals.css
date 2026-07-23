@@ -92,6 +92,42 @@ body {
   color: var(--muted);
 }
 
+/* Fliesstext fuer Rechtsseiten (Impressum, Datenschutz). */
+.legal h2 {
+  font-size: 1.05rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  margin-top: 2.5rem;
+  margin-bottom: 0.75rem;
+}
+.legal p,
+.legal li {
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: var(--ink-soft);
+}
+.legal p + p {
+  margin-top: 0.75rem;
+}
+.legal ul {
+  margin-top: 0.75rem;
+  padding-left: 1.1rem;
+  list-style: disc;
+}
+.legal li + li {
+  margin-top: 0.4rem;
+}
+.legal a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.legal strong {
+  color: var(--ink);
+  font-weight: 500;
+}
+
 /* Sichtbarer, konsistenter Fokusrahmen fuer Tastaturbedienung. */
 :focus-visible {
   outline: 2px solid var(--ink);

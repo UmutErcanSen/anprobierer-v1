@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
-import { Check, ChevronRight, Download, ImagePlus, Loader2, Trash2 } from 'lucide-react';
+import { Check, ImagePlus, Loader2, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Field, Select, Textarea } from '@/components/ui/field';
+import { ResultView, type ResultCard } from '@/components/generation/result-view';
 import {
   CLOTHING_TYPES,
   SIZES,
@@ -29,8 +29,6 @@ import {
 
 type Status = 'idle' | 'generating' | 'done' | 'error';
 type ClothingItem = { id: number; file: File | null; type: string; size: string; color: string };
-/** Bild und Verkaufstext gehoeren zusammen — so kommt es vom Server. */
-type ResultCard = { title: string; imageUrl: string | null; saleText: string | null };
 
 const PROGRESS = [
   'Personenfoto analysieren',
@@ -117,48 +115,6 @@ function PhotoField({
         onChange={(e) => onFiles(Array.from(e.target.files ?? []))}
       />
     </label>
-  );
-}
-
-/** Laedt Bild und Text gemeinsam als ZIP — beides braucht man fuer eine Anzeige. */
-async function downloadZip(cards: ResultCard[], filename: string) {
-  const JSZip = (await import('jszip')).default;
-  const zip = new JSZip();
-
-  for (let i = 0; i < cards.length; i++) {
-    const card = cards[i];
-    const base = `${String(i + 1).padStart(2, '0')}-${card.title.replace(/[^\w\d]+/g, '-').toLowerCase()}`;
-    if (card.imageUrl) {
-      const blob = await fetch(card.imageUrl).then((r) => r.blob());
-      zip.file(`${base}.png`, blob);
-    }
-    if (card.saleText) zip.file(`${base}.txt`, card.saleText);
-  }
-
-  const blob = await zip.generateAsync({ type: 'blob' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
-function CopyButton({ text }: { text: string }) {
-  const [copied, setCopied] = useState(false);
-  async function copy() {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    } catch {
-      // Zwischenablage nicht verfuegbar — Text kann manuell markiert werden.
-    }
-  }
-  return (
-    <button type="button" onClick={copy} className="text-xs text-muted underline underline-offset-4 transition-colors hover:text-ink">
-      {copied ? 'Kopiert' : 'Kopieren'}
-    </button>
   );
 }
 
@@ -268,86 +224,7 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
 
   // ---------------------------------------------------------------- Ergebnis
   if (status === 'done') {
-    const imageCards = cards.filter((c) => c.imageUrl).length;
-    return (
-      <div className="flex flex-col gap-6">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-ink">Fertig</h1>
-            <p className="mt-1 text-sm text-muted">
-              {imageCards} {imageCards === 1 ? 'Bild' : 'Bilder'} · Restguthaben {remaining} Credits
-            </p>
-          </div>
-          {cards.length > 0 && (
-            <Button variant="outline" onClick={() => downloadZip(cards, 'anprobe.zip')}>
-              <Download size={15} aria-hidden /> Alles als ZIP
-            </Button>
-          )}
-        </div>
-
-        {failures > 0 && (
-          <p role="status" className="rounded-lg border border-line bg-surface px-4 py-3 text-sm text-ink-soft">
-            {failures} {failures === 1 ? 'Bild konnte' : 'Bilder konnten'} nicht erstellt werden — die Credits
-            dafür wurden zurückgebucht.
-          </p>
-        )}
-
-        {/* Aufklappbare Karten: Bild und Text gehoeren zusammen. Nur die erste
-            ist offen, damit man auf dem Handy nicht endlos scrollen muss. */}
-        <div className="flex flex-col gap-3">
-          {cards.map((card, i) => (
-            <details key={`${card.title}-${i}`} open={i === 0} className="group rounded-xl border border-line">
-              <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-4">
-                <span className="flex items-center gap-2.5">
-                  <ChevronRight size={16} className="text-muted transition-transform group-open:rotate-90" aria-hidden />
-                  <span className="text-sm font-medium text-ink">{card.title}</span>
-                </span>
-                <span className="text-xs text-muted">
-                  {card.imageUrl && card.saleText ? 'Bild + Text' : card.imageUrl ? 'Bild' : 'Text'}
-                </span>
-              </summary>
-
-              <div className="flex flex-col gap-4 border-t border-line p-4">
-                {card.imageUrl && (
-                  <div className="overflow-hidden rounded-lg border border-line">
-                    <Image src={card.imageUrl} alt={card.title} width={512} height={768} className="h-auto w-full" unoptimized />
-                  </div>
-                )}
-
-                {card.saleText && (
-                  <div className="flex flex-col gap-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs uppercase tracking-[0.14em] text-muted">Verkaufstext</span>
-                      <CopyButton text={card.saleText} />
-                    </div>
-                    <p className="whitespace-pre-wrap rounded-lg bg-surface p-3 text-sm text-ink-soft">{card.saleText}</p>
-                  </div>
-                )}
-
-                <div className="flex flex-wrap gap-3 text-sm">
-                  {card.imageUrl && (
-                    <a href={card.imageUrl} download={`${card.title}.png`} className="text-ink underline underline-offset-4">
-                      Bild herunterladen
-                    </a>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => downloadZip([card], `${card.title.replace(/[^\w\d]+/g, '-').toLowerCase()}.zip`)}
-                    className="text-ink underline underline-offset-4"
-                  >
-                    Bild + Text als ZIP
-                  </button>
-                </div>
-              </div>
-            </details>
-          ))}
-        </div>
-
-        <div>
-          <Button onClick={reset}>Neue Anprobe erstellen</Button>
-        </div>
-      </div>
-    );
+    return <ResultView cards={cards} failures={failures} remaining={remaining} onReset={reset} />;
   }
 
   // -------------------------------------------------------------- Wartephase

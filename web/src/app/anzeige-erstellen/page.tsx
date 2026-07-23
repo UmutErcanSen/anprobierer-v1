@@ -25,10 +25,12 @@ export default async function AnzeigeErstellenPage() {
   return (
     <>
       <AppHeader credits={credits} />
-      {/* max-w-xl auf Mobil (schmales Formular wie bisher), auf md+ deutlich
-          breiter -- die Editorial-Aufteilung (Foto | Einstellungen) braucht
-          Platz nebeneinander, sonst wirkt sie gequetscht. */}
-      <main className="mx-auto w-full max-w-xl flex-1 px-6 py-10 md:max-w-5xl md:py-12">
+      {/* Mobil: schmales, zentriertes Formular wie bisher (max-w-xl + Rand).
+          Ab md faellt die Randbeschraenkung komplett weg, damit die
+          Foto-Spalte von GenerateFlow bis an den Bildschirmrand reicht --
+          genau wie der Hero auf der Landingpage. Die Einstellungsspalte
+          bringt ihre eigene, lesbare Breite dann selbst mit. */}
+      <main className="mx-auto w-full max-w-xl flex-1 px-6 py-10 md:max-w-none md:px-0 md:py-0">
         <GenerateFlow credits={credits} plan={plan} />
       </main>
     </>

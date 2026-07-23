@@ -6,6 +6,7 @@ import { Check, ImagePlus, Loader2, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Field, Select, Textarea } from '@/components/ui/field';
 import { InfoTip } from '@/components/ui/info-tip';
+import { TipModal } from '@/components/ui/tip-modal';
 import { ResultView, type ResultCard } from '@/components/generation/result-view';
 import {
   CLOTHING_TYPES,
@@ -195,30 +196,29 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
   const notEnough = cost > credits;
   const readyToGenerate = ready && !notEnough && cost > 0;
 
-  // Tipp-Inhalte einmal definiert, an mehreren Stellen verwendet (Mobil-
-  // Überschrift + Desktop-Bildpanel teilen sich denselben Text).
-  const personTips = (
-    <>
-      <p className="font-medium text-ink">Für ein gutes Ergebnis:</p>
-      <ul className="mt-1.5 list-disc space-y-1 pl-4">
-        <li>Ganzkörper, frontal fotografiert</li>
-        <li>Gleichmäßiges Licht — Tageslicht ist ideal</li>
-        <li>Ruhiger, aufgeräumter Hintergrund</li>
-        <li>Kein extremer Winkel oder Zoom</li>
-      </ul>
-    </>
-  );
-  const clothingTips = (
-    <>
-      <p className="font-medium text-ink">Für ein gutes Ergebnis:</p>
-      <ul className="mt-1.5 list-disc space-y-1 pl-4">
-        <li>Flach ausgebreitet oder am Bügel fotografiert</li>
-        <li>Das ganze Stück im Bild, nicht abgeschnitten</li>
-        <li>Gleichmäßiges Licht, kein Schatten auf dem Stoff</li>
-        <li>Möglichst ohne Person darauf — Schnitt und Farbe sind so am besten erkennbar</li>
-      </ul>
-    </>
-  );
+  // Tipp-Inhalte aus der Altanwendung uebernommen (dort als "photoGuide"/
+  // "clothingGuide"-Modal bereits vorhanden) -- als Daten statt JSX, weil
+  // TipModal Bild + Stichpunkte selbst zusammensetzt.
+  const personGood = {
+    src: '/tips/person-gut.png',
+    alt: 'Gutes Beispiel für ein Personenfoto',
+    points: ['Ganzkörperaufnahme', 'Neutraler Hintergrund', 'Gut beleuchtet', 'Arme leicht vom Körper'],
+  };
+  const personBad = {
+    src: '/tips/person-schlecht.jpg',
+    alt: 'Schlechtes Beispiel für ein Personenfoto',
+    points: ['Angeschnitten (Knie fehlen)', 'Unruhiger Hintergrund', 'Zu dunkel', 'Arme am Körper verdeckt'],
+  };
+  const clothingGood = {
+    src: '/tips/clothing-gut.png',
+    alt: 'Gutes Beispiel für ein Kleidungsfoto',
+    points: ['Einzelnes Kleidungsstück', 'Flach ausgebreitet, glatt', 'Neutraler Hintergrund', 'Gut beleuchtet, nah herangezoomt'],
+  };
+  const clothingBad = {
+    src: '/tips/clothing-schlecht.jpg',
+    alt: 'Schlechtes Beispiel für ein Kleidungsfoto',
+    points: ['Mehrere Teile durcheinander', 'Gefaltet oder zerknittert', 'Unruhiger Hintergrund', 'Zu weit weg oder schlecht beleuchtet'],
+  };
   const modeTips = (
     <div className="flex flex-col gap-2.5">
       <p>
@@ -434,7 +434,13 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
       <section className="relative flex flex-col gap-3 md:sticky md:top-16 md:flex-[0.9] md:border-r md:border-line">
         <h2 className="flex items-center gap-1.5 text-sm font-medium text-ink md:hidden">
           Dein Foto
-          <InfoTip label="Tipps für ein gutes Personenfoto">{personTips}</InfoTip>
+          <TipModal
+            label="Tipps für ein gutes Personenfoto"
+            title="So sollte dein Personenfoto aussehen"
+            intro="Für beste Ergebnisse mit der KI-Anprobe beachte diese Tipps:"
+            good={personGood}
+            bad={personBad}
+          />
         </h2>
         <div className="w-40 md:w-full">
           <PhotoField
@@ -442,18 +448,24 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
             label="Personenfoto"
             file={person}
             onFiles={(files) => setPerson(files[0] ?? null)}
-            className="aspect-[3/4] md:aspect-auto md:h-[clamp(420px,calc(100vh-5rem),760px)]"
+            className="aspect-[3/4] md:aspect-auto md:h-[clamp(420px,calc(100vh-5rem),900px)]"
             panelOverlay
           />
         </div>
         {/* Auf Desktop ersetzt die Kicker-Pille im Bild den <h2> — der
             Info-Knopf braucht deshalb hier eine eigene, sichtbare Stelle. */}
         <div className="absolute right-6 top-6 z-10 hidden md:block">
-          <InfoTip label="Tipps für ein gutes Personenfoto">{personTips}</InfoTip>
+          <TipModal
+            label="Tipps für ein gutes Personenfoto"
+            title="So sollte dein Personenfoto aussehen"
+            intro="Für beste Ergebnisse mit der KI-Anprobe beachte diese Tipps:"
+            good={personGood}
+            bad={personBad}
+          />
         </div>
       </section>
 
-      <div className="flex flex-col gap-8 md:flex-[1.4] md:px-10 md:py-10">
+      <div className="flex flex-col gap-8 md:flex-[1.4] md:max-w-2xl md:px-12 md:py-10">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight text-ink">Anprobe erstellen</h1>
         <p className="mt-1 text-sm text-muted">Guthaben: {credits} Credits</p>
@@ -495,7 +507,13 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
       <section className="flex flex-col gap-3">
         <h2 className="flex items-center gap-1.5 text-sm font-medium text-ink">
           Kleidungsstücke
-          <InfoTip label="Tipps für ein gutes Kleidungsfoto">{clothingTips}</InfoTip>
+          <TipModal
+            label="Tipps für ein gutes Kleidungsfoto"
+            title="So sollten deine Kleidungsfotos aussehen"
+            intro="Für beste Ergebnisse mit der KI-Anprobe beachte diese Tipps:"
+            good={clothingGood}
+            bad={clothingBad}
+          />
         </h2>
 
         <div className="flex flex-col gap-4">

@@ -128,6 +128,20 @@ body {
   font-weight: 500;
 }
 
+/* Einmaliger "Pop", sobald eine Aktion von deaktiviert zu klickbar wechselt
+   (z.B. der Generieren-Button, wenn alle Pflichtfelder ausgefuellt sind).
+   Kein Dauer-Pulsieren -- das widerspraeche dem ruhigen, zurueckhaltenden
+   Editorial-Stil. Greift automatisch die globale prefers-reduced-motion-
+   Regel oben (Animationsdauer wird dort auf ~0 gesetzt). */
+@keyframes pop-ready {
+  0% { transform: scale(0.94); }
+  55% { transform: scale(1.035); }
+  100% { transform: scale(1); }
+}
+.pop-ready {
+  animation: pop-ready 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
 /* Sichtbarer, konsistenter Fokusrahmen fuer Tastaturbedienung. */
 :focus-visible {
   outline: 2px solid var(--ink);

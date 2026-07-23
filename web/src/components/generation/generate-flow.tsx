@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Check, ImagePlus, Loader2, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Field, Select, Textarea } from '@/components/ui/field';
+import { InfoTip } from '@/components/ui/info-tip';
 import { ResultView, type ResultCard } from '@/components/generation/result-view';
 import {
   CLOTHING_TYPES,
@@ -40,8 +41,7 @@ const PROGRESS = [
   'Qualitätsprüfung',
 ];
 
-let nextId = 1;
-const newItem = (): ClothingItem => ({ id: nextId++, file: null, type: '', size: '', color: '' });
+const emptyItem = (id: number): ClothingItem => ({ id, file: null, type: '', size: '', color: '' });
 
 function usePreview(file: File | null) {
   const [url, setUrl] = useState<string | null>(null);
@@ -149,9 +149,28 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
   const maxItems = maxItemsForPlan(plan);
   const unitCost = CREDITS_PER_QUALITY[qualityForPlan(plan)];
 
+  // Zaehler pro Komponenten-Instanz (useRef), NICHT modulweit: Ein modulweiter
+  // Zaehler zaehlt im Next.js-Dev-Server ueber mehrere Anfragen/Neuladungen
+  // hinweg weiter, waehrend der Browser bei jedem Laden neu bei 1 anfaengt --
+  // das fuehrte zu server/client-inkonsistenten IDs (Hydration-Fehler bei
+  // htmlFor/id-Paaren, siehe Konsole).
+  //
+  // Ein useRef allein reicht dafuer NICHT: Next.js aktiviert standardmaessig
+  // React Strict Mode, und React ruft eine an useState uebergebene Lazy-
+  // Initializer-Funktion im Dev-Modus zweimal auf, um unreine Effekte zu
+  // erkennen (ein Ergebnis wird verworfen). Mutiert diese Funktion einen Ref
+  // als Seiteneffekt, zaehlt der verworfene Aufruf trotzdem mit -- der Server
+  // (der nur einmal rendert) landet dadurch bei einer anderen ID als der
+  // Client. Deshalb bekommt das anfaengliche Element eine FESTE ID (kein
+  // Seiteneffekt beim Rendern); der Ref-Zaehler existiert nur noch fuer
+  // Elemente, die ueber Event-Handler hinzukommen -- die ruft React nie
+  // doppelt auf.
+  const nextIdRef = useRef(1);
+  const newItem = () => emptyItem(nextIdRef.current++);
+
   const [mode, setMode] = useState<'single' | 'combined'>('single');
   const [person, setPerson] = useState<File | null>(null);
-  const [items, setItems] = useState<ClothingItem[]>([newItem()]);
+  const [items, setItems] = useState<ClothingItem[]>(() => [emptyItem(0)]);
   const [notes, setNotes] = useState('');
 
   const [status, setStatus] = useState<Status>('idle');
@@ -174,6 +193,46 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
   const ready =
     Boolean(person) && filledItems.length > 0 && filledItems.every((i) => i.type && i.size);
   const notEnough = cost > credits;
+  const readyToGenerate = ready && !notEnough && cost > 0;
+
+  // Tipp-Inhalte einmal definiert, an mehreren Stellen verwendet (Mobil-
+  // Überschrift + Desktop-Bildpanel teilen sich denselben Text).
+  const personTips = (
+    <>
+      <p className="font-medium text-ink">Für ein gutes Ergebnis:</p>
+      <ul className="mt-1.5 list-disc space-y-1 pl-4">
+        <li>Ganzkörper, frontal fotografiert</li>
+        <li>Gleichmäßiges Licht — Tageslicht ist ideal</li>
+        <li>Ruhiger, aufgeräumter Hintergrund</li>
+        <li>Kein extremer Winkel oder Zoom</li>
+      </ul>
+    </>
+  );
+  const clothingTips = (
+    <>
+      <p className="font-medium text-ink">Für ein gutes Ergebnis:</p>
+      <ul className="mt-1.5 list-disc space-y-1 pl-4">
+        <li>Flach ausgebreitet oder am Bügel fotografiert</li>
+        <li>Das ganze Stück im Bild, nicht abgeschnitten</li>
+        <li>Gleichmäßiges Licht, kein Schatten auf dem Stoff</li>
+        <li>Möglichst ohne Person darauf — Schnitt und Farbe sind so am besten erkennbar</li>
+      </ul>
+    </>
+  );
+  const modeTips = (
+    <div className="flex flex-col gap-2.5">
+      <p>
+        <span className="font-medium text-ink">Einzeln:</span> Für jedes Kleidungsstück
+        entsteht ein eigenes Anprobebild. Kosten: {unitCost} {unitCost === 1 ? 'Credit' : 'Credits'} pro
+        Bild.
+      </p>
+      <p>
+        <span className="font-medium text-ink">Kombiniert:</span> Alle ausgewählten Stücke
+        werden in einem gemeinsamen Bild kombiniert. Kosten: {unitCost}{' '}
+        {unitCost === 1 ? 'Credit' : 'Credits'} insgesamt, unabhängig von der Anzahl der Stücke.
+      </p>
+    </div>
+  );
 
   useEffect(() => {
     if (status !== 'generating') return;
@@ -360,26 +419,41 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
   // Layout: auf Mobil ein einziger vertikaler Fluss (Standardverhalten von
   // flex-col — unverändert zum bisherigen Aufbau). Ab md wird daraus ein
   // Zweispalter: links das Personenfoto als bildfüllende Spalte (Editorial-
-  // Stil, wie auf der Landingpage), rechts die Einstellungen. Bewusst reines
-  // CSS (`md:grid`) statt einer JS-Breakpoint-Abfrage — ein Redesign für
-  // größere Bildschirme, keine zwei parallele Implementierungen.
+  // Stil, wie auf der Landingpage), rechts die Einstellungen.
+  //
+  // Bewusst FLEXBOX statt CSS-Grid für den Zweispalter: Grid-Zeilen (auch mit
+  // nur zwei "Spalten"-Kindern) werden implizit auf gleiche Höhe gebracht,
+  // sodass die Foto-Spalte mit jedem zusätzlichen Kleidungsstück oder jeder
+  // längeren Notiz in der Einstellungsspalte mitwuchs — genau der gemeldete
+  // Fehler. Mit Flexbox + `items-start` behält jede Spalte ihre eigene,
+  // unabhängige Höhe; die Foto-Spalte bekommt zusätzlich eine feste,
+  // vom Sichtfenster abhängige Höhe (`clamp(...)`) statt `h-full`, und
+  // bleibt dank `sticky` beim Scrollen durch die Einstellungen sichtbar.
   return (
-    <div className="flex flex-col gap-8 md:grid md:grid-cols-[0.9fr_1.4fr] md:items-stretch md:gap-0">
-      <section className="flex flex-col gap-3 md:border-r md:border-line">
-        <h2 className="text-sm font-medium text-ink md:hidden">Dein Foto</h2>
-        <div className="w-40 md:h-full md:w-full">
+    <div className="flex flex-col gap-8 md:flex-row md:items-start md:gap-0">
+      <section className="relative flex flex-col gap-3 md:sticky md:top-16 md:flex-[0.9] md:border-r md:border-line">
+        <h2 className="flex items-center gap-1.5 text-sm font-medium text-ink md:hidden">
+          Dein Foto
+          <InfoTip label="Tipps für ein gutes Personenfoto">{personTips}</InfoTip>
+        </h2>
+        <div className="w-40 md:w-full">
           <PhotoField
             id="person"
             label="Personenfoto"
             file={person}
             onFiles={(files) => setPerson(files[0] ?? null)}
-            className="aspect-[3/4] md:aspect-auto md:h-full md:min-h-[420px]"
+            className="aspect-[3/4] md:aspect-auto md:h-[clamp(420px,calc(100vh-5rem),760px)]"
             panelOverlay
           />
         </div>
+        {/* Auf Desktop ersetzt die Kicker-Pille im Bild den <h2> — der
+            Info-Knopf braucht deshalb hier eine eigene, sichtbare Stelle. */}
+        <div className="absolute right-6 top-6 z-10 hidden md:block">
+          <InfoTip label="Tipps für ein gutes Personenfoto">{personTips}</InfoTip>
+        </div>
       </section>
 
-      <div className="flex flex-col gap-8 md:px-10 md:py-10">
+      <div className="flex flex-col gap-8 md:flex-[1.4] md:px-10 md:py-10">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight text-ink">Anprobe erstellen</h1>
         <p className="mt-1 text-sm text-muted">Guthaben: {credits} Credits</p>
@@ -390,7 +464,10 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
       )}
 
       <section className="flex flex-col gap-3">
-        <h2 className="text-sm font-medium text-ink">Modus</h2>
+        <h2 className="flex items-center gap-1.5 text-sm font-medium text-ink">
+          Modus
+          <InfoTip label="Was bedeuten die beiden Modi?">{modeTips}</InfoTip>
+        </h2>
         {/* self-start: sonst streckt der flex-col-Container die Pille. */}
         <div className="inline-flex self-start rounded-full border border-line p-1 text-sm">
           <button
@@ -416,7 +493,10 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
       </section>
 
       <section className="flex flex-col gap-3">
-        <h2 className="text-sm font-medium text-ink">Kleidungsstücke</h2>
+        <h2 className="flex items-center gap-1.5 text-sm font-medium text-ink">
+          Kleidungsstücke
+          <InfoTip label="Tipps für ein gutes Kleidungsfoto">{clothingTips}</InfoTip>
+        </h2>
 
         <div className="flex flex-col gap-4">
           {items.map((item, idx) => (
@@ -485,7 +565,16 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
       </section>
 
       <div className="flex flex-col items-start gap-2 border-t border-line pt-6">
-        <Button size="lg" onClick={generate} disabled={!ready || notEnough || cost === 0}>
+        {/* key erzwingt ein Neu-Mounten, sobald der Button klickbar wird —
+            dadurch startet die pop-ready-Animation garantiert frisch, statt
+            nur einmal beim ersten Laden zu greifen. */}
+        <Button
+          key={readyToGenerate ? 'ready' : 'not-ready'}
+          size="lg"
+          onClick={generate}
+          disabled={!readyToGenerate}
+          className={readyToGenerate ? 'pop-ready hover:-translate-y-0.5' : ''}
+        >
           {cost > 0 ? `Generieren (${cost} ${cost === 1 ? 'Credit' : 'Credits'})` : 'Generieren'}
         </Button>
         {notEnough && <span className="text-xs text-accent">Guthaben reicht nicht — {cost} Credits nötig.</span>}

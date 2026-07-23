@@ -26,7 +26,11 @@ export function Input(props: ComponentProps<"input">) {
 }
 
 export function Textarea(props: ComponentProps<"textarea">) {
-  return <textarea className={`${controlClasses} py-2.5`} {...props} />;
+  // resize-none: das native Ziehgriff-Resize eines Textareas veraendert nur
+  // dessen eigene Hoehe, kann aber je nach umgebendem Layout (z.B. Flex-
+  // Geschwister, deren Hoehe an den Inhalt gekoppelt ist) unerwuenscht auf
+  // Nachbarelemente durchschlagen. Feste Zeilenzahl per `rows` reicht hier.
+  return <textarea className={`${controlClasses} resize-none py-2.5`} {...props} />;
 }
 
 export function Select(props: ComponentProps<"select">) {

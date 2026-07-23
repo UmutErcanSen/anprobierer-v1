@@ -12,7 +12,7 @@ type Size = "md" | "lg";
 
 const base =
   "inline-flex items-center justify-center gap-2 rounded-full font-medium " +
-  "transition-[background-color,color,opacity] duration-150 " +
+  "transition-[background-color,color,opacity,transform] duration-150 " +
   "disabled:opacity-50 disabled:pointer-events-none whitespace-nowrap";
 
 const variants: Record<Variant, string> = {

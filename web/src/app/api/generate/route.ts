@@ -93,12 +93,11 @@ export async function POST(request: Request) {
     if (err) return NextResponse.json({ error: err }, { status: 400 });
   }
 
-  // Im Einzelmodus braucht jedes Stueck einen gueltigen Typ und eine Groesse.
-  if (mode === 'single') {
-    for (let i = 0; i < clothing.length; i++) {
-      if (!isClothingType(types[i]) || !sizes[i]) {
-        return NextResponse.json({ error: 'Bitte gib zu jedem Kleidungsstück Typ und Größe an.' }, { status: 400 });
-      }
+  // Typ und Groesse sind in BEIDEN Modi Pflicht: Sie speisen den Verkaufstext,
+  // den es pro Kleidungsstueck gibt — unabhaengig von der Bildanzahl.
+  for (let i = 0; i < clothing.length; i++) {
+    if (!isClothingType(types[i]) || !sizes[i]) {
+      return NextResponse.json({ error: 'Bitte gib zu jedem Kleidungsstück Typ und Größe an.' }, { status: 400 });
     }
   }
 
@@ -138,50 +137,34 @@ export async function POST(request: Request) {
       upsert: true,
     });
 
-    // Ein erzeugtes Bild samt (optionalem) Verkaufstext.
-    type Produced = { image: Buffer; mimeType: string; model: string; costUsd: number | null; saleText: string | null };
+    // Alle Kleidungsbilder einmal vorbereiten — sie werden fuer die
+    // Bildgenerierung UND die Verkaufstexte gebraucht.
+    const clothingInputs = await Promise.all(clothing.map((c, i) => prepare(c, `${dir}/clothing-${i}`)));
+
+    type Produced = { image: Buffer; mimeType: string; model: string; costUsd: number | null };
     const produced: Produced[] = [];
     let failures = 0;
 
     if (mode === 'combined') {
-      // Kombiniert: ein Bild aus allen Stuecken, kein per-Stueck-Verkaufstext.
-      const clothingInputs = await Promise.all(clothing.map((c, i) => prepare(c, `${dir}/clothing-${i}`)));
+      // Kombiniert: ein Bild aus allen Stuecken.
       try {
-        const r = await generateTryOn({ person: personInput, clothing: clothingInputs, prompt: COMBINED_PROMPT, quality });
-        produced.push({ ...r, saleText: null });
+        produced.push(await generateTryOn({ person: personInput, clothing: clothingInputs, prompt: COMBINED_PROMPT, quality }));
       } catch (err) {
         console.error('[generate] combined fehlgeschlagen', genId, err);
         failures = 1;
       }
     } else {
-      // Einzeln: pro Stueck ein Bild UND ein Verkaufstext. Ein Fehlschlag
-      // stoppt die anderen nicht.
-      for (let i = 0; i < clothing.length; i++) {
+      // Einzeln: pro Stueck ein Bild. Ein Fehlschlag stoppt die anderen nicht.
+      for (let i = 0; i < clothingInputs.length; i++) {
         const type = types[i];
         if (!isClothingType(type)) { failures++; continue; }
         try {
-          const clothingInput = await prepare(clothing[i], `${dir}/clothing-${i}`);
-          const r = await generateTryOn({
+          produced.push(await generateTryOn({
             person: personInput,
-            clothing: [clothingInput],
+            clothing: [clothingInputs[i]],
             prompt: buildTryOnPrompt(type, sizes[i], notes),
             quality,
-          });
-
-          // Verkaufstext ist "best effort": scheitert er, bleibt das Bild
-          // trotzdem gueltig (der Nutzer hat dafuer bezahlt).
-          let saleText: string | null = null;
-          try {
-            saleText = await generateSaleText({
-              prompt: buildSalePrompt(type, sizes[i], colors[i] ? [colors[i]] : null, notes),
-              imageBytes: clothingInput.bytes,
-              mimeType: clothingInput.mimeType,
-            });
-          } catch (textErr) {
-            console.error('[generate] Verkaufstext', i, 'fehlgeschlagen', genId, textErr);
-          }
-
-          produced.push({ ...r, saleText });
+          }));
         } catch (err) {
           console.error('[generate] single item', i, 'fehlgeschlagen', genId, err);
           failures++;
@@ -199,19 +182,36 @@ export async function POST(request: Request) {
       );
     }
 
-    // Erfolgreiche Bilder dauerhaft speichern; Verkaufstexte bleiben ausgerichtet.
-    const resultPaths: string[] = [];
+    // Verkaufstext je Kleidungsstueck — in BEIDEN Modi, denn verkauft wird
+    // jedes Stueck einzeln, egal ob es in einem oder mehreren Bildern steckt.
+    // "Best effort": scheitert ein Text, bleibt das bezahlte Bild gueltig.
     const saleTexts: (string | null)[] = [];
+    for (let i = 0; i < clothingInputs.length; i++) {
+      const type = types[i];
+      if (!isClothingType(type)) { saleTexts.push(null); continue; }
+      try {
+        saleTexts.push(
+          await generateSaleText({
+            prompt: buildSalePrompt(type, sizes[i], colors[i] ? [colors[i]] : null, notes),
+            imageBytes: clothingInputs[i].bytes,
+            mimeType: clothingInputs[i].mimeType,
+          }),
+        );
+      } catch (textErr) {
+        console.error('[generate] Verkaufstext', i, 'fehlgeschlagen', genId, textErr);
+        saleTexts.push(null);
+      }
+    }
+
+    // Erfolgreiche Bilder dauerhaft speichern.
+    const resultPaths: string[] = [];
     for (let i = 0; i < produced.length; i++) {
       const path = `${dir}/${i}.png`;
       const { error: upErr } = await admin.storage.from('results').upload(path, produced[i].image, {
         contentType: produced[i].mimeType,
         upsert: true,
       });
-      if (!upErr) {
-        resultPaths.push(path);
-        saleTexts.push(produced[i].saleText);
-      }
+      if (!upErr) resultPaths.push(path);
     }
 
     const costUsd = produced.reduce((sum, r) => sum + (r.costUsd ?? 0), 0);

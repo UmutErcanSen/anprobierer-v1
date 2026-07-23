@@ -20,6 +20,7 @@
   --line-strong: #d4d4d4;  /* betonte Trennung */
   --on-ink: #ffffff;       /* Text auf dunkler Vollflaeche */
   --accent: #c2410c;       /* Terrakotta — einziger Farbakzent, nur auf Display-Kursive */
+  --success: #15803d;      /* Statusfarbe, kein Dekor — nur fuer "erledigt" */
 }
 
 [data-theme="dark"] {
@@ -32,6 +33,7 @@
   --line-strong: #2e2e2e;
   --on-ink: #0a0a0a;
   --accent: #ea7a4f;       /* auf dunklem Grund etwas heller, damit der Kontrast stimmt */
+  --success: #5cc98f;
 }
 
 /* Semantische Tokens -> Tailwind-Utilities (bg-paper, text-ink, border-line …). */
@@ -45,6 +47,7 @@
   --color-line-strong: var(--line-strong);
   --color-on-ink: var(--on-ink);
   --color-accent: var(--accent);
+  --color-success: var(--success);
 
   --font-sans: var(--font-geist-sans);
   --font-display: var(--font-instrument-serif);

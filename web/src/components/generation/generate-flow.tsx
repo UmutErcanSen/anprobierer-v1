@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { Loader2, X } from 'lucide-react';
+import { Check, ImagePlus, Loader2, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Field, Select, Textarea } from '@/components/ui/field';
 import {
@@ -17,10 +17,14 @@ import {
 } from '@/lib/generation/constants';
 
 /*
-  Einseitiger Ablauf statt Stepper: alles auf einen Blick, Fotos jederzeit
-  aenderbar, kein Weiter-Klicken. Zwei Modi:
+  Einseitiger Ablauf. Zwei Modi:
     Einzeln     — je Kleidungsstueck ein eigenes Bild (kostet pro Bild)
     Kombiniert  — alle Stuecke in einem Bild (kostet 1×)
+
+  Typ, Groesse und Farbe werden in BEIDEN Modi erfasst: Sie speisen den
+  Verkaufstext, den es pro Kleidungsstueck gibt — unabhaengig davon, ob die
+  Stuecke in einem oder mehreren Bildern landen. Nebeneffekt: Die Karten sind
+  in beiden Modi gleich hoch.
 */
 
 type Status = 'idle' | 'generating' | 'done' | 'error';
@@ -50,36 +54,66 @@ function usePreview(file: File | null) {
   return url;
 }
 
+/**
+ * Foto-Feld mit Drag & Drop. Der gestrichelte Rahmen bleibt immer sichtbar —
+ * auch mit Bild — damit erkennbar ist, dass man hier jederzeit ein neues Foto
+ * hineinziehen kann. Mehrere gleichzeitig fallengelassene Dateien reicht das
+ * Feld nach oben durch (der Aufrufer verteilt sie auf weitere Stuecke).
+ */
 function PhotoField({
   id,
   label,
   file,
-  onChange,
-  aspect = 'aspect-[3/4]',
+  onFiles,
+  className = 'h-full min-h-44',
 }: {
   id: string;
   label: string;
   file: File | null;
-  onChange: (f: File | null) => void;
-  aspect?: string;
+  onFiles: (files: File[]) => void;
+  className?: string;
 }) {
   const preview = usePreview(file);
+  const [over, setOver] = useState(false);
+
+  function handleDrop(e: React.DragEvent) {
+    e.preventDefault();
+    setOver(false);
+    const dropped = Array.from(e.dataTransfer.files).filter((f) => f.type.startsWith('image/'));
+    if (dropped.length) onFiles(dropped);
+  }
+
   return (
     <label
       htmlFor={id}
-      className={`flex ${aspect} w-full cursor-pointer flex-col items-center justify-center overflow-hidden rounded-xl border border-dashed border-line-strong bg-surface text-center transition-colors hover:border-ink`}
+      onDragOver={(e) => { e.preventDefault(); setOver(true); }}
+      onDragLeave={() => setOver(false)}
+      onDrop={handleDrop}
+      className={`flex ${className} w-full cursor-pointer flex-col items-center justify-center gap-1 overflow-hidden rounded-xl border-2 border-dashed p-1.5 text-center transition-colors ${
+        over ? 'border-ink bg-surface' : 'border-line-strong bg-surface hover:border-ink'
+      }`}
     >
       {preview ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={preview} alt={label} className="h-full w-full object-cover" />
+        <img src={preview} alt={label} className="h-full w-full rounded-lg object-cover" />
       ) : (
-        <span className="px-4 text-sm text-muted">
-          {label}
-          <br />
-          <span className="text-xs">Tippen zum Auswählen</span>
-        </span>
+        <>
+          <ImagePlus size={18} className="text-muted" aria-hidden />
+          <span className="px-2 text-xs text-muted">
+            {label}
+            <br />
+            <span className="text-[11px]">Klicken oder hineinziehen</span>
+          </span>
+        </>
       )}
-      <input id={id} type="file" accept="image/*" className="sr-only" onChange={(e) => onChange(e.target.files?.[0] ?? null)} />
+      <input
+        id={id}
+        type="file"
+        accept="image/*"
+        multiple
+        className="sr-only"
+        onChange={(e) => onFiles(Array.from(e.target.files ?? []))}
+      />
     </label>
   );
 }
@@ -92,7 +126,7 @@ function CopyButton({ text }: { text: string }) {
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch {
-      // Zwischenablage nicht verfuegbar — Nutzer kann den Text manuell markieren.
+      // Zwischenablage nicht verfuegbar — Text kann manuell markiert werden.
     }
   }
   return (
@@ -117,19 +151,15 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
   const [error, setError] = useState<string | null>(null);
   const [results, setResults] = useState<string[]>([]);
   const [saleTexts, setSaleTexts] = useState<(string | null)[]>([]);
-  // Guthaben-Schnappschuss zum Zeitpunkt der Erstellung — die Prop aktualisiert
-  // sich nach router.refresh(), fuer die Ergebnisanzeige brauchen wir den Wert
-  // von genau diesem Moment.
   const [remaining, setRemaining] = useState(0);
 
   const filledItems = items.filter((i) => i.file);
   const imageCount = mode === 'combined' ? (filledItems.length ? 1 : 0) : filledItems.length;
   const cost = imageCount * unitCost;
 
+  // Typ und Groesse sind in beiden Modi Pflicht (sie speisen den Verkaufstext).
   const ready =
-    Boolean(person) &&
-    filledItems.length > 0 &&
-    (mode === 'combined' || items.every((i) => !i.file || (i.type && i.size)));
+    Boolean(person) && filledItems.length > 0 && filledItems.every((i) => i.type && i.size);
   const notEnough = cost > credits;
 
   useEffect(() => {
@@ -142,6 +172,24 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
   function updateItem(id: number, patch: Partial<ClothingItem>) {
     setItems((prev) => prev.map((i) => (i.id === id ? { ...i, ...patch } : i)));
   }
+
+  /**
+   * Verteilt fallengelassene Dateien ab einer Position auf die Stuecke und
+   * legt bei Bedarf neue an — begrenzt durch das Tariflimit.
+   */
+  function assignFiles(startIndex: number, files: File[]) {
+    setItems((prev) => {
+      const next = [...prev];
+      for (let k = 0; k < files.length; k++) {
+        const target = startIndex + k;
+        if (target >= maxItems) break; // Tariflimit
+        if (target < next.length) next[target] = { ...next[target], file: files[k] };
+        else next.push({ ...newItem(), file: files[k] });
+      }
+      return next;
+    });
+  }
+
   function addItem() {
     if (items.length < maxItems) setItems((prev) => [...prev, newItem()]);
   }
@@ -169,11 +217,9 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
       if (notes) form.set('notes', notes);
       for (const item of filledItems) {
         form.append('clothing', item.file!);
-        if (mode === 'single') {
-          form.append('clothingType', item.type);
-          form.append('size', item.size);
-          form.append('color', item.color); // leer erlaubt, haelt die Indizes ausgerichtet
-        }
+        form.append('clothingType', item.type);
+        form.append('size', item.size);
+        form.append('color', item.color);
       }
       const res = await fetch('/api/generate', { method: 'POST', body: form });
       const data = await res.json();
@@ -187,51 +233,57 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
       setSaleTexts(data.saleTexts ?? []);
       setRemaining(credits - charged);
       setStatus('done');
-      // Aktualisiert die Guthaben-Anzeige im Header (Server-Komponente),
-      // damit sie sofort den neuen Stand zeigt — nicht erst beim naechsten Laden.
-      router.refresh();
+      router.refresh(); // Guthaben im Header sofort aktualisieren
     } catch {
       setError('Netzwerkfehler. Bitte versuch es erneut.');
       setStatus('error');
     }
   }
 
-  // Ergebnisansicht
+  // ---------------------------------------------------------------- Ergebnis
   if (status === 'done') {
+    const texts = saleTexts.filter(Boolean) as string[];
     return (
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-8">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-ink">Fertig</h1>
           <p className="mt-1 text-sm text-muted">
-            {results.length} {results.length === 1 ? 'Bild' : 'Bilder'} erstellt · Restguthaben {remaining}
+            {results.length} {results.length === 1 ? 'Bild' : 'Bilder'} · Restguthaben {remaining} Credits
           </p>
         </div>
-        <div className="flex flex-col gap-8">
-          {results.map((url, i) => (
-            <div key={url} className="grid gap-4 sm:grid-cols-2">
-              <figure className="flex flex-col gap-2">
-                <div className="overflow-hidden rounded-xl border border-line">
-                  <Image src={url} alt={`Anprobebild ${i + 1}`} width={512} height={768} className="h-auto w-full" unoptimized />
-                </div>
-                <a href={url} download={`anprobe-${i + 1}.png`} className="text-sm text-ink underline underline-offset-4">
-                  Bild herunterladen
-                </a>
-              </figure>
 
-              {saleTexts[i] && (
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-ink">Verkaufstext</span>
-                    <CopyButton text={saleTexts[i]!} />
-                  </div>
-                  <p className="whitespace-pre-wrap rounded-xl border border-line bg-surface p-4 text-sm text-ink-soft">
-                    {saleTexts[i]}
-                  </p>
-                </div>
-              )}
-            </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          {results.map((url, i) => (
+            <figure key={url} className="flex flex-col gap-2">
+              <div className="overflow-hidden rounded-xl border border-line">
+                <Image src={url} alt={`Anprobebild ${i + 1}`} width={512} height={768} className="h-auto w-full" unoptimized />
+              </div>
+              <a href={url} download={`anprobe-${i + 1}.png`} className="text-sm text-ink underline underline-offset-4">
+                Bild herunterladen
+              </a>
+            </figure>
           ))}
         </div>
+
+        {texts.length > 0 && (
+          <section className="flex flex-col gap-3">
+            <h2 className="text-sm font-medium text-ink">
+              {texts.length === 1 ? 'Verkaufstext' : 'Verkaufstexte'}
+            </h2>
+            {saleTexts.map((text, i) =>
+              text ? (
+                <div key={i} className="flex flex-col gap-2 rounded-xl border border-line p-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs uppercase tracking-[0.14em] text-muted">Stück {i + 1}</span>
+                    <CopyButton text={text} />
+                  </div>
+                  <p className="whitespace-pre-wrap text-sm text-ink-soft">{text}</p>
+                </div>
+              ) : null,
+            )}
+          </section>
+        )}
+
         <div>
           <Button onClick={reset}>Neue Anprobe erstellen</Button>
         </div>
@@ -239,7 +291,7 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
     );
   }
 
-  // Wartephase
+  // -------------------------------------------------------------- Wartephase
   if (status === 'generating') {
     const pct = Math.round(((progressIdx + 1) / PROGRESS.length) * 100);
     return (
@@ -249,9 +301,8 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
           <h1 className="text-lg font-medium text-ink">Deine Anprobe entsteht …</h1>
         </div>
 
-        {/* Fortschrittsbalken */}
-        <div className="h-1 w-full overflow-hidden rounded-full bg-line">
-          <div className="h-full rounded-full bg-ink transition-all duration-700 ease-out" style={{ width: `${pct}%` }} />
+        <div className="h-1.5 w-full overflow-hidden rounded-full bg-line">
+          <div className="h-full rounded-full bg-success transition-all duration-700 ease-out" style={{ width: `${pct}%` }} />
         </div>
 
         <ul className="flex flex-col gap-2.5">
@@ -262,15 +313,19 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
               <li
                 key={label}
                 className={`flex items-center gap-3 text-sm transition-colors ${
-                  done ? 'text-muted' : active ? 'font-medium text-ink' : 'text-muted/60'
+                  done ? 'text-ink' : active ? 'font-medium text-ink' : 'text-muted/60'
                 }`}
               >
                 <span
-                  className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] ${
-                    done ? 'bg-ink text-on-ink' : active ? 'border-2 border-ink' : 'border border-line'
+                  className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full transition-colors ${
+                    done
+                      ? 'bg-success text-paper'
+                      : active
+                        ? 'border-2 border-ink'
+                        : 'border border-line'
                   }`}
                 >
-                  {done ? '✓' : active ? <Loader2 size={11} className="animate-spin" aria-hidden /> : ''}
+                  {done ? <Check size={12} strokeWidth={3} aria-hidden /> : active ? <Loader2 size={11} className="animate-spin" aria-hidden /> : null}
                 </span>
                 {label}
               </li>
@@ -285,7 +340,7 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
     );
   }
 
-  // Eingabe (idle / error)
+  // ----------------------------------------------------------------- Eingabe
   return (
     <div className="flex flex-col gap-8">
       <div>
@@ -297,19 +352,22 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
         <p role="alert" className="rounded-lg border border-line bg-surface px-4 py-3 text-sm text-accent">{error}</p>
       )}
 
-      {/* Personenfoto */}
       <section className="flex flex-col gap-3">
         <h2 className="text-sm font-medium text-ink">Dein Foto</h2>
-        <div className="max-w-xs">
-          <PhotoField id="person" label="Personenfoto" file={person} onChange={setPerson} />
+        <div className="w-40">
+          <PhotoField
+            id="person"
+            label="Personenfoto"
+            file={person}
+            onFiles={(files) => setPerson(files[0] ?? null)}
+            className="aspect-[3/4]"
+          />
         </div>
       </section>
 
-      {/* Modus */}
       <section className="flex flex-col gap-3">
         <h2 className="text-sm font-medium text-ink">Modus</h2>
-        {/* self-start: ohne das streckt der flex-col-Container die Pille auf
-            volle Breite (align-items: stretch schlaegt inline-flex). */}
+        {/* self-start: sonst streckt der flex-col-Container die Pille. */}
         <div className="inline-flex self-start rounded-full border border-line p-1 text-sm">
           <button
             type="button"
@@ -333,80 +391,75 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
         </p>
       </section>
 
-      {/* Kleidungsstuecke */}
       <section className="flex flex-col gap-3">
         <h2 className="text-sm font-medium text-ink">Kleidungsstücke</h2>
+
         <div className="flex flex-col gap-4">
           {items.map((item, idx) => (
-            <div key={item.id} className="flex gap-4 rounded-xl border border-line p-4">
-              {/* Fuellt die Kartenhoehe statt festem Seitenverhaeltnis — sonst
-                  bleibt unter dem Foto Leerraum, wenn die Feldspalte hoeher ist. */}
+            <div key={item.id} className="relative flex gap-4 rounded-xl border border-line p-4">
+              {items.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => removeItem(item.id)}
+                  aria-label={`Stück ${idx + 1} entfernen`}
+                  className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full text-muted transition-colors hover:bg-surface hover:text-accent"
+                >
+                  <Trash2 size={15} aria-hidden />
+                </button>
+              )}
+
               <div className="w-28 shrink-0">
                 <PhotoField
                   id={`item-${item.id}`}
-                  label="Foto"
+                  label={`Stück ${idx + 1}`}
                   file={item.file}
-                  onChange={(f) => updateItem(item.id, { file: f })}
-                  aspect="h-full min-h-36"
+                  onFiles={(files) => assignFiles(idx, files)}
                 />
               </div>
-              <div className="flex flex-1 flex-col gap-3">
-                {mode === 'single' ? (
-                  <>
-                    <Field label="Kleidungstyp" htmlFor={`type-${item.id}`}>
-                      <Select id={`type-${item.id}`} value={item.type} onChange={(e) => updateItem(item.id, { type: e.target.value })}>
-                        <option value="" disabled>Bitte wählen …</option>
-                        {Object.entries(CLOTHING_TYPES).map(([key, { de }]) => (
-                          <option key={key} value={key}>{de}</option>
-                        ))}
-                      </Select>
-                    </Field>
-                    <Field label="Größe" htmlFor={`size-${item.id}`}>
-                      <Select id={`size-${item.id}`} value={item.size} onChange={(e) => updateItem(item.id, { size: e.target.value })}>
-                        <option value="" disabled>Bitte wählen …</option>
-                        {SIZES.map((s) => <option key={s} value={s}>{s}</option>)}
-                      </Select>
-                    </Field>
-                    <Field label="Farbe (optional, für den Verkaufstext)" htmlFor={`color-${item.id}`}>
-                      <Select id={`color-${item.id}`} value={item.color} onChange={(e) => updateItem(item.id, { color: e.target.value })}>
-                        <option value="">Keine Angabe</option>
-                        {COLORS.map((c) => <option key={c} value={c}>{c}</option>)}
-                      </Select>
-                    </Field>
-                  </>
-                ) : (
-                  <p className="text-sm text-muted">Stück {idx + 1}</p>
-                )}
-                {items.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => removeItem(item.id)}
-                    className="inline-flex items-center gap-1 self-start text-xs text-muted transition-colors hover:text-accent"
-                  >
-                    <X size={13} aria-hidden /> Entfernen
-                  </button>
-                )}
+
+              <div className="flex flex-1 flex-col gap-3 pr-8">
+                <Field label="Kleidungstyp" htmlFor={`type-${item.id}`}>
+                  <Select id={`type-${item.id}`} value={item.type} onChange={(e) => updateItem(item.id, { type: e.target.value })}>
+                    <option value="" disabled>Bitte wählen …</option>
+                    {Object.entries(CLOTHING_TYPES).map(([key, { de }]) => (
+                      <option key={key} value={key}>{de}</option>
+                    ))}
+                  </Select>
+                </Field>
+                <Field label="Größe" htmlFor={`size-${item.id}`}>
+                  <Select id={`size-${item.id}`} value={item.size} onChange={(e) => updateItem(item.id, { size: e.target.value })}>
+                    <option value="" disabled>Bitte wählen …</option>
+                    {SIZES.map((s) => <option key={s} value={s}>{s}</option>)}
+                  </Select>
+                </Field>
+                <Field label="Farbe (optional, für den Verkaufstext)" htmlFor={`color-${item.id}`}>
+                  <Select id={`color-${item.id}`} value={item.color} onChange={(e) => updateItem(item.id, { color: e.target.value })}>
+                    <option value="">Keine Angabe</option>
+                    {COLORS.map((c) => <option key={c} value={c}>{c}</option>)}
+                  </Select>
+                </Field>
               </div>
             </div>
           ))}
         </div>
+
         {items.length < maxItems ? (
           <button type="button" onClick={addItem} className="self-start text-sm text-ink underline underline-offset-4">
             + Kleidungsstück hinzufügen
           </button>
         ) : (
-          <p className="text-xs text-muted">Dein Tarif erlaubt bis zu {maxItems} Stück{maxItems > 1 ? 'e' : ''} pro Anprobe.</p>
+          <p className="text-xs text-muted">
+            Dein Tarif erlaubt bis zu {maxItems} Stück{maxItems > 1 ? 'e' : ''} pro Anprobe.
+          </p>
         )}
       </section>
 
-      {/* Hinweise */}
       <section>
         <Field label="Zusätzliche Hinweise (optional)" htmlFor="notes">
           <Textarea id="notes" rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} />
         </Field>
       </section>
 
-      {/* Aktion */}
       <div className="flex flex-col items-start gap-2 border-t border-line pt-6">
         <Button size="lg" onClick={generate} disabled={!ready || notEnough || cost === 0}>
           {cost > 0 ? `Generieren (${cost} ${cost === 1 ? 'Credit' : 'Credits'})` : 'Generieren'}

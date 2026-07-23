@@ -47,7 +47,48 @@ type ImageInput = { bytes: Buffer; filename: string; mimeType: string };
  * ein generiertes Bild. Reihenfolge der Bilder ist bedeutsam (image[0] =
  * Person), deshalb ein Array statt einzelner Felder.
  */
+/**
+ * Wiederholt den Aufruf bei vorruebergehenden Fehlern.
+ *
+ * OpenAI liefert in der Praxis regelmaessig HTTP 520 ("unknown error" hinter
+ * ihrem CDN) oder 429/5xx. Ohne Wiederholung sieht der Nutzer dann ein
+ * fehlendes Bild — bei mehreren Kleidungsstuecken faellt genau eines aus.
+ * Diese Fehler sind nicht unser Fehler und meist beim naechsten Versuch weg.
+ */
+const RETRY_STATUS = new Set([408, 409, 425, 429, 500, 502, 503, 504, 520, 522, 524]);
+const MAX_ATTEMPTS = 3;
+
+const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
 export async function generateTryOn(params: {
+  person: ImageInput;
+  clothing: ImageInput[];
+  prompt: string;
+  quality: Quality;
+  signal?: AbortSignal;
+}): Promise<TryOnResult> {
+  let lastError: unknown;
+
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    try {
+      return await callImageEdit(params);
+    } catch (err) {
+      lastError = err;
+      const retryable =
+        err instanceof OpenAIError && (RETRY_STATUS.has(err.status) || err.type === 'network');
+      if (!retryable || attempt === MAX_ATTEMPTS) break;
+
+      // Kurzes Backoff: 2s, dann 5s.
+      const delay = attempt === 1 ? 2000 : 5000;
+      console.warn(`[openai] Versuch ${attempt} fehlgeschlagen (${(err as OpenAIError).status}) — neuer Versuch in ${delay}ms`);
+      await wait(delay);
+    }
+  }
+
+  throw lastError;
+}
+
+async function callImageEdit(params: {
   person: ImageInput;
   clothing: ImageInput[];
   prompt: string;

@@ -141,14 +141,17 @@ export async function POST(request: Request) {
     // Bildgenerierung UND die Verkaufstexte gebraucht.
     const clothingInputs = await Promise.all(clothing.map((c, i) => prepare(c, `${dir}/clothing-${i}`)));
 
-    type Produced = { image: Buffer; mimeType: string; model: string; costUsd: number | null };
+    // itemIndex haelt fest, zu welchem Kleidungsstueck ein Bild gehoert —
+    // noetig, um Bild und Verkaufstext spaeter zu paaren, auch wenn einzelne
+    // Bilder fehlschlagen. -1 = kombiniertes Bild (gehoert zu allen).
+    type Produced = { itemIndex: number; image: Buffer; mimeType: string; model: string; costUsd: number | null };
     const produced: Produced[] = [];
     let failures = 0;
 
     if (mode === 'combined') {
-      // Kombiniert: ein Bild aus allen Stuecken.
       try {
-        produced.push(await generateTryOn({ person: personInput, clothing: clothingInputs, prompt: COMBINED_PROMPT, quality }));
+        const r = await generateTryOn({ person: personInput, clothing: clothingInputs, prompt: COMBINED_PROMPT, quality });
+        produced.push({ itemIndex: -1, ...r });
       } catch (err) {
         console.error('[generate] combined fehlgeschlagen', genId, err);
         failures = 1;
@@ -159,12 +162,13 @@ export async function POST(request: Request) {
         const type = types[i];
         if (!isClothingType(type)) { failures++; continue; }
         try {
-          produced.push(await generateTryOn({
+          const r = await generateTryOn({
             person: personInput,
             clothing: [clothingInputs[i]],
             prompt: buildTryOnPrompt(type, sizes[i], notes),
             quality,
-          }));
+          });
+          produced.push({ itemIndex: i, ...r });
         } catch (err) {
           console.error('[generate] single item', i, 'fehlgeschlagen', genId, err);
           failures++;
@@ -203,16 +207,17 @@ export async function POST(request: Request) {
       }
     }
 
-    // Erfolgreiche Bilder dauerhaft speichern.
-    const resultPaths: string[] = [];
+    // Erfolgreiche Bilder dauerhaft speichern — mit Zuordnung zum Stueck.
+    const uploaded: { itemIndex: number; path: string }[] = [];
     for (let i = 0; i < produced.length; i++) {
       const path = `${dir}/${i}.png`;
       const { error: upErr } = await admin.storage.from('results').upload(path, produced[i].image, {
         contentType: produced[i].mimeType,
         upsert: true,
       });
-      if (!upErr) resultPaths.push(path);
+      if (!upErr) uploaded.push({ itemIndex: produced[i].itemIndex, path });
     }
+    const resultPaths = uploaded.map((u) => u.path);
 
     const costUsd = produced.reduce((sum, r) => sum + (r.costUsd ?? 0), 0);
     // Verkaufstexte zusammengefuehrt in der DB ablegen (fuer die Historie).
@@ -238,13 +243,40 @@ export async function POST(request: Request) {
 
     // Signierte Links auf die privaten Ergebnisse.
     const signed = await Promise.all(
-      resultPaths.map((p) => admin.storage.from('results').createSignedUrl(p, 60 * 60)),
+      uploaded.map((u) => admin.storage.from('results').createSignedUrl(u.path, 60 * 60)),
     );
+    const urlByItem = new Map<number, string>();
+    uploaded.forEach((u, idx) => {
+      const url = signed[idx].data?.signedUrl;
+      if (url) urlByItem.set(u.itemIndex, url);
+    });
+
+    /*
+      Karten: Bild und Verkaufstext gehoeren zusammen, damit der Nutzer beides
+      als Einheit sieht und herunterladen kann.
+        Einzeln    — eine Karte je Stueck (Bild + eigener Text)
+        Kombiniert — eine Karte mit dem gemeinsamen Bild, danach je Stueck
+                     eine Karte mit dem Verkaufstext
+    */
+    type Card = { title: string; imageUrl: string | null; saleText: string | null };
+    const cards: Card[] = [];
+
+    if (mode === 'combined') {
+      cards.push({ title: 'Kombiniertes Bild', imageUrl: urlByItem.get(-1) ?? null, saleText: null });
+      for (let i = 0; i < clothingInputs.length; i++) {
+        if (saleTexts[i]) cards.push({ title: `Stück ${i + 1}`, imageUrl: null, saleText: saleTexts[i] });
+      }
+    } else {
+      for (let i = 0; i < clothingInputs.length; i++) {
+        const url = urlByItem.get(i) ?? null;
+        if (!url && !saleTexts[i]) continue;
+        cards.push({ title: `Stück ${i + 1}`, imageUrl: url, saleText: saleTexts[i] });
+      }
+    }
 
     return NextResponse.json({
       generationId: genId,
-      resultUrls: signed.map((s) => s.data?.signedUrl ?? null),
-      saleTexts,
+      cards,
       creditsCharged: produced.length * unitCost,
       failures,
     });

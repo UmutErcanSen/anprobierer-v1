@@ -2,6 +2,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ImageOff, Loader2 } from 'lucide-react';
 import { FavoriteToggle } from '@/components/history/favorite-toggle';
+import { CLOTHING_TYPES, COLOR_SWATCH, type ClothingType } from '@/lib/generation/constants';
 
 export type HistoryGeneration = {
   id: string;
@@ -12,9 +13,18 @@ export type HistoryGeneration = {
   created_at: string;
   imageCount: number;
   isFavorite: boolean;
+  categories: string[];
+  sizes: string[];
+  colors: string[];
 };
 
 const MODE_LABEL: Record<string, string> = { single: 'Einzeln', combined: 'Kombiniert' };
+
+/** Eindeutige, lesbare Werte -- eine Generierung mit mehreren Stuecken kann
+ * z.B. zweimal "Jeans" enthalten, das soll nicht zweimal auftauchen. */
+function unique(values: string[]): string[] {
+  return Array.from(new Set(values));
+}
 
 const dateFormat = new Intl.DateTimeFormat('de-DE', { dateStyle: 'medium', timeStyle: 'short' });
 
@@ -47,7 +57,12 @@ function ModeBadge({ mode }: { mode: string }) {
 
 /** Eine Karte im Verlauf-Raster. Rein darstellend -- die Daten (inkl. signierter Thumbnail-URL) kommen fertig von der Server Component. */
 export function HistoryCard({ generation, thumbnail }: { generation: HistoryGeneration; thumbnail: string | null }) {
-  const { id, status, mode, quality, credits_charged, created_at, imageCount, isFavorite } = generation;
+  const { id, status, mode, quality, credits_charged, created_at, imageCount, isFavorite, categories, sizes, colors } =
+    generation;
+
+  const categoryLabel = unique(categories.map((c) => CLOTHING_TYPES[c as ClothingType]?.de ?? c)).join(', ');
+  const sizeLabel = unique(sizes).join(', ');
+  const colorList = unique(colors);
 
   return (
     <li>
@@ -86,6 +101,29 @@ export function HistoryCard({ generation, thumbnail }: { generation: HistoryGene
             {imageCount} {imageCount === 1 ? 'Bild' : 'Bilder'}
             {quality === 'hd' && ' · HD'} · {credits_charged} {credits_charged === 1 ? 'Credit' : 'Credits'}
           </span>
+          {/* Kategorie/Groesse als Text (aus CLOTHING_TYPES uebersetzt bzw.
+              wie erfasst), Farbe als kleine Musterkreise statt Namen -- bei
+              mehreren Stuecken pro Generierung sonst schnell zu lang fuer
+              eine schmale Karte. Nur anzeigen, wenn ueberhaupt Daten da sind
+              (aeltere Generierungen vor der Attribut-Migration haben keine). */}
+          {(categoryLabel || sizeLabel || colorList.length > 0) && (
+            <span className="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-muted">
+              {categoryLabel && <span className="truncate">{categoryLabel}</span>}
+              {sizeLabel && <span>{sizeLabel}</span>}
+              {colorList.length > 0 && (
+                <span className="flex items-center gap-1">
+                  {colorList.map((c) => (
+                    <span
+                      key={c}
+                      title={c}
+                      className="h-2.5 w-2.5 shrink-0 rounded-full border border-line-strong"
+                      style={{ background: COLOR_SWATCH[c as keyof typeof COLOR_SWATCH] ?? c }}
+                    />
+                  ))}
+                </span>
+              )}
+            </span>
+          )}
         </div>
       </Link>
     </li>

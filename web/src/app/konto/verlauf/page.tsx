@@ -50,9 +50,10 @@ export default async function VerlaufPage(props: PageProps<"/konto/verlauf">) {
 
   let query = supabase
     .from("generations")
-    .select("id, status, mode, quality, credits_charged, created_at, cards, result_paths, sale_text, is_favorite", {
-      count: "exact",
-    })
+    .select(
+      "id, status, mode, quality, credits_charged, created_at, cards, result_paths, sale_text, is_favorite, clothing_types, sizes, colors",
+      { count: "exact" },
+    )
     .order("created_at", { ascending: false });
 
   if (status === "in_progress") query = query.in("status", ["queued", "processing"]);
@@ -87,6 +88,9 @@ export default async function VerlaufPage(props: PageProps<"/konto/verlauf">) {
     created_at: g.created_at,
     imageCount: cardRowsByGeneration[i].filter((c) => c.imagePath).length,
     isFavorite: g.is_favorite,
+    categories: g.clothing_types ?? [],
+    sizes: g.sizes ?? [],
+    colors: g.colors ?? [],
   }));
 
   // Thumbnails frisch signieren -- die Pfade in der DB sind dauerhaft, die

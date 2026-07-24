@@ -2,6 +2,8 @@ import Image from "next/image";
 import { LinkButton } from "@/components/ui/button";
 import { SiteHeader } from "@/components/site/site-header";
 import { SiteFooter } from "@/components/site/site-footer";
+import { PLATFORMS } from "@/lib/generation/platforms";
+import { PLATFORM_ICONS, PlatformIcon } from "@/components/generation/platform-icon";
 
 /*
   Landing Page — Richtung "Editorial & bildstark".
@@ -148,6 +150,35 @@ export default function HomePage() {
             <div className="mt-14 flex flex-col items-start gap-4 sm:flex-row sm:items-center">
               <LinkButton href="/registrieren" size="lg">Jetzt kostenlos starten</LinkButton>
               <span className="text-sm text-muted">5 Gratis-Anproben · keine Zahlungsdaten nötig</span>
+            </div>
+          </div>
+        </section>
+
+        {/* Plattform-Export als eigener Beweis-Punkt: knapp gehalten, gleiche
+            Bausteine (kicker/display/Kartenraster) wie die Sektionen oben,
+            damit sich nichts "aufgesetzt" anfühlt. */}
+        <section className="border-t border-line">
+          <div className="mx-auto w-full max-w-6xl px-6 py-20">
+            <p className="kicker">Fertig zum Einfügen</p>
+            <h2 className="display max-w-2xl text-3xl md:text-5xl">
+              Ein Klick — <em>passend</em> für jede Plattform.
+            </h2>
+            <p className="mt-5 max-w-xl text-[15px] leading-relaxed text-ink-soft">
+              Vinted, Kleinanzeigen und eBay haben jeweils einen eigenen Ton und
+              ihr eigenes Zeichenlimit. Ein Klick bereitet Titel, Beschreibung und
+              Bild passend vor und öffnet die richtige Seite — einfügen, fertig.
+            </p>
+
+            <div className="mt-10 flex flex-wrap gap-3">
+              {PLATFORMS.map((platform) => (
+                <div
+                  key={platform.key}
+                  className="flex items-center gap-2 rounded-full border border-line px-4 py-2 text-sm text-ink"
+                >
+                  <PlatformIcon icon={PLATFORM_ICONS[platform.key]} size={16} />
+                  {platform.label}
+                </div>
+              ))}
             </div>
           </div>
         </section>

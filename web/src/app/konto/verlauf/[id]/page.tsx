@@ -39,6 +39,7 @@ export default async function VerlaufDetailPage(props: PageProps<"/konto/verlauf
 
   const cards: ResultCard[] = await Promise.all(
     cardRows.map(async (c) => ({
+      itemIndex: c.itemIndex,
       title: c.title,
       saleText: c.saleText,
       imageUrl: c.imagePath
@@ -95,6 +96,7 @@ export default async function VerlaufDetailPage(props: PageProps<"/konto/verlauf
               remaining={credits}
               title={`Anprobe vom ${dateFormat.format(new Date(generation.created_at))}`}
               footer={<LinkButton href="/anzeige-erstellen">Neue Anprobe erstellen</LinkButton>}
+              generationId={generation.id}
             />
           </div>
         )}

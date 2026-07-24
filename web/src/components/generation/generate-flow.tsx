@@ -181,6 +181,8 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
   const [liveCards, setLiveCards] = useState<ResultCard[]>([]); // Zwischenstand waehrend des Pollens
   const [failures, setFailures] = useState(0);
   const [remaining, setRemaining] = useState(0);
+  // Fuer PlatformExport (plattformspezifische Texte serverseitig anfragen).
+  const [generationId, setGenerationId] = useState<string | null>(null);
 
   // Verhindert, dass ein noch laufender Poll nach reset()/Unmount weiterlaeuft
   // und veraltete Daten in einen neuen Durchlauf schreibt.
@@ -275,6 +277,7 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
     setLiveCards([]);
     setFailures(0);
     setError(null);
+    setGenerationId(null);
     setPerson(null);
     setItems([newItem()]);
     setNotes('');
@@ -349,6 +352,7 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
         setStatus('error');
         return;
       }
+      setGenerationId(data.generationId);
       void poll(data.generationId, myToken);
     } catch {
       setError('Netzwerkfehler. Bitte versuch es erneut.');
@@ -358,7 +362,15 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
 
   // ---------------------------------------------------------------- Ergebnis
   if (status === 'done') {
-    return <ResultView cards={cards} failures={failures} remaining={remaining} onReset={reset} />;
+    return (
+      <ResultView
+        cards={cards}
+        failures={failures}
+        remaining={remaining}
+        onReset={reset}
+        generationId={generationId ?? undefined}
+      />
+    );
   }
 
   // -------------------------------------------------------------- Wartephase

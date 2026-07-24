@@ -43,6 +43,7 @@ export async function GET(_request: Request, ctx: { params: Promise<{ id: string
   // die URLs laufen nach einer Stunde ab.
   const signedCards = await Promise.all(
     cards.map(async (c) => ({
+      itemIndex: c.itemIndex,
       title: c.title,
       saleText: c.saleText,
       imageUrl: c.imagePath

@@ -12,8 +12,12 @@ import { PlatformExport } from '@/components/generation/platform-export';
   Eine Kopie wuerde mit der Zeit auseinanderlaufen.
 */
 
-/** Bild und Verkaufstext gehoeren zusammen — so kommt es vom Server. */
-export type ResultCard = { title: string; imageUrl: string | null; saleText: string | null };
+/** Bild und Verkaufstext gehoeren zusammen — so kommt es vom Server.
+ * `itemIndex` (falls vorhanden) verweist auf die Karte in generations.cards
+ * -- der PlatformExport braucht ihn, um plattformspezifische Texte serverseitig
+ * zwischenzuspeichern (fehlt er, z.B. auf der Demo-Testseite, faellt der
+ * Export auf reine Client-Kuerzung ohne KI-Anfrage zurueck). */
+export type ResultCard = { itemIndex?: number; title: string; imageUrl: string | null; saleText: string | null };
 
 /** Laedt Bild und Text gemeinsam als ZIP — beides braucht man fuer eine Anzeige. */
 export async function downloadZip(cards: ResultCard[], filename: string) {
@@ -64,6 +68,7 @@ export function ResultView({
   onReset,
   title = 'Fertig',
   footer,
+  generationId,
 }: {
   cards: ResultCard[];
   failures: number;
@@ -75,6 +80,9 @@ export function ResultView({
   /** Ersetzt den Standard-"Neue Anprobe erstellen"-Button, z.B. durch einen
    * Link zurueck zum Verlauf. */
   footer?: ReactNode;
+  /** Fuer PlatformExport: ohne generationId (z.B. Demo-Testseite) bleibt der
+   * Export rein clientseitig ohne KI-Textanpassung. */
+  generationId?: string;
 }) {
   const imageCards = cards.filter((c) => c.imageUrl).length;
 
@@ -149,7 +157,7 @@ export function ResultView({
               </div>
 
               <div className="border-t border-line pt-4">
-                <PlatformExport card={card} />
+                <PlatformExport card={card} generationId={generationId} />
               </div>
             </div>
           </details>

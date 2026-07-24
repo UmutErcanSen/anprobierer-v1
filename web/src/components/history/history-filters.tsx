@@ -355,9 +355,17 @@ export function HistoryFilters({
       {/* Sheet bleibt nach dem ersten Oeffnen dauerhaft im DOM (nur per
           Transform ausserhalb des Bildschirms) -- das ermoeglicht die
           Slide-Animation, genau wie beim Burger-Menue (MobileNav). */}
+      {/* `inert` auf dem AEUSSEREN Wrapper, nicht nur auf dem Panel: dieser
+          Wrapper ist "fixed inset-0" (deckt den ganzen Bildschirm ab) und
+          blieb bisher auch geschlossen im DOM stehen, OHNE pointer-events
+          zu verlieren -- eine unsichtbare Ebene ueber der kompletten Seite
+          machte dadurch jeden Klick/Tap wirkungslos, sobald das Sheet
+          einmal gemountet war (praktisch immer, sofort nach dem Laden).
+          `inert` nimmt dem ganzen Wrapper Fokus UND Zeigerereignisse ab,
+          wenn geschlossen. */}
       {mounted &&
         createPortal(
-          <div className="fixed inset-0 z-[100] sm:hidden" aria-hidden={!sheetOpen}>
+          <div className="fixed inset-0 z-[100] sm:hidden" inert={!sheetOpen}>
             <div
               className={`absolute inset-0 bg-ink/40 transition-opacity duration-300 ${
                 sheetOpen ? 'opacity-100' : 'pointer-events-none opacity-0'
@@ -365,7 +373,6 @@ export function HistoryFilters({
               onClick={() => setSheetOpen(false)}
             />
             <div
-              inert={!sheetOpen}
               className={`absolute inset-x-0 bottom-0 max-h-[85vh] overflow-y-auto rounded-t-2xl border-t border-line bg-paper p-5 shadow-lg transition-transform duration-300 ease-out ${
                 sheetOpen ? 'translate-y-0' : 'translate-y-full'
               }`}

@@ -4,6 +4,7 @@ import { useState, type ReactNode } from 'react';
 import Image from 'next/image';
 import { ChevronRight, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { PlatformExport } from '@/components/generation/platform-export';
 
 /*
   Ergebnisansicht — bewusst als eigene Komponente, damit die Testseite
@@ -145,6 +146,10 @@ export function ResultView({
                 >
                   Bild + Text als ZIP
                 </button>
+              </div>
+
+              <div className="border-t border-line pt-4">
+                <PlatformExport card={card} />
               </div>
             </div>
           </details>

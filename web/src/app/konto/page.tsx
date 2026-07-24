@@ -59,6 +59,12 @@ export default async function KontoPage() {
             Neue Anprobe erstellen
           </LinkButton>
           <Link
+            href="/konto/verlauf"
+            className="text-sm text-muted underline underline-offset-4 transition-colors hover:text-ink"
+          >
+            Verlauf ansehen
+          </Link>
+          <Link
             href="/preise"
             className="text-sm text-muted underline underline-offset-4 transition-colors hover:text-ink"
           >

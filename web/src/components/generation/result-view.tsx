@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import Image from 'next/image';
 import { ChevronRight, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -61,11 +61,19 @@ export function ResultView({
   failures,
   remaining,
   onReset,
+  title = 'Fertig',
+  footer,
 }: {
   cards: ResultCard[];
   failures: number;
   remaining: number;
-  onReset: () => void;
+  /** Bei einer frischen Generierung: setzt das Formular zurueck. Fuer die
+   * (read-only) Verlaufsansicht stattdessen `footer` verwenden. */
+  onReset?: () => void;
+  title?: string;
+  /** Ersetzt den Standard-"Neue Anprobe erstellen"-Button, z.B. durch einen
+   * Link zurueck zum Verlauf. */
+  footer?: ReactNode;
 }) {
   const imageCards = cards.filter((c) => c.imageUrl).length;
 
@@ -73,9 +81,9 @@ export function ResultView({
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-ink">Fertig</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-ink">{title}</h1>
           <p className="mt-1 text-sm text-muted">
-            {imageCards} {imageCards === 1 ? 'Bild' : 'Bilder'} · Restguthaben {remaining} Credits
+            {imageCards} {imageCards === 1 ? 'Bild' : 'Bilder'} · Guthaben {remaining} Credits
           </p>
         </div>
         {cards.length > 0 && (
@@ -143,9 +151,7 @@ export function ResultView({
         ))}
       </div>
 
-      <div>
-        <Button onClick={onReset}>Neue Anprobe erstellen</Button>
-      </div>
+      <div>{footer ?? (onReset && <Button onClick={onReset}>Neue Anprobe erstellen</Button>)}</div>
     </div>
   );
 }

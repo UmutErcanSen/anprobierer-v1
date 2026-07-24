@@ -34,6 +34,9 @@ export function AppHeader({ credits }: { credits?: number }) {
             <Link href="/anzeige-erstellen" className="transition-colors hover:text-ink">
               Erstellen
             </Link>
+            <Link href="/konto/verlauf" className="transition-colors hover:text-ink">
+              Verlauf
+            </Link>
             <Link href="/konto" className="transition-colors hover:text-ink">
               Konto
             </Link>
@@ -57,7 +60,13 @@ export function AppHeader({ credits }: { credits?: number }) {
               Abmelden komplett -- vorher gab es dafuer gar keinen Ersatz,
               die Links verschwanden unterhalb von sm einfach ohne
               Alternative. */}
-          <MobileNav items={[{ href: "/anzeige-erstellen", label: "Erstellen" }, { href: "/konto", label: "Konto" }]}>
+          <MobileNav
+            items={[
+              { href: "/anzeige-erstellen", label: "Erstellen" },
+              { href: "/konto/verlauf", label: "Verlauf" },
+              { href: "/konto", label: "Konto" },
+            ]}
+          >
             <div className="flex items-center justify-between border-b border-line py-4 text-lg text-ink">
               <span>Design</span>
               <ThemeToggle />

@@ -30,6 +30,19 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
+/* Modus ist kein Zustand, sondern eine Eigenschaft -- bekommt bewusst KEINE
+   eigene Signalfarbe (die App hat genau einen Akzent, Farbe ist Status
+   vorbehalten). Stattdessen ein neutrales, umrandetes Tag mit leichtem
+   Frosted-Hintergrund, damit es sich trotzdem vom farbigen Status-Badge
+   abhebt, ohne mit ihm um Aufmerksamkeit zu konkurrieren. */
+function ModeBadge({ mode }: { mode: string }) {
+  return (
+    <span className="rounded-full border border-line-strong bg-paper/90 px-2.5 py-1 text-xs font-medium text-ink">
+      {MODE_LABEL[mode] ?? mode}
+    </span>
+  );
+}
+
 /** Eine Karte im Verlauf-Raster. Rein darstellend -- die Daten (inkl. signierter Thumbnail-URL) kommen fertig von der Server Component. */
 export function HistoryCard({ generation, thumbnail }: { generation: HistoryGeneration; thumbnail: string | null }) {
   const { id, status, mode, quality, credits_charged, created_at, imageCount } = generation;
@@ -54,14 +67,18 @@ export function HistoryCard({ generation, thumbnail }: { generation: HistoryGene
               <ImageOff size={20} aria-hidden />
             </div>
           )}
-          <div className="absolute left-2 top-2">
+          {/* Beide Badges in EINER Ecke statt gegenueberliegend: bei
+              schmalen Karten (viele Spalten) stiessen "Fehlgeschlagen" links
+              und "Kombiniert" rechts sonst zusammen und ueberlappten sich. */}
+          <div className="absolute left-2 top-2 flex flex-col items-start gap-1">
             <StatusBadge status={status} />
+            <ModeBadge mode={mode} />
           </div>
         </div>
         <div className="flex flex-col gap-0.5 p-3">
           <span className="text-sm font-medium text-ink">{dateFormat.format(new Date(created_at))}</span>
           <span className="text-xs text-muted">
-            {MODE_LABEL[mode] ?? mode} · {imageCount} {imageCount === 1 ? 'Bild' : 'Bilder'}
+            {imageCount} {imageCount === 1 ? 'Bild' : 'Bilder'}
             {quality === 'hd' && ' · HD'} · {credits_charged} {credits_charged === 1 ? 'Credit' : 'Credits'}
           </span>
         </div>

@@ -7,10 +7,9 @@ import { AppHeader } from "@/components/site/app-header";
 import { LinkButton } from "@/components/ui/button";
 import { ResultView, type ResultCard } from "@/components/generation/result-view";
 import { CREDITS_PER_QUALITY, type Quality } from "@/lib/generation/constants";
+import { resolveCardRows } from "@/lib/generation/cards";
 
 export const metadata: Metadata = { title: "Anprobe · Verlauf" };
-
-type CardRow = { title: string; imagePath: string | null; saleText: string | null };
 
 const dateFormat = new Intl.DateTimeFormat("de-DE", { dateStyle: "medium", timeStyle: "short" });
 
@@ -25,7 +24,7 @@ export default async function VerlaufDetailPage(props: PageProps<"/konto/verlauf
   const [{ data: generation }, { data: balance }] = await Promise.all([
     supabase
       .from("generations")
-      .select("id, status, mode, quality, credits_charged, created_at, cards")
+      .select("id, status, mode, quality, credits_charged, created_at, cards, result_paths, sale_text")
       .eq("id", id)
       .maybeSingle(),
     supabase.from("credit_balances").select("balance").maybeSingle(),
@@ -36,7 +35,7 @@ export default async function VerlaufDetailPage(props: PageProps<"/konto/verlauf
   if (!generation) notFound();
 
   const credits = balance?.balance ?? 0;
-  const cardRows = (generation.cards ?? []) as CardRow[];
+  const cardRows = resolveCardRows(generation);
 
   const cards: ResultCard[] = await Promise.all(
     cardRows.map(async (c) => ({

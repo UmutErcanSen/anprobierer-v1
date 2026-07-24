@@ -124,6 +124,11 @@ export async function POST(request: Request) {
     p_image_count: imageCount,
     p_clothing_type: mode === 'single' && isClothingType(types[0]) ? types[0] : null,
     p_notes: notes ?? null,
+    // Ein Eintrag je Kleidungsstueck -- Grundlage fuer die Mehrfachfilter
+    // (Kategorie/Groesse/Farbe) im Verlauf.
+    p_clothing_types: types.filter(isClothingType),
+    p_sizes: sizes.filter(Boolean),
+    p_colors: colors.filter(Boolean),
   });
 
   if (spendError || !generation) {

@@ -50,8 +50,12 @@ export function AppHeader({ credits }: { credits?: number }) {
 
           <ThemeToggle display="hidden md:flex" />
 
+          {/* Leicht roter Ton (der App-Akzent ist ohnehin ein warmes
+              Terrakotta) signalisiert "verlaesst den Bereich", ohne eine
+              zweite Akzentfarbe einzufuehren -- dieselbe Farbe, die schon
+              Fehlermeldungen und den Fehlgeschlagen-Status traegt. */}
           <form action={signOutAction} className="hidden md:block">
-            <button type="submit" className="text-sm text-muted transition-colors hover:text-ink">
+            <button type="submit" className="text-sm text-accent/80 transition-colors hover:text-accent">
               Abmelden
             </button>
           </form>
@@ -72,7 +76,7 @@ export function AppHeader({ credits }: { credits?: number }) {
               <ThemeToggle />
             </div>
             <form action={signOutAction}>
-              <button type="submit" className="w-full py-4 text-left text-lg text-ink">
+              <button type="submit" className="w-full py-4 text-left text-lg text-accent/80 transition-colors hover:text-accent">
                 Abmelden
               </button>
             </form>

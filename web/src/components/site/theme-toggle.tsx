@@ -9,7 +9,7 @@ import { Moon, Sun } from 'lucide-react';
   uebernimmt das Inline-Skript im <head> (siehe layout.tsx) — dieser Button
   spiegelt nur den Zustand und schaltet um.
 */
-export function ThemeToggle() {
+export function ThemeToggle({ display = 'flex' }: { display?: string }) {
   const [dark, setDark] = useState(false);
 
   useEffect(() => {
@@ -32,7 +32,10 @@ export function ThemeToggle() {
       type="button"
       onClick={toggle}
       aria-label={dark ? 'Zu hellem Design wechseln' : 'Zu dunklem Design wechseln'}
-      className="flex h-9 w-9 items-center justify-center rounded-full text-muted transition-colors hover:bg-surface hover:text-ink"
+      // `display` als eigener Parameter (statt freier className), damit der
+      // Aufrufer nur die Sichtbarkeit steuert (z.B. "hidden md:flex" im
+      // Header-Kontext), ohne aus Versehen Groesse/Farbe zu ueberschreiben.
+      className={`${display} h-9 w-9 items-center justify-center rounded-full text-muted transition-colors hover:bg-surface hover:text-ink`}
     >
       {dark ? <Sun size={18} aria-hidden /> : <Moon size={18} aria-hidden />}
     </button>

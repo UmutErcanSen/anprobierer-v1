@@ -30,9 +30,9 @@ export function InfoTip({ label, children }: { label: string; children: ReactNod
     <details ref={ref} className="relative inline-block align-middle">
       <summary
         aria-label={label}
-        className="inline-flex h-[18px] w-[18px] cursor-pointer list-none items-center justify-center rounded-full border border-line-strong text-muted transition-colors hover:border-ink hover:text-ink [&::-webkit-details-marker]:hidden"
+        className="inline-flex h-[18px] w-[18px] cursor-pointer list-none items-center justify-center rounded-full text-muted transition-colors hover:text-ink [&::-webkit-details-marker]:hidden"
       >
-        <Info size={11} aria-hidden />
+        <Info size={14} aria-hidden />
       </summary>
       <div className="absolute left-0 top-6 z-20 w-72 rounded-lg border border-line-strong bg-paper p-3.5 text-xs leading-relaxed text-ink-soft">
         {children}

@@ -114,7 +114,7 @@ function PhotoField({
         <img
           src={preview}
           alt={label}
-          className={`h-full w-full object-cover ${panelOverlay ? 'rounded-lg md:rounded-none md:object-top' : 'rounded-lg'}`}
+          className={`h-full w-full object-cover ${panelOverlay ? 'rounded-lg md:rounded-none' : 'rounded-lg'}`}
         />
       ) : (
         <>
@@ -431,7 +431,13 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
   // bleibt dank `sticky` beim Scrollen durch die Einstellungen sichtbar.
   return (
     <div className="flex flex-col gap-8 md:flex-row md:items-start md:gap-0">
-      <section className="relative flex flex-col gap-3 md:sticky md:top-16 md:flex-[0.9] md:border-r md:border-line">
+      {/* md:max-w begrenzt, wie breit die Foto-Spalte auf sehr großen
+          Bildschirmen werden kann: ohne das wuchs sie mit flex-[0.9] nahezu
+          unbegrenzt, waehrend die Hoehe durch den clamp(...) unten bei 900px
+          gedeckelt blieb -- das Seitenverhaeltnis wurde dadurch immer breiter
+          und object-cover schnitt zunehmend mehr vom Foto ab (untere Haelfte
+          verschwand). Bleibt trotzdem randbuendig zum linken Bildschirmrand. */}
+      <section className="relative flex flex-col gap-3 md:sticky md:top-16 md:max-w-[38rem] md:flex-[0.9] md:border-r md:border-line">
         <h2 className="flex items-center gap-1.5 text-sm font-medium text-ink md:hidden">
           Dein Foto
           <TipModal
@@ -461,6 +467,7 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
             intro="Für beste Ergebnisse mit der KI-Anprobe beachte diese Tipps:"
             good={personGood}
             bad={personBad}
+            pill
           />
         </div>
       </section>

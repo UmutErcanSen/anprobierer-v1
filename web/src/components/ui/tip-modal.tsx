@@ -20,12 +20,16 @@ export function TipModal({
   intro,
   good,
   bad,
+  pill = false,
 }: {
   label: string;
   title: string;
   intro: string;
   good: Example;
   bad: Example;
+  /** Sichtbarere Pillen-Variante mit Beschriftung, fuer freistehende Trigger
+   * (z.B. auf dem Personenfoto), wo ein reines 18px-Icon leicht uebersehen wird. */
+  pill?: boolean;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
 
@@ -35,9 +39,14 @@ export function TipModal({
         type="button"
         aria-label={label}
         onClick={() => ref.current?.showModal()}
-        className="inline-flex h-[18px] w-[18px] cursor-pointer items-center justify-center rounded-full border border-line-strong text-muted transition-colors hover:border-ink hover:text-ink"
+        className={
+          pill
+            ? 'inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-line-strong bg-paper/90 px-3.5 py-1.5 text-xs font-medium text-ink shadow-sm transition-colors hover:border-ink'
+            : 'inline-flex h-[18px] w-[18px] cursor-pointer items-center justify-center rounded-full text-muted transition-colors hover:text-ink'
+        }
       >
-        <Info size={11} aria-hidden />
+        <Info size={pill ? 13 : 14} aria-hidden />
+        {pill && 'Fototipps'}
       </button>
 
       <dialog

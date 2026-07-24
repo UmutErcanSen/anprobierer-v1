@@ -22,6 +22,7 @@
     "react-hook-form": "^7.82.0",
     "server-only": "^0.0.1",
     "sharp": "^0.35.3",
+    "simple-icons": "^16.27.0",
     "sonner": "^2.0.7",
     "zod": "^4.4.3"
   },

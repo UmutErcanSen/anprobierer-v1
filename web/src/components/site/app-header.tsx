@@ -71,10 +71,7 @@ export function AppHeader({ credits }: { credits?: number }) {
               { href: "/konto", label: "Konto" },
             ]}
           >
-            <div className="flex items-center justify-between border-b border-line py-4 text-lg text-ink">
-              <span>Design</span>
-              <ThemeToggle />
-            </div>
+            <ThemeToggle variant="row" />
             <form action={signOutAction}>
               <button type="submit" className="w-full py-4 text-left text-lg text-accent/80 transition-colors hover:text-accent">
                 Abmelden

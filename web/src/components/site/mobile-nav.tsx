@@ -19,6 +19,14 @@ type Item = { href: string; label: string };
 
 export function MobileNav({ items, children }: { items: Item[]; children?: ReactNode }) {
   const [open, setOpen] = useState(false);
+  // Das Overlay wird erst NACH dem ersten Client-Render eingehaengt: waehrend
+  // des Server-Renders gibt es kein `document`, createPortal(..., document.body)
+  // wuerde dort abstuerzen. Einmal eingehaengt bleibt es dauerhaft im DOM (nur
+  // per Transform ausserhalb des Bildschirms) -- erst das ermoeglicht die
+  // Slide-in-Animation beim Oeffnen, statt dass das Menue schlagartig
+  // erscheint/verschwindet.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   // Body-Scroll sperren, solange das Overlay offen ist.
   useEffect(() => {
@@ -48,10 +56,19 @@ export function MobileNav({ items, children }: { items: Item[]; children?: React
         sondern nur an der 64px hohen Header-Leiste — das Menue schien dann
         nicht zu funktionieren, weil es nur einen schmalen Streifen oben
         ausfuellte statt des ganzen Bildschirms.
+
+        `inert` waehrend geschlossen: verhindert Tab-Fokus und Klicks auf das
+        ausserhalb des Bildschirms liegende Menue, ohne es aus dem DOM zu
+        nehmen (das wuerde die Animation wieder zunichtemachen).
       */}
-      {open &&
+      {mounted &&
         createPortal(
-          <div className="fixed inset-0 z-[100] overflow-y-auto bg-paper">
+          <div
+            inert={!open}
+            className={`fixed inset-0 z-[100] overflow-y-auto bg-paper transition-transform duration-300 ease-out ${
+              open ? 'translate-x-0' : 'translate-x-full'
+            }`}
+          >
             <div className="flex h-16 items-center justify-between px-6">
               <span className="text-[15px] font-medium uppercase tracking-[0.16em] text-ink">Anprobierer</span>
               <button

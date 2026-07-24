@@ -68,10 +68,7 @@ export async function SiteHeader() {
             </LinkButton>
           </span>
           <MobileNav items={[...nav, cta]}>
-            <div className="flex items-center justify-between border-b border-line py-4 text-lg text-ink">
-              <span>Design</span>
-              <ThemeToggle />
-            </div>
+            <ThemeToggle variant="row" />
           </MobileNav>
         </div>
       </div>

@@ -430,7 +430,19 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
   // vom Sichtfenster abhängige Höhe (`clamp(...)`) statt `h-full`, und
   // bleibt dank `sticky` beim Scrollen durch die Einstellungen sichtbar.
   return (
-    <div className="flex flex-col gap-8 md:flex-row md:items-start md:gap-0">
+    // md:max-w + md:mx-auto: beide Spalten sind bereits einzeln gedeckelt
+    // (Foto 38rem, Formular 2xl=42rem -- zusammen 80rem), wachsen per
+    // flex-grow aber nicht darueber hinaus. Ohne eine Grenze auf DIESER
+    // Ebene blieb der Rest sehr breiter Bildschirme ungenutzt und sammelte
+    // sich als einseitige Luecke rechts (die Fotospalte klebte links, die
+    // Zeile selbst wurde nie zentriert). Eine feste Summen-Breite statt
+    // `w-fit` -- Flexbox berechnet `fit-content` bei aktivem flex-grow nicht
+    // zuverlaessig ueber Browser hinweg (erste Version schrumpfte dadurch
+    // die Zeile bereits bei normaler Desktop-Breite unbeabsichtigt). Unter
+    // 80rem Fensterbreite greift ganz normal flex-shrink, dort bleibt der
+    // Rand-zu-Rand-Look wie zuvor erhalten; erst darueber zentriert sich die
+    // Zeile mit gleichmaessigen Raendern.
+    <div className="flex flex-col gap-8 md:mx-auto md:max-w-[80rem] md:flex-row md:items-start md:gap-0">
       {/* md:max-w begrenzt, wie breit die Foto-Spalte auf sehr großen
           Bildschirmen werden kann: ohne das wuchs sie mit flex-[0.9] nahezu
           unbegrenzt, waehrend die Hoehe durch den clamp(...) unten bei 900px
@@ -448,7 +460,10 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
             bad={personBad}
           />
         </h2>
-        <div className="w-40 md:w-full">
+        {/* mx-auto: auf Mobil blieb das Foto sonst links ausgerichtet und
+            liess rechts sichtbar ungenutzten Platz -- die Karte selbst ist
+            durch flex-col volle Breite, aber der Block darin (w-56) nicht. */}
+        <div className="mx-auto w-56 sm:w-64 md:mx-0 md:w-full">
           <PhotoField
             id="person"
             label="Personenfoto"
@@ -487,8 +502,10 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
           Modus
           <InfoTip label="Was bedeuten die beiden Modi?">{modeTips}</InfoTip>
         </h2>
-        {/* self-start: sonst streckt der flex-col-Container die Pille. */}
-        <div className="inline-flex self-start rounded-full border border-line p-1 text-sm">
+        {/* self-start: sonst streckt der flex-col-Container die Pille.
+            Auf Mobil dafuer zentriert (self-center), ab md wieder linksbuendig
+            wie der Rest der Einstellungsspalte. */}
+        <div className="inline-flex self-center rounded-full border border-line p-1 text-sm md:self-start">
           <button
             type="button"
             onClick={() => setMode('single')}
@@ -525,7 +542,7 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
 
         <div className="flex flex-col gap-4">
           {items.map((item, idx) => (
-            <div key={item.id} className="relative flex gap-4 rounded-xl border border-line p-4">
+            <div key={item.id} className="relative flex flex-col gap-4 rounded-xl border border-line p-4 sm:flex-row">
               {items.length > 1 && (
                 <button
                   type="button"
@@ -537,7 +554,11 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
                 </button>
               )}
 
-              <div className="w-28 shrink-0">
+              {/* Auf Mobil Foto ueber den Feldern statt daneben -- die
+                  Dropdowns bekommen dadurch die volle Breite statt sich neben
+                  einer 112px breiten Fotospalte zu quetschen. Ab sm wieder
+                  nebeneinander wie gehabt. */}
+              <div className="mx-auto w-28 shrink-0 sm:mx-0">
                 <PhotoField
                   id={`item-${item.id}`}
                   label={`Stück ${idx + 1}`}
@@ -546,7 +567,7 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
                 />
               </div>
 
-              <div className="flex flex-1 flex-col gap-3 pr-8">
+              <div className="flex flex-1 flex-col gap-3 sm:pr-8">
                 <Field label="Kleidungstyp" htmlFor={`type-${item.id}`}>
                   <Select id={`type-${item.id}`} value={item.type} onChange={(e) => updateItem(item.id, { type: e.target.value })}>
                     <option value="" disabled>Bitte wählen …</option>
@@ -589,7 +610,7 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
         </Field>
       </section>
 
-      <div className="flex flex-col items-start gap-2 border-t border-line pt-6">
+      <div className="flex flex-col items-center gap-2 border-t border-line pt-6 md:items-start">
         {/* key erzwingt ein Neu-Mounten, sobald der Button klickbar wird —
             dadurch startet die pop-ready-Animation garantiert frisch, statt
             nur einmal beim ersten Laden zu greifen. */}

@@ -77,7 +77,11 @@ export function TipModal({
 
           <p className="text-sm text-muted">{intro}</p>
 
-          <div className="grid grid-cols-2 gap-4">
+          {/* Auf Mobil untereinander statt nebeneinander: bei zwei
+              Spalten auf 320-400px Breite wurden die Beispielbilder winzig.
+              Untereinander koennen sie deutlich groesser dargestellt werden,
+              ab sm ist wieder Platz fuer die 2-Spalten-Gegenueberstellung. */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {[
               { ...good, ok: true },
               { ...bad, ok: false },

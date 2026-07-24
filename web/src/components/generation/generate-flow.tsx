@@ -5,13 +5,13 @@ import { useRouter } from 'next/navigation';
 import { Check, ImagePlus, Loader2, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Field, Select, Textarea } from '@/components/ui/field';
+import { ColorSelect } from '@/components/ui/color-select';
 import { InfoTip } from '@/components/ui/info-tip';
 import { TipModal } from '@/components/ui/tip-modal';
 import { ResultView, type ResultCard } from '@/components/generation/result-view';
 import {
   CLOTHING_TYPES,
   SIZES,
-  COLORS,
   CREDITS_PER_QUALITY,
   maxItemsForPlan,
   qualityForPlan,
@@ -474,8 +474,12 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
         </h2>
         {/* mx-auto: auf Mobil blieb das Foto sonst links ausgerichtet und
             liess rechts sichtbar ungenutzten Platz -- die Karte selbst ist
-            durch flex-col volle Breite, aber der Block darin (w-56) nicht. */}
-        <div className="mx-auto w-56 sm:w-64 md:mx-0 md:w-full">
+            durch flex-col volle Breite, aber der Block darin nicht. w-56 war
+            dabei zu knapp bemessen (deutlich schmaler als noetig); max-w statt
+            einer festen Breite nutzt den verfuegbaren Platz auf schmalen
+            Handys besser aus, ohne auf breiteren Mobilgeraeten zu ausufernd
+            zu werden. */}
+        <div className="mx-auto w-full max-w-[22rem] sm:w-64 sm:max-w-none md:mx-0 md:w-full">
           <PhotoField
             id="person"
             label="Personenfoto"
@@ -595,10 +599,7 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
                   </Select>
                 </Field>
                 <Field label="Farbe (optional, für den Verkaufstext)" htmlFor={`color-${item.id}`}>
-                  <Select id={`color-${item.id}`} value={item.color} onChange={(e) => updateItem(item.id, { color: e.target.value })}>
-                    <option value="">Keine Angabe</option>
-                    {COLORS.map((c) => <option key={c} value={c}>{c}</option>)}
-                  </Select>
+                  <ColorSelect id={`color-${item.id}`} value={item.color} onChange={(v) => updateItem(item.id, { color: v })} />
                 </Field>
               </div>
             </div>

@@ -15,16 +15,21 @@ import { PLATFORM_ICONS, PlatformIcon } from "@/components/generation/platform-i
   rechts das generierte Ergebnis gezeigt — der ehrliche, staerkere Vergleich.
 */
 
+// Nur Werte, die tatsaechlich stimmen -- "30 Sek. pro Anprobe" und "2.400+
+// Anzeigen erstellt" waren erfundene Wunsch-Zahlen ohne Grundlage (das Produkt
+// hat bisher einen einzigen Testnutzer). Fake-Social-Proof untergraebt genau
+// das Vertrauen, das eine Landing Page aufbauen soll -- deshalb ausschliesslich
+// Aussagen, die schon heute technisch/vertraglich zutreffen.
 const STATS = [
-  { value: "30 Sek.", label: "pro Anprobe" },
-  { value: "2.400+", label: "Anzeigen erstellt" },
   { value: "5 gratis", label: "zum Ausprobieren" },
+  { value: "3 Plattformen", label: "bereit zum Einfügen" },
+  { value: "0 €", label: "ohne Zahlungsdaten" },
 ];
 
-// Fuer den Logo-Marquee mehrfach hintereinander wiederholt, sonst wirkt das
-// Band bei nur drei Plattformen zu leer. Der Track wird unten zusaetzlich
-// selbst verdoppelt (Bedingung fuer die nahtlose -50%-Schleife).
-const MARQUEE_TRACK = Array.from({ length: 4 }, () => PLATFORMS).flat();
+// Fuer den Logo-Marquee wiederholt, sonst wirkt das Band bei nur drei
+// Plattformen zu leer. Der Track wird unten zusaetzlich selbst verdoppelt
+// (Bedingung fuer die nahtlose -50%-Schleife).
+const MARQUEE_TRACK = Array.from({ length: 2 }, () => PLATFORMS).flat();
 
 const STEPS = [
   {
@@ -92,15 +97,19 @@ export default function HomePage() {
 
         {/* Logo-Marquee direkt nach dem Hero statt ganz unten -- dort ging
             der Beweis-Punkt "passend fuer jede Plattform" bisher unter.
+            pt groesser als pb: mehr Luft zur Hero-Sektion oberhalb, statt
+            symmetrischem Abstand, der dort zu knapp wirkte. Nur drei
+            Plattformen -- bewusst gross und mit viel Abstand statt vieler
+            kleiner Wiederholungen, damit jede einzelne praesent wirkt.
             mask-image blendet den Rand weich aus, damit die Wiederholung am
             linken/rechten Bildschirmrand nicht hart abgeschnitten wirkt. */}
-        <section className="overflow-hidden border-t border-line py-10">
-          <p className="text-center text-xs uppercase tracking-[0.14em] text-muted">Fertig zum Einfügen bei</p>
-          <div className="mt-6 [mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)]">
-            <div className="flex w-max gap-16 animate-marquee">
+        <section className="overflow-hidden border-t border-line pt-16 pb-12">
+          <p className="text-center text-xs uppercase tracking-[0.14em] text-muted">Verkaufsbereit auf</p>
+          <div className="mt-8 [mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)]">
+            <div className="flex w-max gap-28 animate-marquee">
               {[...MARQUEE_TRACK, ...MARQUEE_TRACK].map((platform, i) => (
-                <div key={i} className="flex shrink-0 items-center gap-2.5 text-xl font-medium tracking-tight text-ink">
-                  <PlatformIcon icon={PLATFORM_ICONS[platform.key]} size={22} />
+                <div key={i} className="flex shrink-0 items-center gap-3.5 text-3xl font-medium tracking-tight text-ink">
+                  <PlatformIcon icon={PLATFORM_ICONS[platform.key]} size={32} />
                   {platform.label}
                 </div>
               ))}

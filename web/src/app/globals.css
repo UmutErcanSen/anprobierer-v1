@@ -153,7 +153,10 @@ body {
   to { transform: translateX(-50%); }
 }
 .animate-marquee {
-  animation: marquee 22s linear infinite;
+  /* Laengere Laufzeit fuer eine ruhigere, gleichmaessigere Bewegung -- bei
+     nur drei (jetzt groesser dargestellten) Plattformen wirkte das Tempo
+     der kuerzeren Version eher hektisch als "smooth". */
+  animation: marquee 38s linear infinite;
   will-change: transform;
 }
 

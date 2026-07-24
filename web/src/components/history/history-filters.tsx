@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useRef, useState, useTransition } from 'react';
+import { createPortal } from 'react-dom';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { ChevronDown, Loader2, Star } from 'lucide-react';
+import { ChevronDown, Loader2, SlidersHorizontal, Star, X } from 'lucide-react';
 import { CLOTHING_TYPES, SIZES, COLORS, COLOR_SWATCH } from '@/lib/generation/constants';
 
 /*
@@ -214,6 +215,20 @@ export function HistoryFilters({
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
 
+  const [sheetOpen, setSheetOpen] = useState(false);
+  // Portal braucht `document` -- erst nach dem Client-Mount verfuegbar,
+  // sonst wuerde createPortal(..., document.body) beim Server-Render
+  // abstuerzen (siehe MobileNav fuer dasselbe Muster).
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  useEffect(() => {
+    document.body.style.overflow = sheetOpen ? 'hidden' : '';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [sheetOpen]);
+
   // Mehrfachauswahl-Navigation wird debounced: bei einer Checkbox-Liste
   // klickt man oft mehrere Optionen kurz hintereinander an. Ohne Debounce
   // loest jeder einzelne Klick sofort eine eigene Server-Navigation aus, die
@@ -257,46 +272,76 @@ export function HistoryFilters({
 
   const hasAnyFilter =
     status !== 'all' || mode !== 'all' || kategorie.length > 0 || groesse.length > 0 || farbe.length > 0 || favorit;
+  const activeCount =
+    (status !== 'all' ? 1 : 0) +
+    (mode !== 'all' ? 1 : 0) +
+    kategorie.length +
+    groesse.length +
+    farbe.length +
+    (favorit ? 1 : 0);
+
+  const resetButton = hasAnyFilter && (
+    <button
+      type="button"
+      onClick={() => {
+        if (debounceRef.current) clearTimeout(debounceRef.current);
+        startTransition(() => router.replace(pathname, { scroll: false }));
+      }}
+      className="text-center text-sm text-muted underline underline-offset-4 transition-colors hover:text-ink"
+    >
+      Filter zurücksetzen
+    </button>
+  );
+
+  // Sechs Filter nebeneinander (bzw. im 2-Spalten-Raster) wirkten auf Mobil
+  // ueberladen. Dieselben Kontrollen tauchen deshalb zweimal auf: einmal in
+  // der Desktop-Zeile (`hidden sm:flex`), einmal im Mobil-Sheet (`sm:hidden`
+  // -- nur eines von beiden ist je Breakpoint sichtbar) -- zwei unabhaengige
+  // Komponenteninstanzen mit demselben State/Handlern sind hier unbedenklich.
+  const filterControls = (
+    <>
+      <SingleSelect label="Alle Status" options={STATUS_OPTIONS} value={status} onChange={(v) => updateSingle('status', v)} />
+      <SingleSelect label="Alle Modi" options={MODE_OPTIONS} value={mode} onChange={(v) => updateSingle('mode', v)} />
+      <MultiSelect label="Kategorie" options={CATEGORY_OPTIONS} selected={kategorie} onChange={(v) => updateMulti('kategorie', v)} />
+      <MultiSelect label="Größe" options={SIZE_OPTIONS} selected={groesse} onChange={(v) => updateMulti('groesse', v)} />
+      <MultiSelect label="Farbe" options={COLOR_OPTIONS} selected={farbe} onChange={(v) => updateMulti('farbe', v)} />
+      <button
+        type="button"
+        onClick={() => toggleFavorit(!favorit)}
+        aria-pressed={favorit}
+        className={`flex h-11 w-full items-center justify-center gap-2 rounded-lg border px-3.5 text-[15px] transition-colors sm:w-auto ${
+          favorit ? 'border-ink text-ink' : 'border-line text-ink hover:border-line-strong'
+        }`}
+      >
+        <Star size={15} fill={favorit ? 'currentColor' : 'none'} aria-hidden />
+        Favoriten
+      </button>
+    </>
+  );
 
   return (
-    // 6 Filter passen auf Mobil glatt in ein 2-Spalten-Raster (3 volle
-    // Zeilen) -- vorher rissen unterschiedlich breite Elemente per
-    // Flex-Wrap die Zeilen uneinheitlich um. Ab sm wieder die kompakte,
-    // an den Inhalt angepasste Zeile.
     <div className="flex flex-wrap items-center gap-3">
-      <div className="grid w-full grid-cols-2 gap-3 sm:flex sm:w-auto sm:flex-wrap sm:items-center">
-        <SingleSelect label="Alle Status" options={STATUS_OPTIONS} value={status} onChange={(v) => updateSingle('status', v)} />
-        <SingleSelect label="Alle Modi" options={MODE_OPTIONS} value={mode} onChange={(v) => updateSingle('mode', v)} />
-
-        <MultiSelect label="Kategorie" options={CATEGORY_OPTIONS} selected={kategorie} onChange={(v) => updateMulti('kategorie', v)} />
-        <MultiSelect label="Größe" options={SIZE_OPTIONS} selected={groesse} onChange={(v) => updateMulti('groesse', v)} />
-        <MultiSelect label="Farbe" options={COLOR_OPTIONS} selected={farbe} onChange={(v) => updateMulti('farbe', v)} />
-
-        <button
-          type="button"
-          onClick={() => toggleFavorit(!favorit)}
-          aria-pressed={favorit}
-          className={`flex h-11 w-full items-center justify-center gap-2 rounded-lg border px-3.5 text-[15px] transition-colors sm:w-auto ${
-            favorit ? 'border-ink text-ink' : 'border-line text-ink hover:border-line-strong'
-          }`}
-        >
-          <Star size={15} fill={favorit ? 'currentColor' : 'none'} aria-hidden />
-          Favoriten
-        </button>
-
-        {hasAnyFilter && (
-          <button
-            type="button"
-            onClick={() => {
-              if (debounceRef.current) clearTimeout(debounceRef.current);
-              startTransition(() => router.replace(pathname, { scroll: false }));
-            }}
-            className="col-span-2 text-center text-sm text-muted underline underline-offset-4 transition-colors hover:text-ink sm:col-span-1 sm:text-left"
-          >
-            Filter zurücksetzen
-          </button>
-        )}
+      {/* Desktop: Zeile wie bisher. */}
+      <div className="hidden sm:flex sm:flex-wrap sm:items-center sm:gap-3">
+        {filterControls}
+        {resetButton}
       </div>
+
+      {/* Mobil: ein einzelner Button oeffnet ein Sheet mit allen Filtern,
+          statt sechs Dropdowns nebeneinander/uebereinander zu zeigen. */}
+      <button
+        type="button"
+        onClick={() => setSheetOpen(true)}
+        className="flex h-11 items-center gap-2 rounded-lg border border-line px-4 text-[15px] text-ink transition-colors hover:border-line-strong sm:hidden"
+      >
+        <SlidersHorizontal size={16} aria-hidden />
+        Filter
+        {activeCount > 0 && (
+          <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-ink px-1 text-xs font-medium text-on-ink">
+            {activeCount}
+          </span>
+        )}
+      </button>
 
       {/* Reserviert von Anfang an Platz (statt erst beim Erscheinen Layout zu
           verschieben) -- zeigt an, dass im Hintergrund noch eine Anfrage
@@ -306,6 +351,49 @@ export function HistoryFilters({
         className={`shrink-0 animate-spin text-muted transition-opacity ${isPending ? 'opacity-100' : 'opacity-0'}`}
         aria-hidden
       />
+
+      {/* Sheet bleibt nach dem ersten Oeffnen dauerhaft im DOM (nur per
+          Transform ausserhalb des Bildschirms) -- das ermoeglicht die
+          Slide-Animation, genau wie beim Burger-Menue (MobileNav). */}
+      {mounted &&
+        createPortal(
+          <div className="fixed inset-0 z-[100] sm:hidden" aria-hidden={!sheetOpen}>
+            <div
+              className={`absolute inset-0 bg-ink/40 transition-opacity duration-300 ${
+                sheetOpen ? 'opacity-100' : 'pointer-events-none opacity-0'
+              }`}
+              onClick={() => setSheetOpen(false)}
+            />
+            <div
+              inert={!sheetOpen}
+              className={`absolute inset-x-0 bottom-0 max-h-[85vh] overflow-y-auto rounded-t-2xl border-t border-line bg-paper p-5 shadow-lg transition-transform duration-300 ease-out ${
+                sheetOpen ? 'translate-y-0' : 'translate-y-full'
+              }`}
+            >
+              <div className="mb-4 flex items-center justify-between">
+                <span className="text-sm font-medium text-ink">Filter</span>
+                <button
+                  type="button"
+                  onClick={() => setSheetOpen(false)}
+                  aria-label="Filter schließen"
+                  className="flex h-8 w-8 items-center justify-center rounded-full text-muted transition-colors hover:bg-surface hover:text-ink"
+                >
+                  <X size={18} aria-hidden />
+                </button>
+              </div>
+              <div className="flex flex-col gap-3">{filterControls}</div>
+              {resetButton && <div className="mt-3">{resetButton}</div>}
+              <button
+                type="button"
+                onClick={() => setSheetOpen(false)}
+                className="mt-5 w-full rounded-full bg-ink px-5 py-3 text-sm font-medium text-on-ink transition-opacity hover:opacity-90"
+              >
+                Ergebnisse anzeigen
+              </button>
+            </div>
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }

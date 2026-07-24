@@ -142,6 +142,21 @@ body {
   animation: pop-ready 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
+/* Endlos von rechts nach links laufendes Logo-Band (Marquee) auf der
+   Landing Page. Die Spur enthaelt den Inhalt zweimal hintereinander und
+   verschiebt sich um exakt -50% -- dadurch schliesst die Schleife nahtlos,
+   ohne dass am Ende ein Sprung sichtbar wird. `will-change` haelt die
+   Animation auf schwaecheren Geraeten fluessig. prefers-reduced-motion
+   greift automatisch ueber die globale Regel unten. */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.animate-marquee {
+  animation: marquee 22s linear infinite;
+  will-change: transform;
+}
+
 /* Sichtbarer, konsistenter Fokusrahmen fuer Tastaturbedienung. */
 :focus-visible {
   outline: 2px solid var(--ink);

@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { ImageOff, Loader2 } from 'lucide-react';
+import { FavoriteToggle } from '@/components/history/favorite-toggle';
 
 export type HistoryGeneration = {
   id: string;
@@ -10,6 +11,7 @@ export type HistoryGeneration = {
   credits_charged: number;
   created_at: string;
   imageCount: number;
+  isFavorite: boolean;
 };
 
 const MODE_LABEL: Record<string, string> = { single: 'Einzeln', combined: 'Kombiniert' };
@@ -45,7 +47,7 @@ function ModeBadge({ mode }: { mode: string }) {
 
 /** Eine Karte im Verlauf-Raster. Rein darstellend -- die Daten (inkl. signierter Thumbnail-URL) kommen fertig von der Server Component. */
 export function HistoryCard({ generation, thumbnail }: { generation: HistoryGeneration; thumbnail: string | null }) {
-  const { id, status, mode, quality, credits_charged, created_at, imageCount } = generation;
+  const { id, status, mode, quality, credits_charged, created_at, imageCount, isFavorite } = generation;
 
   return (
     <li>
@@ -73,6 +75,9 @@ export function HistoryCard({ generation, thumbnail }: { generation: HistoryGene
           <div className="absolute left-2 top-2 flex flex-col items-start gap-1">
             <StatusBadge status={status} />
             <ModeBadge mode={mode} />
+          </div>
+          <div className="absolute right-2 top-2">
+            <FavoriteToggle generationId={id} initialFavorite={isFavorite} />
           </div>
         </div>
         <div className="flex flex-col gap-0.5 p-3">

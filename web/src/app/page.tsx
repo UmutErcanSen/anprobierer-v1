@@ -21,6 +21,11 @@ const STATS = [
   { value: "5 gratis", label: "zum Ausprobieren" },
 ];
 
+// Fuer den Logo-Marquee mehrfach hintereinander wiederholt, sonst wirkt das
+// Band bei nur drei Plattformen zu leer. Der Track wird unten zusaetzlich
+// selbst verdoppelt (Bedingung fuer die nahtlose -50%-Schleife).
+const MARQUEE_TRACK = Array.from({ length: 4 }, () => PLATFORMS).flat();
+
 const STEPS = [
   {
     n: "01",
@@ -82,6 +87,24 @@ export default function HomePage() {
               sizes="(max-width: 768px) 100vw, 50vw"
               className="object-cover object-[50%_28%]"
             />
+          </div>
+        </section>
+
+        {/* Logo-Marquee direkt nach dem Hero statt ganz unten -- dort ging
+            der Beweis-Punkt "passend fuer jede Plattform" bisher unter.
+            mask-image blendet den Rand weich aus, damit die Wiederholung am
+            linken/rechten Bildschirmrand nicht hart abgeschnitten wirkt. */}
+        <section className="overflow-hidden border-t border-line py-10">
+          <p className="text-center text-xs uppercase tracking-[0.14em] text-muted">Fertig zum Einfügen bei</p>
+          <div className="mt-6 [mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)]">
+            <div className="flex w-max gap-16 animate-marquee">
+              {[...MARQUEE_TRACK, ...MARQUEE_TRACK].map((platform, i) => (
+                <div key={i} className="flex shrink-0 items-center gap-2.5 text-xl font-medium tracking-tight text-ink">
+                  <PlatformIcon icon={PLATFORM_ICONS[platform.key]} size={22} />
+                  {platform.label}
+                </div>
+              ))}
+            </div>
           </div>
         </section>
 
@@ -150,35 +173,6 @@ export default function HomePage() {
             <div className="mt-14 flex flex-col items-start gap-4 sm:flex-row sm:items-center">
               <LinkButton href="/registrieren" size="lg">Jetzt kostenlos starten</LinkButton>
               <span className="text-sm text-muted">5 Gratis-Anproben · keine Zahlungsdaten nötig</span>
-            </div>
-          </div>
-        </section>
-
-        {/* Plattform-Export als eigener Beweis-Punkt: knapp gehalten, gleiche
-            Bausteine (kicker/display/Kartenraster) wie die Sektionen oben,
-            damit sich nichts "aufgesetzt" anfühlt. */}
-        <section className="border-t border-line">
-          <div className="mx-auto w-full max-w-6xl px-6 py-20">
-            <p className="kicker">Fertig zum Einfügen</p>
-            <h2 className="display max-w-2xl text-3xl md:text-5xl">
-              Ein Klick — <em>passend</em> für jede Plattform.
-            </h2>
-            <p className="mt-5 max-w-xl text-[15px] leading-relaxed text-ink-soft">
-              Vinted, Kleinanzeigen und eBay haben jeweils einen eigenen Ton und
-              ihr eigenes Zeichenlimit. Ein Klick bereitet Titel, Beschreibung und
-              Bild passend vor und öffnet die richtige Seite — einfügen, fertig.
-            </p>
-
-            <div className="mt-10 flex flex-wrap gap-3">
-              {PLATFORMS.map((platform) => (
-                <div
-                  key={platform.key}
-                  className="flex items-center gap-2 rounded-full border border-line px-4 py-2 text-sm text-ink"
-                >
-                  <PlatformIcon icon={PLATFORM_ICONS[platform.key]} size={16} />
-                  {platform.label}
-                </div>
-              ))}
             </div>
           </div>
         </section>

@@ -42,6 +42,7 @@ export default async function VerlaufPage(props: PageProps<"/konto/verlauf">) {
   const kategorie = parseList(first(params.kategorie));
   const groesse = parseList(first(params.groesse));
   const farbe = parseList(first(params.farbe));
+  const favorit = first(params.favorit) === "1";
   const page = Math.max(1, Number(first(params.page)) || 1);
 
   const { data: balance } = await supabase.from("credit_balances").select("balance").maybeSingle();
@@ -49,7 +50,7 @@ export default async function VerlaufPage(props: PageProps<"/konto/verlauf">) {
 
   let query = supabase
     .from("generations")
-    .select("id, status, mode, quality, credits_charged, created_at, cards, result_paths, sale_text", {
+    .select("id, status, mode, quality, credits_charged, created_at, cards, result_paths, sale_text, is_favorite", {
       count: "exact",
     })
     .order("created_at", { ascending: false });
@@ -64,6 +65,7 @@ export default async function VerlaufPage(props: PageProps<"/konto/verlauf">) {
   if (kategorie.length > 0) query = query.overlaps("clothing_types", kategorie);
   if (groesse.length > 0) query = query.overlaps("sizes", groesse);
   if (farbe.length > 0) query = query.overlaps("colors", farbe);
+  if (favorit) query = query.eq("is_favorite", true);
 
   const from = (page - 1) * PAGE_SIZE;
   const { data: rows, count, error: queryError } = await query.range(from, from + PAGE_SIZE - 1);
@@ -84,6 +86,7 @@ export default async function VerlaufPage(props: PageProps<"/konto/verlauf">) {
     credits_charged: g.credits_charged,
     created_at: g.created_at,
     imageCount: cardRowsByGeneration[i].filter((c) => c.imagePath).length,
+    isFavorite: g.is_favorite,
   }));
 
   // Thumbnails frisch signieren -- die Pfade in der DB sind dauerhaft, die
@@ -104,13 +107,14 @@ export default async function VerlaufPage(props: PageProps<"/konto/verlauf">) {
     if (kategorie.length) sp.set("kategorie", kategorie.join(","));
     if (groesse.length) sp.set("groesse", groesse.join(","));
     if (farbe.length) sp.set("farbe", farbe.join(","));
+    if (favorit) sp.set("favorit", "1");
     if (target > 1) sp.set("page", String(target));
     const qs = sp.toString();
     return qs ? `/konto/verlauf?${qs}` : "/konto/verlauf";
   }
 
   const isFiltered =
-    status !== "all" || mode !== "all" || kategorie.length > 0 || groesse.length > 0 || farbe.length > 0;
+    status !== "all" || mode !== "all" || kategorie.length > 0 || groesse.length > 0 || farbe.length > 0 || favorit;
 
   return (
     <>
@@ -131,7 +135,7 @@ export default async function VerlaufPage(props: PageProps<"/konto/verlauf">) {
             neben dem Titel und rutschte auf schmalen Bildschirmen direkt vor
             die Filter, ohne erkennbaren Zusammenhang zu beidem. */}
         <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
-          <HistoryFilters status={status} mode={mode} kategorie={kategorie} groesse={groesse} farbe={farbe} />
+          <HistoryFilters status={status} mode={mode} kategorie={kategorie} groesse={groesse} farbe={farbe} favorit={favorit} />
           <LinkButton href="/anzeige-erstellen" size="md" className="shrink-0">
             Neue Anprobe erstellen
           </LinkButton>

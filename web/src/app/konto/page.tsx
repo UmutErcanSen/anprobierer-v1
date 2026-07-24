@@ -29,7 +29,7 @@ export default async function KontoPage() {
     supabase.from("generations").select("id", { count: "exact", head: true }),
     supabase
       .from("generations")
-      .select("id, status, mode, quality, credits_charged, created_at, cards, result_paths, sale_text")
+      .select("id, status, mode, quality, credits_charged, created_at, cards, result_paths, sale_text, is_favorite")
       .order("created_at", { ascending: false })
       .limit(RECENT_COUNT),
   ]);
@@ -46,6 +46,7 @@ export default async function KontoPage() {
     credits_charged: g.credits_charged,
     created_at: g.created_at,
     imageCount: recentCardRows[i].filter((c) => c.imagePath).length,
+    isFavorite: g.is_favorite,
   }));
   const recentThumbnails = await Promise.all(
     recentCardRows.map(async (cards) => {

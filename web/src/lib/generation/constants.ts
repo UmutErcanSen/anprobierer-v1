@@ -47,6 +47,31 @@ export const COLORS = [
   'Denim', 'Mehrfarbig',
 ] as const;
 
+/** CSS-Farbwert je Farbname -- fuer das kleine Muster-Kreis-Icon im
+ * Farbfilter des Verlaufs. "Mehrfarbig" bekommt einen Verlauf statt einer
+ * Flaechenfarbe, da es keine einzelne Farbe repraesentiert. */
+export const COLOR_SWATCH: Record<(typeof COLORS)[number], string> = {
+  Schwarz: '#111111',
+  Weiß: '#ffffff',
+  Grau: '#9ca3af',
+  Rot: '#dc2626',
+  Blau: '#2563eb',
+  Grün: '#16a34a',
+  Gelb: '#eab308',
+  Pink: '#ec4899',
+  Lila: '#9333ea',
+  Orange: '#f97316',
+  Braun: '#78350f',
+  Beige: '#e7d9c1',
+  Navy: '#1e3a5f',
+  Türkis: '#14b8a6',
+  Bordeaux: '#7f1d3d',
+  Silber: '#c4c9cf',
+  Gold: '#d4af37',
+  Denim: '#4a6fa5',
+  Mehrfarbig: 'conic-gradient(from 90deg, #dc2626, #eab308, #16a34a, #2563eb, #9333ea, #dc2626)',
+};
+
 /**
  * Konfektionsgrößen für das Pflicht-Dropdown, aus der Altanwendung übernommen.
  * Format: Buchstabengröße mit deutscher/internationaler Entsprechung.

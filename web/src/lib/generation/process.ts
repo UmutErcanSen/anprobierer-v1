@@ -91,8 +91,9 @@ export async function processGeneration(input: ProcessGenerationInput): Promise<
       for (let i = 0; i < clothing.length; i++) {
         const type = types[i];
         if (!isClothingType(type)) continue;
-        const saleText = await safeSaleText(type, sizes[i], colors[i], notes, clothing[i]);
-        if (saleText) await pushCard({ itemIndex: i, title: `Stück ${i + 1}`, imagePath: null, saleText });
+        const result = await safeSaleText(type, sizes[i], colors[i], notes, clothing[i]);
+        costUsd += result?.costUsd ?? 0;
+        if (result) await pushCard({ itemIndex: i, title: `Stück ${i + 1}`, imagePath: null, saleText: result.text });
       }
     } else {
       // Einzeln: pro Stueck ein Bild UND ein Verkaufstext, in einer Karte.
@@ -123,8 +124,9 @@ export async function processGeneration(input: ProcessGenerationInput): Promise<
           failures++;
         }
 
-        const saleText = await safeSaleText(type, sizes[i], colors[i], notes, clothing[i]);
-        await pushCard({ itemIndex: i, title: `Stück ${i + 1}`, imagePath, saleText });
+        const result = await safeSaleText(type, sizes[i], colors[i], notes, clothing[i]);
+        costUsd += result?.costUsd ?? 0;
+        await pushCard({ itemIndex: i, title: `Stück ${i + 1}`, imagePath, saleText: result?.text ?? null });
       }
     }
 
@@ -168,13 +170,14 @@ async function safeSaleText(
   color: string | undefined,
   notes: string | null | undefined,
   clothingInput: PreparedImage,
-): Promise<string | null> {
+): Promise<{ text: string; costUsd: number } | null> {
   try {
-    return await generateSaleText({
+    const { text, costUsd } = await generateSaleText({
       prompt: buildSalePrompt(type, size, color ? [color] : null, notes),
       imageBytes: clothingInput.bytes,
       mimeType: clothingInput.mimeType,
     });
+    return { text, costUsd: costUsd ?? 0 };
   } catch (err) {
     console.error('[process] Verkaufstext fehlgeschlagen', err);
     return null;

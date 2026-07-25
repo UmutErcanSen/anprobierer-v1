@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { GenerateFlow } from "@/components/generation/generate-flow";
 
 /*
   ============================================================================
-  TEMPORÄRE TESTSEITE — vor dem Livegang loeschen.
+  DAUERHAFTES DEV-WERKZEUG — nur lokal erreichbar, nicht in Produktion.
 
   Rendert das Erstellen-Formular OHNE Anmeldung und ohne echte API-Aufrufe
   auszuloesen (ein Klick auf "Generieren" wuerde zwar POST /api/generate
@@ -11,8 +12,8 @@ import { GenerateFlow } from "@/components/generation/generate-flow";
   Aufruf ausloesen). Dient dazu, am Layout/Design des Formulars zu arbeiten,
   ohne jedes Mal ein Testkonto zu benoetigen -- analog zu /test-ergebnis.
 
-  Zum Entfernen: diesen Ordner loeschen. Die eigentliche GenerateFlow-
-  Komponente bleibt (die nutzt der echte, angemeldete Ablauf).
+  Der notFound()-Guard unten sperrt die Route in production komplett (sonst
+  waere sie oeffentlich erreichbar, sobald die App live ist).
   ============================================================================
 */
 
@@ -22,6 +23,8 @@ export const metadata: Metadata = {
 };
 
 export default function TestErstellenPage() {
+  if (process.env.NODE_ENV === "production") notFound();
+
   return (
     <main className="mx-auto w-full max-w-xl flex-1 px-6 py-10 md:max-w-none md:px-0 md:py-0">
       {/* Banner behaelt einen eigenen Rand, obwohl <main> ab md keinen mehr

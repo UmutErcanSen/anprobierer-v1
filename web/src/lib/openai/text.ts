@@ -20,12 +20,35 @@ const apiKey = z
   .min(1, 'OPENAI_API_KEY fehlt in .env.local')
   .parse(process.env.OPENAI_API_KEY);
 
+/**
+ * gpt-4o-mini wird nach Tokens abgerechnet. Diese Preise sind aus der
+ * oeffentlichen OpenAI-Preisliste uebernommen, aber -- anders als die
+ * Bildkosten in images.ts, die bereits per echtem Testlauf bestaetigt sind --
+ * NOCH NICHT gegen eine echte Rechnung dieses Projekts geprueft. Dient
+ * vorerst der Groessenordnung, nicht der finalen Preiskalkulation.
+ */
+const TEXT_PRICE_PER_TOKEN = {
+  input: 0.15 / 1_000_000,
+  output: 0.6 / 1_000_000,
+};
+
+type ChatUsage = { prompt_tokens?: number; completion_tokens?: number };
+
+export function costForTextUsage(usage: ChatUsage | undefined): number | null {
+  if (!usage) return null;
+  const inTok = usage.prompt_tokens ?? 0;
+  const outTok = usage.completion_tokens ?? 0;
+  return inTok * TEXT_PRICE_PER_TOKEN.input + outTok * TEXT_PRICE_PER_TOKEN.output;
+}
+
+export type SaleTextResult = { text: string; costUsd: number | null };
+
 export async function generateSaleText(params: {
   prompt: string;
   imageBytes: Buffer;
   mimeType: string;
   signal?: AbortSignal;
-}): Promise<string> {
+}): Promise<SaleTextResult> {
   const dataUrl = `data:${params.mimeType};base64,${params.imageBytes.toString('base64')}`;
   const timeout = AbortSignal.timeout(60_000);
   const signal = params.signal ? AbortSignal.any([params.signal, timeout]) : timeout;
@@ -63,5 +86,8 @@ export async function generateSaleText(params: {
 
   const data = await res.json();
   const text = data?.choices?.[0]?.message?.content;
-  return typeof text === 'string' ? text.trim() : '';
+  return {
+    text: typeof text === 'string' ? text.trim() : '',
+    costUsd: costForTextUsage(data?.usage),
+  };
 }

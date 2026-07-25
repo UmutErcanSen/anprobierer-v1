@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { prepareImage } from '@/lib/generation/prepare-image';
 import { processGeneration, type PreparedImage } from '@/lib/generation/process';
+import { rateLimitError } from '@/lib/generation/rate-limit';
 import {
   ALLOWED_UPLOAD_MIME,
   CREDITS_PER_QUALITY,
@@ -67,6 +68,12 @@ export async function POST(request: Request) {
   if (!user.email_confirmed_at) {
     return NextResponse.json({ error: 'Bitte bestätige zuerst deine E-Mail-Adresse.' }, { status: 403 });
   }
+
+  // Vor jeder weiteren Arbeit pruefen: verhindert, dass ein Account mit
+  // Guthaben beliebig viele parallele/schnell aufeinanderfolgende
+  // Generierungen lostritt (CLAUDE.md §9 Missbrauchsschutz).
+  const rateLimitMsg = await rateLimitError(supabase, user.id);
+  if (rateLimitMsg) return NextResponse.json({ error: rateLimitMsg }, { status: 429 });
 
   const { data: profile } = await supabase.from('profiles').select('plan').single();
   const plan = (profile?.plan ?? 'free') as PlanKey;

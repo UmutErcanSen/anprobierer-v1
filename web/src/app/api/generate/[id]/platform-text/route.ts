@@ -52,7 +52,7 @@ export async function POST(request: Request, ctx: { params: Promise<{ id: string
   const admin = createAdminClient();
   const { data: generation, error } = await admin
     .from('generations')
-    .select('id, user_id, cards')
+    .select('id, user_id, cards, cost_usd')
     .eq('id', id)
     .single();
 
@@ -74,19 +74,27 @@ export async function POST(request: Request, ctx: { params: Promise<{ id: string
   if (cached) return NextResponse.json({ text: cached });
 
   let text: string;
+  let costUsd: number | null;
   try {
-    text = await rewriteSaleTextForPlatform(baseText, platform);
+    ({ text, costUsd } = await rewriteSaleTextForPlatform(baseText, platform));
   } catch (err) {
     console.error('[platform-text] Umschreibung fehlgeschlagen', id, itemIndex, platform, err);
     return NextResponse.json({ error: 'Text konnte nicht erstellt werden.' }, { status: 502 });
   }
+
+  // Kosten immer nachtragen, unabhaengig vom Cache -- ein realer OpenAI-
+  // Aufruf ist gerade erst passiert, auch wenn diese Karte (Legacy) das
+  // Ergebnis nicht zwischenspeichern kann.
+  const newCostUsd = (generation.cost_usd ?? 0) + (costUsd ?? 0);
 
   // Nur echte (nicht-Legacy) Karten koennen zwischengespeichert werden --
   // cardPos ist bei Legacy-Generierungen immer -1, da generations.cards dort
   // leer ist (siehe resolveCardRows in lib/generation/cards.ts).
   if (cardPos !== -1) {
     cards[cardPos] = { ...cards[cardPos], platformTexts: { ...cards[cardPos].platformTexts, [platform]: text } };
-    await admin.from('generations').update({ cards }).eq('id', id);
+    await admin.from('generations').update({ cards, cost_usd: newCostUsd }).eq('id', id);
+  } else {
+    await admin.from('generations').update({ cost_usd: newCostUsd }).eq('id', id);
   }
 
   return NextResponse.json({ text });

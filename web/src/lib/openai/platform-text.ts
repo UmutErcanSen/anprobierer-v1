@@ -3,6 +3,7 @@ import 'server-only';
 import { z } from 'zod';
 import { TEXT_MODEL } from '@/lib/generation/constants';
 import { OpenAIError } from '@/lib/openai/images';
+import { costForTextUsage } from '@/lib/openai/text';
 
 /**
  * Schreibt einen bestehenden Verkaufstext fuer eine andere Plattform um --
@@ -35,7 +36,12 @@ const PLATFORM_STYLE: Record<RewritablePlatform, string> = {
     'Schreibe ihn im strukturierten, professionellen eBay-Stil um: sachlich, in kurzen Absaetzen oder Stichpunkten (Zustand, Material falls bekannt, Groesse), ohne Emojis und ohne Hashtags.',
 };
 
-export async function rewriteSaleTextForPlatform(baseText: string, platform: RewritablePlatform): Promise<string> {
+export type PlatformTextResult = { text: string; costUsd: number | null };
+
+export async function rewriteSaleTextForPlatform(
+  baseText: string,
+  platform: RewritablePlatform,
+): Promise<PlatformTextResult> {
   const prompt = `Hier ist ein bestehender deutscher Verkaufstext für ein Kleidungsstück (verfasst im lockeren Vinted-Stil mit Emojis):
 
 """
@@ -71,5 +77,8 @@ Struktur: Überschrift in der ersten Zeile, danach eine Leerzeile, danach die Be
 
   const data = await res.json();
   const text = data?.choices?.[0]?.message?.content;
-  return typeof text === 'string' && text.trim() ? text.trim() : baseText;
+  return {
+    text: typeof text === 'string' && text.trim() ? text.trim() : baseText,
+    costUsd: costForTextUsage(data?.usage),
+  };
 }

@@ -73,7 +73,11 @@ export default function HomePage() {
               samt fertigem Verkaufstext — in unter einer Minute.
             </p>
 
-            <div className="mt-9 flex flex-wrap items-center gap-3">
+            {/* justify-center nur auf Mobil: Kicker/Headline/Absatz bleiben
+                linksbuendig, aber zwei Buttons nebeneinander sahen dort auf
+                der schmalen, sonst mittigen Flaeche schief aus. Ab md wieder
+                linksbuendig wie der restliche Textblock. */}
+            <div className="mt-9 flex flex-wrap items-center justify-center gap-3 md:justify-start">
               <LinkButton href="/registrieren" size="lg">Kostenlos starten</LinkButton>
               <LinkButton href="/#so-gehts" variant="outline" size="lg">So funktioniert's</LinkButton>
             </div>
@@ -105,11 +109,17 @@ export default function HomePage() {
             linken/rechten Bildschirmrand nicht hart abgeschnitten wirkt. */}
         <section className="overflow-hidden border-t border-line pt-16 pb-12">
           <p className="text-center text-xs uppercase tracking-[0.14em] text-muted">Verkaufsbereit auf</p>
+          {/* gap waechst mit der Bildschirmbreite: bei nur drei Plattformen
+              wirkte ein fixer Abstand auf breiten Desktop-Monitoren zu eng
+              (die Zeile blieb "mobil-dicht", obwohl viel mehr Platz da war). */}
           <div className="mt-8 [mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)]">
-            <div className="flex w-max gap-28 animate-marquee">
+            <div className="flex w-max gap-20 animate-marquee md:gap-36 lg:gap-44">
               {[...MARQUEE_TRACK, ...MARQUEE_TRACK].map((platform, i) => (
-                <div key={i} className="flex shrink-0 items-center gap-3.5 text-3xl font-medium tracking-tight text-ink">
-                  <PlatformIcon icon={PLATFORM_ICONS[platform.key]} size={32} />
+                <div
+                  key={i}
+                  className="flex shrink-0 items-center gap-3.5 text-3xl font-medium tracking-tight text-ink md:gap-5 md:text-5xl"
+                >
+                  <PlatformIcon icon={PLATFORM_ICONS[platform.key]} size={32} className="h-8 w-8 md:h-11 md:w-11" />
                   {platform.label}
                 </div>
               ))}

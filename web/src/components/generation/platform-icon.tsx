@@ -14,9 +14,28 @@ export const PLATFORM_ICONS: Record<PlatformKey, SimpleIcon> = {
   ebay: siEbay,
 };
 
-export function PlatformIcon({ icon, size = 14 }: { icon: SimpleIcon; size?: number }) {
+export function PlatformIcon({
+  icon,
+  size = 14,
+  className,
+}: {
+  icon: SimpleIcon;
+  size?: number;
+  /** Fuer responsives Skalieren (z.B. "h-8 w-8 md:h-11 md:w-11") -- die
+   * CSS-Breite/Hoehe einer Klasse hat Vorrang vor den width/height-Attributen
+   * oben, die nur als Basisgroesse dienen. */
+  className?: string;
+}) {
   return (
-    <svg role="img" viewBox="0 0 24 24" width={size} height={size} aria-hidden="true" fill={`#${icon.hex}`}>
+    <svg
+      role="img"
+      viewBox="0 0 24 24"
+      width={size}
+      height={size}
+      aria-hidden="true"
+      fill={`#${icon.hex}`}
+      className={className}
+    >
       <path d={icon.path} />
     </svg>
   );

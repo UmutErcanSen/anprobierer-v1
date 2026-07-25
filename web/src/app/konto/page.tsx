@@ -23,10 +23,17 @@ export default async function KontoPage() {
 
   // Laeuft alles unter Row Level Security — kein user_id-Filter noetig, es
   // kommen ohnehin nur die eigenen Zeilen zurueck.
-  const [{ data: profile }, { data: balance }, { count: totalGenerations }, { data: recentRows }] = await Promise.all([
+  const [
+    { data: profile },
+    { data: balance },
+    { count: totalGenerations },
+    { count: totalFavorites },
+    { data: recentRows },
+  ] = await Promise.all([
     supabase.from("profiles").select("display_name, plan").single(),
     supabase.from("credit_balances").select("balance").maybeSingle(),
     supabase.from("generations").select("id", { count: "exact", head: true }),
+    supabase.from("generations").select("id", { count: "exact", head: true }).eq("is_favorite", true),
     supabase
       .from("generations")
       .select(
@@ -67,42 +74,63 @@ export default async function KontoPage() {
       <AppHeader credits={credits} />
 
       <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-14">
-        <p className="kicker">Mein Konto</p>
-        <h1 className="mt-4 text-3xl font-semibold tracking-tight text-ink">
-          Hallo{profile?.display_name ? `, ${profile.display_name}` : ""}
-        </h1>
-        <p className="mt-1 text-sm text-muted">{user.email}</p>
-
-        <dl className="mt-10 grid gap-px overflow-hidden rounded-xl border border-line bg-line sm:grid-cols-3">
-          <div className="bg-paper p-6">
-            <dt className="text-xs uppercase tracking-[0.14em] text-muted">Guthaben</dt>
-            <dd className="mt-2 text-3xl font-semibold tabular-nums text-ink">
-              {credits}
-              <span className="ml-1.5 text-sm font-normal text-muted">
-                {credits === 1 ? "Credit" : "Credits"}
-              </span>
-            </dd>
+        {/* Titel + Primaeraktion in einer Zeile, wie im Verlauf (dort
+            "Deine Anproben" + "Neue Anprobe erstellen") -- vorher stand der
+            Button als eigener, schwerer Block MITTEN in der Seite, direkt
+            nach den ruhigen Stats. Das brach den Rhythmus und liess "Guthaben
+            aufladen" wie eine zweite, konkurrierende Geld-Aktion neben "Auf
+            Pro upgraden" wirken. Jetzt: Aktion gehoert zum Titel, Aufladen
+            gehoert zur Guthaben-Zeile, wo es inhaltlich hingehoert. */}
+        <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="kicker">Mein Konto</p>
+            <h1 className="mt-4 text-3xl font-semibold tracking-tight text-ink">
+              Hallo{profile?.display_name ? `, ${profile.display_name}` : ""}
+            </h1>
+            <p className="mt-1 text-sm text-muted">{user.email}</p>
           </div>
-          <div className="bg-paper p-6">
-            <dt className="text-xs uppercase tracking-[0.14em] text-muted">Tarif</dt>
-            <dd className="mt-2 text-3xl font-semibold capitalize text-ink">{plan}</dd>
-          </div>
-          <div className="bg-paper p-6">
-            <dt className="text-xs uppercase tracking-[0.14em] text-muted">Erstellt</dt>
-            <dd className="mt-2 text-3xl font-semibold tabular-nums text-ink">{totalGenerations ?? 0}</dd>
-          </div>
-        </dl>
-
-        <div className="mt-8 flex flex-wrap items-center gap-5">
-          <LinkButton href="/anzeige-erstellen" size="lg">
+          <LinkButton href="/anzeige-erstellen" size="md" className="shrink-0">
             Neue Anprobe erstellen
           </LinkButton>
-          <Link
-            href="/preise"
-            className="text-sm text-muted underline underline-offset-4 transition-colors hover:text-ink"
-          >
-            Guthaben aufladen
-          </Link>
+        </div>
+
+        {/* Guthaben als grosses Display-Element statt einer von drei
+            gleichwertigen Kacheln -- es ist der Wert, den der Nutzer hier
+            eigentlich nachschauen kommt. Bewusst KEIN "von X Credits"/
+            "erneuert in Y Tagen": das wuerde eine monatliche Kontingent-
+            Rueckerstattung und ein Abrechnungsdatum vortaeuschen, die es
+            technisch noch nicht gibt (Stripe/Abo-Webhooks stehen noch aus,
+            siehe Aufgabe #5/#6) -- also nur Werte zeigen, die wirklich stimmen. */}
+        <div className="mt-10 flex items-baseline gap-4">
+          <span className="text-5xl font-medium tracking-tight text-ink tabular-nums">{credits}</span>
+          <div>
+            <p className="text-sm text-ink-soft">{credits === 1 ? "Credit übrig" : "Credits übrig"}</p>
+            <p className="mt-0.5 text-xs uppercase tracking-[0.1em] text-muted">
+              <span className="capitalize">{plan}-Tarif</span> ·{" "}
+              <Link href="/preise" className="normal-case underline underline-offset-4 hover:text-ink">
+                Guthaben aufladen
+              </Link>
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-6 flex flex-wrap items-center gap-7 border-t border-line pt-5">
+          <div>
+            <p className="text-lg font-semibold tabular-nums text-ink">{totalGenerations ?? 0}</p>
+            <p className="text-xs uppercase tracking-[0.1em] text-muted">Erstellt</p>
+          </div>
+          <div>
+            <p className="text-lg font-semibold tabular-nums text-ink">{totalFavorites ?? 0}</p>
+            <p className="text-xs uppercase tracking-[0.1em] text-muted">Favoriten</p>
+          </div>
+          {plan !== "pro" && (
+            <Link
+              href="/preise"
+              className="ml-auto text-sm text-accent underline underline-offset-4 transition-colors hover:opacity-80"
+            >
+              Auf Pro upgraden
+            </Link>
+          )}
         </div>
 
         {recent.length > 0 && (

@@ -55,6 +55,24 @@ const PLANS: Plan[] = [
   },
 ];
 
+/**
+ * Direkter Vergleich der tatsaechlichen Unterschiede zwischen den Tarifen —
+ * die Karten oben zeigen jeden Tarif fuer sich, hier stehen dieselben Werte
+ * nebeneinander, damit man nicht selbst zwischen drei Karten hin- und
+ * herspringen muss, um z.B. "Standard vs. HD" oder "5 vs. 9 Stuecke" zu
+ * vergleichen. Werte muessen 1:1 mit lib/generation/constants.ts
+ * (qualityForPlan, maxItemsForPlan) uebereinstimmen.
+ */
+const COMPARISON_ROWS: { label: string; values: [string, string, string] }[] = [
+  { label: "Credits", values: ["5 einmalig", "60 / Monat", "200 / Monat"] },
+  { label: "Bildqualität", values: ["Standard", "Standard", "HD"] },
+  { label: "Kleidungsstücke pro Anprobe", values: ["1", "bis zu 5", "bis zu 9"] },
+  { label: "Kombiniert-Modus (mehrere Stücke, 1 Bild)", values: ["—", "✓", "✓"] },
+  { label: "Verkaufstexte inklusive", values: ["✓", "✓", "✓"] },
+  { label: "Plattform-Export (Vinted, Kleinanzeigen, eBay)", values: ["✓", "✓", "✓"] },
+  { label: "Support", values: ["Standard", "Standard", "Bevorzugt"] },
+];
+
 export default function PreisePage() {
   return (
     <>
@@ -111,6 +129,48 @@ export default function PreisePage() {
                 )}
               </div>
             ))}
+          </div>
+        </section>
+
+        {/* Direktvergleich: dieselben Zeilen ueber alle drei Tarife, statt
+            drei separate Feature-Listen vergleichen zu muessen. */}
+        <section className="border-t border-line">
+          <div className="mx-auto w-full max-w-4xl px-6 py-16">
+            <h2 className="display text-2xl md:text-4xl">Die Tarife <em>im Vergleich</em>.</h2>
+            <div className="mt-8 overflow-x-auto rounded-xl border border-line">
+              <table className="w-full min-w-[560px] border-collapse text-left text-sm">
+                <thead>
+                  <tr className="border-b border-line bg-surface">
+                    <th className="px-5 py-3.5 font-medium text-muted">Merkmal</th>
+                    {PLANS.map((plan) => (
+                      <th key={plan.name} className="px-5 py-3.5 text-center font-medium text-ink">
+                        {plan.name}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {COMPARISON_ROWS.map((row, i) => (
+                    <tr key={row.label} className={i > 0 ? "border-t border-line" : undefined}>
+                      <th scope="row" className="px-5 py-3.5 font-normal text-ink-soft">
+                        {row.label}
+                      </th>
+                      {row.values.map((value, j) => (
+                        <td key={j} className="px-5 py-3.5 text-center tabular-nums text-ink">
+                          {value === "✓" ? (
+                            <span aria-hidden className="text-success">✓</span>
+                          ) : value === "—" ? (
+                            <span aria-hidden className="text-muted">—</span>
+                          ) : (
+                            value
+                          )}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </section>
 

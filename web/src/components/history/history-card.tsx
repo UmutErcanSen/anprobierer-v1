@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { ImageOff, Loader2 } from 'lucide-react';
+import { ImageOff, Loader2, Lock } from 'lucide-react';
 import { FavoriteToggle } from '@/components/history/favorite-toggle';
 import { CLOTHING_TYPES, COLOR_SWATCH, type ClothingType } from '@/lib/generation/constants';
 
@@ -16,6 +16,10 @@ export type HistoryGeneration = {
   categories: string[];
   sizes: string[];
   colors: string[];
+  /** Free-Tarif ab dem zweiten Ergebnis (siehe lock.ts) -- das Thumbnail ist
+   * bereits die serverseitig unscharfe Variante, hier nur noch als Hinweis
+   * markieren. */
+  locked: boolean;
 };
 
 const MODE_LABEL: Record<string, string> = { single: 'Einzeln', combined: 'Kombiniert' };
@@ -57,7 +61,7 @@ function ModeBadge({ mode }: { mode: string }) {
 
 /** Eine Karte im Verlauf-Raster. Rein darstellend -- die Daten (inkl. signierter Thumbnail-URL) kommen fertig von der Server Component. */
 export function HistoryCard({ generation, thumbnail }: { generation: HistoryGeneration; thumbnail: string | null }) {
-  const { id, status, mode, quality, credits_charged, created_at, imageCount, isFavorite, categories, sizes, colors } =
+  const { id, status, mode, quality, credits_charged, created_at, imageCount, isFavorite, categories, sizes, colors, locked } =
     generation;
 
   const categoryLabel = unique(categories.map((c) => CLOTHING_TYPES[c as ClothingType]?.de ?? c)).join(', ');
@@ -94,6 +98,11 @@ export function HistoryCard({ generation, thumbnail }: { generation: HistoryGene
           <div className="absolute right-2 top-2">
             <FavoriteToggle generationId={id} initialFavorite={isFavorite} />
           </div>
+          {locked && (
+            <span className="absolute bottom-2 left-2 flex items-center gap-1 rounded-full bg-paper/90 px-2.5 py-1 text-xs font-medium text-ink">
+              <Lock size={11} aria-hidden /> Vorschau
+            </span>
+          )}
         </div>
         <div className="flex flex-col gap-0.5 p-3">
           <span className="text-sm font-medium text-ink">{dateFormat.format(new Date(created_at))}</span>

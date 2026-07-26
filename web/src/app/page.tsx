@@ -21,7 +21,7 @@ import { PLATFORM_ICONS, PlatformIcon } from "@/components/generation/platform-i
 // das Vertrauen, das eine Landing Page aufbauen soll -- deshalb ausschliesslich
 // Aussagen, die schon heute technisch/vertraglich zutreffen.
 const STATS = [
-  { value: "5 gratis", label: "zum Ausprobieren" },
+  { value: "1 gratis", label: "Ergebnis in voller Auflösung" },
   { value: "3 Plattformen", label: "bereit zum Einfügen" },
   { value: "0 €", label: "ohne Zahlungsdaten" },
 ];
@@ -83,7 +83,7 @@ export default function HomePage() {
             </div>
 
             <p className="mt-6 text-sm text-muted">
-              5 Gratis-Anproben · keine Zahlungsdaten nötig
+              Erstes Ergebnis gratis · keine Zahlungsdaten nötig
             </p>
           </div>
 
@@ -191,7 +191,7 @@ export default function HomePage() {
 
             <div className="mt-14 flex flex-col items-start gap-4 sm:flex-row sm:items-center">
               <LinkButton href="/registrieren" size="lg">Jetzt kostenlos starten</LinkButton>
-              <span className="text-sm text-muted">5 Gratis-Anproben · keine Zahlungsdaten nötig</span>
+              <span className="text-sm text-muted">Erstes Ergebnis gratis · keine Zahlungsdaten nötig</span>
             </div>
           </div>
         </section>

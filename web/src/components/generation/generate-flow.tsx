@@ -208,6 +208,9 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
   const [remaining, setRemaining] = useState(0);
   // Fuer PlatformExport (plattformspezifische Texte serverseitig anfragen).
   const [generationId, setGenerationId] = useState<string | null>(null);
+  // Free-Tarif: ab dem zweiten Ergebnis serverseitig verdeckt (siehe lock.ts) --
+  // der Wert kommt direkt vom Poll-Endpunkt, nicht aus einer eigenen Berechnung.
+  const [locked, setLocked] = useState(false);
 
   // Verhindert, dass ein noch laufender Poll nach reset()/Unmount weiterlaeuft
   // und veraltete Daten in einen neuen Durchlauf schreibt.
@@ -303,6 +306,7 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
     setFailures(0);
     setError(null);
     setGenerationId(null);
+    setLocked(false);
     setPerson(null);
     setItems([newItem()]);
     setNotes('');
@@ -338,6 +342,7 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
         setCards(data.cards ?? []);
         setFailures(data.failures ?? 0);
         setRemaining(credits - (data.creditsCharged ?? 0));
+        setLocked(Boolean(data.locked));
         setStatus(data.cards?.length ? 'done' : 'error');
         if (!data.cards?.length) setError('Die Generierung ist fehlgeschlagen. Deine Credits wurden zurückgebucht.');
         router.refresh(); // Guthaben im Header sofort aktualisieren
@@ -404,6 +409,7 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
           remaining={remaining}
           onReset={reset}
           generationId={generationId ?? undefined}
+          locked={locked}
         />
       </div>
     );

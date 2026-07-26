@@ -2,8 +2,9 @@
 
 import { useState, type ReactNode } from 'react';
 import Image from 'next/image';
-import { ChevronRight, Download } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import Link from 'next/link';
+import { ChevronRight, Download, Lock } from 'lucide-react';
+import { Button, LinkButton } from '@/components/ui/button';
 import { PlatformExport } from '@/components/generation/platform-export';
 
 /*
@@ -69,6 +70,7 @@ export function ResultView({
   title = 'Fertig',
   footer,
   generationId,
+  locked = false,
 }: {
   cards: ResultCard[];
   failures: number;
@@ -83,6 +85,10 @@ export function ResultView({
   /** Fuer PlatformExport: ohne generationId (z.B. Demo-Testseite) bleibt der
    * Export rein clientseitig ohne KI-Textanpassung. */
   generationId?: string;
+  /** Free-Tarif ab dem zweiten Ergebnis (siehe lock.ts): Bild/Text sind bereits
+   * server­seitig durch eine unscharfe/gekuerzte Variante ersetzt -- hier nur
+   * noch Download/Export ausblenden und stattdessen zum Upgrade einladen. */
+  locked?: boolean;
 }) {
   const imageCards = cards.filter((c) => c.imageUrl).length;
 
@@ -95,12 +101,25 @@ export function ResultView({
             {imageCards} {imageCards === 1 ? 'Bild' : 'Bilder'} · Guthaben {remaining} Credits
           </p>
         </div>
-        {cards.length > 0 && (
+        {cards.length > 0 && !locked && (
           <Button variant="outline" onClick={() => downloadZip(cards, 'anprobe.zip')}>
             <Download size={15} aria-hidden /> Alles als ZIP
           </Button>
         )}
       </div>
+
+      {locked && (
+        <div className="flex flex-col items-start gap-3 rounded-xl border border-line bg-surface px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <p className="flex items-center gap-2 text-sm text-ink-soft">
+            <Lock size={15} className="shrink-0 text-muted" aria-hidden />
+            Dein erstes Ergebnis war gratis in voller Auflösung. Ab jetzt siehst du nur eine Vorschau — schalte
+            Bild, Text und Download mit einem Tarif frei.
+          </p>
+          <LinkButton href="/preise" size="md" className="shrink-0">
+            Tarif ansehen
+          </LinkButton>
+        </div>
+      )}
 
       {failures > 0 && (
         <p role="status" className="rounded-lg border border-line bg-surface px-4 py-3 text-sm text-ink-soft">
@@ -126,39 +145,54 @@ export function ResultView({
 
             <div className="flex flex-col gap-4 border-t border-line p-4">
               {card.imageUrl && (
-                <div className="overflow-hidden rounded-lg border border-line">
+                <div className="relative overflow-hidden rounded-lg border border-line">
                   <Image src={card.imageUrl} alt={card.title} width={512} height={768} className="h-auto w-full" unoptimized />
+                  {locked && (
+                    <span className="absolute left-2 top-2 flex items-center gap-1.5 rounded-full bg-paper/90 px-3 py-1.5 text-xs font-medium text-ink">
+                      <Lock size={12} aria-hidden /> Vorschau
+                    </span>
+                  )}
                 </div>
               )}
 
               {card.saleText && (
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs uppercase tracking-[0.14em] text-muted">Verkaufstext</span>
-                    <CopyButton text={card.saleText} />
+                    <span className="text-xs uppercase tracking-[0.14em] text-muted">
+                      {locked ? 'Verkaufstext (Vorschau)' : 'Verkaufstext'}
+                    </span>
+                    {!locked && <CopyButton text={card.saleText} />}
                   </div>
                   <p className="whitespace-pre-wrap rounded-lg bg-surface p-3 text-sm text-ink-soft">{card.saleText}</p>
                 </div>
               )}
 
-              <div className="flex flex-wrap gap-3 text-sm">
-                {card.imageUrl && (
-                  <a href={card.imageUrl} download={`${card.title}.png`} className="text-ink underline underline-offset-4">
-                    Bild herunterladen
-                  </a>
-                )}
-                <button
-                  type="button"
-                  onClick={() => downloadZip([card], `${card.title.replace(/[^\w\d]+/g, '-').toLowerCase()}.zip`)}
-                  className="text-ink underline underline-offset-4"
-                >
-                  Bild + Text als ZIP
-                </button>
-              </div>
+              {locked ? (
+                <Link href="/preise" className="text-sm text-ink underline underline-offset-4">
+                  Zum Freischalten einen Tarif wählen
+                </Link>
+              ) : (
+                <>
+                  <div className="flex flex-wrap gap-3 text-sm">
+                    {card.imageUrl && (
+                      <a href={card.imageUrl} download={`${card.title}.png`} className="text-ink underline underline-offset-4">
+                        Bild herunterladen
+                      </a>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => downloadZip([card], `${card.title.replace(/[^\w\d]+/g, '-').toLowerCase()}.zip`)}
+                      className="text-ink underline underline-offset-4"
+                    >
+                      Bild + Text als ZIP
+                    </button>
+                  </div>
 
-              <div className="border-t border-line pt-4">
-                <PlatformExport card={card} generationId={generationId} />
-              </div>
+                  <div className="border-t border-line pt-4">
+                    <PlatformExport card={card} generationId={generationId} />
+                  </div>
+                </>
+              )}
             </div>
           </details>
         ))}

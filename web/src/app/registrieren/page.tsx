@@ -10,7 +10,7 @@ export default function RegistrierenPage() {
   return (
     <AuthShell
       title="Konto erstellen"
-      subtitle="5 Gratis-Anproben zum Ausprobieren — ohne Zahlungsdaten."
+      subtitle="3 Gratis-Credits zum Ausprobieren, erstes Ergebnis in voller Auflösung — ohne Zahlungsdaten."
       footer={
         <>
           Schon ein Konto?{" "}

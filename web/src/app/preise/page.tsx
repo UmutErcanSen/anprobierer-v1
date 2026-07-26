@@ -6,7 +6,7 @@ import { LinkButton } from "@/components/ui/button";
 export const metadata: Metadata = {
   title: "Preise",
   description:
-    "Credits statt Abo-Falle: Ein Credit entspricht einem Anprobebild. 5 Gratis-Credits zum Ausprobieren, ohne Zahlungsdaten.",
+    "Credits statt Abo-Falle: Ein Credit entspricht einem Anprobebild. 3 Gratis-Credits zum Ausprobieren, ohne Zahlungsdaten.",
 };
 
 /*
@@ -32,12 +32,17 @@ const PLANS: Plan[] = [
   {
     name: "Kostenlos",
     price: "0 €",
-    credits: "5 Credits einmalig",
-    features: ["Standard-Qualität", "1 Kleidungsstück pro Anprobe", "Verkaufstexte inklusive"],
+    credits: "3 Credits einmalig",
+    features: [
+      "Erstes Ergebnis in voller Auflösung",
+      "Weitere Ergebnisse als Vorschau",
+      "Standard-Qualität",
+      "1 Kleidungsstück pro Anprobe",
+    ],
     available: true,
   },
   {
-    name: "Starter",
+    name: "Basic",
     price: "9,99 €",
     period: "/ Monat",
     credits: "60 Credits monatlich",
@@ -64,7 +69,8 @@ const PLANS: Plan[] = [
  * (qualityForPlan, maxItemsForPlan) uebereinstimmen.
  */
 const COMPARISON_ROWS: { label: string; values: [string, string, string] }[] = [
-  { label: "Credits", values: ["5 einmalig", "60 / Monat", "200 / Monat"] },
+  { label: "Credits", values: ["3 einmalig", "60 / Monat", "200 / Monat"] },
+  { label: "Ergebnisse in voller Auflösung", values: ["nur das erste", "alle", "alle"] },
   { label: "Bildqualität", values: ["Standard", "Standard", "HD"] },
   { label: "Kleidungsstücke pro Anprobe", values: ["1", "bis zu 5", "bis zu 9"] },
   { label: "Kombiniert-Modus (mehrere Stücke, 1 Bild)", values: ["—", "✓", "✓"] },
@@ -205,6 +211,15 @@ export default function PreisePage() {
                 <dd className="mt-1 text-ink-soft">
                   Wenn ein Bild nicht erstellt werden kann, werden die Credits dafür
                   automatisch zurückgebucht.
+                </dd>
+              </div>
+              <div>
+                <dt className="font-medium text-ink">Im Free-Tarif ist nur das erste Ergebnis frei sichtbar</dt>
+                <dd className="mt-1 text-ink-soft">
+                  Deine ersten 3 Credits kannst du nutzen, aber nur dein <em>erstes</em> Ergebnis
+                  siehst du in voller Auflösung samt vollständigem Verkaufstext. Ab dem zweiten
+                  Ergebnis zeigen wir eine unscharfe Vorschau, bis ein bezahlter Tarif aktiv ist —
+                  ein Upgrade schaltet dann auch alle bisherigen Ergebnisse rückwirkend frei.
                 </dd>
               </div>
             </dl>

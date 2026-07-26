@@ -33,7 +33,7 @@ export default function TestErstellenPage() {
         <strong className="text-ink">Testseite.</strong> Kein echtes Konto, keine echten
         Generierungen. Wird vor dem Livegang entfernt.
       </p>
-      <GenerateFlow credits={97} plan="starter" />
+      <GenerateFlow credits={97} plan="basic" />
     </main>
   );
 }

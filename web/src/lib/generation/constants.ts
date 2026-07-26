@@ -9,7 +9,7 @@
 
 export type Quality = 'standard' | 'hd';
 export type GenerationMode = 'single' | 'combined';
-export type PlanKey = 'free' | 'starter' | 'pro';
+export type PlanKey = 'free' | 'basic' | 'pro';
 
 /** Kleidungstypen (Schlüssel = DB-Wert, EN = für den Prompt, DE = fürs UI). */
 export const CLOTHING_TYPES = {
@@ -91,7 +91,7 @@ export const SIZES = [
 
 /**
  * Qualität wird NICHT vom Nutzer gewählt, sondern folgt dem Plan. So kann
- * niemand über das Formular eine teurere Stufe erzwingen. Free und Starter
+ * niemand über das Formular eine teurere Stufe erzwingen. Free und Basic
  * teilen sich Standard; HD ist Pro vorbehalten.
  */
 export function qualityForPlan(plan: PlanKey): Quality {
@@ -188,6 +188,6 @@ export function validateImageFiles(files: File[]): { valid: File[]; error: strin
 /** Wie viele Kleidungsstücke ein Plan pro Generierung kombinieren darf. */
 export function maxItemsForPlan(plan: PlanKey): number {
   if (plan === 'pro') return 9;
-  if (plan === 'starter') return 5;
+  if (plan === 'basic') return 5;
   return 1;
 }

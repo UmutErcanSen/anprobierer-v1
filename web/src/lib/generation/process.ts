@@ -4,6 +4,8 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { generateTryOn } from '@/lib/openai/images';
 import { generateSaleText } from '@/lib/openai/text';
 import { buildTryOnPrompt, buildSalePrompt, COMBINED_PROMPT } from '@/lib/generation/prompts';
+import { createLockedPreview } from '@/lib/generation/prepare-image';
+import { lockedImagePath } from '@/lib/generation/lock';
 import { isClothingType, type ClothingType } from '@/lib/generation/constants';
 import type { Quality } from '@/lib/generation/constants';
 
@@ -77,6 +79,7 @@ export async function processGeneration(input: ProcessGenerationInput): Promise<
           anyImage = true;
           model = r.model;
           costUsd += r.costUsd ?? 0;
+          await uploadLockedPreview(admin, path, r.image);
           await pushCard({ itemIndex: -1, title: 'Kombiniertes Bild', imagePath: path, saleText: null });
         } else {
           failures = 1;
@@ -116,6 +119,7 @@ export async function processGeneration(input: ProcessGenerationInput): Promise<
             anyImage = true;
             model = r.model;
             costUsd += r.costUsd ?? 0;
+            await uploadLockedPreview(admin, path, r.image);
           } else {
             failures++;
           }
@@ -160,6 +164,26 @@ export async function processGeneration(input: ProcessGenerationInput): Promise<
     console.error('[process] unerwarteter Fehler', genId, err);
     await admin.rpc('refund_generation', { p_generation_id: genId, p_error_message: 'Unerwarteter Fehler.' });
     await admin.storage.from('uploads').remove([personUpload, ...clothing.map((_, i) => `${dir}/clothing-${i}`)]).catch(() => {});
+  }
+}
+
+/**
+ * Laedt zusaetzlich zum echten Ergebnis eine unscharfe, kleine Vorschau-
+ * Variante hoch (siehe lock.ts/prepare-image.ts) -- fuer Free-Tarif-Nutzer ab
+ * ihrem zweiten Ergebnis. "Best effort": schlaegt das fehl, bleibt das echte
+ * (bezahlte) Bild trotzdem gueltig, nur die Vorschau-Funktion greift dann fuer
+ * genau dieses Bild nicht.
+ */
+async function uploadLockedPreview(
+  admin: ReturnType<typeof createAdminClient>,
+  path: string,
+  image: Buffer,
+): Promise<void> {
+  try {
+    const preview = await createLockedPreview(image);
+    await admin.storage.from('results').upload(lockedImagePath(path), preview, { contentType: 'image/jpeg', upsert: true });
+  } catch (err) {
+    console.error('[process] Vorschau-Variante fehlgeschlagen', path, err);
   }
 }
 

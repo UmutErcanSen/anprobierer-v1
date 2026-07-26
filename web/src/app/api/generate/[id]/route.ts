@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { CREDITS_PER_QUALITY, type Quality } from '@/lib/generation/constants';
+import { CREDITS_PER_QUALITY, type PlanKey, type Quality } from '@/lib/generation/constants';
+import { isGenerationLocked, lockedImagePath, redactSaleText } from '@/lib/generation/lock';
 
 /*
   Status-Endpunkt fuer eine laufende oder abgeschlossene Generierung. Der
@@ -25,17 +26,26 @@ export async function GET(_request: Request, ctx: { params: Promise<{ id: string
   if (!user) return NextResponse.json({ error: 'Nicht angemeldet.' }, { status: 401 });
 
   const admin = createAdminClient();
-  const { data: generation, error } = await admin
-    .from('generations')
-    .select('id, user_id, status, cards, credits_charged, quality, error_message')
-    .eq('id', id)
-    .single();
+  const [{ data: generation, error }, { data: profile }] = await Promise.all([
+    admin
+      .from('generations')
+      .select('id, user_id, status, cards, credits_charged, quality, error_message, is_free_reveal')
+      .eq('id', id)
+      .single(),
+    supabase.from('profiles').select('plan').single(),
+  ]);
 
   // Kein Unterschied zwischen "existiert nicht" und "gehört jemand anderem" —
   // sonst liesse sich durch Ausprobieren erraten, welche IDs es gibt.
   if (error || !generation || generation.user_id !== user.id) {
     return NextResponse.json({ error: 'Generierung nicht gefunden.' }, { status: 404 });
   }
+
+  // Free-Tarif: nur das eine kostenlose Vorschau-Ergebnis ist unverdeckt --
+  // siehe lock.ts. Die Entscheidung faellt HIER, serverseitig: bei einer
+  // verdeckten Generierung bekommt der Client gar nicht erst die echte
+  // Bild-URL oder den vollen Text zu sehen.
+  const locked = isGenerationLocked((profile?.plan as PlanKey) ?? 'free', generation.is_free_reveal);
 
   const cards = (generation.cards ?? []) as CardRow[];
 
@@ -45,9 +55,10 @@ export async function GET(_request: Request, ctx: { params: Promise<{ id: string
     cards.map(async (c) => ({
       itemIndex: c.itemIndex,
       title: c.title,
-      saleText: c.saleText,
+      saleText: locked && c.saleText ? redactSaleText(c.saleText) : c.saleText,
       imageUrl: c.imagePath
-        ? (await admin.storage.from('results').createSignedUrl(c.imagePath, 60 * 60)).data?.signedUrl ?? null
+        ? (await admin.storage.from('results').createSignedUrl(locked ? lockedImagePath(c.imagePath) : c.imagePath, 60 * 60)).data
+            ?.signedUrl ?? null
         : null,
     })),
   );
@@ -73,9 +84,10 @@ export async function GET(_request: Request, ctx: { params: Promise<{ id: string
       creditsCharged: (generation.credits_charged ?? 0) - refunded,
       failures,
       error: generation.status === 'failed' ? generation.error_message : null,
+      locked,
     });
   }
 
   // Noch in Arbeit: Zwischenstand zeigen, damit die Warteansicht nicht leer bleibt.
-  return NextResponse.json({ status: generation.status, cards: signedCards });
+  return NextResponse.json({ status: generation.status, cards: signedCards, locked });
 }

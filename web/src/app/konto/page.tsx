@@ -6,6 +6,8 @@ import { AppHeader } from "@/components/site/app-header";
 import { LinkButton } from "@/components/ui/button";
 import { HistoryCard, type HistoryGeneration } from "@/components/history/history-card";
 import { resolveCardRows } from "@/lib/generation/cards";
+import { isGenerationLocked, lockedImagePath } from "@/lib/generation/lock";
+import type { PlanKey } from "@/lib/generation/constants";
 
 export const metadata: Metadata = { title: "Mein Konto" };
 
@@ -37,14 +39,14 @@ export default async function KontoPage() {
     supabase
       .from("generations")
       .select(
-        "id, status, mode, quality, credits_charged, created_at, cards, result_paths, sale_text, is_favorite, clothing_types, sizes, colors",
+        "id, status, mode, quality, credits_charged, created_at, cards, result_paths, sale_text, is_favorite, clothing_types, sizes, colors, is_free_reveal",
       )
       .order("created_at", { ascending: false })
       .limit(RECENT_COUNT),
   ]);
 
   const credits = balance?.balance ?? 0;
-  const plan = profile?.plan ?? "free";
+  const plan = (profile?.plan as PlanKey) ?? "free";
 
   const recentCardRows = (recentRows ?? []).map((g) => resolveCardRows(g));
   const recent: HistoryGeneration[] = (recentRows ?? []).map((g, i) => ({
@@ -59,12 +61,16 @@ export default async function KontoPage() {
     categories: g.clothing_types ?? [],
     sizes: g.sizes ?? [],
     colors: g.colors ?? [],
+    locked: isGenerationLocked(plan, g.is_free_reveal),
   }));
+  // Verdeckte Generierungen bekommen die unscharfe Vorschau-Variante statt
+  // des echten Bilds (siehe lock.ts) -- niemals die echte URL an den Client.
   const recentThumbnails = await Promise.all(
-    recentCardRows.map(async (cards) => {
+    recentCardRows.map(async (cards, i) => {
       const firstImage = cards.find((c) => c.imagePath)?.imagePath;
       if (!firstImage) return null;
-      const { data } = await supabase.storage.from("results").createSignedUrl(firstImage, 60 * 5);
+      const path = recent[i].locked ? lockedImagePath(firstImage) : firstImage;
+      const { data } = await supabase.storage.from("results").createSignedUrl(path, 60 * 5);
       return data?.signedUrl ?? null;
     }),
   );

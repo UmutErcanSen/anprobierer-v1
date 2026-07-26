@@ -45,3 +45,20 @@ export async function prepareImage(
 
   return { bytes, mimeType: 'image/png' };
 }
+
+/**
+ * Stark verkleinerte, verwaschene Variante eines Ergebnisbilds -- fuer die
+ * Vorschau, die Free-Tarif-Nutzer ab ihrem zweiten Ergebnis statt des echten
+ * Bilds sehen (siehe lock.ts). Wird IMMER erzeugt, auch fuer zahlende Nutzer
+ * (einfacher als bedingte Erzeugung, minimale Zusatzkosten, schuetzt auch bei
+ * einem spaeteren Downgrade). Bewusst als JPEG mit niedriger Qualitaet: klein
+ * genug, um Details/Wasserzeichen der Kleidung nicht erkennbar zu machen,
+ * aber genug Farbe/Form, um Neugier zu wecken.
+ */
+export async function createLockedPreview(resultBytes: Buffer): Promise<Buffer> {
+  return sharp(resultBytes)
+    .resize({ width: 240, withoutEnlargement: true })
+    .blur(18)
+    .jpeg({ quality: 55 })
+    .toBuffer();
+}

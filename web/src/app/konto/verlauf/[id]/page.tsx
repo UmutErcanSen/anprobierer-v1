@@ -6,8 +6,9 @@ import { createClient } from "@/lib/supabase/server";
 import { AppHeader } from "@/components/site/app-header";
 import { LinkButton } from "@/components/ui/button";
 import { ResultView, type ResultCard } from "@/components/generation/result-view";
-import { CREDITS_PER_QUALITY, type Quality } from "@/lib/generation/constants";
+import { CREDITS_PER_QUALITY, type PlanKey, type Quality } from "@/lib/generation/constants";
 import { resolveCardRows } from "@/lib/generation/cards";
+import { isGenerationLocked, lockedImagePath, redactSaleText } from "@/lib/generation/lock";
 
 export const metadata: Metadata = { title: "Anprobe · Verlauf" };
 
@@ -21,13 +22,14 @@ export default async function VerlaufDetailPage(props: PageProps<"/konto/verlauf
   } = await supabase.auth.getUser();
   if (!user) redirect("/anmelden");
 
-  const [{ data: generation }, { data: balance }] = await Promise.all([
+  const [{ data: generation }, { data: balance }, { data: profile }] = await Promise.all([
     supabase
       .from("generations")
-      .select("id, status, mode, quality, credits_charged, created_at, cards, result_paths, sale_text")
+      .select("id, status, mode, quality, credits_charged, created_at, cards, result_paths, sale_text, is_free_reveal")
       .eq("id", id)
       .maybeSingle(),
     supabase.from("credit_balances").select("balance").maybeSingle(),
+    supabase.from("profiles").select("plan").single(),
   ]);
 
   // RLS filtert fremde Zeilen ohnehin heraus -- kein Unterschied zwischen
@@ -36,14 +38,16 @@ export default async function VerlaufDetailPage(props: PageProps<"/konto/verlauf
 
   const credits = balance?.balance ?? 0;
   const cardRows = resolveCardRows(generation);
+  const locked = isGenerationLocked((profile?.plan as PlanKey) ?? "free", generation.is_free_reveal);
 
   const cards: ResultCard[] = await Promise.all(
     cardRows.map(async (c) => ({
       itemIndex: c.itemIndex,
       title: c.title,
-      saleText: c.saleText,
+      saleText: locked && c.saleText ? redactSaleText(c.saleText) : c.saleText,
       imageUrl: c.imagePath
-        ? ((await supabase.storage.from("results").createSignedUrl(c.imagePath, 60 * 60)).data?.signedUrl ?? null)
+        ? ((await supabase.storage.from("results").createSignedUrl(locked ? lockedImagePath(c.imagePath) : c.imagePath, 60 * 60))
+            .data?.signedUrl ?? null)
         : null,
     })),
   );
@@ -97,6 +101,7 @@ export default async function VerlaufDetailPage(props: PageProps<"/konto/verlauf
               title={`Anprobe vom ${dateFormat.format(new Date(generation.created_at))}`}
               footer={<LinkButton href="/anzeige-erstellen">Neue Anprobe erstellen</LinkButton>}
               generationId={generation.id}
+              locked={locked}
             />
           </div>
         )}

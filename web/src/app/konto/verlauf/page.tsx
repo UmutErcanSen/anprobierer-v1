@@ -7,6 +7,8 @@ import { LinkButton } from "@/components/ui/button";
 import { HistoryFilters } from "@/components/history/history-filters";
 import { HistoryCard, type HistoryGeneration } from "@/components/history/history-card";
 import { resolveCardRows } from "@/lib/generation/cards";
+import { isGenerationLocked, lockedImagePath } from "@/lib/generation/lock";
+import type { PlanKey } from "@/lib/generation/constants";
 
 export const metadata: Metadata = { title: "Verlauf" };
 
@@ -45,13 +47,17 @@ export default async function VerlaufPage(props: PageProps<"/konto/verlauf">) {
   const favorit = first(params.favorit) === "1";
   const page = Math.max(1, Number(first(params.page)) || 1);
 
-  const { data: balance } = await supabase.from("credit_balances").select("balance").maybeSingle();
+  const [{ data: balance }, { data: profile }] = await Promise.all([
+    supabase.from("credit_balances").select("balance").maybeSingle(),
+    supabase.from("profiles").select("plan").single(),
+  ]);
   const credits = balance?.balance ?? 0;
+  const plan = (profile?.plan as PlanKey) ?? "free";
 
   let query = supabase
     .from("generations")
     .select(
-      "id, status, mode, quality, credits_charged, created_at, cards, result_paths, sale_text, is_favorite, clothing_types, sizes, colors",
+      "id, status, mode, quality, credits_charged, created_at, cards, result_paths, sale_text, is_favorite, clothing_types, sizes, colors, is_free_reveal",
       { count: "exact" },
     )
     .order("created_at", { ascending: false });
@@ -91,15 +97,19 @@ export default async function VerlaufPage(props: PageProps<"/konto/verlauf">) {
     categories: g.clothing_types ?? [],
     sizes: g.sizes ?? [],
     colors: g.colors ?? [],
+    locked: isGenerationLocked(plan, g.is_free_reveal),
   }));
 
   // Thumbnails frisch signieren -- die Pfade in der DB sind dauerhaft, die
   // signierten URLs laufen ab und duerfen deshalb nicht mitgespeichert werden.
+  // Verdeckte Generierungen bekommen die unscharfe Vorschau-Variante statt
+  // des echten Bilds (siehe lock.ts) -- niemals die echte URL an den Client.
   const thumbnails = await Promise.all(
-    cardRowsByGeneration.map(async (cards) => {
+    cardRowsByGeneration.map(async (cards, i) => {
       const firstImage = cards.find((c) => c.imagePath)?.imagePath;
       if (!firstImage) return null;
-      const { data } = await supabase.storage.from("results").createSignedUrl(firstImage, 60 * 5);
+      const path = generations[i].locked ? lockedImagePath(firstImage) : firstImage;
+      const { data } = await supabase.storage.from("results").createSignedUrl(path, 60 * 5);
       return data?.signedUrl ?? null;
     }),
   );

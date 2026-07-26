@@ -3,6 +3,8 @@ import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { rewriteSaleTextForPlatform, type RewritablePlatform } from '@/lib/openai/platform-text';
+import { isGenerationLocked } from '@/lib/generation/lock';
+import type { PlanKey } from '@/lib/generation/constants';
 
 /*
   Schreibt den Verkaufstext einer Karte fuer eine andere Plattform um
@@ -50,15 +52,21 @@ export async function POST(request: Request, ctx: { params: Promise<{ id: string
   const { itemIndex, platform, baseText: fallbackBaseText } = parsed.data;
 
   const admin = createAdminClient();
-  const { data: generation, error } = await admin
-    .from('generations')
-    .select('id, user_id, cards, cost_usd')
-    .eq('id', id)
-    .single();
+  const [{ data: generation, error }, { data: profile }] = await Promise.all([
+    admin.from('generations').select('id, user_id, cards, cost_usd, is_free_reveal').eq('id', id).single(),
+    supabase.from('profiles').select('plan').single(),
+  ]);
 
   // Kein Unterschied zwischen "existiert nicht" und "gehört jemand anderem".
   if (error || !generation || generation.user_id !== user.id) {
     return NextResponse.json({ error: 'Generierung nicht gefunden.' }, { status: 404 });
+  }
+
+  // Verteidigung in der Tiefe: der Export-Button ist im UI bereits verdeckt
+  // (siehe result-view.tsx), aber ein direkter API-Aufruf muss ebenfalls
+  // scheitern -- sonst liesse sich die Vorschau-Sperre umgehen.
+  if (isGenerationLocked((profile?.plan as PlanKey) ?? 'free', generation.is_free_reveal)) {
+    return NextResponse.json({ error: 'Für dieses Ergebnis ist ein bezahlter Tarif nötig.' }, { status: 403 });
   }
 
   const cards = (generation.cards ?? []) as CardRow[];

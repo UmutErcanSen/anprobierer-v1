@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { Eye, Search, ShieldCheck } from "lucide-react";
 import { LinkButton } from "@/components/ui/button";
 import { SiteHeader } from "@/components/site/site-header";
 import { SiteFooter } from "@/components/site/site-footer";
@@ -30,6 +31,29 @@ const STATS = [
 // Plattformen zu leer. Der Track wird unten zusaetzlich selbst verdoppelt
 // (Bedingung fuer die nahtlose -50%-Schleife).
 const MARQUEE_TRACK = Array.from({ length: 2 }, () => PLATFORMS).flat();
+
+// Bewusst OHNE Prozentzahl ("bis zu 75% mehr verkauft" o.ae.) -- dafuer
+// fehlt jede eigene Datengrundlage (1 Testnutzer bisher), und eine
+// erfundene Zahl untergraebt genau das Vertrauen, das dieser Abschnitt
+// aufbauen soll. Stattdessen nachvollziehbare, fuer sich stehende Gruende,
+// die kein Beleg brauchen.
+const SELL_POINTS = [
+  {
+    icon: Eye,
+    title: "Käufer scrollen weiter",
+    body: "Ein unscharfes Spiegel-Selfie wirkt unseriös. Ein klares Anprobebild zeigt sofort, wie das Stück am Körper sitzt.",
+  },
+  {
+    icon: Search,
+    title: "Besser auffindbar",
+    body: "Ein vollständiger, treffend formulierter Text wird von der Plattform-Suche eher gefunden als eine Zeile Stichworte.",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Weniger Rückfragen",
+    body: "Wer die Passform am Körper sieht, hat vor dem Kauf weniger offene Fragen — das beschleunigt den Verkauf.",
+  },
+];
 
 const STEPS = [
   {
@@ -170,6 +194,27 @@ export default function HomePage() {
                 </div>
               ))}
             </dl>
+          </div>
+        </section>
+
+        {/* Warum bessere Fotos/Texte verkaufen -- bewusst als nachvollziehbare
+            Gruende statt als (unbelegte) Statistik-Behauptung aufgebaut. */}
+        <section className="border-t border-line">
+          <div className="mx-auto w-full max-w-6xl px-6 py-20">
+            <p className="kicker">Mehr als nur ein Foto</p>
+            <h2 className="display mt-5 max-w-2xl text-3xl md:text-5xl">
+              Warum bessere Anzeigen <em>verkaufen</em>.
+            </h2>
+
+            <div className="mt-14 grid gap-8 md:grid-cols-3">
+              {SELL_POINTS.map(({ icon: Icon, title, body }) => (
+                <div key={title}>
+                  <Icon size={22} className="text-accent" aria-hidden />
+                  <h3 className="mt-4 text-lg font-medium tracking-tight text-ink">{title}</h3>
+                  <p className="mt-2 text-[15px] leading-relaxed text-ink-soft">{body}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
 

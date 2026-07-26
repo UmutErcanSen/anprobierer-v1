@@ -9,6 +9,7 @@ import { ResultView, type ResultCard } from "@/components/generation/result-view
 import { CREDITS_PER_QUALITY, type PlanKey, type Quality } from "@/lib/generation/constants";
 import { resolveCardRows } from "@/lib/generation/cards";
 import { isGenerationLocked, lockedImagePath, redactSaleText } from "@/lib/generation/lock";
+import { DeleteGenerationButton } from "@/components/history/delete-generation-button";
 
 export const metadata: Metadata = { title: "Anprobe · Verlauf" };
 
@@ -105,6 +106,10 @@ export default async function VerlaufDetailPage(props: PageProps<"/konto/verlauf
             />
           </div>
         )}
+
+        <div className="mt-10 border-t border-line pt-6">
+          <DeleteGenerationButton generationId={generation.id} />
+        </div>
       </main>
     </>
   );

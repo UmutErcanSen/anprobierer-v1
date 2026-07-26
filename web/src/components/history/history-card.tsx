@@ -64,7 +64,7 @@ export function HistoryCard({ generation, thumbnail }: { generation: HistoryGene
   const { id, status, mode, quality, credits_charged, created_at, imageCount, isFavorite, categories, sizes, colors, locked } =
     generation;
 
-  const categoryLabel = unique(categories.map((c) => CLOTHING_TYPES[c as ClothingType]?.de ?? c)).join(', ');
+  const categoryList = unique(categories.map((c) => CLOTHING_TYPES[c as ClothingType]?.de ?? c));
   const sizeLabel = unique(sizes).join(', ');
   const colorList = unique(colors);
 
@@ -110,28 +110,48 @@ export function HistoryCard({ generation, thumbnail }: { generation: HistoryGene
             {imageCount} {imageCount === 1 ? 'Bild' : 'Bilder'}
             {quality === 'hd' && ' · HD'} · {credits_charged} {credits_charged === 1 ? 'Credit' : 'Credits'}
           </span>
-          {/* Kategorie/Groesse als Text (aus CLOTHING_TYPES uebersetzt bzw.
-              wie erfasst), Farbe als kleine Musterkreise statt Namen -- bei
-              mehreren Stuecken pro Generierung sonst schnell zu lang fuer
-              eine schmale Karte. Nur anzeigen, wenn ueberhaupt Daten da sind
-              (aeltere Generierungen vor der Attribut-Migration haben keine). */}
-          {(categoryLabel || sizeLabel || colorList.length > 0) && (
-            <span className="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-muted">
-              {categoryLabel && <span className="truncate">{categoryLabel}</span>}
-              {sizeLabel && <span>{sizeLabel}</span>}
+          {/* Kategorie und Farbe je in eigener Zeile statt in einer
+              gemeinsamen Zeile mit der Groesse -- bei mehreren Stuecken pro
+              Generierung liefen Kategorie/Groesse/Farbe-Punkte vorher schnell
+              zusammen und waren auf einen Blick schwer auseinanderzuhalten.
+              Als Tag/Pill statt Fliesstext, damit jeder Wert als eigenstaen-
+              diger Chip erkennbar ist -- die Farbe traegt ihren Musterkreis
+              direkt im Tag statt als separate Punktreihe. Nur anzeigen, wenn
+              ueberhaupt Daten da sind (aeltere Generierungen vor der
+              Attribut-Migration haben keine). */}
+          {(categoryList.length > 0 || colorList.length > 0) && (
+            <div className="mt-1.5 flex flex-col gap-1">
+              {categoryList.length > 0 && (
+                <div className="flex flex-wrap gap-1">
+                  {categoryList.map((c) => (
+                    <span
+                      key={c}
+                      className="truncate rounded-full border border-line-strong bg-surface px-2 py-0.5 text-[11px] text-ink-soft"
+                    >
+                      {c}
+                      {sizeLabel ? ` · ${sizeLabel}` : ''}
+                    </span>
+                  ))}
+                </div>
+              )}
               {colorList.length > 0 && (
-                <span className="flex items-center gap-1">
+                <div className="flex flex-wrap gap-1">
                   {colorList.map((c) => (
                     <span
                       key={c}
-                      title={c}
-                      className="h-2.5 w-2.5 shrink-0 rounded-full border border-line-strong"
-                      style={{ background: COLOR_SWATCH[c as keyof typeof COLOR_SWATCH] ?? c }}
-                    />
+                      className="flex items-center gap-1 rounded-full border border-line-strong bg-surface px-2 py-0.5 text-[11px] text-ink-soft"
+                    >
+                      <span
+                        className="h-2 w-2 shrink-0 rounded-full border border-line-strong"
+                        aria-hidden
+                        style={{ background: COLOR_SWATCH[c as keyof typeof COLOR_SWATCH] ?? c }}
+                      />
+                      {c}
+                    </span>
                   ))}
-                </span>
+                </div>
               )}
-            </span>
+            </div>
           )}
         </div>
       </Link>

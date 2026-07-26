@@ -58,10 +58,13 @@ export function GenerationIconPanel({ progressIdx, pct }: { progressIdx: number;
         />
       </svg>
 
-      {/* key erzwingt ein Neu-Mounten bei jedem Schrittwechsel, damit die
-          icon-pop-Animation garantiert frisch abspielt (gleiches Prinzip wie
-          der Generieren-Button in generate-flow.tsx). */}
-      <Icon key={progressIdx} size={40} className="icon-pop relative text-ink" aria-hidden />
+      {/* icon-breathe sitzt auf dem WRAPPER (kein key) und laeuft dadurch
+          durchgehend weiter, auch waehrend das innere Icon per key-Remount
+          bei jedem Schrittwechsel neu "poppt" -- so bewegt sich das Panel
+          die ganze Wartezeit ueber, nicht nur kurz bei jedem Schrittwechsel. */}
+      <div className="icon-breathe relative">
+        <Icon key={progressIdx} size={40} className="icon-pop text-ink" aria-hidden />
+      </div>
     </div>
   );
 }

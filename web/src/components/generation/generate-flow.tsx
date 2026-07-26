@@ -595,13 +595,17 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
               {/* Auf Mobil Foto ueber den Feldern statt daneben -- die
                   Dropdowns bekommen dadurch die volle Breite statt sich neben
                   einer 112px breiten Fotospalte zu quetschen. Ab sm wieder
-                  nebeneinander wie gehabt. */}
-              <div className="mx-auto w-28 shrink-0 sm:mx-0">
+                  nebeneinander wie gehabt. w-full statt einer festen Breite:
+                  vorher blieb der Rahmen auch auf Mobil bei 112px (w-28) und
+                  liess links/rechts viel ungenutzten Platz -- erst ab sm
+                  greift wieder die schmale Spaltenbreite. */}
+              <div className="w-full shrink-0 sm:w-28">
                 <PhotoField
                   id={`item-${item.id}`}
                   label={`Stück ${idx + 1}`}
                   file={item.file}
                   onFiles={(files) => assignFiles(idx, files)}
+                  className="aspect-square sm:aspect-auto sm:h-full sm:min-h-44"
                 />
               </div>
 

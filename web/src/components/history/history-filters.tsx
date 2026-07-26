@@ -101,7 +101,13 @@ function SingleSelect({
         <ChevronDown size={14} className="text-muted" aria-hidden />
       </summary>
 
-      <div className="absolute left-0 top-[calc(100%+6px)] z-20 w-full min-w-48 overflow-hidden rounded-lg border border-line-strong bg-paper p-1 shadow-sm sm:w-48">
+      {/* static auf Mobil statt absolute: im Filter-Sheet ueberlappte das
+          Panel sonst als Overlay die Buttons darunter (Favoriten, "Ergebnisse
+          anzeigen") -- verrutscht und schwer bedienbar. Static reserviert
+          echten Platz im ohnehin scrollbaren Sheet (Akkordeon-Verhalten).
+          Ab sm (Desktop-Zeile mit viel Leerraum drumherum) bleibt es ein
+          echtes Overlay wie zuvor. */}
+      <div className="static mt-1.5 w-full min-w-48 overflow-hidden rounded-lg border border-line-strong bg-paper p-1 shadow-sm sm:absolute sm:left-0 sm:top-[calc(100%+6px)] sm:z-20 sm:mt-0 sm:w-48">
         {options.map((opt) => (
           <button
             key={opt.value}
@@ -165,7 +171,8 @@ function MultiSelect({
         <ChevronDown size={14} className="text-muted" aria-hidden />
       </summary>
 
-      <div className="absolute left-0 top-[calc(100%+6px)] z-20 max-h-72 w-full min-w-60 overflow-y-auto rounded-lg border border-line-strong bg-paper p-2 shadow-sm sm:w-60">
+      {/* static auf Mobil, siehe SingleSelect oben fuer die Begruendung. */}
+      <div className="static mt-1.5 max-h-60 w-full min-w-60 overflow-y-auto rounded-lg border border-line-strong bg-paper p-2 shadow-sm sm:absolute sm:left-0 sm:top-[calc(100%+6px)] sm:z-20 sm:mt-0 sm:max-h-72 sm:w-60">
         {options.map((opt) => (
           <label
             key={opt.value}

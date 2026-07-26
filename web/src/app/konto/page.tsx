@@ -107,7 +107,14 @@ export default async function KontoPage() {
             Rueckerstattung und ein Abrechnungsdatum vortaeuschen, die es
             technisch noch nicht gibt (Stripe/Abo-Webhooks stehen noch aus,
             siehe Aufgabe #5/#6) -- also nur Werte zeigen, die wirklich stimmen. */}
-        <div className="mt-10 flex items-baseline gap-4">
+        {/* items-center statt items-baseline: bei so unterschiedlichen
+            Schriftgroessen (48px vs. 12-14px) liegt die Baseline der kleinen
+            Zeilen naeher an ihrer eigenen Boxmitte als an der Baseline der
+            grossen Zahl -- das Ergebnis wirkte trotz "korrekter" Baseline-
+            Ausrichtung leicht verschoben. items-center zentriert den
+            Textblock optisch an der Zahl, das balanciert sich bei diesem
+            Groessenunterschied sauberer aus. */}
+        <div className="mt-10 flex items-center gap-4">
           <span className="text-5xl font-medium tracking-tight text-ink tabular-nums">{credits}</span>
           <div>
             <p className="text-sm text-ink-soft">{credits === 1 ? "Credit übrig" : "Credits übrig"}</p>

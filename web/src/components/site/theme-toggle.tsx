@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Moon, Sun } from 'lucide-react';
+import { SunMoon } from 'lucide-react';
 
 /*
   Hell/Dunkel-Umschalter. Hell ist Standard; Dunkel wird per data-theme am
@@ -9,17 +9,12 @@ import { Moon, Sun } from 'lucide-react';
   uebernimmt das Inline-Skript im <head> (siehe layout.tsx) — dieser Button
   spiegelt nur den Zustand und schaltet um.
 
-  Zwei Varianten:
-    'icon' — kompakter Rundknopf fuer den Header (nur Icon, per `display`
-             gesteuerte Sichtbarkeit).
-    'row'  — volle Zeile fuers Mobil-Menue: Label benennt die AKTION statt
-             eines statischen "Design" ("Dunkles Design aktivieren"), Icon
-             sitzt direkt neben dem Text statt an den rechten Rand gespreizt
-             (vorher `justify-between` liess Text und Icon wie zwei getrennte
-             Elemente wirken, obwohl beide zusammen einen einzigen Schalter
-             bilden).
+  Steht jetzt IMMER sichtbar im Header (vorher auf Mobil im Burger-Menue
+  versteckt -- ein taeglich genutzter Schalter sollte nicht zwei Taps
+  entfernt sein). Eigener Rahmen statt reinem Ghost-Icon, damit er neben den
+  Textlinks im Header als eigenstaendiger Knopf erkennbar bleibt.
 */
-export function ThemeToggle({ display = 'flex', variant = 'icon' }: { display?: string; variant?: 'icon' | 'row' }) {
+export function ThemeToggle() {
   const [dark, setDark] = useState(false);
 
   useEffect(() => {
@@ -37,30 +32,14 @@ export function ThemeToggle({ display = 'flex', variant = 'icon' }: { display?: 
     }
   }
 
-  if (variant === 'row') {
-    return (
-      <button
-        type="button"
-        onClick={toggle}
-        className="flex w-full items-center gap-3 border-b border-line py-4 text-left text-lg text-ink"
-      >
-        {dark ? <Sun size={18} aria-hidden /> : <Moon size={18} aria-hidden />}
-        {dark ? 'Helles Design aktivieren' : 'Dunkles Design aktivieren'}
-      </button>
-    );
-  }
-
   return (
     <button
       type="button"
       onClick={toggle}
       aria-label={dark ? 'Zu hellem Design wechseln' : 'Zu dunklem Design wechseln'}
-      // `display` als eigener Parameter (statt freier className), damit der
-      // Aufrufer nur die Sichtbarkeit steuert (z.B. "hidden md:flex" im
-      // Header-Kontext), ohne aus Versehen Groesse/Farbe zu ueberschreiben.
-      className={`${display} h-9 w-9 items-center justify-center rounded-full text-muted transition-colors hover:bg-surface hover:text-ink`}
+      className="flex h-9 w-9 items-center justify-center rounded-full border border-line text-ink transition-colors hover:border-line-strong hover:bg-surface"
     >
-      {dark ? <Sun size={18} aria-hidden /> : <Moon size={18} aria-hidden />}
+      <SunMoon size={17} aria-hidden />
     </button>
   );
 }

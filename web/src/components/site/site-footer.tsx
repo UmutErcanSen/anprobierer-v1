@@ -1,4 +1,22 @@
 import Link from "next/link";
+import { siVisa, siMastercard, siPaypal, siApplepay, siGooglepay, type SimpleIcon } from "simple-icons";
+
+/*
+  Monochrome statt Markenfarben: ein einzelner bunter Logo-Streifen (Blau,
+  Gelb, Rot, Schwarz nebeneinander) haette dem "eine Akzentfarbe"-Prinzip der
+  restlichen Seite widersprochen. `currentColor` uebernimmt stattdessen die
+  gedeckte --muted-Textfarbe der Zeile, die Logos bleiben trotzdem an ihrer
+  Form erkennbar.
+*/
+function PaymentIcon({ icon }: { icon: SimpleIcon }) {
+  return (
+    <svg role="img" viewBox="0 0 24 24" width={20} height={20} fill="currentColor" aria-label={icon.title}>
+      <path d={icon.path} />
+    </svg>
+  );
+}
+
+const PAYMENT_ICONS = [siVisa, siMastercard, siPaypal, siApplepay, siGooglepay];
 
 export function SiteFooter() {
   return (
@@ -11,6 +29,20 @@ export function SiteFooter() {
           <Link href="/impressum" className="transition-colors hover:text-ink">Impressum</Link>
         </nav>
         <span>© {new Date().getFullYear()} Anprobierer</span>
+      </div>
+
+      {/* Noch nicht buchbar (Stripe-Anbindung steht aus, siehe TODO) --
+          deshalb bewusst als "bald" formuliert statt eine bereits aktive
+          Zahlungsfaehigkeit zu suggerieren. */}
+      <div className="border-t border-line">
+        <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-3 px-6 py-6 text-xs text-muted sm:flex-row sm:justify-center md:justify-start">
+          <span>Bezahlung bald möglich mit</span>
+          <div className="flex items-center gap-3 text-muted">
+            {PAYMENT_ICONS.map((icon) => (
+              <PaymentIcon key={icon.title} icon={icon} />
+            ))}
+          </div>
+        </div>
       </div>
     </footer>
   );

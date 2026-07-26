@@ -47,9 +47,9 @@ export async function SiteHeader() {
         </nav>
 
         <div className="flex items-center gap-3">
-          {/* Auf Mobil wandert der Umschalter ins Burger-Menue (siehe unten);
-              ab md bleibt er wie bisher direkt im Header sichtbar. */}
-          <ThemeToggle display="hidden md:flex" />
+          {/* Immer sichtbar (auch auf Mobil) -- ein taeglich genutzter
+              Schalter gehoert nicht ins Burger-Menue, zwei Taps entfernt. */}
+          <ThemeToggle />
           <span className="hidden h-5 w-px bg-line md:inline-block" aria-hidden="true" />
           {/* Sichtbarkeit ueber einen Wrapper steuern, nicht direkt am Button:
               Button/LinkButton bringen selbst schon ein unbedingtes
@@ -67,9 +67,10 @@ export async function SiteHeader() {
               {cta.label}
             </LinkButton>
           </span>
-          <MobileNav items={[...nav, cta]}>
-            <ThemeToggle variant="row" />
-          </MobileNav>
+          {/* cta zuerst: die wichtigste Aktion ("Mein Konto"/"Kostenlos
+              starten") soll im Menue oben stehen, nicht hinter den
+              Info-Links verschwinden. */}
+          <MobileNav items={[cta, ...nav]} />
         </div>
       </div>
     </header>

@@ -52,7 +52,7 @@ const PLANS: Plan[] = [
   },
   {
     name: "Pro",
-    price: "24,99 €",
+    price: "19,99 €",
     period: "/ Monat",
     credits: "200 Credits monatlich",
     features: ["HD-Qualität freigeschaltet", "Bis zu 9 Kleidungsstücke pro Anprobe", "Verkaufstexte inklusive", "Bevorzugter Support"],

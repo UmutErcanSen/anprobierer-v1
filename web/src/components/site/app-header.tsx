@@ -42,13 +42,12 @@ export function AppHeader({ credits }: { credits?: number }) {
             </Link>
           </nav>
 
-          {/* Trennlinie isoliert die Utility-Icons (Theme) von den Textlinks
-              und der Abmelden-Aktion. Ab md sichtbar, weil der Theme-
-              Umschalter selbst erst ab md inline erscheint (auf Mobil steckt
-              er im Burger-Menue). */}
+          {/* Trennlinie isoliert die Utility-Icons vom Theme-Umschalter. */}
           <span className="hidden h-5 w-px bg-line md:inline-block" aria-hidden="true" />
 
-          <ThemeToggle display="hidden md:flex" />
+          {/* Immer sichtbar (auch auf Mobil) -- ein taeglich genutzter
+              Schalter gehoert nicht ins Burger-Menue, zwei Taps entfernt. */}
+          <ThemeToggle />
 
           {/* Leicht roter Ton (der App-Akzent ist ohnehin ein warmes
               Terrakotta) signalisiert "verlaesst den Bereich", ohne eine
@@ -60,18 +59,17 @@ export function AppHeader({ credits }: { credits?: number }) {
             </button>
           </form>
 
-          {/* Auf Mobil ersetzt das Burger-Menue Erstellen/Konto/Theme/
-              Abmelden komplett -- vorher gab es dafuer gar keinen Ersatz,
-              die Links verschwanden unterhalb von sm einfach ohne
-              Alternative. */}
+          {/* Auf Mobil ersetzt das Burger-Menue Erstellen/Verlauf/Konto/
+              Abmelden komplett. Konto zuerst: die wichtigste Zieladresse
+              (Guthaben, Verlauf-Zugriff) soll oben stehen, nicht hinter
+              "Erstellen"/"Verlauf" verschwinden. */}
           <MobileNav
             items={[
+              { href: "/konto", label: "Konto" },
               { href: "/anzeige-erstellen", label: "Erstellen" },
               { href: "/konto/verlauf", label: "Verlauf" },
-              { href: "/konto", label: "Konto" },
             ]}
           >
-            <ThemeToggle variant="row" />
             <form action={signOutAction}>
               <button type="submit" className="w-full py-4 text-left text-lg text-accent/80 transition-colors hover:text-accent">
                 Abmelden

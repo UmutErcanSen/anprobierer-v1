@@ -189,7 +189,11 @@ export default function HomePage() {
               ))}
             </div>
 
-            <div className="mt-14 flex flex-col items-start gap-4 sm:flex-row sm:items-center">
+            {/* items-center statt items-start: auf Mobil sonst linksbuendig,
+                obwohl Button+Text als eigener Block optisch mittig wirken
+                sollen (anders als die Ueberschrift darueber, die bewusst
+                linksbuendig bleibt). Ab sm wieder normale Zeile. */}
+            <div className="mt-14 flex flex-col items-center gap-4 text-center sm:flex-row sm:items-center sm:text-left">
               <LinkButton href="/registrieren" size="lg">Jetzt kostenlos starten</LinkButton>
               <span className="text-sm text-muted">Erstes Ergebnis gratis · keine Zahlungsdaten nötig</span>
             </div>

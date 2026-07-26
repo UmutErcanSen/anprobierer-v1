@@ -101,7 +101,11 @@ function PhotoField({
   function handleDrop(e: React.DragEvent) {
     e.preventDefault();
     setOver(false);
-    const dropped = Array.from(e.dataTransfer.files).filter((f) => f.type.startsWith('image/'));
+    // Leerer file.type NICHT hier aussortieren -- manche Browser liefern bei
+    // HEIC-Fotos (iPhone-Standardformat) gar keinen MIME-Typ. Die eigentliche
+    // Format-Pruefung (inkl. HEIC-Erkennung per Dateiendung) uebernimmt
+    // validateImageFiles() in handleFiles.
+    const dropped = Array.from(e.dataTransfer.files).filter((f) => f.type === '' || f.type.startsWith('image/'));
     handleFiles(dropped);
   }
 

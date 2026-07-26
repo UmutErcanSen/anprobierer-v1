@@ -7,9 +7,9 @@ import { prepareImage } from '@/lib/generation/prepare-image';
 import { processGeneration, type PreparedImage } from '@/lib/generation/process';
 import { rateLimitError } from '@/lib/generation/rate-limit';
 import {
-  ALLOWED_UPLOAD_MIME,
   CREDITS_PER_QUALITY,
   MAX_UPLOAD_BYTES,
+  isAllowedImageFile,
   isClothingType,
   maxItemsForPlan,
   qualityForPlan,
@@ -47,7 +47,7 @@ const scalarSchema = z.object({
 });
 
 function fileError(file: File): string | null {
-  if (!(ALLOWED_UPLOAD_MIME as readonly string[]).includes(file.type)) return 'Nur JPG, PNG oder WebP sind erlaubt.';
+  if (!isAllowedImageFile(file.type, file.name)) return 'Nur JPG, PNG, WebP oder HEIC (iPhone-Fotos) sind erlaubt.';
   if (file.size > MAX_UPLOAD_BYTES) return 'Jedes Bild darf höchstens 10 MB groß sein.';
   if (file.size === 0) return 'Eine hochgeladene Datei ist leer.';
   return null;
@@ -56,7 +56,7 @@ function fileError(file: File): string | null {
 /** Liest die Datei sofort in einen Buffer — nötig, weil nach der Antwort
  *  (in after()) der ursprüngliche Request-Stream nicht mehr existiert. */
 async function toPrepared(file: File, filename: string): Promise<PreparedImage> {
-  const p = await prepareImage(Buffer.from(await file.arrayBuffer()));
+  const p = await prepareImage(Buffer.from(await file.arrayBuffer()), file.type, file.name);
   return { bytes: p.bytes, filename, mimeType: p.mimeType };
 }
 

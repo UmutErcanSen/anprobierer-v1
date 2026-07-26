@@ -130,7 +130,30 @@ export const IMAGE_SIZE = '1024x1536';
 
 /** Grenzen für Uploads, serverseitig erzwungen. */
 export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024; // 10 MB
-export const ALLOWED_UPLOAD_MIME = ['image/jpeg', 'image/png', 'image/webp'] as const;
+/**
+ * iPhones speichern Fotos standardmaessig als HEIC/HEIF (Kameraeinstellung
+ * "Hohe Effizienz") -- ohne diese beiden Typen waeren Anproben von iOS aus
+ * praktisch die Regel, nicht die Ausnahme, sofort blockiert. `sharp` kann
+ * HEIC/HEIF nicht direkt decodieren (der HEVC-Codec fehlt in den
+ * vorkompilierten Builds aus Lizenzgruenden) -- siehe die Konvertierung
+ * per `heic-convert` in prepare-image.ts, BEVOR die Bytes an sharp gehen.
+ */
+export const ALLOWED_UPLOAD_MIME = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'] as const;
+/** Manche Browser (u.a. aeltere Safari-Versionen unter iOS) liefern bei
+ *  HEIC-Dateien einen leeren file.type statt "image/heic" -- anhand der
+ *  Dateiendung nachreichen, statt die Datei faelschlich abzulehnen. */
+const HEIC_EXTENSIONS = ['.heic', '.heif'] as const;
+
+/** Zentrale Format-Pruefung, von validateImageFiles() (Client) UND
+ *  fileError() in api/generate/route.ts (Server) genutzt -- beide muessen
+ *  exakt dieselbe Regel anwenden. */
+export function isAllowedImageFile(type: string, filename: string): boolean {
+  if ((ALLOWED_UPLOAD_MIME as readonly string[]).includes(type)) return true;
+  const lower = filename.toLowerCase();
+  return type === '' && HEIC_EXTENSIONS.some((ext) => lower.endsWith(ext));
+}
+
+const UNSUPPORTED_FORMAT_ERROR = 'Nur JPG, PNG, WebP oder HEIC (iPhone-Fotos) sind erlaubt.';
 
 /**
  * Dieselbe Pruefung wie fileError() in api/generate/route.ts, aber CLIENT-
@@ -140,13 +163,12 @@ export const ALLOWED_UPLOAD_MIME = ['image/jpeg', 'image/png', 'image/webp'] as 
  * Pruefung bleibt trotzdem bestehen (Client-Validierung ist umgehbar).
  */
 export function validateImageFiles(files: File[]): { valid: File[]; error: string | null } {
-  const allowed = new Set<string>(ALLOWED_UPLOAD_MIME);
   const valid: File[] = [];
   let error: string | null = null;
 
   for (const file of files) {
-    if (!allowed.has(file.type)) {
-      error = 'Nur JPG, PNG oder WebP sind erlaubt.';
+    if (!isAllowedImageFile(file.type, file.name)) {
+      error = UNSUPPORTED_FORMAT_ERROR;
       continue;
     }
     if (file.size > MAX_UPLOAD_BYTES) {

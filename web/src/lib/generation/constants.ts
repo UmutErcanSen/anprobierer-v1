@@ -132,6 +132,37 @@ export const IMAGE_SIZE = '1024x1536';
 export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024; // 10 MB
 export const ALLOWED_UPLOAD_MIME = ['image/jpeg', 'image/png', 'image/webp'] as const;
 
+/**
+ * Dieselbe Pruefung wie fileError() in api/generate/route.ts, aber CLIENT-
+ * seitig VOR dem Hochladen. Ohne das ging jede ungueltige Datei (falsches
+ * Format, zu gross) erst komplett zum Server, bevor der Fehler zurueckkam --
+ * unnoetiger Zeit-/Datenverbrauch gerade auf Mobilfunk. Serverseitige
+ * Pruefung bleibt trotzdem bestehen (Client-Validierung ist umgehbar).
+ */
+export function validateImageFiles(files: File[]): { valid: File[]; error: string | null } {
+  const allowed = new Set<string>(ALLOWED_UPLOAD_MIME);
+  const valid: File[] = [];
+  let error: string | null = null;
+
+  for (const file of files) {
+    if (!allowed.has(file.type)) {
+      error = 'Nur JPG, PNG oder WebP sind erlaubt.';
+      continue;
+    }
+    if (file.size > MAX_UPLOAD_BYTES) {
+      error = 'Jedes Bild darf höchstens 10 MB groß sein.';
+      continue;
+    }
+    if (file.size === 0) {
+      error = 'Diese Datei ist leer.';
+      continue;
+    }
+    valid.push(file);
+  }
+
+  return { valid, error };
+}
+
 /** Wie viele Kleidungsstücke ein Plan pro Generierung kombinieren darf. */
 export function maxItemsForPlan(plan: PlanKey): number {
   if (plan === 'pro') return 9;

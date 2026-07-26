@@ -16,6 +16,7 @@ import {
   CREDITS_PER_QUALITY,
   maxItemsForPlan,
   qualityForPlan,
+  validateImageFiles,
   type PlanKey,
 } from '@/lib/generation/constants';
 
@@ -86,12 +87,22 @@ function PhotoField({
 }) {
   const preview = usePreview(file);
   const [over, setOver] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Validiert VOR dem Weiterreichen an den Aufrufer -- ungueltige Dateien
+  // (falsches Format, zu gross, leer) werden hier abgefangen, statt sie erst
+  // beim Server-Request scheitern zu lassen (siehe validateImageFiles).
+  function handleFiles(raw: File[]) {
+    const { valid, error: validationError } = validateImageFiles(raw);
+    setError(validationError);
+    if (valid.length) onFiles(valid);
+  }
 
   function handleDrop(e: React.DragEvent) {
     e.preventDefault();
     setOver(false);
     const dropped = Array.from(e.dataTransfer.files).filter((f) => f.type.startsWith('image/'));
-    if (dropped.length) onFiles(dropped);
+    handleFiles(dropped);
   }
 
   return (
@@ -134,13 +145,22 @@ function PhotoField({
         </span>
       )}
 
+      {error && (
+        <span
+          role="alert"
+          className="pointer-events-none absolute inset-x-2 bottom-2 rounded-md bg-paper/95 px-2 py-1 text-[11px] text-accent"
+        >
+          {error}
+        </span>
+      )}
+
       <input
         id={id}
         type="file"
         accept="image/*"
         multiple
         className="sr-only"
-        onChange={(e) => onFiles(Array.from(e.target.files ?? []))}
+        onChange={(e) => handleFiles(Array.from(e.target.files ?? []))}
       />
     </label>
   );

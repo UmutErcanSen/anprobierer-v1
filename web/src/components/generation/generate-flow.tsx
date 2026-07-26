@@ -9,6 +9,7 @@ import { ColorSelect } from '@/components/ui/color-select';
 import { InfoTip } from '@/components/ui/info-tip';
 import { TipModal } from '@/components/ui/tip-modal';
 import { ResultView, type ResultCard } from '@/components/generation/result-view';
+import { GenerationIconPanel } from '@/components/generation/generation-icon-panel';
 import {
   CLOTHING_TYPES,
   SIZES,
@@ -361,67 +362,88 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
   }
 
   // ---------------------------------------------------------------- Ergebnis
+  //
+  // md:mx-auto + md:max-w-2xl: Das Eingabeformular hat sein eigenes
+  // Zweispalten-Layout (Fotospalte randbuendig, siehe unten), das <main> der
+  // Seite laesst dafuer bewusst jede Breitenbegrenzung weg. Wartephase und
+  // Ergebnis haben aber KEIN eigenes Layout und erben sonst dieselbe volle
+  // Breite -- auf Desktop zog sich die Karte dadurch randlos ueber den ganzen
+  // Bildschirm. Dieselbe max-w-2xl/px-12/py-10-Kombination wie die
+  // Einstellungsspalte im Formular sorgt fuer eine konsistente, lesbare
+  // Breite in allen drei Phasen.
   if (status === 'done') {
     return (
-      <ResultView
-        cards={cards}
-        failures={failures}
-        remaining={remaining}
-        onReset={reset}
-        generationId={generationId ?? undefined}
-      />
+      <div className="md:mx-auto md:max-w-2xl md:px-12 md:py-10">
+        <ResultView
+          cards={cards}
+          failures={failures}
+          remaining={remaining}
+          onReset={reset}
+          generationId={generationId ?? undefined}
+        />
+      </div>
     );
   }
 
   // -------------------------------------------------------------- Wartephase
+  //
+  // md:max-w-3xl statt max-w-2xl (siehe "Ergebnis"-Zweig oben): das
+  // Icon-Panel kommt als feste 220px-Spalte dazu, ohne die Textspalte zu
+  // stauchen.
   if (status === 'generating') {
     const pct = Math.round(((progressIdx + 1) / PROGRESS.length) * 100);
     return (
-      <div className="flex flex-col gap-5 rounded-xl border border-line p-6">
-        <div className="flex items-center gap-3">
-          <Loader2 size={18} className="animate-spin text-ink" aria-hidden />
-          <h1 className="text-lg font-medium text-ink">Deine Anprobe entsteht …</h1>
+      <div className="md:mx-auto md:max-w-3xl md:px-12 md:py-10">
+        <div className="flex flex-col overflow-hidden rounded-xl border border-line md:flex-row">
+          <GenerationIconPanel progressIdx={progressIdx} pct={pct} />
+
+          <div className="flex flex-1 flex-col gap-5 p-6">
+            <div className="flex items-center gap-3">
+              <Loader2 size={18} className="animate-spin text-ink" aria-hidden />
+              <h1 className="text-lg font-medium text-ink">Deine Anprobe entsteht …</h1>
+            </div>
+
+            <div className="h-1.5 w-full overflow-hidden rounded-full bg-line">
+              <div className="h-full rounded-full bg-success transition-all duration-700 ease-out" style={{ width: `${pct}%` }} />
+            </div>
+
+            <ul className="flex flex-col gap-2.5">
+              {PROGRESS.map((label, i) => {
+                const done = i < progressIdx;
+                const active = i === progressIdx;
+                return (
+                  <li
+                    key={label}
+                    className={`flex items-center gap-3 text-sm transition-colors ${
+                      done ? 'text-ink' : active ? 'font-medium text-ink' : 'text-muted/60'
+                    }`}
+                  >
+                    <span
+                      className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full transition-colors ${
+                        done
+                          ? 'bg-success text-paper'
+                          : active
+                            ? 'border-2 border-ink'
+                            : 'border border-line'
+                      }`}
+                    >
+                      {done ? <Check size={12} strokeWidth={3} aria-hidden /> : active ? <Loader2 size={11} className="animate-spin" aria-hidden /> : null}
+                    </span>
+                    {label}
+                  </li>
+                );
+              })}
+            </ul>
+
+            <p className="text-xs text-muted">
+              {imageCount > 1
+                ? liveCards.filter((c) => c.imageUrl).length > 0
+                  ? `${liveCards.filter((c) => c.imageUrl).length} von ${imageCount} Bildern fertig …`
+                  : `${imageCount} Bilder — das dauert ein paar Minuten.`
+                : 'Das dauert in der Regel unter einer Minute.'}
+            </p>
+          </div>
         </div>
-
-        <div className="h-1.5 w-full overflow-hidden rounded-full bg-line">
-          <div className="h-full rounded-full bg-success transition-all duration-700 ease-out" style={{ width: `${pct}%` }} />
-        </div>
-
-        <ul className="flex flex-col gap-2.5">
-          {PROGRESS.map((label, i) => {
-            const done = i < progressIdx;
-            const active = i === progressIdx;
-            return (
-              <li
-                key={label}
-                className={`flex items-center gap-3 text-sm transition-colors ${
-                  done ? 'text-ink' : active ? 'font-medium text-ink' : 'text-muted/60'
-                }`}
-              >
-                <span
-                  className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full transition-colors ${
-                    done
-                      ? 'bg-success text-paper'
-                      : active
-                        ? 'border-2 border-ink'
-                        : 'border border-line'
-                  }`}
-                >
-                  {done ? <Check size={12} strokeWidth={3} aria-hidden /> : active ? <Loader2 size={11} className="animate-spin" aria-hidden /> : null}
-                </span>
-                {label}
-              </li>
-            );
-          })}
-        </ul>
-
-        <p className="text-xs text-muted">
-          {imageCount > 1
-            ? liveCards.filter((c) => c.imageUrl).length > 0
-              ? `${liveCards.filter((c) => c.imageUrl).length} von ${imageCount} Bildern fertig …`
-              : `${imageCount} Bilder — das dauert ein paar Minuten.`
-            : 'Das dauert in der Regel unter einer Minute.'}
-        </p>
       </div>
     );
   }

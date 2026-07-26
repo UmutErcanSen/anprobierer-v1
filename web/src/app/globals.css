@@ -160,6 +160,31 @@ body {
   will-change: transform;
 }
 
+/* Icon-Panel der Wartephase (siehe generation-icon-panel.tsx): einmaliger
+   "Pop", wenn das Icon per key-Remount beim Schrittwechsel neu einblendet --
+   analog zu pop-ready oben, selbes Prinzip, andere Stelle. */
+@keyframes icon-pop {
+  0% { transform: scale(0.6); opacity: 0; }
+  60% { transform: scale(1.08); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.icon-pop {
+  animation: icon-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Zufaellig ueber die Flaeche verstreute Funken im Icon-Panel -- rein
+   dekoratives Ambiente, bewusst NICHT an progressIdx gekoppelt (die Positionen
+   waeren sonst bei jedem Schrittwechsel neu zu berechnen, ohne sichtbaren
+   Mehrwert). Jeder Funke bekommt ueber ein individuelles animation-delay
+   einen eigenen Rhythmus, dadurch blitzt nie mehr als 1-2 gleichzeitig auf.*/
+@keyframes sparkle-twinkle {
+  0%, 100% { opacity: 0; transform: scale(0.4) rotate(0deg); }
+  50% { opacity: 0.9; transform: scale(1.15) rotate(20deg); }
+}
+.sparkle {
+  animation: sparkle-twinkle 3.2s ease-in-out infinite;
+}
+
 /* Sichtbarer, konsistenter Fokusrahmen fuer Tastaturbedienung. */
 :focus-visible {
   outline: 2px solid var(--ink);

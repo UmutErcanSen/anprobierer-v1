@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useTransition } from 'react';
 import { createPortal } from 'react-dom';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { ChevronDown, Loader2, SlidersHorizontal, Star, X } from 'lucide-react';
+import { Check, ChevronDown, ChevronLeft, ChevronRight, Loader2, SlidersHorizontal, Star, X } from 'lucide-react';
 import { CLOTHING_TYPES, SIZES, COLORS, COLOR_SWATCH } from '@/lib/generation/constants';
 
 /*
@@ -202,6 +202,105 @@ function MultiSelect({
   );
 }
 
+/** Optimistischer lokaler State, synct sich mit einem von aussen kommenden
+ * Wert (URL-Prop) -- dasselbe Prinzip wie in SingleSelect/MultiSelect oben,
+ * hier als Hook, weil das Mobil-Drilldown unten GLEICH FUENF davon braucht
+ * (Zeilen-Zusammenfassung UND Unterseite muessen beide sofort reagieren). */
+function useOptimistic<T>(value: T) {
+  const [local, setLocal] = useState(value);
+  useEffect(() => setLocal(value), [value]);
+  return [local, setLocal] as const;
+}
+
+/** Eine Zeile in der obersten Mobil-Filter-Ebene: Name links, aktueller Wert
+ * + Pfeil rechts -- tippen fuehrt zur Unterseite mit den eigentlichen
+ * Optionen (siehe MobileOptionList/MobileCheckList). */
+function FilterRow({ label, value, onClick }: { label: string; value: string; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex h-12 w-full items-center justify-between rounded-lg border border-line px-3.5 text-left text-[15px] text-ink transition-colors hover:border-line-strong"
+    >
+      {label}
+      <span className="flex items-center gap-1.5 text-muted">
+        <span className="max-w-[9.5rem] truncate text-sm">{value}</span>
+        <ChevronRight size={15} aria-hidden />
+      </span>
+    </button>
+  );
+}
+
+/** Unterseite fuer Einzelauswahl (Status/Modus) -- eine Wahl reicht, die
+ * Auswahlfunktion selbst kehrt danach zur obersten Ebene zurueck (siehe
+ * chooseSingle unten), hier nur die Liste. */
+function MobileOptionList({ options, value, onSelect }: { options: Option[]; value: string; onSelect: (v: string) => void }) {
+  return (
+    <div className="flex flex-col gap-1">
+      {options.map((opt) => (
+        <button
+          key={opt.value}
+          type="button"
+          onClick={() => onSelect(opt.value)}
+          className={`flex h-12 w-full items-center justify-between rounded-lg px-3.5 text-left text-[15px] transition-colors hover:bg-surface ${
+            opt.value === value ? 'font-medium text-ink' : 'text-ink-soft'
+          }`}
+        >
+          {opt.label}
+          {opt.value === value && <Check size={16} className="text-ink" aria-hidden />}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/** Unterseite fuer Mehrfachauswahl (Kategorie/Groesse/Farbe) -- bleibt offen,
+ * bis der Nutzer selbst per Zurueck-Pfeil in der Kopfzeile zurueckgeht. */
+function MobileCheckList({
+  options,
+  selected,
+  onToggle,
+}: {
+  options: Option[];
+  selected: string[];
+  onToggle: (v: string) => void;
+}) {
+  return (
+    <div className="flex flex-col gap-1">
+      {options.map((opt) => (
+        <label
+          key={opt.value}
+          className="flex cursor-pointer items-center gap-3 rounded-lg px-3.5 py-2.5 text-[15px] text-ink hover:bg-surface"
+        >
+          <input
+            type="checkbox"
+            checked={selected.includes(opt.value)}
+            onChange={() => onToggle(opt.value)}
+            className="h-4 w-4 shrink-0 rounded border-line-strong accent-ink"
+          />
+          {opt.swatch && (
+            <span
+              className="h-3.5 w-3.5 shrink-0 rounded-full border border-line-strong"
+              style={{ background: opt.swatch }}
+              aria-hidden
+            />
+          )}
+          {opt.label}
+        </label>
+      ))}
+    </div>
+  );
+}
+
+type MobilePanel = 'status' | 'mode' | 'kategorie' | 'groesse' | 'farbe';
+const PANEL_TITLE: Record<MobilePanel, string> = {
+  status: 'Status',
+  mode: 'Modus',
+  kategorie: 'Kategorie',
+  groesse: 'Größe',
+  farbe: 'Farbe',
+};
+
 export function HistoryFilters({
   status,
   mode,
@@ -235,6 +334,18 @@ export function HistoryFilters({
       document.body.style.overflow = '';
     };
   }, [sheetOpen]);
+
+  // Welche Unterseite das Mobil-Sheet gerade zeigt (null = oberste Ebene mit
+  // den sechs Filterzeilen). Eigener, von den Desktop-<details>-Instanzen
+  // unabhaengiger optimistischer State (siehe useOptimistic oben) -- die
+  // Zeilen-Zusammenfassung ("2 ausgewaehlt") muss genauso sofort reagieren
+  // wie die Haekchen auf der Unterseite selbst.
+  const [mobilePanel, setMobilePanel] = useState<MobilePanel | null>(null);
+  const [mStatus, setMStatus] = useOptimistic(status);
+  const [mMode, setMMode] = useOptimistic(mode);
+  const [mKategorie, setMKategorie] = useOptimistic(kategorie);
+  const [mGroesse, setMGroesse] = useOptimistic(groesse);
+  const [mFarbe, setMFarbe] = useOptimistic(farbe);
 
   // Mehrfachauswahl-Navigation wird debounced: bei einer Checkbox-Liste
   // klickt man oft mehrere Optionen kurz hintereinander an. Ohne Debounce
@@ -277,6 +388,37 @@ export function HistoryFilters({
     navigate(params);
   }
 
+  // Einzelauswahl im Mobil-Drilldown: waehlen UND sofort zur obersten Ebene
+  // zurueckkehren -- bei genau einer sinnvollen Wahl ist ein zusaetzlicher
+  // Zurueck-Tap ueberfluessig.
+  function chooseSingleMobile(key: 'status' | 'mode', value: string) {
+    if (key === 'status') setMStatus(value);
+    else setMMode(value);
+    updateSingle(key, value);
+    setMobilePanel(null);
+  }
+
+  function toggleKategorieMobile(value: string) {
+    const next = mKategorie.includes(value) ? mKategorie.filter((v) => v !== value) : [...mKategorie, value];
+    setMKategorie(next);
+    updateMulti('kategorie', next);
+  }
+  function toggleGroesseMobile(value: string) {
+    const next = mGroesse.includes(value) ? mGroesse.filter((v) => v !== value) : [...mGroesse, value];
+    setMGroesse(next);
+    updateMulti('groesse', next);
+  }
+  function toggleFarbeMobile(value: string) {
+    const next = mFarbe.includes(value) ? mFarbe.filter((v) => v !== value) : [...mFarbe, value];
+    setMFarbe(next);
+    updateMulti('farbe', next);
+  }
+
+  function closeSheet() {
+    setSheetOpen(false);
+    setMobilePanel(null);
+  }
+
   const hasAnyFilter =
     status !== 'all' || mode !== 'all' || kategorie.length > 0 || groesse.length > 0 || farbe.length > 0 || favorit;
   const activeCount =
@@ -300,11 +442,11 @@ export function HistoryFilters({
     </button>
   );
 
-  // Sechs Filter nebeneinander (bzw. im 2-Spalten-Raster) wirkten auf Mobil
-  // ueberladen. Dieselben Kontrollen tauchen deshalb zweimal auf: einmal in
-  // der Desktop-Zeile (`hidden sm:flex`), einmal im Mobil-Sheet (`sm:hidden`
-  // -- nur eines von beiden ist je Breakpoint sichtbar) -- zwei unabhaengige
-  // Komponenteninstanzen mit demselben State/Handlern sind hier unbedenklich.
+  // Nur noch fuer die Desktop-Zeile (`hidden sm:flex`) -- das Mobil-Sheet
+  // nutzt seit dem Drilldown-Umbau eigene, flach gerenderte Listen
+  // (FilterRow/MobileOptionList/MobileCheckList), keine <details>-Dropdowns
+  // mehr (die brauchten auf Mobil sonst eine eigene, verschachtelte
+  // Scrollbar innerhalb des ohnehin scrollenden Sheets).
   const filterControls = (
     <>
       <SingleSelect label="Alle Status" options={STATUS_OPTIONS} value={status} onChange={(v) => updateSingle('status', v)} />
@@ -377,33 +519,127 @@ export function HistoryFilters({
               className={`absolute inset-0 bg-ink/40 transition-opacity duration-300 ${
                 sheetOpen ? 'opacity-100' : 'pointer-events-none opacity-0'
               }`}
-              onClick={() => setSheetOpen(false)}
+              onClick={closeSheet}
             />
+            {/* Feste Hoehe statt mitwachsendem Inhalt: vorher wurde das Sheet
+                beim Aufklappen einer Options-Liste selbst groesser und rutschte
+                sichtbar nach oben -- wenig elegant, und die Liste bekam
+                zusaetzlich ihre eigene verschachtelte Scrollbar. Jetzt ist die
+                Hoehe fix, Ober- und Unterebene teilen sich EINEN Scrollbereich
+                (siehe "relative flex-1 overflow-hidden" unten) und schieben
+                sich nur noch seitlich uebereinander (Drilldown-Muster:
+                Filterliste -> Optionsseite -> per Pfeil zurueck). */}
             <div
-              className={`absolute inset-x-0 bottom-0 max-h-[85vh] overflow-y-auto rounded-t-2xl border-t border-line bg-paper p-5 shadow-lg transition-transform duration-300 ease-out ${
+              className={`absolute inset-x-0 bottom-0 flex h-[min(75vh,34rem)] flex-col rounded-t-2xl border-t border-line bg-paper shadow-lg transition-transform duration-300 ease-out ${
                 sheetOpen ? 'translate-y-0' : 'translate-y-full'
               }`}
             >
-              <div className="mb-4 flex items-center justify-between">
-                <span className="text-sm font-medium text-ink">Filter</span>
+              <div className="flex items-center justify-between border-b border-line px-5 py-4">
+                {mobilePanel ? (
+                  <button
+                    type="button"
+                    onClick={() => setMobilePanel(null)}
+                    className="-ml-1.5 flex items-center gap-1 rounded-full py-1 pl-1.5 pr-3 text-sm font-medium text-ink transition-colors hover:bg-surface"
+                  >
+                    <ChevronLeft size={17} aria-hidden />
+                    {PANEL_TITLE[mobilePanel]}
+                  </button>
+                ) : (
+                  <span className="text-sm font-medium text-ink">Filter</span>
+                )}
                 <button
                   type="button"
-                  onClick={() => setSheetOpen(false)}
+                  onClick={closeSheet}
                   aria-label="Filter schließen"
                   className="flex h-8 w-8 items-center justify-center rounded-full text-muted transition-colors hover:bg-surface hover:text-ink"
                 >
                   <X size={18} aria-hidden />
                 </button>
               </div>
-              <div className="flex flex-col gap-3">{filterControls}</div>
-              {resetButton && <div className="mt-3">{resetButton}</div>}
-              <button
-                type="button"
-                onClick={() => setSheetOpen(false)}
-                className="mt-5 w-full rounded-full bg-ink px-5 py-3 text-sm font-medium text-on-ink transition-opacity hover:opacity-90"
-              >
-                Ergebnisse anzeigen
-              </button>
+
+              <div className="relative flex-1 overflow-hidden">
+                {/* Oberste Ebene: die sechs Filterzeilen. */}
+                <div
+                  inert={mobilePanel !== null}
+                  className={`absolute inset-0 overflow-y-auto p-5 transition-transform duration-300 ease-out ${
+                    mobilePanel ? '-translate-x-full' : 'translate-x-0'
+                  }`}
+                >
+                  <div className="flex flex-col gap-2">
+                    <FilterRow
+                      label="Status"
+                      value={STATUS_OPTIONS.find((o) => o.value === mStatus)?.label ?? 'Alle Status'}
+                      onClick={() => setMobilePanel('status')}
+                    />
+                    <FilterRow
+                      label="Modus"
+                      value={MODE_OPTIONS.find((o) => o.value === mMode)?.label ?? 'Alle Modi'}
+                      onClick={() => setMobilePanel('mode')}
+                    />
+                    <FilterRow
+                      label="Kategorie"
+                      value={mKategorie.length ? `${mKategorie.length} ausgewählt` : 'Alle'}
+                      onClick={() => setMobilePanel('kategorie')}
+                    />
+                    <FilterRow
+                      label="Größe"
+                      value={mGroesse.length ? `${mGroesse.length} ausgewählt` : 'Alle'}
+                      onClick={() => setMobilePanel('groesse')}
+                    />
+                    <FilterRow
+                      label="Farbe"
+                      value={mFarbe.length ? `${mFarbe.length} ausgewählt` : 'Alle'}
+                      onClick={() => setMobilePanel('farbe')}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => toggleFavorit(!favorit)}
+                      aria-pressed={favorit}
+                      className={`flex h-12 w-full items-center justify-center gap-2 rounded-lg border px-3.5 text-[15px] transition-colors ${
+                        favorit ? 'border-ink text-ink' : 'border-line text-ink hover:border-line-strong'
+                      }`}
+                    >
+                      <Star size={15} fill={favorit ? 'currentColor' : 'none'} aria-hidden />
+                      Favoriten
+                    </button>
+                    {resetButton && <div className="mt-1 text-center">{resetButton}</div>}
+                  </div>
+                </div>
+
+                {/* Unterebene: die Optionen des gerade gewaehlten Filters. */}
+                <div
+                  inert={mobilePanel === null}
+                  className={`absolute inset-0 overflow-y-auto p-5 transition-transform duration-300 ease-out ${
+                    mobilePanel ? 'translate-x-0' : 'translate-x-full'
+                  }`}
+                >
+                  {mobilePanel === 'status' && (
+                    <MobileOptionList options={STATUS_OPTIONS} value={mStatus} onSelect={(v) => chooseSingleMobile('status', v)} />
+                  )}
+                  {mobilePanel === 'mode' && (
+                    <MobileOptionList options={MODE_OPTIONS} value={mMode} onSelect={(v) => chooseSingleMobile('mode', v)} />
+                  )}
+                  {mobilePanel === 'kategorie' && (
+                    <MobileCheckList options={CATEGORY_OPTIONS} selected={mKategorie} onToggle={toggleKategorieMobile} />
+                  )}
+                  {mobilePanel === 'groesse' && (
+                    <MobileCheckList options={SIZE_OPTIONS} selected={mGroesse} onToggle={toggleGroesseMobile} />
+                  )}
+                  {mobilePanel === 'farbe' && (
+                    <MobileCheckList options={COLOR_OPTIONS} selected={mFarbe} onToggle={toggleFarbeMobile} />
+                  )}
+                </div>
+              </div>
+
+              <div className="border-t border-line p-5">
+                <button
+                  type="button"
+                  onClick={closeSheet}
+                  className="w-full rounded-full bg-ink px-5 py-3 text-sm font-medium text-on-ink transition-opacity hover:opacity-90"
+                >
+                  Ergebnisse anzeigen
+                </button>
+              </div>
             </div>
           </div>,
           document.body,

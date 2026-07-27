@@ -2,6 +2,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ImageOff, Loader2, Lock } from 'lucide-react';
 import { FavoriteToggle } from '@/components/history/favorite-toggle';
+import { DeleteCardButton } from '@/components/history/delete-card-button';
 import { CLOTHING_TYPES, COLOR_SWATCH, type ClothingType } from '@/lib/generation/constants';
 
 export type HistoryGeneration = {
@@ -30,7 +31,34 @@ function unique(values: string[]): string[] {
   return Array.from(new Set(values));
 }
 
-const dateFormat = new Intl.DateTimeFormat('de-DE', { dateStyle: 'medium', timeStyle: 'short' });
+/*
+  Relative Datumsanzeige statt "26.07.2026, 15:53" (wirkte wie ein reines
+  Log-/Dashboard-Format). Heute/Gestern/Wochentag fuer die letzten 7 Tage,
+  danach Tag + Monat (+ Jahr, falls nicht das aktuelle) -- das deckt genau
+  die Faelle ab, in denen das exakte Datum ohnehin nicht mehr relevant ist.
+*/
+const weekdayFormat = new Intl.DateTimeFormat('de-DE', { weekday: 'short' });
+const shortDateFormat = new Intl.DateTimeFormat('de-DE', { day: 'numeric', month: 'long' });
+const shortDateWithYearFormat = new Intl.DateTimeFormat('de-DE', { day: 'numeric', month: 'long', year: 'numeric' });
+const timeFormat = new Intl.DateTimeFormat('de-DE', { hour: '2-digit', minute: '2-digit' });
+
+function startOfDay(d: Date): Date {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+}
+
+function formatCardDate(iso: string): string {
+  const date = new Date(iso);
+  const now = new Date();
+  const time = timeFormat.format(date);
+  const diffDays = Math.round((startOfDay(now).getTime() - startOfDay(date).getTime()) / 86_400_000);
+
+  if (diffDays === 0) return `Heute, ${time}`;
+  if (diffDays === 1) return `Gestern, ${time}`;
+  if (diffDays > 1 && diffDays < 7) return `${weekdayFormat.format(date)}., ${time}`;
+
+  const sameYear = date.getFullYear() === now.getFullYear();
+  return sameYear ? shortDateFormat.format(date) : shortDateWithYearFormat.format(date);
+}
 
 function StatusBadge({ status }: { status: string }) {
   if (status === 'succeeded') {
@@ -95,8 +123,9 @@ export function HistoryCard({ generation, thumbnail }: { generation: HistoryGene
             <StatusBadge status={status} />
             <ModeBadge mode={mode} />
           </div>
-          <div className="absolute right-2 top-2">
+          <div className="absolute right-2 top-2 flex flex-col items-end gap-1.5">
             <FavoriteToggle generationId={id} initialFavorite={isFavorite} />
+            <DeleteCardButton generationId={id} />
           </div>
           {locked && (
             <span className="absolute bottom-2 left-2 flex items-center gap-1 rounded-full bg-paper/90 px-2.5 py-1 text-xs font-medium text-ink">
@@ -105,7 +134,7 @@ export function HistoryCard({ generation, thumbnail }: { generation: HistoryGene
           )}
         </div>
         <div className="flex flex-col gap-0.5 p-3">
-          <span className="text-sm font-medium text-ink">{dateFormat.format(new Date(created_at))}</span>
+          <span className="text-sm font-medium text-ink">{formatCardDate(created_at)}</span>
           <span className="text-xs text-muted">
             {imageCount} {imageCount === 1 ? 'Bild' : 'Bilder'}
             {quality === 'hd' && ' · HD'} · {credits_charged} {credits_charged === 1 ? 'Credit' : 'Credits'}

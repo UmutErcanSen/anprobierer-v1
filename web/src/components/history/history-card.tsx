@@ -123,10 +123,17 @@ export function HistoryCard({ generation, thumbnail }: { generation: HistoryGene
             <StatusBadge status={status} />
             <ModeBadge mode={mode} />
           </div>
-          <div className="absolute right-2 top-2 flex flex-col items-end gap-1.5">
+          <div className="absolute right-2 top-2">
             <FavoriteToggle generationId={id} initialFavorite={isFavorite} />
-            <DeleteCardButton generationId={id} />
           </div>
+          {/* NICHT in denselben "absolute right-2 top-2"-Wrapper wie der
+              Favoriten-Stern -- ein positionierter Wrapper wird selbst zum
+              "containing block" fuer absolut positionierte Kinder. Das
+              Bestaetigungs-Overlay (absolute inset-0) bezog sich dadurch auf
+              die winzige Wrapper-Box statt auf das ganze Bild und lief dort
+              sichtbar ueber. DeleteCardButton positioniert seinen eigenen
+              Knopf deshalb selbst, direkt im Bild-Container. */}
+          <DeleteCardButton generationId={id} />
           {locked && (
             <span className="absolute bottom-2 left-2 flex items-center gap-1 rounded-full bg-paper/90 px-2.5 py-1 text-xs font-medium text-ink">
               <Lock size={11} aria-hidden /> Vorschau

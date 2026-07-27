@@ -40,6 +40,11 @@ export function DeleteCardButton({ generationId }: { generationId: string }) {
 
   return (
     <>
+      {/* Selbst positioniert (nicht ueber einen externen Wrapper) -- direkt
+          unter dem Favoriten-Stern, im selben "relative"-Bildcontainer wie
+          dieser. Bewusst KEIN eigener positionierter Wrapper drumherum: der
+          waere sonst selbst der "containing block" fuer das Bestaetigungs-
+          Overlay unten (siehe Kommentar in history-card.tsx). */}
       <button
         type="button"
         onClick={(e) => {
@@ -47,25 +52,31 @@ export function DeleteCardButton({ generationId }: { generationId: string }) {
           setConfirming(true);
         }}
         aria-label="Anprobe löschen"
-        className="flex h-7 w-7 items-center justify-center rounded-full bg-paper/90 text-ink transition-colors hover:bg-paper hover:text-accent"
+        className="absolute right-2 top-11 flex h-7 w-7 items-center justify-center rounded-full bg-paper/90 text-ink transition-colors hover:bg-paper hover:text-accent"
       >
         <Trash2 size={13} aria-hidden />
       </button>
 
       {confirming && (
+        // Kompakt statt der ausfuehrlichen Detailseiten-Formulierung: Karten
+        // im Raster sind auf Mobil oft nur ~150px breit (2-Spalten-Grid) --
+        // der lange Erklaerungssatz plus zwei nebeneinander liegende Buttons
+        // passten dort nicht und wurden vom `overflow-hidden` der Karte
+        // abgeschnitten. Kurzer Text + gestapelte, volle Breite nutzende
+        // Buttons statt einer Nebeneinander-Reihe.
         <div
           role="alertdialog"
           aria-label="Löschen bestätigen"
           onClick={stop}
-          className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-paper/97 p-4 text-center"
+          className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 bg-paper/97 p-3 text-center"
         >
-          <p className="text-xs text-ink-soft">Unwiderruflich löschen — Bild(er) und Text sind danach weg.</p>
-          <div className="flex gap-2">
+          <p className="text-[11px] leading-snug text-ink-soft">Anprobe unwiderruflich löschen?</p>
+          <div className="flex w-full flex-col gap-1.5 px-1">
             <button
               type="button"
               onClick={handleDelete}
               disabled={deleting}
-              className="rounded-full bg-accent px-3 py-1.5 text-xs font-medium text-paper transition-opacity hover:opacity-90 disabled:opacity-50"
+              className="w-full rounded-full bg-accent px-2 py-1.5 text-[11px] font-medium text-paper transition-opacity hover:opacity-90 disabled:opacity-50"
             >
               {deleting ? 'Löscht …' : 'Löschen'}
             </button>
@@ -76,7 +87,7 @@ export function DeleteCardButton({ generationId }: { generationId: string }) {
                 setConfirming(false);
               }}
               disabled={deleting}
-              className="rounded-full border border-line-strong px-3 py-1.5 text-xs text-ink transition-colors hover:bg-surface disabled:opacity-50"
+              className="w-full rounded-full border border-line-strong px-2 py-1.5 text-[11px] text-ink transition-colors hover:bg-surface disabled:opacity-50"
             >
               Abbrechen
             </button>

@@ -31,12 +31,9 @@ export function SiteFooter() {
         <span>© {new Date().getFullYear()} Anprobierer</span>
       </div>
 
-      {/* Noch nicht buchbar (Stripe-Anbindung steht aus, siehe TODO) --
-          deshalb bewusst als "bald" formuliert statt eine bereits aktive
-          Zahlungsfaehigkeit zu suggerieren. */}
       <div className="border-t border-line">
         <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-3 px-6 py-6 text-xs text-muted sm:flex-row sm:justify-center md:justify-start">
-          <span>Bezahlung bald möglich mit</span>
+          <span>Sichere Bezahlung mit</span>
           <div className="flex items-center gap-3 text-muted">
             {PAYMENT_ICONS.map((icon) => (
               <PaymentIcon key={icon.title} icon={icon} />

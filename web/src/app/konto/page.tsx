@@ -8,6 +8,7 @@ import { HistoryCard, type HistoryGeneration } from "@/components/history/histor
 import { resolveCardRows } from "@/lib/generation/cards";
 import { isGenerationLocked, lockedImagePath } from "@/lib/generation/lock";
 import type { PlanKey } from "@/lib/generation/constants";
+import { ManageSubscriptionLink } from "@/components/pricing/manage-subscription-link";
 
 export const metadata: Metadata = { title: "Mein Konto" };
 
@@ -159,14 +160,17 @@ export default async function KontoPage() {
             <p className="text-lg font-semibold tabular-nums text-ink">{totalFavorites ?? 0}</p>
             <p className="text-xs uppercase tracking-[0.1em] text-muted">Favoriten</p>
           </div>
-          {plan !== "pro" && (
-            <Link
-              href="/preise"
-              className="ml-auto text-sm text-accent underline underline-offset-4 transition-colors hover:opacity-80"
-            >
-              Auf Pro upgraden
-            </Link>
-          )}
+          <div className="ml-auto flex items-center gap-5">
+            {plan !== "free" && <ManageSubscriptionLink />}
+            {plan !== "pro" && (
+              <Link
+                href="/preise"
+                className="text-sm text-accent underline underline-offset-4 transition-colors hover:opacity-80"
+              >
+                {plan === "free" ? "Tarif wählen" : "Auf Pro upgraden"}
+              </Link>
+            )}
+          </div>
         </div>
 
         {recent.length > 0 ? (

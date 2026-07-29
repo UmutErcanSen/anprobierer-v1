@@ -213,6 +213,27 @@ body {
   animation: sparkle-twinkle 3.2s ease-in-out infinite;
 }
 
+/* Konto-Uebersicht: Fortschrittsring zeichnet sich einmalig ein, Balken
+   wachsen gestaffelt von unten. Beides laeuft rein ueber CSS -- die
+   Uebersicht bleibt dadurch eine Server-Komponente ohne Client-JavaScript.
+   `--dash` wird pro Element inline gesetzt (Kreisumfang), damit der
+   Startwert des Keyframes zur jeweiligen Ringgroesse passt.
+   prefers-reduced-motion greift ueber die globale Regel weiter unten. */
+@keyframes ring-draw {
+  from { stroke-dashoffset: var(--dash); }
+}
+.ring-draw {
+  animation: ring-draw 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+}
+
+@keyframes bar-rise {
+  from { transform: scaleY(0); }
+}
+.bar-rise {
+  transform-origin: bottom;
+  animation: bar-rise 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+}
+
 /* Sichtbarer, konsistenter Fokusrahmen fuer Tastaturbedienung. */
 :focus-visible {
   outline: 2px solid var(--ink);

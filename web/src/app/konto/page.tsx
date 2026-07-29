@@ -9,6 +9,8 @@ import { resolveCardRows } from "@/lib/generation/cards";
 import { isGenerationLocked, lockedImagePath } from "@/lib/generation/lock";
 import type { PlanKey } from "@/lib/generation/constants";
 import { ManageSubscriptionLink } from "@/components/pricing/manage-subscription-link";
+import { UsageOverview } from "@/components/konto/usage-overview";
+import { buildTip, lastGrant, monthlyUsage, usedSince, type LedgerRow } from "@/lib/usage/summary";
 
 export const metadata: Metadata = { title: "Mein Konto" };
 
@@ -41,6 +43,8 @@ export default async function KontoPage() {
     { count: totalGenerations },
     { count: totalFavorites },
     { data: recentRows },
+    { data: subscription },
+    { data: grantRow },
   ] = await Promise.all([
     supabase.from("profiles").select("display_name, plan").single(),
     supabase.from("credit_balances").select("balance").maybeSingle(),
@@ -53,10 +57,48 @@ export default async function KontoPage() {
       )
       .order("created_at", { ascending: false })
       .limit(RECENT_COUNT),
+    supabase.from("subscriptions").select("current_period_end, status").maybeSingle(),
+    // Die letzte Gutschrift ist die Bezugsgroesse des Fortschrittsrings --
+    // separat geholt, weil sie bei Jahresabos oder Free-Konten aelter sein
+    // kann als das 6-Monats-Fenster des Verlaufsdiagramms.
+    supabase
+      .from("credit_ledger")
+      .select("delta, reason, created_at")
+      .in("reason", ["signup_bonus", "subscription_grant", "topup_purchase"])
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
   ]);
 
   const credits = balance?.balance ?? 0;
   const plan = (profile?.plan as PlanKey) ?? "free";
+
+  // Ledger nur so weit zurueck laden, wie tatsaechlich gebraucht: bis zum
+  // Beginn des Diagramm-Fensters ODER bis zur letzten Gutschrift, je nachdem
+  // was frueher liegt. Damit bleibt die Zeilenzahl auch bei Vielnutzern klein.
+  const windowStart = new Date();
+  windowStart.setMonth(windowStart.getMonth() - 5);
+  windowStart.setDate(1);
+  windowStart.setHours(0, 0, 0, 0);
+  const since =
+    grantRow && grantRow.created_at < windowStart.toISOString()
+      ? grantRow.created_at
+      : windowStart.toISOString();
+
+  const { data: ledgerRows } = await supabase
+    .from("credit_ledger")
+    .select("delta, reason, created_at")
+    .gte("created_at", since);
+
+  const rows = (ledgerRows ?? []) as LedgerRow[];
+  const grant = grantRow ? lastGrant([grantRow as LedgerRow]) : null;
+  const monthly = monthlyUsage(rows);
+  const usedSinceGrant = grant ? usedSince(rows, grant.at) : 0;
+  const tip = buildTip({ plan, balance: credits, grantAmount: grant?.amount ?? null, usedSinceGrant, monthly });
+
+  // Ring erst zeigen, wenn es etwas zu zeigen gibt -- ein 0-%-Ring direkt
+  // nach der Registrierung waere nur Dekoration neben dem Onboarding-Block.
+  const showUsage = Boolean(grant) && (usedSinceGrant > 0 || monthly.some((m) => m.used > 0));
 
   const recentCardRows = (recentRows ?? []).map((g) => resolveCardRows(g));
   const recent: HistoryGeneration[] = (recentRows ?? []).map((g, i) => ({
@@ -176,6 +218,19 @@ export default async function KontoPage() {
             )}
           </div>
         </div>
+
+        {showUsage && grant && (
+          <UsageOverview
+            planLabel={`${plan.charAt(0).toUpperCase()}${plan.slice(1)}-Tarif`}
+            grantAmount={grant.amount}
+            usedSinceGrant={usedSinceGrant}
+            monthly={monthly}
+            // Nur bei laufendem Abo gibt es einen echten naechsten Termin --
+            // im Free-Tarif war die Gutschrift einmalig.
+            periodEnd={plan !== "free" ? (subscription?.current_period_end ?? null) : null}
+            tip={tip}
+          />
+        )}
 
         {recent.length > 0 ? (
           <section className="mt-14">

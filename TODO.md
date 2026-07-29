@@ -4,9 +4,16 @@
 > ergänzen statt in Chats verstreuen. Reihenfolge innerhalb einer Gruppe =
 > Prioritätsempfehlung, nicht zwingend Bearbeitungsreihenfolge.
 
-Stand: 25.07.2026
+Stand: 27.07.2026
 
 ---
+
+## 🚨 Show-Stopper — neu gefunden am 27.07.2026
+
+- [ ] **Hängengebliebene Generierungen sperren den Account dauerhaft.** `processGeneration` läuft in `after()` und setzt den Status auf `processing`. Stürzt der Vorgang ab, ohne den `catch`-Block zu erreichen — Serverless-Instanz wird beendet, `maxDuration` (300 s) überschritten, Deploy mitten in der Generierung, Out-of-Memory —, bleibt die Zeile **für immer** auf `processing`. Da [`rate-limit.ts`](web/src/lib/generation/rate-limit.ts) genau diesen Status als „läuft noch" wertet, kann der Nutzer **nie wieder** eine Anprobe starten, und die abgebuchten Credits sind weg. Es gibt aktuell weder Timeout noch Cron noch manuellen Reset. **Fix:** (a) `rateLimitError` ignoriert `processing`-Zeilen, die älter als ~10 min sind, UND (b) ein Aufräum-Job (Supabase `pg_cron`, minütlich), der solche Zeilen auf `failed` setzt und `refund_generation` aufruft.
+- [ ] **Kein „Passwort vergessen".** [`actions.ts`](web/src/lib/auth/actions.ts) kennt nur `signUp`/`signIn`/`signOut`, es gibt keine Route und kein Formular für `resetPasswordForEmail`. Wer sein Passwort vergisst, kommt nie wieder ins Konto — bei einem zahlenden Abo ein garantierter Support- und Erstattungsfall. Supabase liefert die Funktion mit, es fehlt nur Seite + Aktion (`/passwort-vergessen` + `/passwort-neu`).
+- [ ] **Keine Fehlerseiten.** Weder `error.tsx`, `not-found.tsx` noch `global-error.tsx` existieren. Jeder unerwartete Server-Fehler zeigt in Produktion die nackte Next.js-Standardseite („Application error: a server-side exception has occurred") ohne Weg zurück — genau in dem Moment, in dem Vertrauen am wichtigsten ist.
+- [ ] **Keine Security-Header.** [`next.config.ts`](web/next.config.ts) setzt keine `headers()`. Es fehlen mindestens `Strict-Transport-Security`, `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `X-Frame-Options`/`frame-ancestors` (Clickjacking-Schutz für die Konto-Seiten) und perspektivisch eine CSP.
 
 ## 🔴 Sicherheit — vor jedem weiteren echten Nutzer
 
@@ -57,12 +64,21 @@ Stand: 25.07.2026
 - [ ] **Frontend-Tests**: Vitest + React Testing Library für `ColorSelect`, `MultiSelect`/`SingleSelect`, `FavoriteToggle`, `PlatformExport`.
 - [ ] **E2E mit Playwright**: Registrierung → Login → Upload → Generierung → Ergebnis → Verlauf-Filter → Favorit → Plattform-Export. Ziel: manuelles Durchklicken im Browser nur noch bei einem fehlgeschlagenen Testlauf, nicht mehr routinemäßig nach jeder Änderung.
 
+## 🟡 Architektur & Betrieb (vor bzw. kurz nach Livegang)
+
+- [ ] **Kein Monitoring / keine Fehlermeldung an den Betreiber.** Fehler landen ausschließlich in `console.error` — auf einer Serverless-Plattform heißt das: nur im Log, das niemand liest. Ein fehlgeschlagener OpenAI-Aufruf, ein Storage-Fehler oder eine hängende Generierung fallen erst auf, wenn ein Nutzer sich meldet. Sentry (kostenloser Tier reicht anfangs) + ein Alarm auf `cost_usd`-Summe pro Tag.
+- [ ] **Verwaiste Storage-Dateien.** Bricht `processGeneration` zwischen Upload und Aufräumen ab, bleiben Personen-/Kleidungsfotos im `uploads`-Bucket liegen — DSGVO-relevant (das Personenfoto soll laut Datenschutzerklärung „unmittelbar nach der Generierung" gelöscht werden) und Speicherkosten. Derselbe Cron-Job wie beim Stale-Job-Fix kann das mit erledigen.
+- [ ] **`after()` ist kein Ersatz für eine echte Job-Queue.** Funktioniert für den Start, aber: kein Retry bei Absturz, keine Sichtbarkeit, harte Bindung an die Funktionslaufzeit. Sobald mehrere Nutzer gleichzeitig generieren oder Pro-Nutzer 9 Stücke gleichzeitig schicken, wird das zum Engpass. Mittelfristig: Supabase Queues/pg-boss oder ein kleiner dedizierter Worker.
+- [ ] **Kein Backup-Konzept.** Supabase Free hat keine Point-in-Time-Recovery. Vor echten Zahlkunden klären, wie oft `credit_ledger` und `generations` gesichert werden (das Ledger ist die Abrechnungsgrundlage — Verlust = unklarer Kontostand bei allen Nutzern).
+
 ## 🟢 Feature-Ideen (kein Blocker, aber Mehrwert)
 
 - [ ] Vorher/Nachher-Slider auf der Ergebnisseite
 - [ ] E-Mail-Benachrichtigung, wenn eine Generierung fertig ist (jetzt wo alles async läuft, relevant für Retention)
 - [ ] Mehrere KI-Ergebnisvarianten pro Anfrage als Pro-Feature
 - [ ] Admin-Dashboard (Nutzer, Kosten, Umsatz — in Postgres trivial)
+- [ ] **Onboarding/Leerzustand**: Wer sich neu registriert, landet auf einem leeren Konto. Ein erster geführter Schritt („Lade dein erstes Foto hoch") oder ein Beispielergebnis würde die Aktivierungsrate messbar heben.
+- [ ] **Credits-Warnung vor dem Aufbrauchen**: Hinweis bei ≤1 verbleibendem Credit, statt den Nutzer erst beim Klick auf „Generieren" gegen die Wand laufen zu lassen.
 
 ---
 

@@ -48,10 +48,20 @@ export function UsageOverview({ planLabel, grantAmount, usedSinceGrant, monthly,
   const offset = CIRCUMFERENCE * (1 - pct / 100);
 
   const peak = Math.max(1, ...monthly.map((m) => m.used));
-  // Ein Verlauf braucht mindestens zwei Punkte, um einer zu sein. Bei einem
-  // frisch registrierten Konto (nur der laufende Monat) waere ein einzelner
-  // Balken bloss Dekoration -- der Ring darueber sagt dann schon alles.
-  const hasHistory = monthly.length >= 2 && monthly.some((m) => m.used > 0);
+  const isFirstMonth = monthly.length === 1;
+  // Bei mehreren Monaten wird gegen den Spitzenmonat skaliert -- nur so ist
+  // der Verlauf ablesbar. Bei EINEM Monat gaebe das immer einen Balken auf
+  // voller Hoehe, egal ob 9 oder 59 Credits: er waere sein eigener Spitzenwert.
+  // Neben einem Ring, der 15 % anzeigt, wirkt das widerspruechlich. Deshalb
+  // dann gegen die Zuteilung skalieren -- Math.max schuetzt den Fall, dass
+  // dank angesparter Credits mehr verbraucht wurde als zugeteilt.
+  const scale = isFirstMonth ? Math.max(grantAmount, peak) : peak;
+  // Sobald ueberhaupt Verbrauch da ist, wird er gezeigt -- auch im ersten
+  // Monat. Die vorherige Regel "erst ab zwei Monaten" war zwar sauberer
+  // gedacht, wurde aber als fehlende Anzeige gelesen. Ein einzelner Balken
+  // plus der Hinweis unten ("ab dem naechsten Monat...") ist verstaendlicher
+  // als ein Block, der scheinbar grundlos fehlt.
+  const hasHistory = monthly.some((m) => m.used > 0);
 
   return (
     <section className="mt-6 border-t border-line pt-8">
@@ -134,9 +144,13 @@ export function UsageOverview({ planLabel, grantAmount, usedSinceGrant, monthly,
               Achse mit Hilfslinien -- und braucht keine Skalenbeschriftung,
               die auf Mobil ohnehin gedraengt waere. Die Grundlinie unten
               uebernimmt die Rolle der X-Achse. */}
+          {/* max-w begrenzt die Spaltenbreite: bei nur einem oder zwei Monaten
+              wuerde ein reines flex-1 den Balken ueber die halbe Seite ziehen
+              und wie ein Layoutfehler wirken. So beginnt die Reihe links und
+              waechst nach rechts, wenn Monate dazukommen. */}
           <div className="mt-4 flex items-end gap-2 border-b border-line">
             {monthly.map((m, i) => (
-              <div key={`${m.label}-${i}`} className="flex flex-1 flex-col items-center gap-1.5">
+              <div key={`${m.label}-${i}`} className="flex max-w-[72px] flex-1 flex-col items-center gap-1.5">
                 <span
                   className={`text-xs tabular-nums ${m.isCurrent ? "font-medium text-ink" : "text-muted"}`}
                 >
@@ -147,7 +161,7 @@ export function UsageOverview({ planLabel, grantAmount, usedSinceGrant, monthly,
                   style={{
                     // Mindesthoehe, damit ein Monat ohne Verbrauch als bewusste
                     // Grundlinie lesbar bleibt statt wie ein Darstellungsfehler.
-                    height: `${Math.max(6, Math.round((m.used / peak) * MAX_BAR_PX))}px`,
+                    height: `${Math.max(6, Math.round((m.used / scale) * MAX_BAR_PX))}px`,
                     animationDelay: `${i * 45}ms`,
                   }}
                 />
@@ -157,13 +171,25 @@ export function UsageOverview({ planLabel, grantAmount, usedSinceGrant, monthly,
 
           <div className="mt-2 flex gap-2 text-xs text-muted">
             {monthly.map((m, i) => (
-              <span key={`${m.label}-label-${i}`} className="flex-1 text-center">
+              <span key={`${m.label}-label-${i}`} className="max-w-[72px] flex-1 text-center">
                 {m.label}
               </span>
             ))}
           </div>
 
-          {periodEnd && (
+          {/* Im ersten Monat gibt es naturgemaess keinen Verlauf. Das offen zu
+              sagen ist besser, als den Block wegzulassen -- sonst wirkt es wie
+              ein Fehler statt wie ein Anfang. */}
+          {isFirstMonth && (
+            <p className="mt-4 text-xs leading-relaxed text-muted">
+              Ab dem nächsten Monat siehst du hier deinen Verlauf über mehrere Monate.
+            </p>
+          )}
+
+          {/* Der Hinweis auf abweichende Zeitraeume lohnt erst, wenn es
+              ueberhaupt mehrere Monate zu vergleichen gibt -- im ersten Monat
+              waere er eine zweite graue Zeile ohne Nutzen. */}
+          {periodEnd && !isFirstMonth && (
             <p className="mt-4 text-xs leading-relaxed text-muted">
               Kalendermonate. Deine Zuteilung oben läuft nach dem Abrechnungszeitraum und beginnt
               deshalb nicht am Monatsersten — die Zahlen können abweichen.

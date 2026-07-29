@@ -83,10 +83,15 @@ export default async function PreisePage() {
                       <th scope="row" className="px-5 py-3.5 font-normal text-ink-soft">
                         {row.label}
                       </th>
+                      {/* Hier trennt das Haekchen tatsaechlich zwei Zustaende
+                          (enthalten / nicht enthalten) -- der Unterschied
+                          bleibt also, laeuft aber ueber Kontrast statt ueber
+                          eine zweite Farbe: vorhanden = kraeftig, fehlend =
+                          zurueckgenommen. */}
                       {row.values.map((value, j) => (
                         <td key={j} className="px-5 py-3.5 text-center tabular-nums text-ink">
                           {value === "✓" ? (
-                            <span aria-hidden className="text-success">✓</span>
+                            <span aria-hidden className="text-ink">✓</span>
                           ) : value === "—" ? (
                             <span aria-hidden className="text-muted">—</span>
                           ) : (

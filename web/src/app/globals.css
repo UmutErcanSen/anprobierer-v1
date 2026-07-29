@@ -20,20 +20,33 @@
   --line-strong: #d4d4d4;  /* betonte Trennung */
   --on-ink: #ffffff;       /* Text auf dunkler Vollflaeche */
   --accent: #c2410c;       /* Terrakotta — einziger Farbakzent, nur auf Display-Kursive */
-  --success: #15803d;      /* Statusfarbe, kein Dekor — nur fuer "erledigt" */
+  /* Salbei-Gruen statt des vorherigen satten Waldgruens (#15803d): das kaempfte
+     als zweite kraeftige Farbe sichtbar mit dem Terrakotta-Akzent. Dieser Ton
+     ist entsaettigt und waermer -- er ordnet sich unter, bleibt aber eindeutig
+     als "erledigt" lesbar. NUR fuer echten Status, niemals als Dekor. */
+  --success: #3f6b43;
 }
 
 [data-theme="dark"] {
-  --paper: #0a0a0a;
-  --surface: #141414;
-  --ink: #f5f5f5;
-  --ink-soft: #cfcfcf;
-  --muted: #8f8f8f;
-  --line: #1f1f1f;
-  --line-strong: #2e2e2e;
-  --on-ink: #0a0a0a;
+  /* Vorher #0a0a0a/#f5f5f5 -- nahezu reines Schwarz mit nahezu reinem Weiss
+     obendrauf ist der klassische Grund fuer Augenbelastung bei laengerem
+     Lesen (harter Kontrastsprung, dazu OLED-Halo-Effekt an Kanten). Jetzt
+     ein weiches, leicht warmes Dunkelgrau (angelehnt an die Terrakotta-
+     Akzentfarbe) mit gedaempftem Off-White statt reinem Weiss -- gleiche
+     Hierarchie, spuerbar ruhiger fuer die Augen. */
+  --paper: #151412;
+  --surface: #1c1b18;
+  --ink: #ece8e1;
+  --ink-soft: #c6c1b8;
+  --muted: #8f8a80;
+  --line: #29271f;
+  --line-strong: #38352b;
+  --on-ink: #151412;
   --accent: #ea7a4f;       /* auf dunklem Grund etwas heller, damit der Kontrast stimmt */
-  --success: #5cc98f;
+  /* Vorher #5cc98f -- ein kuehles Mintgruen, das auf dem jetzt warmen
+     Dunkelgrund wie ein Fremdkoerper wirkte. Dieser Salbeiton teilt die
+     Waerme des Hintergrunds und der Akzentfarbe. */
+  --success: #8fbb96;
 }
 
 /* Semantische Tokens -> Tailwind-Utilities (bg-paper, text-ink, border-line …). */

@@ -92,9 +92,12 @@ export function PricingCards({ currentPlan }: PricingCardsProps) {
             }`}
           >
             Jährlich
+            {/* Rabatt-Hinweis war gruen -- das ist aber kein Status ("erledigt"),
+                sondern eine Werbeaussage. Werbung gehoert auf die eine
+                Markenfarbe, sonst konkurrieren zwei Farben um Aufmerksamkeit. */}
             <span
               className={`rounded-full px-1.5 py-0.5 text-xs ${
-                interval === "yearly" ? "bg-on-ink/15" : "bg-success/15 text-success"
+                interval === "yearly" ? "bg-on-ink/15" : "bg-accent/12 text-accent"
               }`}
             >
               2 Monate gratis
@@ -134,10 +137,14 @@ export function PricingCards({ currentPlan }: PricingCardsProps) {
                 <p className="mt-2 text-sm text-muted">{plan.credits}</p>
               </div>
 
+              {/* Haekchen bewusst entfaerbt (vorher gruen): In einer Liste, in
+                  der ALLE Punkte enthalten sind, unterscheidet die Farbe nichts
+                  -- sie war reine Dekoration und stritt mit dem Terrakotta.
+                  Zurueckhaltende Haekchen lassen den Text vorne stehen. */}
               <ul className="flex flex-1 flex-col gap-2.5 text-sm text-ink-soft">
                 {plan.features.map((f) => (
                   <li key={f} className="flex gap-2.5">
-                    <span aria-hidden className="text-success">
+                    <span aria-hidden className="text-muted">
                       ✓
                     </span>
                     {f}
@@ -152,7 +159,7 @@ export function PricingCards({ currentPlan }: PricingCardsProps) {
                   das seit Kurzem beides mit korrekter Proration beherrscht. */}
               {plan.key === currentPlan ? (
                 <span className="inline-flex h-12 items-center justify-center rounded-full border border-line px-7 text-[15px] text-muted">
-                  Aktueller Tarif
+                  Dein Tarif
                 </span>
               ) : plan.key === "free" ? (
                 currentPlan == null ? (
@@ -161,19 +168,19 @@ export function PricingCards({ currentPlan }: PricingCardsProps) {
                   </LinkButton>
                 ) : (
                   <Button size="lg" variant="outline" onClick={openPortal} disabled={portalLoading}>
-                    {portalLoading ? "Öffnet …" : "Zum Kündigen: Abo verwalten"}
+                    {portalLoading ? "Öffnet …" : "Abo verwalten"}
                   </Button>
                 )
               ) : currentPlan && currentPlan !== "free" ? (
                 <Button size="lg" variant="outline" onClick={openPortal} disabled={portalLoading}>
-                  {portalLoading ? "Öffnet …" : "Zum Wechseln: Abo verwalten"}
+                  {portalLoading ? "Öffnet …" : "Wechseln"}
                 </Button>
               ) : (
                 (() => {
                   const paidKey = plan.key;
                   return (
                     <Button size="lg" onClick={() => startCheckout(paidKey)} disabled={pendingPlan !== null}>
-                      {pendingPlan === paidKey ? "Wird geöffnet …" : "Jetzt upgraden"}
+                      {pendingPlan === paidKey ? "Öffnet …" : "Auswählen"}
                     </Button>
                   );
                 })()

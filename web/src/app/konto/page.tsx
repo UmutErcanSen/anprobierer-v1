@@ -13,6 +13,15 @@ export const metadata: Metadata = { title: "Mein Konto" };
 
 const RECENT_COUNT = 4;
 
+/* Kurzfassung der drei Schritte von der Landing Page -- hier braucht es
+   keine Ueberzeugungsarbeit mehr (der Nutzer ist ja schon angemeldet),
+   sondern nur die Erwartung, was gleich passiert. */
+const ERSTE_SCHRITTE = [
+  { title: "Foto von dir", body: "Ganzkörper, gut beleuchtet, ruhiger Hintergrund." },
+  { title: "Kleidungsstück", body: "Flach ausgebreitet oder auf dem Bügel." },
+  { title: "Fertig", body: "Anprobebild und Verkaufstext in unter einer Minute." },
+];
+
 export default async function KontoPage() {
   const supabase = await createClient();
 
@@ -127,6 +136,20 @@ export default async function KontoPage() {
           </div>
         </div>
 
+        {/* Bei 0 Credits ist die App faktisch gesperrt -- das stand bisher nur
+            als beilaeufiges "0 Credits übrig" da. Ein Nutzer, der auf
+            "Neue Anprobe erstellen" klickt, lief erst im Formular gegen die
+            Wand. Bewusst nur bei EXAKT 0: bei 1 verbleibendem Credit ist noch
+            nichts blockiert, da waere die Warnung nur Laerm. */}
+        {credits === 0 && (
+          <p className="mt-6 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-lg border border-line bg-surface px-4 py-3 text-sm text-ink-soft">
+            Dein Guthaben ist aufgebraucht — für weitere Anproben brauchst du neue Credits.
+            <Link href="/preise" className="text-accent underline underline-offset-4 hover:opacity-80">
+              Tarife ansehen
+            </Link>
+          </p>
+        )}
+
         <div className="mt-6 flex flex-wrap items-center gap-7 border-t border-line pt-5">
           <div>
             <p className="text-lg font-semibold tabular-nums text-ink">{totalGenerations ?? 0}</p>
@@ -146,7 +169,7 @@ export default async function KontoPage() {
           )}
         </div>
 
-        {recent.length > 0 && (
+        {recent.length > 0 ? (
           <section className="mt-14">
             <div className="flex items-end justify-between gap-4">
               <h2 className="text-lg font-medium text-ink">Zuletzt erstellt</h2>
@@ -162,6 +185,36 @@ export default async function KontoPage() {
                 <HistoryCard key={g.id} generation={g} thumbnail={recentThumbnails[i] ?? null} />
               ))}
             </ul>
+          </section>
+        ) : (
+          /* Wer sich gerade registriert hat, sah hier bisher NICHTS: nach
+             "0 Erstellt / 0 Favoriten" hoerte die Seite einfach auf. Genau der
+             Moment, in dem die Aktivierung entweder passiert oder eben nicht.
+             Jetzt ein Leerzustand, der den ersten Schritt benennt statt ihn
+             vorauszusetzen -- gestrichelter Rahmen wie bei den Upload-Feldern,
+             damit sofort lesbar ist "hier gehoert noch etwas hin". */
+          <section className="mt-14 rounded-xl border border-dashed border-line-strong bg-surface px-6 py-10 text-center">
+            <h2 className="text-lg font-medium text-ink">Deine erste Anprobe</h2>
+            <p className="mx-auto mt-2 max-w-md text-[15px] leading-relaxed text-ink-soft">
+              Du hast {credits} {credits === 1 ? "Credit" : "Credits"} zum Ausprobieren. Für die erste
+              Anprobe brauchst du nur zwei Fotos.
+            </p>
+
+            <ol className="mx-auto mt-8 grid max-w-xl gap-5 text-left sm:grid-cols-3">
+              {ERSTE_SCHRITTE.map((schritt, i) => (
+                <li key={schritt.title}>
+                  <span className="font-mono text-xs text-muted">0{i + 1}</span>
+                  <p className="mt-1.5 text-sm font-medium text-ink">{schritt.title}</p>
+                  <p className="mt-1 text-[13px] leading-relaxed text-muted">{schritt.body}</p>
+                </li>
+              ))}
+            </ol>
+
+            <div className="mt-9">
+              <LinkButton href="/anzeige-erstellen" size="lg">
+                Jetzt starten
+              </LinkButton>
+            </div>
           </section>
         )}
       </main>

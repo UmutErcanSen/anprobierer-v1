@@ -80,8 +80,8 @@ Stand: 27.07.2026
 - [ ] E-Mail-Benachrichtigung, wenn eine Generierung fertig ist (jetzt wo alles async läuft, relevant für Retention)
 - [ ] Mehrere KI-Ergebnisvarianten pro Anfrage als Pro-Feature
 - [ ] Admin-Dashboard (Nutzer, Kosten, Umsatz — in Postgres trivial)
-- [ ] **Onboarding/Leerzustand**: Wer sich neu registriert, landet auf einem leeren Konto. Ein erster geführter Schritt („Lade dein erstes Foto hoch") oder ein Beispielergebnis würde die Aktivierungsrate messbar heben.
-- [ ] **Credits-Warnung vor dem Aufbrauchen**: Hinweis bei ≤1 verbleibendem Credit, statt den Nutzer erst beim Klick auf „Generieren" gegen die Wand laufen zu lassen.
+- [x] **Onboarding/Leerzustand** — erledigt 27.07.2026. `/konto` zeigte nach „0 Erstellt / 0 Favoriten" gar nichts mehr; jetzt ein Leerzustand mit drei Kurz-Schritten und CTA. `/konto/verlauf` unterscheidet außerdem zwischen „Filter ohne Treffer" (Ausweg: Filter zurücksetzen) und „noch nichts erstellt" (Ausweg: erste Anprobe) — vorher beides derselbe nackte Satz ohne Handlungsmöglichkeit. ⚠️ Visuell noch nicht live geprüft: braucht einen Account **ohne** Generierungen (der Testaccount hat 14).
+- [x] **Warnung bei aufgebrauchtem Guthaben** — erledigt 27.07.2026. Bei exakt 0 Credits weist die Kontoseite jetzt darauf hin, dass nichts mehr geht, statt den Nutzer erst im Formular gegen die Wand laufen zu lassen. Bewusst nicht schon bei 1 Credit — da ist noch nichts blockiert.
 
 ---
 

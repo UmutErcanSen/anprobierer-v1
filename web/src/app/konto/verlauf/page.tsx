@@ -156,9 +156,37 @@ export default async function VerlaufPage(props: PageProps<"/konto/verlauf">) {
         </div>
 
         {generations.length === 0 ? (
-          <p className="mt-10 rounded-xl border border-dashed border-line-strong bg-surface px-6 py-10 text-center text-sm text-muted">
-            {isFiltered ? "Keine Anproben für diese Filter gefunden." : "Du hast noch keine Anprobe erstellt."}
-          </p>
+          /* Zwei sehr verschiedene Situationen, die vorher denselben nackten
+             Satz bekamen: "nichts gefunden" ist ein Filter-Problem (Ausweg:
+             Filter loesen), "noch nichts erstellt" ist ein Leerzustand
+             (Ausweg: anfangen). Ohne Handlungsmoeglichkeit war beides eine
+             Sackgasse. */
+          <div className="mt-10 rounded-xl border border-dashed border-line-strong bg-surface px-6 py-12 text-center">
+            {isFiltered ? (
+              <>
+                <p className="text-sm text-ink-soft">Keine Anproben für diese Filter gefunden.</p>
+                <Link
+                  href="/konto/verlauf"
+                  className="mt-3 inline-block text-sm text-ink underline underline-offset-4 hover:text-accent"
+                >
+                  Filter zurücksetzen
+                </Link>
+              </>
+            ) : (
+              <>
+                <p className="text-base font-medium text-ink">Noch keine Anprobe erstellt</p>
+                <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-muted">
+                  Sobald du deine erste Anprobe erstellst, sammeln sich hier alle Ergebnisse — mit
+                  Bild, Verkaufstext und Filtern.
+                </p>
+                <div className="mt-7">
+                  <LinkButton href="/anzeige-erstellen" size="lg">
+                    Erste Anprobe erstellen
+                  </LinkButton>
+                </div>
+              </>
+            )}
+          </div>
         ) : (
           <ul className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
             {generations.map((g, i) => (

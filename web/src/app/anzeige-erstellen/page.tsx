@@ -24,7 +24,7 @@ export default async function AnzeigeErstellenPage() {
 
   return (
     <>
-      <AppHeader credits={credits} />
+      <AppHeader credits={credits} plan={plan} />
       {/* Mobil: schmales, zentriertes Formular wie bisher (max-w-xl + Rand).
           Ab md faellt die Randbeschraenkung komplett weg, damit die
           Foto-Spalte von GenerateFlow bis an den Bildschirmrand reicht --

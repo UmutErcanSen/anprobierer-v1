@@ -99,8 +99,6 @@ export default async function KontoPage() {
   const grant = grantRow ? lastGrant([grantRow as LedgerRow]) : null;
   // user.created_at begrenzt das Diagramm nach hinten -- Monate vor der
   // Registrierung tauchen gar nicht auf, statt als leere Balken.
-  // user.created_at begrenzt das Diagramm nach hinten -- Monate vor der
-  // Registrierung tauchen gar nicht auf, statt als leere Balken.
   const monthly = monthlyUsage(rows, 6, today, user.created_at);
   const usedSinceGrant = grant ? usedSince(rows, grant.at) : 0;
   const tip = buildTip({ plan, balance: credits, grantAmount: grant?.amount ?? null, usedSinceGrant, monthly });
@@ -138,7 +136,7 @@ export default async function KontoPage() {
 
   return (
     <>
-      <AppHeader credits={credits} />
+      <AppHeader credits={credits} plan={plan} />
 
       <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-14">
         {/* Titel + Primaeraktion in einer Zeile, wie im Verlauf (dort

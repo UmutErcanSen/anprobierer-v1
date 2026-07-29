@@ -2,6 +2,9 @@ import Link from "next/link";
 import { signOutAction } from "@/lib/auth/actions";
 import { ThemeToggle } from "@/components/site/theme-toggle";
 import { MobileNav } from "@/components/site/mobile-nav";
+import type { PlanKey } from "@/lib/generation/constants";
+
+const PLAN_LABELS: Record<PlanKey, string> = { free: "Free", basic: "Basic", pro: "Pro" };
 
 /*
   Header fuer eingeloggte Seiten. Zeigt das Guthaben (der wichtigste Wert fuer
@@ -11,7 +14,7 @@ import { MobileNav } from "@/components/site/mobile-nav";
   Die Wortmarke fuehrt bewusst zur Startseite (/) statt zum Konto -- das ist
   die universelle Erwartung an ein Logo, unabhaengig vom Anmeldestatus.
 */
-export function AppHeader({ credits }: { credits?: number }) {
+export function AppHeader({ credits, plan }: { credits?: number; plan?: PlanKey }) {
   return (
     <header className="sticky top-0 z-50 border-b border-line bg-paper/85 backdrop-blur-md">
       <div className="mx-auto flex h-16 w-full max-w-5xl items-center justify-between px-6">
@@ -27,6 +30,16 @@ export function AppHeader({ credits }: { credits?: number }) {
             >
               <span className="font-medium tabular-nums">{credits}</span>
               <span className="text-muted">{credits === 1 ? "Credit" : "Credits"}</span>
+              {/* Tarif direkt sichtbar, ohne erst auf /konto nachschauen zu
+                  muessen. Eigene Pille statt nur mehr Text in der Credits-
+                  Pille -- Trennlinie macht "Guthaben" und "Tarif" als zwei
+                  getrennte Informationen lesbar statt einer verklumpten. */}
+              {plan && (
+                <>
+                  <span className="h-3 w-px bg-line" aria-hidden="true" />
+                  <span className="text-muted">{PLAN_LABELS[plan]}</span>
+                </>
+              )}
             </Link>
           )}
 

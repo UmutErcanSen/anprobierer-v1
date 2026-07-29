@@ -38,8 +38,9 @@ export default async function VerlaufDetailPage(props: PageProps<"/konto/verlauf
   if (!generation) notFound();
 
   const credits = balance?.balance ?? 0;
+  const plan = (profile?.plan as PlanKey) ?? "free";
   const cardRows = resolveCardRows(generation);
-  const locked = isGenerationLocked((profile?.plan as PlanKey) ?? "free", generation.is_free_reveal);
+  const locked = isGenerationLocked(plan, generation.is_free_reveal);
 
   const cards: ResultCard[] = await Promise.all(
     cardRows.map(async (c) => ({
@@ -76,7 +77,7 @@ export default async function VerlaufDetailPage(props: PageProps<"/konto/verlauf
 
   return (
     <>
-      <AppHeader credits={credits} />
+      <AppHeader credits={credits} plan={plan} />
 
       <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-14">
         {backLink}

@@ -132,7 +132,7 @@ export default async function VerlaufPage(props: PageProps<"/konto/verlauf">) {
 
   return (
     <>
-      <AppHeader credits={credits} />
+      <AppHeader credits={credits} plan={plan} />
 
       {/* max-w-7xl statt max-w-5xl: eine Bildergalerie nutzt die
           Bildschirmbreite anders als ein Formular oder Fliesstext -- bei

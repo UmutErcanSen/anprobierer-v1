@@ -346,6 +346,7 @@ export function HistoryFilters({
   const [mKategorie, setMKategorie] = useOptimistic(kategorie);
   const [mGroesse, setMGroesse] = useOptimistic(groesse);
   const [mFarbe, setMFarbe] = useOptimistic(farbe);
+  const [mFavorit, setMFavorit] = useOptimistic(favorit);
 
   // Mehrfachauswahl-Navigation wird debounced: bei einer Checkbox-Liste
   // klickt man oft mehrere Optionen kurz hintereinander an. Ohne Debounce
@@ -388,35 +389,84 @@ export function HistoryFilters({
     navigate(params);
   }
 
-  // Einzelauswahl im Mobil-Drilldown: waehlen UND sofort zur obersten Ebene
-  // zurueckkehren -- bei genau einer sinnvollen Wahl ist ein zusaetzlicher
-  // Zurueck-Tap ueberfluessig.
+  // Mobil-Drilldown aendert NUR den Entwurf (m*-State) -- anders als die
+  // Desktop-Dropdowns (updateSingle/updateMulti, wenden sofort an) greift
+  // die Auswahl hier erst, wenn "Ergebnisse anzeigen"/"Neue Filter anwenden"
+  // gedrueckt wird (siehe applyMobileFilters unten). Bei Status/Modus
+  // (Einzelauswahl) kehrt eine Wahl trotzdem sofort zur obersten Ebene
+  // zurueck -- das ist reine Navigation innerhalb des Sheets, keine
+  // Anwendung der Filter.
   function chooseSingleMobile(key: 'status' | 'mode', value: string) {
     if (key === 'status') setMStatus(value);
     else setMMode(value);
-    updateSingle(key, value);
     setMobilePanel(null);
   }
 
   function toggleKategorieMobile(value: string) {
-    const next = mKategorie.includes(value) ? mKategorie.filter((v) => v !== value) : [...mKategorie, value];
-    setMKategorie(next);
-    updateMulti('kategorie', next);
+    setMKategorie((prev) => (prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]));
   }
   function toggleGroesseMobile(value: string) {
-    const next = mGroesse.includes(value) ? mGroesse.filter((v) => v !== value) : [...mGroesse, value];
-    setMGroesse(next);
-    updateMulti('groesse', next);
+    setMGroesse((prev) => (prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]));
   }
   function toggleFarbeMobile(value: string) {
-    const next = mFarbe.includes(value) ? mFarbe.filter((v) => v !== value) : [...mFarbe, value];
-    setMFarbe(next);
-    updateMulti('farbe', next);
+    setMFarbe((prev) => (prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]));
   }
 
+  /** Ob sich der Entwurf von den tatsaechlich aktiven Filtern unterscheidet --
+   * steuert den Button-Text ("Ergebnisse anzeigen" vs. "Neue Filter
+   * anwenden") ganz unten im Sheet. */
+  function sameValues(a: string[], b: string[]) {
+    if (a.length !== b.length) return false;
+    const setB = new Set(b);
+    return a.every((v) => setB.has(v));
+  }
+  const hasPendingChanges =
+    mStatus !== status ||
+    mMode !== mode ||
+    mFavorit !== favorit ||
+    !sameValues(mKategorie, kategorie) ||
+    !sameValues(mGroesse, groesse) ||
+    !sameValues(mFarbe, farbe);
+
+  /** Wendet den gesamten Entwurf in einem Schritt an -- kein Debounce noetig,
+   * das ist bereits die explizite, einmalige Bestaetigung. */
+  function applyMobileFilters() {
+    if (hasPendingChanges) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete('page');
+      if (mStatus === 'all') params.delete('status');
+      else params.set('status', mStatus);
+      if (mMode === 'all') params.delete('mode');
+      else params.set('mode', mMode);
+      if (mKategorie.length === 0) params.delete('kategorie');
+      else params.set('kategorie', mKategorie.join(','));
+      if (mGroesse.length === 0) params.delete('groesse');
+      else params.set('groesse', mGroesse.join(','));
+      if (mFarbe.length === 0) params.delete('farbe');
+      else params.set('farbe', mFarbe.join(','));
+      if (mFavorit) params.set('favorit', '1');
+      else params.delete('favorit');
+
+      const qs = params.toString();
+      startTransition(() => {
+        router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+      });
+    }
+    setSheetOpen(false);
+    setMobilePanel(null);
+  }
+
+  /** Schliessen OHNE anzuwenden (X, Hintergrund-Tap) verwirft den Entwurf --
+   * die tatsaechlich aktiven Filter aendern sich dabei nicht. */
   function closeSheet() {
     setSheetOpen(false);
     setMobilePanel(null);
+    setMStatus(status);
+    setMMode(mode);
+    setMKategorie(kategorie);
+    setMGroesse(groesse);
+    setMFarbe(farbe);
+    setMFavorit(favorit);
   }
 
   const hasAnyFilter =
@@ -434,6 +484,15 @@ export function HistoryFilters({
       type="button"
       onClick={() => {
         if (debounceRef.current) clearTimeout(debounceRef.current);
+        // Setzt auch den Mobil-Entwurf zurueck -- sonst wuerde "Ergebnisse
+        // anzeigen" direkt danach die alten (noch nicht verworfenen)
+        // Entwurfswerte wieder anwenden.
+        setMStatus('all');
+        setMMode('all');
+        setMKategorie([]);
+        setMGroesse([]);
+        setMFarbe([]);
+        setMFavorit(false);
         startTransition(() => router.replace(pathname, { scroll: false }));
       }}
       className="text-center text-sm text-muted underline underline-offset-4 transition-colors hover:text-ink"
@@ -593,13 +652,13 @@ export function HistoryFilters({
                     />
                     <button
                       type="button"
-                      onClick={() => toggleFavorit(!favorit)}
-                      aria-pressed={favorit}
+                      onClick={() => setMFavorit((v) => !v)}
+                      aria-pressed={mFavorit}
                       className={`flex h-12 w-full items-center justify-center gap-2 rounded-lg border px-3.5 text-[15px] transition-colors ${
-                        favorit ? 'border-ink text-ink' : 'border-line text-ink hover:border-line-strong'
+                        mFavorit ? 'border-ink text-ink' : 'border-line text-ink hover:border-line-strong'
                       }`}
                     >
-                      <Star size={15} fill={favorit ? 'currentColor' : 'none'} aria-hidden />
+                      <Star size={15} fill={mFavorit ? 'currentColor' : 'none'} aria-hidden />
                       Favoriten
                     </button>
                     {resetButton && <div className="mt-1 text-center">{resetButton}</div>}
@@ -632,12 +691,16 @@ export function HistoryFilters({
               </div>
 
               <div className="border-t border-line p-5">
+                {/* Bewusst applyMobileFilters statt closeSheet: nur dieser
+                    Knopf wendet den Entwurf tatsaechlich an. X/Hintergrund
+                    schliessen ohne Anwenden (siehe closeSheet). Der Text
+                    macht sichtbar, ob es ueberhaupt etwas anzuwenden gibt. */}
                 <button
                   type="button"
-                  onClick={closeSheet}
+                  onClick={applyMobileFilters}
                   className="w-full rounded-full bg-ink px-5 py-3 text-sm font-medium text-on-ink transition-opacity hover:opacity-90"
                 >
-                  Ergebnisse anzeigen
+                  {hasPendingChanges ? 'Neue Filter anwenden' : 'Ergebnisse anzeigen'}
                 </button>
               </div>
             </div>

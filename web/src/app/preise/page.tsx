@@ -3,6 +3,8 @@ import { SiteHeader } from "@/components/site/site-header";
 import { SiteFooter } from "@/components/site/site-footer";
 import { PricingCards } from "@/components/pricing/pricing-cards";
 import { COMPARISON_ROWS } from "@/components/pricing/plans-data";
+import { createClient } from "@/lib/supabase/server";
+import type { PlanKey } from "@/lib/generation/constants";
 
 export const metadata: Metadata = {
   title: "Preise",
@@ -20,7 +22,24 @@ export const metadata: Metadata = {
   zwei, die auseinanderlaufen koennten.
 */
 
-export default function PreisePage() {
+export default async function PreisePage() {
+  // Serverseitig ermitteln, ob (und mit welchem Tarif) der Besucher schon
+  // zahlt -- damit die Karten unten "Jetzt upgraden" gar nicht erst anbieten,
+  // wo ein zweiter Checkout eine zweite, parallele Stripe-Subscription
+  // anlegen wuerde (siehe Guard in /api/stripe/checkout). Absichtlich schon
+  // hier statt erst im Klick-Handler: der Nutzer soll erst gar nicht auf
+  // einen Button treffen, der ohnehin nur einen Fehler zurückgibt.
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  let currentPlan: PlanKey | null = null;
+  if (user) {
+    const { data: profile } = await supabase.from("profiles").select("plan").single();
+    currentPlan = (profile?.plan as PlanKey) ?? "free";
+  }
+
   return (
     <>
       <SiteHeader />
@@ -38,7 +57,7 @@ export default function PreisePage() {
         </section>
 
         <section className="mx-auto w-full max-w-6xl px-6 pb-16">
-          <PricingCards />
+          <PricingCards currentPlan={currentPlan} />
         </section>
 
         {/* Direktvergleich: dieselben Zeilen ueber alle drei Tarife, statt

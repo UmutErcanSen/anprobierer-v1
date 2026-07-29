@@ -133,12 +133,32 @@ export async function POST(request: Request) {
       case 'invoice.paid': {
         const invoice = event.data.object;
         const userId = invoice.parent?.subscription_details?.metadata?.user_id;
-        const priceDetails = invoice.lines.data[0]?.pricing?.price_details;
+
+        // Bei einem Tarifwechsel MITTEN in der Periode (Upgrade/Downgrade ueber
+        // das Customer Portal) enthaelt die naechste Rechnung zusaetzlich zur
+        // regulaeren Verlaengerung ein oder zwei Proration-Posten (Gutschrift
+        // fuer den alten Tarif, Nachbelastung fuer den neuen). lines.data[0]
+        // waere dann nicht verlaesslich der "echte" Posten -- deshalb gezielt
+        // die NICHT-Proration-Zeile suchen, die die tatsaechliche volle
+        // Periode beschreibt. Reine Proration-Rechnungen (keine solche Zeile
+        // vorhanden) loesen bewusst KEINE Credit-Gutschrift aus.
+        const line = invoice.lines.data.find(
+          (l) => l.parent?.subscription_item_details?.proration === false,
+        );
+        const priceDetails = line?.pricing?.price_details;
         const priceId = typeof priceDetails?.price === 'string' ? priceDetails.price : priceDetails?.price?.id;
         const mapped = priceId ? planForPriceId(priceId) : null;
 
-        if (!userId || !mapped) {
-          console.error('[stripe/webhook] invoice.paid ohne verwertbare Daten', invoice.id, { userId, priceId });
+        if (!userId) {
+          console.error('[stripe/webhook] invoice.paid ohne user_id-Metadata', invoice.id);
+          break;
+        }
+        if (!line) {
+          console.log('[stripe/webhook] invoice.paid enthält nur Proration-Posten — keine Gutschrift', invoice.id);
+          break;
+        }
+        if (!mapped) {
+          console.error('[stripe/webhook] invoice.paid mit unbekannter Price-ID', invoice.id, { priceId });
           break;
         }
 

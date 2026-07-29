@@ -130,8 +130,12 @@ export default async function KontoPage() {
             <p className="text-sm text-ink-soft">{credits === 1 ? "Credit übrig" : "Credits übrig"}</p>
             <p className="mt-0.5 text-xs uppercase tracking-[0.1em] text-muted">
               <span className="capitalize">{plan}-Tarif</span> ·{" "}
+              {/* War "Guthaben aufladen" -- irrefuehrend, denn es gibt kein
+                  Aufladen. Es gibt nur Abos (siehe Entscheidung: keine
+                  Credit-Pakete), Credits kommen ausschliesslich ueber den
+                  monatlichen/jaehrlichen Abo-Rhythmus. */}
               <Link href="/preise" className="normal-case underline underline-offset-4 hover:text-ink">
-                Guthaben aufladen
+                Tarife ansehen
               </Link>
             </p>
           </div>

@@ -4,13 +4,22 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { LinkButton, Button } from "@/components/ui/button";
 import { PLANS, type PaidPlan } from "@/components/pricing/plans-data";
+import type { PlanKey } from "@/lib/generation/constants";
 
 type Interval = "monthly" | "yearly";
 
-export function PricingCards() {
+type PricingCardsProps = {
+  /** null = nicht angemeldet. Bestimmt, ob eine Karte "Jetzt upgraden"
+   *  (neuer Checkout) oder "Abo verwalten" (Portal) zeigt -- siehe Kommentar
+   *  unten bei renderCta. */
+  currentPlan: PlanKey | null;
+};
+
+export function PricingCards({ currentPlan }: PricingCardsProps) {
   const router = useRouter();
   const [interval, setInterval] = useState<Interval>("monthly");
   const [pendingPlan, setPendingPlan] = useState<PaidPlan | null>(null);
+  const [portalLoading, setPortalLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function startCheckout(plan: PaidPlan) {
@@ -38,6 +47,24 @@ export function PricingCards() {
       setError("Der Checkout konnte nicht gestartet werden. Prüfe deine Verbindung.");
     } finally {
       setPendingPlan(null);
+    }
+  }
+
+  async function openPortal() {
+    setError(null);
+    setPortalLoading(true);
+    try {
+      const res = await fetch("/api/stripe/portal", { method: "POST" });
+      const data = (await res.json()) as { url?: string; error?: string };
+      if (data.url) {
+        window.location.href = data.url;
+        return;
+      }
+      setError(data.error ?? "Konnte nicht geöffnet werden.");
+    } catch {
+      setError("Konnte nicht geöffnet werden.");
+    } finally {
+      setPortalLoading(false);
     }
   }
 
@@ -118,10 +145,29 @@ export function PricingCards() {
                 ))}
               </ul>
 
-              {plan.key === "free" ? (
-                <LinkButton href="/registrieren" size="lg">
-                  Kostenlos starten
-                </LinkButton>
+              {/* Wer schon EIN bezahltes Abo hat, darf hier keinen zweiten
+                  Checkout starten (der Server lehnt das ohnehin ab, siehe
+                  /api/stripe/checkout) -- Auf-/Abstufung und Kuendigung
+                  laufen ausschliesslich ueber das Stripe Customer Portal,
+                  das seit Kurzem beides mit korrekter Proration beherrscht. */}
+              {plan.key === currentPlan ? (
+                <span className="inline-flex h-12 items-center justify-center rounded-full border border-line px-7 text-[15px] text-muted">
+                  Aktueller Tarif
+                </span>
+              ) : plan.key === "free" ? (
+                currentPlan == null ? (
+                  <LinkButton href="/registrieren" size="lg">
+                    Kostenlos starten
+                  </LinkButton>
+                ) : (
+                  <Button size="lg" variant="outline" onClick={openPortal} disabled={portalLoading}>
+                    {portalLoading ? "Öffnet …" : "Zum Kündigen: Abo verwalten"}
+                  </Button>
+                )
+              ) : currentPlan && currentPlan !== "free" ? (
+                <Button size="lg" variant="outline" onClick={openPortal} disabled={portalLoading}>
+                  {portalLoading ? "Öffnet …" : "Zum Wechseln: Abo verwalten"}
+                </Button>
               ) : (
                 (() => {
                   const paidKey = plan.key;

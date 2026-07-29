@@ -58,8 +58,23 @@ export async function POST(request: Request) {
   // Umstieg von Basic auf Pro wuerde als zweiter, unabhaengiger Kunde landen).
   const { data: existingSub } = await supabase
     .from('subscriptions')
-    .select('stripe_customer_id')
+    .select('stripe_customer_id, status')
     .maybeSingle();
+
+  // Wer bereits ein laufendes Abo hat, darf hier KEIN zweites eroeffnen --
+  // sonst haette der Kunde zwei parallele Stripe-Subscriptions (unsere
+  // subscriptions-Tabelle hat aber nur eine Zeile pro Nutzer, die zweite
+  // wuerde die erste beim naechsten Webhook-Event einfach ueberschreiben,
+  // waehrend die erste im Hintergrund weiterlaeuft und weiter abgebucht
+  // wird). Fuer Wechsel/Kuendigung ist das Stripe Customer Portal
+  // (`/api/stripe/portal`) der richtige, dafuer vorgesehene Weg -- der
+  // erlaubt seit Kurzem auch Auf-/Abstufungen mit korrekter Proration.
+  if (existingSub?.status && ['active', 'trialing', 'past_due'].includes(existingSub.status)) {
+    return NextResponse.json(
+      { error: 'Du hast bereits ein laufendes Abo. Zum Wechseln oder Kündigen nutze „Abo verwalten".' },
+      { status: 409 },
+    );
+  }
 
   const origin = request.headers.get('origin') ?? new URL(request.url).origin;
 

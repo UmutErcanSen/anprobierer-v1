@@ -20,7 +20,7 @@ export type LedgerRow = {
 };
 
 export type MonthUsage = {
-  /** Kurzer Monatsname fuer die Achse, z.B. "Jul". */
+  /** Ausgeschriebener Monatsname fuer die Achse, z.B. "Juli". */
   label: string;
   /** Netto verbrauchte Credits in diesem Monat (Abbuchungen minus Rueckbuchungen). */
   used: number;
@@ -33,7 +33,10 @@ const GRANT_REASONS = new Set(["signup_bonus", "subscription_grant", "topup_purc
 /** Gruende, die den tatsaechlichen Verbrauch abbilden. */
 const USAGE_REASONS = new Set(["generation_charge", "generation_refund"]);
 
-const MONTH_LABELS = ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"];
+const MONTH_LABELS = [
+  "Januar", "Februar", "März", "April", "Mai", "Juni",
+  "Juli", "August", "September", "Oktober", "November", "Dezember",
+];
 
 /**
  * Netto-Verbrauch je Monat fuer die letzten `count` Monate, aelteste zuerst.

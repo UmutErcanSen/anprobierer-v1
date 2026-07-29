@@ -169,9 +169,33 @@ export function UsageOverview({ planLabel, grantAmount, usedSinceGrant, monthly,
             ))}
           </div>
 
-          <div className="mt-2 flex gap-2 text-xs text-muted">
+          {/* Ausgeschriebene Monatsnamen statt Kuerzel ("September" statt
+              "Sep"). Das laengste Wort ist neun Zeichen -- bei sechs Spalten
+              auf einem 320px-Bildschirm reicht der Platz dafuer nicht immer
+              in einer Zeile.
+
+              Zwei Sicherungen, in dieser Reihenfolge unbedingt noetig:
+              - min-w-0 erlaubt der Spalte, unter ihre Inhaltsbreite zu
+                schrumpfen -- ohne das wuerde die Reihe insgesamt breiter als
+                der Container und liefe seitlich aus dem Rahmen.
+              - break-words zwingt lange Woerter zum Umbruch auf eine zweite
+                Zeile. Wurde das getestet: OHNE break-words (nur hyphens-auto)
+                bricht die Silbentrennung in der Praxis oft gar nicht (kein
+                Woerterbuch verfuegbar), das Wort laeuft dann als eine Zeile
+                seitlich UEBER die eigene Spalte hinweg in die Nachbarspalte --
+                "September" und "November" beruehrten sich ohne jeden Abstand.
+                Ein Wortumbruch ohne Trennstrich ("Septe" / "mber") sieht
+                schlechter aus als ein sauberes Wort, verhindert aber
+                zuverlaessig genau diese Kollision. hyphens-auto bleibt
+                zusaetzlich gesetzt: wo der Browser eine Trennstelle kennt,
+                nutzt er sie. */}
+          <div className="mt-2 flex gap-2 text-[11px] text-muted sm:text-xs">
             {monthly.map((m, i) => (
-              <span key={`${m.label}-label-${i}`} className="max-w-[72px] flex-1 text-center">
+              <span
+                key={`${m.label}-label-${i}`}
+                lang="de"
+                className="min-w-0 max-w-[72px] flex-1 break-words text-center [hyphens:auto]"
+              >
                 {m.label}
               </span>
             ))}
@@ -195,6 +219,18 @@ export function UsageOverview({ planLabel, grantAmount, usedSinceGrant, monthly,
               deshalb nicht am Monatsersten — die Zahlen können abweichen.
             </p>
           )}
+
+          {/* Diese Uebersicht ist bewusst ein rollierendes 6-Monats-Fenster,
+              kein Archiv -- fuer laengere Zeitraeume gibt es bereits /konto/
+              verlauf mit echten Filtern (Status, Kategorie, Groesse, Farbe,
+              Favorit). Ein zweites Navigationskonzept (Jahres-Tabs) hier
+              waere doppelte Arbeit fuer denselben Zweck. */}
+          <Link
+            href="/konto/verlauf"
+            className="mt-4 inline-block text-xs text-muted underline underline-offset-4 hover:text-ink"
+          >
+            Vollständigen Verlauf ansehen
+          </Link>
         </div>
       )}
     </section>

@@ -82,6 +82,10 @@ Stand: 27.07.2026
 ## 🟢 Branding & Naming
 
 - [ ] Kein eigener, geschützter Name/Logo — Projekt heißt aktuell nur `ki-anzeigen-ersteller`/„Anprobierer" (Arbeitstitel). Bewusst auf Phase 5 verschoben (nach Struktur, vor Relaunch). Sobald ein Name feststeht: Domain kaufen → Custom-SMTP-Punkt oben wird dadurch entsperrt.
+- ❌ **„Vestio" verworfen (29.07.2026)** — Recherche ergab eine **identische, bestandskräftig eingetragene deutsche Wortmarke**: DPMA 302024235888, eingetragen 20.02.2025, Inhaber Opus Stilberater GmbH (Leimen), Schutz bis 2034, Widerspruchsfrist abgelaufen. Die eingetragenen Klassen decken das Geschäftsmodell praktisch vollständig ab: **Kl. 9 (Software), Kl. 25 (Bekleidung), Kl. 35 (Werbung/Verkaufsförderung), Kl. 42 (IT-Dienstleistungen)**. Erschwerend: Der Inhaber ist ein aktiver, finanzierter FashionTech-Wettbewerber mit eigener „Vestio"-App (iOS/Android, Release 01/2025) — die Marke wird nachweislich benutzt, ein Löschungsangriff wegen Nichtbenutzung scheidet aus. Zusätzlich sind vestio.de (vestio TEXTILING GmbH, seit 1994) und vestio.com (Immobilienfirma, Belgien) aktiv belegt; keine brauchbare Domain frei. Quellen: TMview (EUIPO/TMDN), tmdb.eu. **Kein Rechtsrat — aber identisches Zeichen + überlappende Klassen + gleiches Land ist eindeutig genug, um den Namen nicht weiterzuverfolgen.**
+- [ ] **Lehre daraus: Namen VOR dem Logo-Design prüfen, nicht danach.** Reihenfolge künftig: Kandidatenliste → TMview-/DPMA-Recherche + Domain-Check → erst dann Design.
+- [ ] **„Trylane" (zweiter Favorit) ist noch ungeprüft** — vor weiterer Design-Arbeit dieselbe Prüfung durchlaufen.
+- [ ] Vor endgültiger Festlegung: anwaltliche Freedom-to-operate-Recherche für den finalen Namen, inkl. Unternehmenskennzeichen nach § 5 MarkenG (nicht nur eingetragene Marken). Offen blieb in meiner Recherche außerdem, welche Marken Vestiaire Collective hält — relevant, weil klanglich nah und im selben Segment.
 
 ## 🟢 Tests & Automatisierung
 

@@ -76,10 +76,15 @@ export default async function KontoPage() {
   // Ledger nur so weit zurueck laden, wie tatsaechlich gebraucht: bis zum
   // Beginn des Diagramm-Fensters ODER bis zur letzten Gutschrift, je nachdem
   // was frueher liegt. Damit bleibt die Zeilenzahl auch bei Vielnutzern klein.
-  const windowStart = new Date();
-  windowStart.setMonth(windowStart.getMonth() - 5);
-  windowStart.setDate(1);
-  windowStart.setHours(0, 0, 0, 0);
+  // ACHTUNG, subtile Falle: `setMonth(getMonth() - 5)` waere hier FALSCH.
+  // Am 29./30./31. eines Monats rollt der Zieltag ueber das Monatsende hinaus
+  // (29.07. minus 5 Monate = 29.02. -> existiert 2026 nicht -> 01.03.), das
+  // Ladefenster begaenne also einen Monat zu spaet und der aelteste Balken
+  // bliebe dauerhaft leer. Der Konstruktor mit Tag 1 normalisiert korrekt --
+  // dieselbe Schreibweise nutzt auch monthlyUsage() beim Bilden der Koerbe,
+  // beide muessen zwingend denselben Monat treffen.
+  const today = new Date();
+  const windowStart = new Date(today.getFullYear(), today.getMonth() - 5, 1);
   const since =
     grantRow && grantRow.created_at < windowStart.toISOString()
       ? grantRow.created_at
@@ -92,7 +97,11 @@ export default async function KontoPage() {
 
   const rows = (ledgerRows ?? []) as LedgerRow[];
   const grant = grantRow ? lastGrant([grantRow as LedgerRow]) : null;
-  const monthly = monthlyUsage(rows);
+  // user.created_at begrenzt das Diagramm nach hinten -- Monate vor der
+  // Registrierung tauchen gar nicht auf, statt als leere Balken.
+  // user.created_at begrenzt das Diagramm nach hinten -- Monate vor der
+  // Registrierung tauchen gar nicht auf, statt als leere Balken.
+  const monthly = monthlyUsage(rows, 6, today, user.created_at);
   const usedSinceGrant = grant ? usedSince(rows, grant.at) : 0;
   const tip = buildTip({ plan, balance: credits, grantAmount: grant?.amount ?? null, usedSinceGrant, monthly });
 

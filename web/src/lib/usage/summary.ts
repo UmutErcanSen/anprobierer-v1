@@ -40,12 +40,32 @@ const MONTH_LABELS = ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "
  * Rueckbuchungen (fehlgeschlagene Generierungen) werden gegengerechnet --
  * sonst wuerde der Balken Verbrauch zeigen, der nie stattgefunden hat.
  */
-export function monthlyUsage(rows: LedgerRow[], count = 6, now = new Date()): MonthUsage[] {
+export function monthlyUsage(
+  rows: LedgerRow[],
+  count = 6,
+  now = new Date(),
+  accountCreatedAt?: string,
+): MonthUsage[] {
   const buckets: MonthUsage[] = [];
   const keys: string[] = [];
 
+  // Monate VOR der Registrierung werden weggelassen. Sonst zeigt ein zwei
+  // Monate altes Konto vier leere Balken -- das liest sich wie "nichts
+  // genutzt", gemeint ist aber "damals noch nicht dabei".
+  const createdOrdinal = accountCreatedAt
+    ? (() => {
+        const d = new Date(accountCreatedAt);
+        return d.getFullYear() * 12 + d.getMonth();
+      })()
+    : null;
+
   for (let i = count - 1; i >= 0; i--) {
+    // Bewusst der Konstruktor mit Tag 1 statt setMonth(): setMonth rollt am
+    // 29./30./31. ueber das Monatsende hinaus (29.07. minus 5 Monate ergaebe
+    // den 01.03. statt Februar). page.tsx muss dieselbe Schreibweise nutzen,
+    // damit Ladefenster und Koerbe denselben Monat treffen.
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    if (createdOrdinal !== null && d.getFullYear() * 12 + d.getMonth() < createdOrdinal) continue;
     keys.push(`${d.getFullYear()}-${d.getMonth()}`);
     buckets.push({ label: MONTH_LABELS[d.getMonth()], used: 0, isCurrent: i === 0 });
   }

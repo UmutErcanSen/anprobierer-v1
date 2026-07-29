@@ -38,5 +38,15 @@ export const signInSchema = z.object({
   password: z.string().min(1, 'Bitte gib dein Passwort ein.'),
 });
 
+/** Passwort vergessen, Schritt 1: nur die Adresse, an die der Link geht. */
+export const resetRequestSchema = z.object({ email: emailSchema });
+
+/**
+ * Passwort vergessen, Schritt 2: das neue Passwort.
+ * Hier gelten -- anders als beim Anmelden -- wieder die vollen Regeln:
+ * ein NEU gesetztes Passwort soll den aktuellen Anspruch erfuellen.
+ */
+export const newPasswordSchema = z.object({ password: passwordSchema });
+
 export type SignUpInput = z.infer<typeof signUpSchema>;
 export type SignInInput = z.infer<typeof signInSchema>;

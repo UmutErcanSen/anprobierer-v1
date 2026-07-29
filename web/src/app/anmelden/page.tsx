@@ -16,12 +16,17 @@ export default async function AnmeldenPage(props: PageProps<"/anmelden">) {
       title="Willkommen zurück"
       subtitle="Melde dich an, um weiterzumachen."
       footer={
-        <>
-          Noch kein Konto?{" "}
-          <Link href="/registrieren" className="text-ink underline underline-offset-4">
-            Konto erstellen
+        <div className="flex flex-col gap-2">
+          <span>
+            Noch kein Konto?{" "}
+            <Link href="/registrieren" className="text-ink underline underline-offset-4">
+              Konto erstellen
+            </Link>
+          </span>
+          <Link href="/passwort-vergessen" className="text-ink underline underline-offset-4">
+            Passwort vergessen?
           </Link>
-        </>
+        </div>
       }
     >
       {hatBestaetigungsfehler && (

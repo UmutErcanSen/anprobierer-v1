@@ -104,10 +104,35 @@ export default defineConfig({
   // gegen das eigentliche Testziel.
   webServer: process.env.E2E_BASE_URL
     ? undefined
-    : {
-        command: process.env.CI ? 'npm run build && npm run start' : 'npm run dev',
-        url: 'http://localhost:3000',
-        reuseExistingServer: !process.env.CI,
-        timeout: 180_000,
-      },
+    : [
+        // Mock der OpenAI-API. Muss VOR der App stehen: Playwright startet die
+        // Eintraege in dieser Reihenfolge, und die App soll ihn beim ersten
+        // Aufruf schon vorfinden.
+        {
+          command: 'node e2e/mock-openai.mjs',
+          url: 'http://127.0.0.1:4010/health',
+          reuseExistingServer: !process.env.CI,
+          timeout: 30_000,
+        },
+        {
+          command: process.env.CI ? 'npm run build && npm run start' : 'npm run dev',
+          url: 'http://localhost:3000',
+          reuseExistingServer: !process.env.CI,
+          timeout: 180_000,
+          /*
+            Biegt die serverseitigen OpenAI-Aufrufe auf den Mock um -- der
+            einzige Grund, warum Tests der Generierung nichts kosten.
+
+            ACHTUNG, bekannte Luecke: `reuseExistingServer` greift auf einen
+            bereits laufenden Dev-Server zu, und der kennt diese Variable
+            NICHT, wenn er von Hand gestartet wurde. Dann liefen echte,
+            kostenpflichtige Aufrufe. Genau dagegen zaehlt der Mock seine
+            Anfragen mit: Die Generierungstests pruefen den Zaehler und
+            schlagen fehl, wenn er sich nicht bewegt hat -- statt still Geld
+            auszugeben. Fuer diese Tests den Dev-Server also von Playwright
+            starten lassen oder selbst mit gesetzter Variable starten.
+          */
+          env: { OPENAI_BASE_URL: 'http://127.0.0.1:4010/v1' },
+        },
+      ],
 });

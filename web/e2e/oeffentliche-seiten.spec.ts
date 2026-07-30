@@ -36,6 +36,30 @@ test.describe('Startseite', () => {
     expect(header['referrer-policy']).toBe('strict-origin-when-cross-origin');
     expect(header['content-security-policy']).toContain("frame-ancestors 'none'");
   });
+
+  test('über HTTPS erzwingt die Seite HTTPS auch für die Zukunft (HSTS)', async ({ page, baseURL }) => {
+    /*
+      Läuft nur gegen eine HTTPS-Umgebung — lokal ist der Dev-Server bewusst
+      unverschlüsselt, und Browser IGNORIEREN Strict-Transport-Security über
+      HTTP ohnehin. Dort zu prüfen hätte also keine Aussagekraft.
+
+      Gegen die Produktionsdomain ist der Test dagegen wertvoll: Er belegt,
+      dass die Plattform unseren HSTS-Header wirklich durchreicht. Manche
+      Hoster setzen eigene Header oder verschlucken fremde -- ein still
+      verlorener HSTS-Header fällt sonst niemandem auf.
+
+          E2E_BASE_URL=https://deine-domain.de npm run test:e2e
+    */
+    test.skip(!baseURL?.startsWith('https://'), 'Nur gegen eine HTTPS-Umgebung aussagekräftig.');
+
+    const antwort = await page.goto('/');
+    const hsts = antwort!.headers()['strict-transport-security'];
+
+    expect(hsts).toBeDefined();
+    // Mindestens ein halbes Jahr — kürzere Zeiträume gelten als wirkungslos.
+    const maxAge = Number(/max-age=(\d+)/.exec(hsts ?? '')?.[1] ?? 0);
+    expect(maxAge).toBeGreaterThanOrEqual(15_552_000);
+  });
 });
 
 test.describe('Preise', () => {

@@ -129,6 +129,59 @@ Nötig ist diese Naht, weil die OpenAI-Aufrufe **serverseitig** passieren (in
 `after()` nach der Antwort). Playwrights `page.route()` greift nur bei
 Anfragen aus dem Browser und kann sie deshalb nicht abfangen.
 
+## HTTPS
+
+Kurz: **Die Tests können HTTPS schon heute, es ist nichts zu bauen.**
+
+Meine Formulierung „die App über HTTP ansprechen" war ungenau — gemeint war
+*als Blackbox über das Netzwerkprotokoll*, im Gegensatz zu „interne Funktionen
+importieren". HTTPS **ist** HTTP über TLS; aus Sicht des Tests identisch:
+
+```bash
+E2E_BASE_URL=https://deine-domain.de npm run test:e2e
+```
+
+Warum lokal trotzdem unverschlüsselt? Der Verkehr verlässt den Rechner nie.
+Und Browser behandeln `localhost` ausdrücklich als **sicheren Kontext** —
+Cookies mit `Secure`-Kennzeichen (wie die Supabase-Anmeldecookies) funktionieren
+dort auch ohne TLS. Deshalb laufen die Anmeldetests lokal problemlos.
+
+Falls du HTTPS lokal doch brauchst, kann Next das:
+`next dev --experimental-https` erzeugt ein lokales Zertifikat.
+
+Zwei Punkte für später:
+
+- Der Test „über HTTPS erzwingt die Seite HTTPS auch für die Zukunft (HSTS)"
+  überspringt sich lokal automatisch und greift erst gegen eine HTTPS-Adresse.
+  Er prüft, dass die Hosting-Plattform unseren HSTS-Header wirklich
+  durchreicht — manche setzen eigene Header oder verschlucken fremde.
+- Bei einer Testumgebung mit **selbstsigniertem** Zertifikat würde Playwright
+  die Verbindung ablehnen. Dafür gäbe es `ignoreHTTPSErrors: true` — bewusst
+  **nicht** voreingestellt, weil es echte Zertifikatsfehler verstecken würde,
+  und genau die soll ein Test ja finden.
+
+## OpenAI-Mock — warum die Tests nichts kosten
+
+[`mock-openai.mjs`](mock-openai.mjs) ist ein winziger Server ohne
+Abhängigkeiten, den Playwright automatisch mitstartet. Die App wird per
+`OPENAI_BASE_URL` darauf umgebogen.
+
+Steuerbar zur Laufzeit, damit ein Testlauf schnell bleibt:
+
+| Aufruf | Wirkung |
+|---|---|
+| `/__mock/reset` | Zustand und Zähler zurücksetzen |
+| `/__mock/fail-images?status=520` | Bildaufrufe liefern ab jetzt Fehler |
+| `/__mock/fail-text?status=500` | Textaufrufe liefern ab jetzt Fehler |
+| `/__mock/stats` | Zähler abfragen |
+
+**Die Sicherung gegen versehentliche Kosten:** Der Mock zählt jede Anfrage
+mit. Läuft die App aus Versehen *nicht* über ihn — etwa weil ein von Hand
+gestarteter Dev-Server ohne `OPENAI_BASE_URL` wiederverwendet wurde — bleibt
+der Zähler bei null. Die Generierungstests prüfen das und schlagen fehl,
+statt still echtes Geld auszugeben. Für diese Tests den Dev-Server also von
+Playwright starten lassen.
+
 ## Keine visuellen Regressionstests
 
 Bewusst kein `toHaveScreenshot`. Screenshots unterscheiden sich zwischen

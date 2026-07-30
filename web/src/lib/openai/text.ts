@@ -1,5 +1,7 @@
 import 'server-only';
 
+import { OPENAI_BASE_URL } from '@/lib/openai/base-url';
+
 import { z } from 'zod';
 import { TEXT_MODEL } from '@/lib/generation/constants';
 import { OpenAIError } from '@/lib/openai/images';
@@ -13,7 +15,7 @@ import { OpenAIError } from '@/lib/openai/images';
  * verursachte.
  */
 
-const OPENAI_API = 'https://api.openai.com/v1';
+const OPENAI_API = OPENAI_BASE_URL;
 
 const apiKey = z
   .string()

@@ -1,5 +1,7 @@
 import 'server-only';
 
+import { OPENAI_BASE_URL } from '@/lib/openai/base-url';
+
 import { z } from 'zod';
 import { IMAGE_MODEL, IMAGE_SIZE, OPENAI_QUALITY, type Quality } from '@/lib/generation/constants';
 
@@ -12,7 +14,7 @@ import { IMAGE_MODEL, IMAGE_SIZE, OPENAI_QUALITY, type Quality } from '@/lib/gen
  * falls diese Datei je in eine Client-Komponente gezogen wird.
  */
 
-const OPENAI_API = 'https://api.openai.com/v1';
+const OPENAI_API = OPENAI_BASE_URL;
 
 const apiKey = z
   .string()

@@ -31,6 +31,24 @@ export default defineConfig({
   // alle anderen Tests ueberspringt und der Lauf trotzdem gruen wird.
   forbidOnly: !!process.env.CI,
 
+  /*
+    ZWEI KLASSEN VON TESTS -- der Grund fuer diesen Filter:
+
+    Die meisten Tests sind PORTABEL: Sie sprechen die App nur ueber HTTP an und
+    laufen damit gegen localhost, eine Vorschau-Umgebung oder die spaetere
+    Produktionsdomain, ganz egal wer hostet.
+
+    Einige brauchen dagegen KONTROLLE UEBER DEN SERVER, weil sie serverseitige
+    Fremdaufrufe umbiegen (OpenAI kostet echtes Geld). Deren Mock-Server laeuft
+    auf DIESEM Rechner -- eine entfernte Instanz kann ihn nicht erreichen.
+    Solche Tests sind mit @lokal markiert und werden automatisch uebersprungen,
+    sobald auf eine entfernte Umgebung getestet wird.
+
+    Ohne diesen Filter waeren sie dort nicht nur nutzlos, sondern wuerden
+    schlimmstenfalls ECHTE, kostenpflichtige OpenAI-Aufrufe ausloesen.
+  */
+  grepInvert: process.env.E2E_BASE_URL ? /@lokal/ : undefined,
+
   // Lokal keine Wiederholungen: ein flackernder Test soll sofort auffallen,
   // nicht durch einen zweiten Versuch verdeckt werden. In der CI ein
   // Wiederholungsversuch gegen echte Infrastruktur-Aussetzer.

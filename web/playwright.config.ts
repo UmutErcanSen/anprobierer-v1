@@ -43,7 +43,16 @@ export default defineConfig({
   reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : [['list'], ['html', { open: 'never' }]],
 
   use: {
-    baseURL: 'http://localhost:3000',
+    /*
+      Ziel-Adresse aus der Umgebung, damit dieselben Tests unveraendert gegen
+      localhost, eine Vorschau-Umgebung oder die spaetere Produktionsdomain
+      laufen -- unabhaengig davon, wo gehostet wird. Die Tests sprechen die App
+      ausschliesslich ueber HTTP an und wissen nichts ueber die Plattform
+      darunter; genau das macht sie portabel.
+
+        E2E_BASE_URL=https://vorschau.example.de npm run test:e2e
+    */
+    baseURL: process.env.E2E_BASE_URL ?? 'http://localhost:3000',
     // Spur nur beim Wiederholungsversuch: die Dateien sind gross, und beim
     // ersten Durchlauf reichen Screenshot und Fehlermeldung meist.
     trace: 'on-first-retry',
@@ -72,10 +81,15 @@ export default defineConfig({
     der Dev-Server -- und `reuseExistingServer` greift auf einen bereits
     laufenden zu, was mit `--ui` im Watch-Modus den Unterschied macht.
   */
-  webServer: {
-    command: process.env.CI ? 'npm run build && npm run start' : 'npm run dev',
-    url: 'http://localhost:3000',
-    reuseExistingServer: !process.env.CI,
-    timeout: 180_000,
-  },
+  // Zeigt E2E_BASE_URL auf eine bereits laufende Umgebung, darf Playwright
+  // KEINEN eigenen Server starten -- sonst kaempfte ein lokaler Dev-Server
+  // gegen das eigentliche Testziel.
+  webServer: process.env.E2E_BASE_URL
+    ? undefined
+    : {
+        command: process.env.CI ? 'npm run build && npm run start' : 'npm run dev',
+        url: 'http://localhost:3000',
+        reuseExistingServer: !process.env.CI,
+        timeout: 180_000,
+      },
 });

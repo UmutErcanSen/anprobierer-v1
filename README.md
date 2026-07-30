@@ -1,258 +1,133 @@
-# Virtual Try-On – KI Anzeigen Erstellung
+# Anprobierer
 
-KI-gestützte Anprobebilder für Vinted-Anzeigen. Users upload a person photo + clothing items, and the app generates realistic try-on images via OpenAI GPT Image 2.
+KI-gestützte Anprobebilder samt fertigem Verkaufstext für Vinted, Kleinanzeigen
+und eBay. Nutzer laden ein Foto von sich und ein Kleidungsstück hoch und
+erhalten ein realistisches Anprobebild plus Anzeigentext.
 
-Live: https://virtual-try-on-6d197.web.app
-GitHub: https://github.com/UmutErcanSen/anprobierer-v1
-
----
-
-## Features
-
-- **KI-Bildgenerierung**: Einzel- & Kombi-Modus mit Fortschrittsanzeige
-- **Vinted-Texte**: Automatische Verkaufstexte für alle User
-- **ZIP-Download**: Bilder + Texte als ZIP herunterladen
-- **Account-System**: Email/Google-Login, E-Mail-Verifizierung, Profil-Verwaltung
-- **Abo-System**: Free (3/Monat), Basic (25/Monat), Pro (Unlimited)
-- **Qualität pro Plan**: Niedrig (Free), Mittel (Basic), Hoch (Pro) — keine User-Auswahl
-- **Plan-Wechseln-Flow**: Upgrade via Checkout, Downgrade (deferred bis Periodenende) mit Feature-Vergleich-Modal
-- **Pro-Badge**: Goldener Box-Shadow-Glow (ohne sichtbaren Rahmen), rotiert nur bei Pro
-- **Donut-Visualisierung**: Prozentual mit grün→gelb→orange→rot, Rotation nur bei Pro
-- **History-Cards**: Thumbnails, Preview-Overlay, 2er-Grid auf Desktop
-- **In-App-Benachrichtigungen**: Banner-Varianten (info/warning/danger) bei Limit-Status, Toast bei 80%
-- **Responsive**: Mobile & Desktop optimiert
-- **Burger-Menü**: Hamburger-Icon mit Dropdown-Overlay (Mobile/Desktop)
-- **Nutzer-Icon**: Glow-Effekt + erster Buchstabe des Displaynamens
-- **Rechtliche Seiten**: Impressum & Datenschutzerklärung
-- **Sticky Footer**: Bleibt immer unten, auch bei wenig Inhalt
-- **Header mit Scroll-Shadow**: Box-Shadow erscheint beim Scrollen
-- **DSGVO-konform**: Löschen + Datenexport mit Vorschau-Modal
-- **SEO**: Meta-Tags (OG/Twitter), robots.txt, sitemap.xml, SVG-Favicon
-- **CDN→NPM Migration**: lottie-web + jszip via npm statt CDN (Security + Bundle-Kontrolle)
-- **Code-Splitting**: App-Code (130 kB) + vendor-animation (405 kB) + vendor-firebase (497 kB) — ~87% weniger initiale Ladezeit
-- **Breadcrumb-Navigation**: Auf Account/Preise/Datenschutz/Impressum
-- **Skip-to-Content Link**: Accessibility (Sprungmarke zum Hauptinhalt)
-- **Lazy Loading**: History-Thumbnails mit `loading="lazy"`
-- **Loading-Balken**: Oberer Fortschrittsbalken bei Routenwechseln
-- **Fokus-Management**: Automatischer Fokus auf Hauptcontainer nach Seitenwechsel
-- **Passwort-Validierung**: Min. 8 Zeichen, mindestens 1 Buchstabe + 1 Zahl
-- **Mobile Overflow-Fix**: `-webkit-text-size-adjust:100%`, `overflow:hidden` auf Cards
+> **Der Name ist ein Arbeitstitel.** „Vestio" wurde am 29.07.2026 verworfen — es
+> gibt eine identische eingetragene deutsche Wortmarke im selben Marktsegment.
+> Begründung und Vorgehen für die Namenssuche stehen in [TODO.md](TODO.md).
 
 ---
 
-## 🚀 Lokal entwickeln
+## Aufbau des Repositorys
 
-### Voraussetzungen
+```
+web/          Die Anwendung (Next.js 16, TypeScript, Tailwind)
+  src/        Quellcode
+  e2e/        End-to-End-Tests (Playwright) — eigene Anleitung: web/e2e/README.md
+  supabase/   Datenbank-Migrationen
+  tests/      Nebenläufigkeitstest der Credit-Buchung
 
-- [Node.js](https://nodejs.org) 18+ (auf Mac mit nvm: `nvm use 24`)
-- npm (wird mit Node.js installiert)
+src/, public/, index.html …   Altanwendung (Vanilla JS + Firebase), abgelöst.
+                              Wird gelöscht, sobald sie abgeschaltet ist.
+```
 
-### Dev-Server starten
+## Technik
+
+| Bereich | Wahl |
+|---|---|
+| Frontend/Backend | Next.js 16 (App Router), React 19, TypeScript, Tailwind 4 |
+| Datenbank, Auth, Storage | Supabase (Postgres mit Row Level Security) |
+| Zahlungen | Stripe (aktuell Sandbox/Testmodus) |
+| KI | OpenAI — **ausschließlich serverseitig**, der Schlüssel verlässt den Server nie |
+| Tests | Playwright (E2E), Node-Testrunner (Datenbank) |
+
+## Einrichtung
+
+```bash
+cd web
+npm install
+```
+
+Danach `web/.env.example` nach `web/.env.local` kopieren und ausfüllen. Die
+Datei ist gitignoriert und enthält:
+
+- **Supabase**: URL, Anon-Key, Service-Role-Key (letzterer umgeht RLS — niemals
+  in Client-Code importieren)
+- **OpenAI**: Betreiber-Schlüssel
+- **Stripe**: Secret- und Publishable-Key, Webhook-Secret, vier Price-IDs
+- **Testkonten**: Zugangsdaten für die E2E-Tests
+
+### Datenbank
+
+Migrationen liegen in `web/supabase/migrations/` und werden in
+**chronologischer Reihenfolge** im Supabase SQL-Editor ausgeführt. Welche noch
+offen sind, steht in [TODO.md](TODO.md).
+
+Für den Aufräum-Job (`fail_stale_generations`) muss die Erweiterung `pg_cron`
+im Supabase-Dashboard aktiviert sein (Database → Extensions).
+
+## Entwickeln
 
 ```bash
 npm run dev
 ```
 
-→ http://localhost:5173
+Läuft auf http://localhost:3000.
 
-### API-Key automatisch hinterlegen (optional)
+> **Windows/PowerShell:** Blockiert die Ausführungsrichtlinie `npm`, nutze
+> `npm.cmd` statt `npm` — das umgeht den PowerShell-Wrapper, ohne dass du eine
+> Systemeinstellung ändern musst.
 
-1. Erstelle `.env.local` im Projektstamm (wird nicht committed)
-2. Trag deinen Key ein:
-
-```
-VITE_DEV_API_KEY=sk-dein-wirklicher-key
-```
-
-### DEV_MODE
-
-In `.env` oder `.env.local`:
-```
-VITE_DEV_MODE=true   # Kein Login nötig, 7 Gratis-Generierungen
-VITE_DEV_MODE=false  # Login nötig, 3 Gratis-Generierungen (Produktion)
-```
-
----
-
-## 🔥 Live schalten (Firebase Hosting)
-
-### Empfohlenes Workflow
-
-**Mac (Entwicklung):**
-```bash
-git add -A && git commit -m "Beschreibung" && git push
-```
-
-**PC (Deployment):**
-```bash
-git pull && npm run build && firebase deploy --only hosting
-```
-
-Danach Browser-Cache leeren: **Cmd+Shift+Delete** → Cache leeren → Seite neu laden.
-
-### Quick-Deploy (nur Hosting)
+## Tests
 
 ```bash
-# Mac
-git pull && npm run build && firebase deploy --only hosting
-
-# Windows
-cmd /c "git pull && npm run build && firebase deploy --only hosting"
+npm run test:e2e
 ```
-
----
-
-## 📝 Änderungen commiten und pushen
 
 ```bash
-# Mac
-git add -A && git commit -m "Beschreibung" && git push
-
-# Windows
-cmd /c "git add -A && git commit -m "Beschreibung" && git push"
+npm run test:e2e:ui
 ```
 
----
-
-## 📁 Projektstruktur
-
-```
-src/
-├── main.js              Einstiegspunkt
-├── firebase.js          Firebase Init
-├── auth.js              Login/Registrierung/Google + AuthGuard, Passwort-Validierung
-├── account.js           Account-Seite (Profil, Stats, History, Donut, Preview-Overlay, Upgrade-Banner, lazy loading)
-├── firestore.js         Firestore CRUD (Profile, Generierungen, Thumbnails)
-├── app.js               Hauptlogik (Upload, Generierung, Ergebnisse, createThumbnail, lottie+JSZip)
-├── api.js               OpenAI API-Aufrufe (Bilder + Texte)
-├── subscription.js      Abo-Management (Upgrade, Cancel, Deferred Downgrade, Reset, Quality-Gating)
-├── plans.js             Abo-Vergleich & Definitionen
-├── legal-content.js     Rechtliche Seiten (Impressum, Datenschutz)
-├── utils.js             Hilfsfunktionen
-├── router.js            Client-seitige Navigation (6 Routes) + Route-Loader + Fokus-Management
-├── icons.js             SVG-Icon-System (38+ Lucide-Icons)
-├── checkout.js          Fake Stripe Checkout + Plan-Wechseln-Flow mit Downgrade-Modal
-└── styles.css           Styles (~1700 Zeilen) + Skip-Link + Breadcrumb + Route-Loader
-
-public/
-├── assets/              Bilder (phone-preview, gut, schlecht, …)
-├── js/loading.json      Lottie-Animation
-├── robots.txt           Suchmaschinen-Crawler-Richtlinien
-└── sitemap.xml          XML-Sitemap (6 URLs, /erstellen ergänzt)
-
-index.html               HTML-Grundgerüst (~935 Zeilen) + Skip-Link + Breadcrumbs + Route-Loader
-vite.config.js           Vite-Konfiguration mit Code-Splitting (manualChunks)
-firebase.json            Firebase Hosting Config
-.firebaserc              Firebase Projekt-Alias
-.env                     Basis-Umgebungsvariablen (committed)
-.env.local               Lokale Overrides (NICHT committed)
-.env.production          Produktions-Umgebungsvariablen (committed)
-ROADMAP.md               Entwicklungsroadmap & Fortschritt
+```bash
+npm run test:e2e:report
 ```
 
----
+**Alle Tests kosten nichts** — OpenAI wird über einen lokalen Mock-Server
+umgeleitet, Stripe wird gar nicht aufgerufen.
 
-## 🔑 Abo-Modelle
+Die Tests sind portabel und laufen nach einem Hosting-Wechsel unverändert
+gegen jede Umgebung:
 
-| Feature | Free | Basic (9,99 €/Mo) | Pro (19,99 €/Mo) |
-|---------|------|-------------------|-------------------|
-| Generierungen/Monat | 3 | 25 | Unbegrenzt |
-| Bildqualität | Niedrig | Mittel | Hoch |
-| Kleidungsstücke/Bild | 1 | Bis zu 5 | Unbegrenzt |
-| Kombi-Modus | Ja (max 3) | Ja (max 9) | Ja (max 9) |
-| Vinted-Anzeigentexte | Ja | Ja | Ja |
-| Support | Standard | Priorität | Premium |
-| Donut-Rotation | Nein | Nein | Ja |
-| Pro-Badge | – | – | Goldener Glow |
-
----
-
-## 🏗 Architektur
-
-- **Frontend**: Vanilla JS (kein Framework), Vite 6
-- **Build**: Vite mit Code-Splitting (3 Chunks: app, vendor-animation, vendor-firebase)
-- **Backend**: Firebase (Auth, Firestore, Hosting)
-- **KI**: OpenAI GPT Image 2 (Bilder), GPT-4o-mini (Texte)
-- **API-Key**: BYOK (Bring Your Own Key) — User bringt eigenen OpenAI-Key
-- **Hosting**: Firebase Hosting (`dist/` Ordner)
-
-### Datenfluss
-
-```
-User → Upload Fotos → OpenAI API → Generierte Bilder → Download
-                                    ↓
-                              Firestore (users/{uid}/generations/{id})
-                              ├── mode, quality, itemCount, notes
-                              ├── imageCount, clothingType
-                              └── thumbnail (Base64 JPEG, max 150px)
+```bash
+E2E_BASE_URL=https://deine-domain.de npm run test:e2e
 ```
 
-### Abo-System
+Ausführliche Anleitung inklusive Fehlersuche: **[web/e2e/README.md](web/e2e/README.md)**
 
-- Free-User: 3 Generierungen/Monat, Niedrigqualität, 1 Kleidungsstück
-- Basic-User: 25 Generierungen/Monat, Mittelqualität, bis 5 Kleidungsstücke
-- Pro-User: Unbegrenzt, Hochqualität, unbegrenzte Kleidungsstücke
-- Monats-Reset: Wird beim nächsten Login geprüft (client-seitig)
-- Upgrade: Sofort wirksam via Checkout (Fake Stripe)
-- Downgrade: Deferred bis Periodenende (`scheduledDowngrade` + `downgradeAt` in Firestore)
-- Cancel: `cancelAtPeriodEnd: true`, automatischer Fallback auf Free am Periodenende
-- Quality-Gating: `getQualityForPlan()` in `subscription.js`, kein User-Dropdown mehr
+Zusätzlich gibt es einen Nebenläufigkeitstest der Credit-Buchung:
 
-### Router-System (6 Routes)
-
-| Route | Beschreibung |
-|-------|-------------|
-| `/` | Startseite (Landing Page) |
-| `/anzeige-erstellen` | KI-Generierung (geschützt) |
-| `/account` | Account-Seite (geschützt) |
-| `/preise` | Preisvergleich |
-| `/datenschutz` | Datenschutzerklärung |
-| `/impressum` | Impressum |
-
-### Build & Code-Splitting
-
-Vite teilt den Build automatisch in 3 Chunks per `manualChunks` (`vite.config.js`):
-
-| Chunk | Größe | Inhalt |
-|-------|-------|--------|
-| `index-*.js` | ~130 kB | App-Code (UI, Logik, Routing) |
-| `vendor-animation-*.js` | ~405 kB | lottie-web + jszip |
-| `vendor-firebase-*.js` | ~497 kB | Firebase SDK |
-
-→ **~87% weniger Code** beim initialen Laden (130 kB statt 1,1 MB)
-
-### Modal-Pattern
-
-Alle Modale folgen dem gleichen Muster:
-```js
-// Öffnen
-modal.classList.add('visible');
-document.body.style.overflow = 'hidden';
-
-// Schließen
-modal.classList.remove('visible');
-document.body.style.overflow = '';
+```bash
+npm run test:credits
 ```
 
-### Toast-System
+> ⚠️ Dieser läuft derzeit gegen die **produktive** Supabase-Datenbank und legt
+> dort Wegwerf-Nutzer an. Vor einer CI-Einbindung muss er auf eine eigene
+> Testdatenbank umziehen — vermerkt in [TODO.md](TODO.md).
 
-`showToast(message, type, duration)` mit Typen:
-- `error` (rot), `success` (grün), `warning` (gelb), `info` (blau)
+## Stripe im Testmodus
 
----
+Die Sandbox ist vollständig angebunden (Checkout, Webhook, Customer Portal).
+Für Webhooks lokal:
 
-## 🛠 Nützliche Befehle
+```bash
+stripe listen --forward-to localhost:3000/api/stripe/webhook
+```
 
-| Befehl | Was passiert? |
-|--------|--------------|
-| `npm run dev` | Startet lokalen Dev-Server (http://localhost:5173) |
-| `npm run build` | Baut prod-ready Version nach `dist/` |
-| `npm run preview` | Testet den Build lokal |
-| `git pull` | Holt neuesten Code von GitHub |
-| `firebase deploy --only hosting` | Deployet nur Hosting |
+Das ausgegebene `whsec_…` gehört in `.env.local`. Testkarten:
+`4242 4242 4242 4242` (Erfolg), `4000 0000 0000 0341` (Fehlschlag).
 
----
+## Grundsätze
 
-## 📊 Entwicklung
+Die Leitlinien für Entscheidungen — Sicherheit vor Wirtschaftlichkeit vor
+Benutzerfreundlichkeit vor Performance vor Wartbarkeit vor Design — stehen in
+[CLAUDE.md](CLAUDE.md). Offene Punkte und getroffene Entscheidungen mit
+Begründung: [TODO.md](TODO.md).
 
-Siehe `ROADMAP.md` für den aktuellen Entwicklungsstand und geplante Features.
+Zwei Regeln, die durchgängig gelten:
+
+1. **Kostenpflichtige Aufrufe laufen nur serverseitig** und werden dort
+   kontrolliert (Credits, Rate-Limits). Der Browser sieht nie einen Schlüssel.
+2. **Keine erfundenen Zahlen.** Statistiken und Werbeaussagen werden nur
+   verwendet, wenn sie belegbar sind.

@@ -79,6 +79,37 @@ Stand: 27.07.2026
 - [ ] **Custom SMTP** (Resend empfohlen) statt Supabase-Standardversand. Hängt an einer verifizierten Domain — damit faktisch blockiert, bis Name/Domain (siehe unten) feststehen.
 - [ ] **Löschfristen je Tarif** — Vorschlag Free 7 Tage / Starter 30 / Pro 90, Favoriten ausgenommen. Braucht Umuts Entscheidung zu den genauen Tageszahlen, dann Umsetzung als täglicher Supabase-Cron-Job.
 
+## 🔴 Altanwendung abschalten — vor dem Löschen des alten Codes
+
+Der alte Vanilla-JS-Code (`src/`, `public/`, `index.html`, `vite.config.js`,
+Wurzel-`package.json`) soll weg. Geprüft am 30.07.2026: Die neue App hat
+**keinerlei Verweise** darauf, alles Wichtige ist portiert (Prompts,
+Impressum, Datenschutz), und die 257 Commits Historie bewahren jede Datei
+(`git show <commit>:src/api.js`). Löschen ist technisch unbedenklich.
+
+**Aber Dateien zu löschen erledigt drei Dinge NICHT** — deshalb zuerst:
+
+- [ ] **Alte App bei Firebase Hosting abschalten.** Sie läuft weiter, egal was
+  lokal gelöscht wird. Zurzeit steht dort eine Anwendung mit dem alten
+  BYOK-Ablauf (Nutzer trägt seinen eigenen OpenAI-Schlüssel im Browser ein)
+  und Zugriff auf Firestore. Firebase-Konsole → Hosting → Deaktivieren.
+- [ ] **Firestore-Daten der Altanwendung klären.** Dort liegen noch echte
+  Nutzerdaten — ein DSGVO-Punkt, kein Code-Punkt. Löschen oder exportieren
+  und dokumentieren.
+- [ ] **Erst danach löschen.** `firebase.json`, `.firebaserc`,
+  `firestore.rules` und `firestore.indexes.json` bis dahin BEHALTEN: Ohne sie
+  lässt sich die Altanwendung nicht mehr per CLI verwalten oder abschalten.
+
+Nach dem Löschen zu prüfen: Der `turbopack.root`-Umweg in
+[`next.config.ts`](web/next.config.ts) existiert laut eigenem Kommentar nur
+wegen der Wurzel-`package-lock.json` der Altanwendung — danach kann er
+vermutlich entfallen.
+
+Erledigt am 30.07.2026: `ROADMAP.md` gelöscht (beschrieb ausschließlich die
+Altanwendung, abgelöst durch diese Datei), `README.md` neu geschrieben — das
+alte nannte überholte Preise („Pro Unlimited") und den BYOK-Ablauf und war
+damit aktiv irreführend.
+
 ## 🟢 Branding & Naming
 
 - [ ] Kein eigener, geschützter Name/Logo — Projekt heißt aktuell nur `ki-anzeigen-ersteller`/„Anprobierer" (Arbeitstitel). Bewusst auf Phase 5 verschoben (nach Struktur, vor Relaunch). Sobald ein Name feststeht: Domain kaufen → Custom-SMTP-Punkt oben wird dadurch entsperrt.

@@ -27,6 +27,25 @@ npm run test:e2e:report
 Öffnet den HTML-Bericht des letzten Laufs — mit Screenshots der
 fehlgeschlagenen Tests.
 
+### Wenn im UI-Modus nur wenige Tests auftauchen
+
+Oben links gibt es einen **Projektfilter**. Sind dort nicht alle Haken gesetzt,
+siehst du nur einen Teil. Die Auswahl wird zwischen Sitzungen gemerkt — hakst
+du sie einmal alle an, bleibt es so.
+
+Zur Einordnung, was es gibt (`npx playwright test --list` zeigt es jederzeit):
+
+| Projekt | Tests | Inhalt |
+|---|---|---|
+| `chromium` / `webkit` / `mobile-safari` | je 18 | alles ohne Anmeldung |
+| `angemeldet` | 2 | Generierung (braucht Sitzung + Mock) |
+| `setup` | 1 | nur die Anmeldung, kein echter Testfall |
+
+`setup` allein zeigt also genau **einen** Eintrag — das ist korrekt und kein
+Fehler. Deshalb steht es in der Konfiguration bewusst an letzter Stelle: Der
+UI-Modus wählt beim ersten Start das erste Projekt vor, und das soll ein
+inhaltliches sein.
+
 ## Nur einen Teil laufen lassen
 
 ```bash

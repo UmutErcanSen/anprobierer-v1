@@ -80,29 +80,19 @@ export default defineConfig({
     timezoneId: 'Europe/Berlin',
   },
 
+  /*
+    REIHENFOLGE IST HIER BEDEUTSAM -- nicht fuer den Ablauf, sondern fuer die
+    Bedienung: Der UI-Modus (`--ui`) waehlt beim ersten Start das ERSTE Projekt
+    vor. Stand `setup` vorn, sah man dort genau einen Test ("anmelden") und
+    hielt die Einrichtung fuer kaputt. Deshalb stehen die inhaltlichen Projekte
+    zuerst; `setup` und `angemeldet` haengen hinten an.
+
+    Auf `dependencies` hat die Reihenfolge keinen Einfluss -- Playwright loest
+    das ueber den Namen, nicht ueber die Position.
+  */
   projects: [
-    /*
-      Meldet sich einmal an und legt die Sitzung ab (auth.setup.ts). Laeuft als
-      eigenes Projekt, damit sich nicht jeder angemeldete Test erneut durch das
-      Formular klicken muss.
-    */
-    { name: 'setup', testMatch: /.*\.setup\.ts/ },
-
-    /*
-      Angemeldete Tests. Eigenes Projekt, weil sie einen anderen Startzustand
-      brauchen (storageState) und von 'setup' abhaengen. Bewusst nur Chromium:
-      Sie pruefen Ablaufe und Geldfluss, nicht die Darstellung -- die
-      Browservielfalt bringt hier nichts und verdreifachte nur die Laufzeit.
-    */
-    {
-      name: 'angemeldet',
-      testMatch: /generierung\.spec\.ts/,
-      dependencies: ['setup'],
-      use: { ...devices['Desktop Chrome'], storageState: 'e2e/.auth/user.json' },
-    },
-
-    // Die uebrigen Projekte laufen ohne Anmeldung -- der Generierungstest
-    // gehoert dort ausdruecklich nicht hinein.
+    // Ohne Anmeldung. Der Generierungstest gehoert hier ausdruecklich nicht
+    // hinein, er braucht eine Sitzung (siehe 'angemeldet' unten).
     { name: 'chromium', testIgnore: /generierung\.spec\.ts/, use: { ...devices['Desktop Chrome'] } },
     /*
       WebKit ist hier kein Luxus: Die Zielgruppe verkauft ueber Vinted und
@@ -113,6 +103,26 @@ export default defineConfig({
     */
     { name: 'webkit', testIgnore: /generierung\.spec\.ts/, use: { ...devices['Desktop Safari'] } },
     { name: 'mobile-safari', testIgnore: /generierung\.spec\.ts/, use: { ...devices['iPhone 14'] } },
+
+    /*
+      Angemeldete Tests. Eigenes Projekt, weil sie einen anderen Startzustand
+      brauchen (storageState) und von 'setup' abhaengen. Bewusst nur Chromium:
+      Sie pruefen Ablaeufe und Geldfluss, nicht die Darstellung -- die
+      Browservielfalt brauchte hier die dreifache Laufzeit ohne Erkenntnisgewinn.
+    */
+    {
+      name: 'angemeldet',
+      testMatch: /generierung\.spec\.ts/,
+      dependencies: ['setup'],
+      use: { ...devices['Desktop Chrome'], storageState: 'e2e/.auth/user.json' },
+    },
+
+    /*
+      Meldet sich einmal an und legt die Sitzung ab (auth.setup.ts), damit sich
+      nicht jeder angemeldete Test erneut durch das Formular klicken muss.
+      Kein eigenstaendiger Testfall, sondern Vorbereitung -- deshalb ganz unten.
+    */
+    { name: 'setup', testMatch: /.*\.setup\.ts/ },
   ],
 
   /*

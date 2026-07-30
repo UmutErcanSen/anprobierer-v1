@@ -81,7 +81,29 @@ export default defineConfig({
   },
 
   projects: [
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    /*
+      Meldet sich einmal an und legt die Sitzung ab (auth.setup.ts). Laeuft als
+      eigenes Projekt, damit sich nicht jeder angemeldete Test erneut durch das
+      Formular klicken muss.
+    */
+    { name: 'setup', testMatch: /.*\.setup\.ts/ },
+
+    /*
+      Angemeldete Tests. Eigenes Projekt, weil sie einen anderen Startzustand
+      brauchen (storageState) und von 'setup' abhaengen. Bewusst nur Chromium:
+      Sie pruefen Ablaufe und Geldfluss, nicht die Darstellung -- die
+      Browservielfalt bringt hier nichts und verdreifachte nur die Laufzeit.
+    */
+    {
+      name: 'angemeldet',
+      testMatch: /generierung\.spec\.ts/,
+      dependencies: ['setup'],
+      use: { ...devices['Desktop Chrome'], storageState: 'e2e/.auth/user.json' },
+    },
+
+    // Die uebrigen Projekte laufen ohne Anmeldung -- der Generierungstest
+    // gehoert dort ausdruecklich nicht hinein.
+    { name: 'chromium', testIgnore: /generierung\.spec\.ts/, use: { ...devices['Desktop Chrome'] } },
     /*
       WebKit ist hier kein Luxus: Die Zielgruppe verkauft ueber Vinted und
       Kleinanzeigen, also stark vom iPhone aus -- und wir hatten bereits einen
@@ -89,8 +111,8 @@ export default defineConfig({
       leeren file.type liefert). Solche Faelle findet nur ein echter
       WebKit-Lauf, keine Chrome-Emulation.
     */
-    { name: 'webkit', use: { ...devices['Desktop Safari'] } },
-    { name: 'mobile-safari', use: { ...devices['iPhone 14'] } },
+    { name: 'webkit', testIgnore: /generierung\.spec\.ts/, use: { ...devices['Desktop Safari'] } },
+    { name: 'mobile-safari', testIgnore: /generierung\.spec\.ts/, use: { ...devices['iPhone 14'] } },
   ],
 
   /*

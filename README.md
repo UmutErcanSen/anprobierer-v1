@@ -19,8 +19,16 @@ web/          Die Anwendung (Next.js 16, TypeScript, Tailwind)
   supabase/   Datenbank-Migrationen
   tests/      Nebenläufigkeitstest der Credit-Buchung
 
-src/, public/, index.html …   Altanwendung (Vanilla JS + Firebase), abgelöst.
-                              Wird gelöscht, sobald sie abgeschaltet ist.
+CLAUDE.md     Entscheidungsgrundsätze
+TODO.md       Offene Punkte und getroffene Entscheidungen mit Begründung
+```
+
+Die Altanwendung (Vanilla JS + Firebase) wurde am 30.07.2026 entfernt, nachdem
+das Firebase-Projekt gelöscht war. Ihr Code bleibt über die Git-Historie
+erreichbar:
+
+```bash
+git log --oneline --diff-filter=D -- src/
 ```
 
 ## Technik

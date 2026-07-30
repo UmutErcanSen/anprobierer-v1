@@ -79,36 +79,39 @@ Stand: 27.07.2026
 - [ ] **Custom SMTP** (Resend empfohlen) statt Supabase-Standardversand. Hängt an einer verifizierten Domain — damit faktisch blockiert, bis Name/Domain (siehe unten) feststehen.
 - [ ] **Löschfristen je Tarif** — Vorschlag Free 7 Tage / Starter 30 / Pro 90, Favoriten ausgenommen. Braucht Umuts Entscheidung zu den genauen Tageszahlen, dann Umsetzung als täglicher Supabase-Cron-Job.
 
-## 🔴 Altanwendung abschalten — vor dem Löschen des alten Codes
+## ✅ Altanwendung entfernt — erledigt 30.07.2026
 
-Der alte Vanilla-JS-Code (`src/`, `public/`, `index.html`, `vite.config.js`,
-Wurzel-`package.json`) soll weg. Geprüft am 30.07.2026: Die neue App hat
-**keinerlei Verweise** darauf, alles Wichtige ist portiert (Prompts,
-Impressum, Datenschutz), und die 257 Commits Historie bewahren jede Datei
-(`git show <commit>:src/api.js`). Löschen ist technisch unbedenklich.
+Firebase-Projekt gelöscht (30 Tage Karenzzeit läuft), danach der komplette
+Altbestand entfernt: `src/`, `public/`, `tests/`, `index.html`,
+`vite.config.js`, Wurzel-`package.json`/`package-lock.json`, `.env`/
+`.env.production` sowie die Firebase-Dateien (`firebase.json`, `.firebaserc`,
+`firestore.rules`, `firestore.indexes.json`). Lokal zusätzlich `dist/`,
+`assets/` und das Wurzel-`node_modules/`.
 
-**Aber Dateien zu löschen erledigt drei Dinge NICHT** — deshalb zuerst:
+Vorher geprüft: keine Verweise der neuen App auf den Altbestand, alles
+Wichtige portiert, keine Geheimnisse in den `.env`-Dateien (nur öffentliche
+Firebase-Identifikatoren). Der Code bleibt über die Historie erreichbar:
+`git log --oneline --diff-filter=D -- src/`
 
-- [ ] **Alte App bei Firebase Hosting abschalten.** Sie läuft weiter, egal was
-  lokal gelöscht wird. Zurzeit steht dort eine Anwendung mit dem alten
-  BYOK-Ablauf (Nutzer trägt seinen eigenen OpenAI-Schlüssel im Browser ein)
-  und Zugriff auf Firestore. Firebase-Konsole → Hosting → Deaktivieren.
-- [ ] **Firestore-Daten der Altanwendung klären.** Dort liegen noch echte
-  Nutzerdaten — ein DSGVO-Punkt, kein Code-Punkt. Löschen oder exportieren
-  und dokumentieren.
-- [ ] **Erst danach löschen.** `firebase.json`, `.firebaserc`,
-  `firestore.rules` und `firestore.indexes.json` bis dahin BEHALTEN: Ohne sie
-  lässt sich die Altanwendung nicht mehr per CLI verwalten oder abschalten.
+Zwei Folgeänderungen, die dadurch möglich wurden:
 
-Nach dem Löschen zu prüfen: Der `turbopack.root`-Umweg in
-[`next.config.ts`](web/next.config.ts) existiert laut eigenem Kommentar nur
-wegen der Wurzel-`package-lock.json` der Altanwendung — danach kann er
-vermutlich entfallen.
+- **`turbopack.root` aus [`next.config.ts`](web/next.config.ts) entfernt.** Der
+  Umweg existierte laut eigenem Kommentar nur wegen der Wurzel-
+  `package-lock.json` der Altanwendung. Empirisch geprüft: `npm run build`
+  ohne Warnung zum Wurzelverzeichnis, 54 E2E-Tests weiterhin grün (die nutzen
+  den Dev-Server, decken also beide Turbopack-Pfade ab).
+- **`vite-legacy` aus `.claude/launch.json` entfernt** — zeigte auf die
+  gelöschte Anwendung.
 
-Erledigt am 30.07.2026: `ROADMAP.md` gelöscht (beschrieb ausschließlich die
-Altanwendung, abgelöst durch diese Datei), `README.md` neu geschrieben — das
-alte nannte überholte Preise („Pro Unlimited") und den BYOK-Ablauf und war
-damit aktiv irreführend.
+<details>
+<summary>Ursprüngliche Analyse (zur Nachvollziehbarkeit)</summary>
+
+Der Befund lautete: Dateien zu löschen erledigt drei Dinge NICHT — die alte
+App läuft bei Firebase weiter, im Firestore liegen Nutzerdaten (DSGVO), und
+mit gelöschter `firebase.json` lässt sie sich nicht mehr per CLI abschalten.
+Deshalb wurde erst abgeschaltet, dann gelöscht.
+
+</details>
 
 ## 🟢 Branding & Naming
 

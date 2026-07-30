@@ -23,16 +23,46 @@ export const metadata: Metadata = {
     "Lade ein Foto von dir und ein Kleidungsstück hoch und erhalte realistische Anprobebilder samt fertigem Verkaufstext — in unter einer Minute.",
 };
 
-// Setzt data-theme VOR dem ersten Paint, damit Dunkelmodus nicht kurz als
-// Hell aufblitzt. Laeuft synchron im <head>, bevor der Body rendert.
-const themeScript = `try{if(localStorage.getItem('theme')==='dark')document.documentElement.setAttribute('data-theme','dark')}catch(e){}`;
+/*
+  Setzt data-theme VOR dem ersten Paint, damit Dunkelmodus nicht kurz als Hell
+  aufblitzt. Laeuft synchron im <head>, bevor der Body rendert.
+
+  Uebernimmt jetzt JEDEN gespeicherten Wert, nicht nur 'dark'. Vorher setzte
+  das Skript das Attribut ausschliesslich bei 'dark' -- der Umschalter
+  schreibt aber auch 'light' (siehe theme-toggle.tsx). Bei bewusst gewaehltem
+  Hell entstand so ein Zustand, den der Server nicht kennt: Attribut vom
+  Umschalter gesetzt, beim naechsten Laden aber nicht wiederhergestellt.
+  Optisch identisch (ohne Attribut greift :root = hell), aber unnoetig
+  asymmetrisch.
+*/
+const themeScript = `(function(){try{var t=localStorage.getItem('theme');if(t)document.documentElement.setAttribute('data-theme',t)}catch(e){}})()`;
 
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
+    /*
+      suppressHydrationWarning ist hier zwingend und kein Zudecken eines
+      Fehlers: Das Skript oben aendert data-theme, BEVOR React hydratisiert.
+      React vergleicht dann den DOM mit dem servergerenderten Markup, findet
+      das zusaetzliche Attribut und meldet einen Hydration-Mismatch.
+
+      Ohne das Flag bleibt es nicht bei der Warnung -- React verwirft den
+      Baum und rendert ab der naechsten Fehlergrenze neu. Genau das erzeugt
+      das Aufblitzen, das das Skript verhindern soll. Mit dem Flag behaelt
+      React den DOM-Stand.
+
+      Das Flag wirkt nur eine Ebene tief, also ausschliesslich fuer die
+      Attribute des <html>-Elements selbst -- Hydration-Fehler in
+      Unterkomponenten werden weiterhin gemeldet.
+
+      data-theme="light" wird bewusst schon serverseitig gesetzt, damit
+      Server-Markup und Umschalter denselben Zustand ausdruecken.
+    */
     <html
       lang="de"
+      data-theme="light"
+      suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} ${instrumentSerif.variable} h-full`}
     >
       <head>

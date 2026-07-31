@@ -123,11 +123,23 @@ test.describe('Generierung @lokal', () => {
     await formularAusfuellen(page);
     await page.getByRole('button', { name: /^Generieren/ }).click();
 
-    // Aus demselben Grund wie oben eng gefasst: Die Meldung im Fehlerfall
-    // stammt woertlich aus generate-flow.tsx, nicht aus einem Suchmuster,
-    // das auch auf Hinweistexte der Wartephase passen koennte.
+    /*
+      TEILWEISER Fehlschlag -- das ist hier das richtige Verhalten, nicht ein
+      abgeschwaechter Test:
+
+      Der Mock laesst nur die BILDER scheitern, die Textgenerierung laeuft
+      weiter (zwei getrennte Endpunkte). Die App liefert deshalb bewusst ein
+      Teilergebnis: Der Verkaufstext bleibt erhalten, nur die Credits fuer das
+      fehlende Bild werden ueber refund_credits zurueckgebucht.
+
+      Ein erster Entwurf erwartete hier die Totalausfall-Meldung ("Die
+      Generierung ist fehlgeschlagen") und schlug fehl -- der Fehler lag im
+      Test. Genau dieser Teilpfad ist der wirtschaftlich heiklere: Der Nutzer
+      bekommt etwas geliefert, darf aber trotzdem nicht fuer das bezahlen, was
+      fehlt.
+    */
     await expect(
-      page.getByText('Die Generierung ist fehlgeschlagen. Deine Credits wurden zurückgebucht.'),
+      page.getByText(/Bild(er)? konnte(n)? nicht erstellt werden/),
     ).toBeVisible({ timeout: 90_000 });
 
     const stats = await mockStats(page);

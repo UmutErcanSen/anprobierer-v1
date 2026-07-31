@@ -26,6 +26,12 @@
 -- Diese Migration entfernt den Storage-Teil. Die Rueckbuchung -- der
 -- eigentliche Zweck -- bleibt unveraendert und funktioniert damit wieder.
 --
+-- WICHTIG, `returns integer` beibehalten: Postgres erlaubt bei
+-- `create or replace` keine Aenderung des Rueckgabetyps ("cannot change
+-- return type of existing function"). Ein `drop function` waere der andere
+-- Weg, ist hier aber unnoetig -- und der Zaehler ist ohnehin nuetzlich, weil
+-- man an ihm ablesen kann, ob und wie oft der Job etwas aufraeumen musste.
+--
 -- Die Upload-Bereinigung ist NICHT vergessen, sondern verschoben: Sie gehoert
 -- an eine Stelle mit Zugriff auf die Storage-API. process.ts raeumt die
 -- Uploads am Ende eines Laufs bereits selbst weg (siehe dort
@@ -35,13 +41,14 @@
 -- ============================================================================
 
 create or replace function public.fail_stale_generations()
-returns void
+returns integer
 language plpgsql
 security definer
 set search_path = ''
 as $$
 declare
-  v_id uuid;
+  v_id      uuid;
+  v_anzahl  integer := 0;
 begin
   -- Haengende Jobs beenden und Credits zurueckbuchen. refund_generation ist
   -- idempotent (prueft auf einen bereits vorhandenen generation_refund),
@@ -52,11 +59,16 @@ begin
     where status in ('queued', 'processing')
       and created_at < now() - interval '10 minutes'
   loop
-    perform public.refund_generation(
-      v_id,
-      'Zeitüberschreitung — die Generierung wurde abgebrochen und die Credits zurückgebucht.'
-    );
+    if public.refund_generation(
+         v_id,
+         'Zeitüberschreitung — die Generierung wurde abgebrochen und die Credits zurückgebucht.'
+       )
+    then
+      v_anzahl := v_anzahl + 1;
+    end if;
   end loop;
+
+  return v_anzahl;
 end;
 $$;
 
@@ -64,5 +76,6 @@ revoke all on function public.fail_stale_generations from public, anon, authenti
 grant execute on function public.fail_stale_generations to service_role;
 
 -- Sofort einmal ausfuehren, damit bereits haengende Jobs aus der Zeit vor
--- dieser Korrektur nicht bis zum naechsten Cron-Lauf blockieren.
-select public.fail_stale_generations();
+-- dieser Korrektur nicht bis zum naechsten Cron-Lauf blockieren. Die
+-- Rueckgabe zeigt, wie viele aufgeraeumt wurden.
+select public.fail_stale_generations() as aufgeraeumt;

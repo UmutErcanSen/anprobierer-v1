@@ -74,7 +74,17 @@ Stand: 27.07.2026
 - [ ] **Credit-Preise final nachrechnen**, sobald ein paar echte Generierungen mit dem neuen Tracking gelaufen sind — die echte OpenAI-Rechnung als Gegenprobe nehmen (nicht raten). Aktuelles Verhältnis Standard=1/HD=4-Credits ist beim reinen Bildanteil bereits fast passend; ob der Textanteil das Bild merklich verändert, zeigt erst die echte Zahl.
 - [ ] **Pro-Preis (24,99 €) wirkt im Wettbewerbsvergleich zu hoch** — vergleichbare KI-Anbieter liegen bei ca. 18 $. Siehe separate Kalkulation im Chat; Entscheidung über neuen Preis steht noch aus.
 - [ ] **Preise-Seite** ([`web/src/app/preise/page.tsx`](web/src/app/preise/page.tsx)) erst nach der Nachrechnung final setzen — Basic/Pro sind aktuell ohnehin noch `available: false`.
-- [ ] **Hosting-Entscheidung** (Vercel empfohlen, Frankfurt-Region) — blockiert Phase 3 (Stripe-Webhooks brauchen öffentliche URL).
+- [ ] **Hosting-Entscheidung** — analysiert am 30.07.2026, vertagt. Befund:
+  - **Vercel Gratis-Tarif scheidet aus.** Harte 60-Sekunden-Grenze pro Anfrage, eine Generierung braucht real 45–90 s pro Bild. Bei mehreren Kleidungsstücken bräche jeder Lauf ab. `maxDuration = 300` in [`route.ts`](web/src/app/api/generate/route.ts) hilft dort nicht, die Plattformgrenze sticht.
+  - **Vercel Pro** (~20 $/Monat) löst das über Fluid Compute mit 300 s. Schnellster Weg, aber US-Anbieter.
+  - **Hetzner-VPS** (~5 €/Monat, Deutschland): kein Zeitlimit, günstiger, besser für die DSGVO-Frage. Dafür Einrichtung von Node, Reverse-Proxy, TLS und Prozessverwaltung.
+  - Zusätzlich prüfen: Body-Size-Limit der Plattform gegen bis zu ~100 MB pro Anfrage (siehe Upload-Robustheit oben).
+
+- [ ] **Geschlossener Freundeskreis-Test** — gewünscht, aber vertagt. Was dafür nötig wäre:
+  - **Passwortsperre für die gesamte Seite** (im Proxy). Löst zwei Probleme gleichzeitig: Die Seite ist dann kein öffentliches Angebot (Impressumspflicht, unfertige Datenschutzerklärung mit Platzhaltern), und ein durchgereichter Link kann keine fremden Registrierungen und damit keine OpenAI-Kosten auslösen. Die Limits in `rate-limit.ts` greifen nämlich **pro Nutzer** (10/Stunde, 30/Tag), nicht global.
+  - **E-Mail-Bestätigung in Supabase abschalten.** Der Standardversand ist stark gedrosselt; melden sich mehrere Tester kurz nacheinander an, bekommen die letzten keine Mail. Achtung: `/api/generate` prüft `email_confirmed_at` — vorher verifizieren, dass Supabase das Feld bei abgeschalteter Bestätigung selbst setzt.
+  - **Bezahltarife ausblenden oder kennzeichnen.** Stripe läuft im Testmodus; wer auf „Auswählen" klickt, landet sonst auf einer Testseite und ist verwirrt.
+  - **Kostenrahmen**: 3 Gratis-Credits pro Registrierung ≈ 0,17 $ pro Person. Bei zehn Testern vernachlässigbar — das Risiko liegt allein im Weiterreichen des Links, siehe Passwortsperre.
 - [ ] **Wegwerf-Adressen-Schutz** bei der Registrierung (Domain-Blockliste + Supabase/Cloudflare-Turnstile-Captcha). Braucht einen Turnstile-Sitekey von Umut.
 - [ ] **Custom SMTP** (Resend empfohlen) statt Supabase-Standardversand. Hängt an einer verifizierten Domain — damit faktisch blockiert, bis Name/Domain (siehe unten) feststehen.
 - [ ] **Löschfristen je Tarif** — Vorschlag Free 7 Tage / Starter 30 / Pro 90, Favoriten ausgenommen. Braucht Umuts Entscheidung zu den genauen Tageszahlen, dann Umsetzung als täglicher Supabase-Cron-Job.

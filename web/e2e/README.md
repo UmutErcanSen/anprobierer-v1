@@ -1,6 +1,44 @@
 # Tests ausführen und bewerten
 
-## Die drei Befehle, die du brauchst
+## Zwei Sorten Tests, ein Werkzeug
+
+Playwright deckt beides ab — ein zusätzliches Werkzeug wie Vitest brauchen wir
+nicht:
+
+```bash
+npm run test:unit
+```
+
+Reine Funktionen (`unit/`), ohne Browser und ohne Server: **~2 Sekunden.**
+Der Playwright-Runner führt hier einfach Node-Code aus, die Dateien fordern
+nie ein `page`-Fixture an.
+
+```bash
+npm run test:e2e
+```
+
+Echte Abläufe im Browser (`e2e/`): ~45 Sekunden.
+
+Beide nutzen dieselbe Syntax (`test`, `expect`), dieselbe Oberfläche und
+dieselbe Fehlerausgabe. Nur die Konfiguration ist getrennt
+(`playwright.unit.config.ts`), und zwar aus einem konkreten Grund: `webServer`
+gilt in Playwright global und lässt sich nicht pro Projekt abschalten. Ohne
+eigene Konfiguration würde jeder Lauf erst Next.js und den Mock-Server
+hochfahren — eine halbe Minute Wartezeit für Funktionen, die Millisekunden
+brauchen.
+
+### Was sich so nicht testen lässt
+
+Module mit `import 'server-only'` — also `lib/stripe/plans.ts`,
+`lib/supabase/admin.ts`, `lib/openai/*`. Das Paket wirft absichtlich, sobald
+es außerhalb eines Next-Serverkontexts geladen wird. Das ist kein Nachteil
+von Playwright: Vitest scheitert daran genauso, dort bräuchte es ebenfalls
+eine Ersatzauflösung für `server-only`.
+
+Praktisch ist das kaum eine Einschränkung — die Logik in diesen Dateien wird
+über die E2E-Tests abgedeckt, wo sie im echten Serverkontext läuft.
+
+## Die drei Befehle für die E2E-Tests
 
 ```bash
 npm run test:e2e

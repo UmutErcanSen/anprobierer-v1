@@ -80,9 +80,21 @@ Läuft auf http://localhost:3000.
 
 ## Tests
 
+Zwei Sorten, ein Werkzeug — Playwright deckt beides ab, ein zusätzliches
+Test-Framework wird nicht gebraucht.
+
+```bash
+npm run test:unit
+```
+
+Reine Funktionen ohne Browser und ohne Server (~2 s): Bezahlschranke,
+Ledger-Auswertung, Validierung.
+
 ```bash
 npm run test:e2e
 ```
+
+Echte Abläufe im Browser, inklusive Chromium, WebKit und iPhone-Safari (~45 s).
 
 ```bash
 npm run test:e2e:ui

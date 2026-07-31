@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "test:credits": "node --env-file=.env.local --experimental-strip-types --test tests/credit-concurrency.test.ts",
+    "test:unit": "playwright test -c playwright.unit.config.ts",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:report": "playwright show-report"

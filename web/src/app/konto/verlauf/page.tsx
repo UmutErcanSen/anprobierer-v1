@@ -6,6 +6,7 @@ import { AppHeader } from "@/components/site/app-header";
 import { LinkButton } from "@/components/ui/button";
 import { HistoryFilters } from "@/components/history/history-filters";
 import { HistoryCard, type HistoryGeneration } from "@/components/history/history-card";
+import { HistorySelection } from "@/components/history/selection";
 import { resolveCardRows } from "@/lib/generation/cards";
 import { isGenerationLocked, lockedImagePath } from "@/lib/generation/lock";
 import type { PlanKey } from "@/lib/generation/constants";
@@ -188,11 +189,18 @@ export default async function VerlaufPage(props: PageProps<"/konto/verlauf">) {
             )}
           </div>
         ) : (
-          <ul className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-            {generations.map((g, i) => (
-              <HistoryCard key={g.id} generation={g} thumbnail={thumbnails[i] ?? null} />
-            ))}
-          </ul>
+          /* Die Karten bleiben Server-Komponenten (serverseitig signierte
+             Thumbnail-URLs) und liegen als children in der Auswahl-Insel --
+             nur der Auswahlzustand ist Client-Code. */
+          <div className="mt-8">
+            <HistorySelection ids={generations.map((g) => g.id)}>
+              <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+                {generations.map((g, i) => (
+                  <HistoryCard key={g.id} generation={g} thumbnail={thumbnails[i] ?? null} />
+                ))}
+              </ul>
+            </HistorySelection>
+          </div>
         )}
 
         {totalPages > 1 && (

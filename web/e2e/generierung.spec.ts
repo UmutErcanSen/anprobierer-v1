@@ -37,6 +37,28 @@ async function guthaben(page: Page): Promise<number> {
 
 test.describe('Generierung @lokal', () => {
   test.beforeEach(async ({ page }) => {
+    /*
+      KOSTENSPERRE — muss VOR jedem Upload greifen.
+
+      Zuerst gab es nur eine Prüfung des Mock-Zählers NACH der Generierung.
+      Die meldete den Fehler zwar, aber da war das Geld schon ausgegeben:
+      Genau das ist passiert (0,50 USD), weil ein von Hand gestarteter
+      Dev-Server OPENAI_BASE_URL nicht kennt und Playwrights
+      `reuseExistingServer` ihn abgegriffen hat.
+
+      Diese Prüfung fragt den Server, wohin er seine OpenAI-Aufrufe schickt,
+      und bricht ab, bevor irgendetwas hochgeladen wird.
+    */
+    const ziel = await page.request.get('/api/dev/openai-target');
+    expect(ziel.ok(), 'Diagnose-Endpunkt nicht erreichbar — läuft die App im Entwicklungsmodus?').toBe(true);
+    const { umgeleitet, ziel: host } = await ziel.json();
+    expect(
+      umgeleitet,
+      `Der Server ruft "${host}" auf, nicht den Mock. Ein bereits laufender Dev-Server ohne ` +
+        'OPENAI_BASE_URL wurde wiederverwendet — er würde ECHTE Kosten verursachen. ' +
+        'Diesen Server beenden und den Test erneut starten, damit Playwright einen eigenen hochfährt.',
+    ).toBe(true);
+
     await page.request.get(`${MOCK}/__mock/reset`);
     await page.goto('/anzeige-erstellen');
   });
@@ -59,7 +81,18 @@ test.describe('Generierung @lokal', () => {
 
     // Der Server antwortet sofort und arbeitet in after() weiter; der Client
     // pollt. Grosszuegiges Zeitfenster, aber nicht unbegrenzt.
-    await expect(page.getByText(/Fertig|Ergebnis/i).first()).toBeVisible({ timeout: 60_000 });
+    /*
+      Anker ist der ZIP-Knopf: Der erscheint ausschliesslich in der fertigen
+      Ergebnisansicht.
+
+      Vorher stand hier getByText(/Fertig|Ergebnis/i) -- und genau das ist
+      hochgegangen, als die Wartephase den Hinweis "dein ERGEBNIS findest du
+      danach unter Mein Konto" bekam: Die Zusicherung war sofort gruen,
+      mitten im Wartezustand, bevor ueberhaupt ein Aufruf stattgefunden hatte.
+      Ein Test, der auf beliebigen Fliesstext prueft, haelt keine
+      Textaenderung aus.
+    */
+    await expect(page.getByRole('button', { name: 'Alles als ZIP' })).toBeVisible({ timeout: 60_000 });
 
     /*
       DIE KOSTENSICHERUNG: Hat der Mock keinen einzigen Aufruf gesehen, lief die
@@ -90,9 +123,12 @@ test.describe('Generierung @lokal', () => {
     await formularAusfuellen(page);
     await page.getByRole('button', { name: /^Generieren/ }).click();
 
-    await expect(page.getByText(/fehlgeschlagen|nicht erstellt|Fehler/i).first()).toBeVisible({
-      timeout: 90_000,
-    });
+    // Aus demselben Grund wie oben eng gefasst: Die Meldung im Fehlerfall
+    // stammt woertlich aus generate-flow.tsx, nicht aus einem Suchmuster,
+    // das auch auf Hinweistexte der Wartephase passen koennte.
+    await expect(
+      page.getByText('Die Generierung ist fehlgeschlagen. Deine Credits wurden zurückgebucht.'),
+    ).toBeVisible({ timeout: 90_000 });
 
     const stats = await mockStats(page);
     expect(stats.bilder, 'Der Mock wurde nicht aufgerufen — siehe Hinweis im Erfolgstest.').toBeGreaterThan(0);

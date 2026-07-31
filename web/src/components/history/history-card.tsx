@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { ImageOff, Loader2, Lock } from 'lucide-react';
 import { FavoriteToggle } from '@/components/history/favorite-toggle';
 import { DeleteCardButton } from '@/components/history/delete-card-button';
+import { SelectCheckbox } from '@/components/history/selection';
 import { CLOTHING_TYPES, COLOR_SWATCH, type ClothingType } from '@/lib/generation/constants';
 
 export type HistoryGeneration = {
@@ -103,6 +104,8 @@ export function HistoryCard({ generation, thumbnail }: { generation: HistoryGene
         className="group flex flex-col overflow-hidden rounded-xl border border-line transition-colors hover:border-line-strong"
       >
         <div className="relative aspect-[3/4] w-full overflow-hidden bg-surface">
+          {/* Rendert nur im Auswahlmodus etwas -- ausserhalb davon null. */}
+          <SelectCheckbox generationId={id} />
           {thumbnail ? (
             <Image
               src={thumbnail}

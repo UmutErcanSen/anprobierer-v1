@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Check, ImagePlus, Loader2, Trash2 } from 'lucide-react';
+import Link from 'next/link';
+import { Check, ImagePlus, Loader2, MinusCircle, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Field, Select, Textarea } from '@/components/ui/field';
 import { ColorSelect } from '@/components/ui/color-select';
@@ -421,7 +422,25 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
   // Icon-Panel kommt als feste 220px-Spalte dazu, ohne die Textspalte zu
   // stauchen.
   if (status === 'generating') {
-    const pct = Math.round(((progressIdx + 1) / PROGRESS.length) * 100);
+    /*
+      Fortschritt aus ECHTEN Daten statt aus einem Timer: process.ts erweitert
+      generations.cards nach jedem fertigen Stueck, und der Poll liefert diesen
+      Zwischenstand bereits (liveCards). Vorher lief nur eine 7-Sekunden-
+      Animation ueber eine feste Schrittliste -- bei fuenf Stuecken sah der
+      Nutzer minutenlang "Qualitaetspruefung", ohne zu wissen, ob ueberhaupt
+      etwas vorangeht.
+
+      Die Schrittliste bleibt trotzdem: Sie beschreibt jetzt das GERADE
+      laufende Stueck und gibt dem Balken zwischen zwei fertigen Bildern
+      sichtbare Bewegung. Auf 95 % gedeckelt, damit ein Stueck nie "fertig"
+      aussieht, bevor sein Bild wirklich da ist.
+    */
+    const fertig = liveCards.filter((c) => c.imageUrl).length;
+    const mehrere = imageCount > 1;
+    const teilFortschritt = Math.min((progressIdx + 1) / PROGRESS.length, 0.95);
+    const pct = mehrere
+      ? Math.min(100, Math.round(((fertig + teilFortschritt) / imageCount) * 100))
+      : Math.round(teilFortschritt * 100);
     return (
       <div className="md:mx-auto md:max-w-3xl md:px-12 md:py-10">
         <div className="flex flex-col overflow-hidden rounded-xl border border-line md:flex-row">
@@ -430,13 +449,76 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
           <div className="flex flex-1 flex-col gap-5 p-6">
             <div className="flex items-center gap-3">
               <Loader2 size={18} className="animate-spin text-ink" aria-hidden />
-              <h1 className="text-lg font-medium text-ink">Deine Anprobe entsteht …</h1>
+              <h1 className="text-lg font-medium text-ink">
+                {mehrere ? `Stück ${Math.min(fertig + 1, imageCount)} von ${imageCount}` : 'Deine Anprobe entsteht …'}
+              </h1>
             </div>
 
-            <div className="h-1.5 w-full overflow-hidden rounded-full bg-line">
+            <div
+              className="h-1.5 w-full overflow-hidden rounded-full bg-line"
+              role="progressbar"
+              aria-valuenow={pct}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-label="Fortschritt der Generierung"
+            >
               <div className="h-full rounded-full bg-success transition-all duration-700 ease-out" style={{ width: `${pct}%` }} />
             </div>
 
+            {/* Liste der einzelnen Stuecke -- nur im Einzeln-Modus sinnvoll:
+                im Kombiniert-Modus entsteht EIN Bild aus allen Stuecken, eine
+                Aufschluesselung waere dort irrefuehrend. */}
+            {mehrere && (
+              <ul className="flex flex-col gap-2">
+                {filledItems.map((item, i) => {
+                  const istFertig = i < fertig;
+                  const istAktiv = i === fertig;
+                  // CLOTHING_TYPES liefert { de, en } -- fuer die Anzeige die
+                  // deutsche Bezeichnung, der englische Wert geht in den Prompt.
+                  const bezeichnung =
+                    CLOTHING_TYPES[item.type as keyof typeof CLOTHING_TYPES]?.de ?? `Stück ${i + 1}`;
+
+                  return (
+                    <li
+                      key={item.id}
+                      className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
+                        istAktiv ? 'bg-surface text-ink' : istFertig ? 'text-ink' : 'text-muted/70'
+                      }`}
+                    >
+                      <span className="shrink-0">
+                        {istFertig ? (
+                          <Check size={15} strokeWidth={3} className="text-success" aria-hidden />
+                        ) : istAktiv ? (
+                          <Loader2 size={15} className="animate-spin text-ink" aria-hidden />
+                        ) : (
+                          <MinusCircle size={15} className="text-muted/50" aria-hidden />
+                        )}
+                      </span>
+
+                      <span className={istAktiv ? 'font-medium' : undefined}>
+                        {bezeichnung}
+                        {item.size && <span className="text-muted"> · {item.size}</span>}
+                      </span>
+
+                      {/* Nur beim laufenden Stueck: der aktuelle Zwischenschritt.
+                          Auf Mobil ausgeblendet, sonst bricht die Zeile um. */}
+                      {istAktiv && (
+                        <span className="ml-auto hidden truncate text-xs text-muted sm:block">
+                          {PROGRESS[progressIdx]}
+                        </span>
+                      )}
+                      {istFertig && <span className="ml-auto text-xs text-success">fertig</span>}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+
+            {/* Nur bei EINEM Bild: Dort gibt es keine Stueckliste, die
+                Bewegung zeigen koennte -- hier tragen die Zwischenschritte
+                das Warten. Bei mehreren Stuecken stuende beides untereinander
+                und man wuesste nicht, worauf sich die Schritte beziehen. */}
+            {!mehrere && (
             <ul className="flex flex-col gap-2.5">
               {PROGRESS.map((label, i) => {
                 const done = i < progressIdx;
@@ -464,14 +546,35 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
                 );
               })}
             </ul>
+            )}
 
             <p className="text-xs text-muted">
-              {imageCount > 1
-                ? liveCards.filter((c) => c.imageUrl).length > 0
-                  ? `${liveCards.filter((c) => c.imageUrl).length} von ${imageCount} Bildern fertig …`
+              {mehrere
+                ? fertig > 0
+                  ? `${fertig} von ${imageCount} Bildern fertig — noch etwa ${Math.max(1, imageCount - fertig)} ${imageCount - fertig === 1 ? 'Minute' : 'Minuten'}.`
                   : `${imageCount} Bilder — das dauert ein paar Minuten.`
                 : 'Das dauert in der Regel unter einer Minute.'}
             </p>
+
+            {/* Der Hinweis, der die gefuehlte Wartezeit am staerksten senkt:
+                Die Generierung laeuft serverseitig in after() weiter, voellig
+                unabhaengig davon, ob dieser Tab offen bleibt. Ohne diesen
+                Satz sitzt der Nutzer minutenlang vor dem Bildschirm, weil er
+                annimmt, Schliessen wuerde abbrechen -- und verliert im
+                Zweifel sogar Credits, wenn er es doch tut und neu startet. */}
+            <div className="mt-1 flex items-start gap-3 rounded-lg border border-line bg-surface px-4 py-3">
+              <span className="mt-0.5 shrink-0 text-accent" aria-hidden>
+                <Check size={15} strokeWidth={3} />
+              </span>
+              <p className="text-[13px] leading-relaxed text-ink-soft">
+                <span className="font-medium text-ink">Du kannst diese Seite schließen.</span>{' '}
+                Wir arbeiten im Hintergrund weiter — dein Ergebnis findest du danach unter{' '}
+                <Link href="/konto" className="text-accent underline underline-offset-4 hover:opacity-80">
+                  Mein Konto
+                </Link>
+                .
+              </p>
+            </div>
           </div>
         </div>
       </div>

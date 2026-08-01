@@ -299,7 +299,8 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
   function removeItem(id: number) {
     setItems((prev) => (prev.length > 1 ? prev.filter((i) => i.id !== id) : prev));
   }
-  function reset() {
+  /** Setzt nur den Ergebniszustand zurueck, nicht die Eingaben. */
+  function resetErgebnis() {
     pollToken.current++; // laufenden Poll stilllegen
     setStatus('idle');
     setCards([]);
@@ -308,9 +309,43 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
     setError(null);
     setGenerationId(null);
     setLocked(false);
+  }
+
+  function reset() {
+    resetErgebnis();
     setPerson(null);
     setItems([newItem()]);
     setNotes('');
+  }
+
+  /*
+    Erneuter Versuch nach einem TEILAUSFALL — die eigentliche Luecke.
+
+    Bei einem vollstaendigen Fehlschlag gibt es hier nichts zu tun: Dort wird
+    nur setStatus('error') gesetzt, das Formular faellt durch und behaelt
+    Fotos, Typ, Groesse und Notizen. Ein Klick auf "Generieren" genuegt.
+
+    Anders beim Teilausfall (ein Bild scheitert, der Verkaufstext entsteht):
+    Der Nutzer landet in der Ergebnisansicht, und der einzige Weg zurueck war
+    "Neue Anprobe erstellen" -- das verwirft ueber reset() ALLES, auch die
+    bereits gewaehlten Fotos. Fuer einen zweiten Versuch musste man saemtliche
+    Angaben neu machen, obwohl im Browser noch alles vorliegt.
+
+    Deshalb hier NUR der Ergebniszustand zurueck. person, items samt Dateien
+    und notes bleiben unangetastet, der naechste Versuch ist ein einziger
+    Klick.
+
+    Warum kein serverseitiges Wiederholen der bestehenden Generierung? Die
+    Uploads sind da bereits geloescht (process.ts raeumt sie in beiden Pfaden
+    weg), und wo sie lagen, haelt die Datenbank nicht fest -- die Spalte
+    person_image_path existiert, wird aber nie befuellt. Das liesse sich
+    aendern, hiesse aber, PERSONENFOTOS laenger aufzubewahren. Genau das sagt
+    unsere Datenschutzerklaerung zu, nicht zu tun; Bequemlichkeit rechtfertigt
+    das nicht. Der Umweg ueber den Browser erreicht dasselbe Ziel, ohne ein
+    einziges Foto laenger zu speichern.
+  */
+  function nochmalVersuchen() {
+    resetErgebnis();
   }
 
   useEffect(() => () => { pollToken.current++; }, []); // Poll stoppen beim Verlassen der Seite
@@ -411,6 +446,23 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
           onReset={reset}
           generationId={generationId ?? undefined}
           locked={locked}
+          /* Nur wenn wirklich etwas fehlgeschlagen ist: Angebot, es sofort
+             erneut zu versuchen. Die Eingaben liegen im Browser noch
+             vollstaendig vor, der Versuch kostet also keinen neuen Aufwand --
+             nur neue Credits, weshalb der Knopf zurueckhaltend gestaltet ist
+             und der Standardweg "Neue Anprobe" daneben bestehen bleibt. */
+          footer={
+            failures > 0 ? (
+              <div className="flex flex-wrap gap-3">
+                <Button onClick={nochmalVersuchen}>
+                  {failures === 1 ? 'Fehlendes Bild erneut erstellen' : 'Fehlende Bilder erneut erstellen'}
+                </Button>
+                <Button variant="outline" onClick={reset}>
+                  Neue Anprobe erstellen
+                </Button>
+              </div>
+            ) : undefined
+          }
         />
       </div>
     );

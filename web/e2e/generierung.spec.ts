@@ -148,6 +148,21 @@ test.describe('Generierung @lokal', () => {
     // Wiederholungslogik wirklich greift und nicht beim ersten Fehler aufgibt.
     expect(stats.bilder).toBeGreaterThan(1);
 
+    /*
+      Der Weg zurueck aus dem Teilausfall. Vor dieser Aenderung fuehrte von
+      hier nur "Neue Anprobe erstellen" weg, was ueber reset() alle Eingaben
+      samt der bereits gewaehlten Fotos verwarf -- fuer einen zweiten Versuch
+      musste man alles neu machen, obwohl im Browser noch alles vorlag.
+    */
+    const nochmal = page.getByRole('button', { name: /erneut erstellen/ });
+    await expect(nochmal).toBeVisible();
+    await nochmal.click();
+
+    // Zurueck im Formular -- und die Angaben stehen noch. Genau das ist der
+    // Gewinn: Der naechste Versuch ist ein Klick, keine neue Eingabe.
+    await expect(page.getByLabel('Kleidungstyp')).not.toHaveValue('');
+    await expect(page.getByRole('button', { name: /^Generieren/ })).toBeVisible();
+
     // Der entscheidende Punkt: Das Guthaben muss wieder auf dem Ausgangswert
     // stehen. Nicht weniger -- der Nutzer hat nichts erhalten.
     await page.goto('/konto');

@@ -83,12 +83,23 @@ const server = createServer((req, res) => {
       return json(res, 200, {
         model: 'gpt-image-2',
         data: [{ b64_json: PNG_1x1 }],
-        // Token-Zahlen, damit die Kostenberechnung in images.ts einen
-        // realistischen Wert erhält statt null.
-        usage: {
-          input_tokens_details: { text_tokens: 120, image_tokens: 900 },
-          output_tokens_details: { image_tokens: 1500 },
-        },
+        /*
+          BEWUSST OHNE `usage` -- und das ist keine Nachlässigkeit.
+
+          Vorher standen hier erfundene Token-Zahlen, "damit die
+          Kostenberechnung einen realistischen Wert erhält". Genau das war der
+          Fehler: images.ts rechnet daraus brav einen Preis aus und schreibt
+          ihn nach generations.cost_usd. In der Datenbank landeten dadurch
+          Kosten für Aufrufe, die nie stattgefunden haben -- eine Auswertung
+          der echten Marge mischte anschließend Erfundenes mit Gemessenem und
+          war wertlos.
+
+          Ohne `usage` liefert extractCostUsd() null (siehe images.ts). Genau
+          das ist die ehrliche Aussage: Zu einem Testlauf sind KEINE Kosten
+          bekannt, weil keine entstanden sind. Auswertungen können damit
+          einfach auf `cost_usd is not null` filtern und treffen dann
+          garantiert nur echte Aufrufe.
+        */
       });
     }
 

@@ -212,6 +212,12 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
   // Free-Tarif: ab dem zweiten Ergebnis serverseitig verdeckt (siehe lock.ts) --
   // der Wert kommt direkt vom Poll-Endpunkt, nicht aus einer eigenen Berechnung.
   const [locked, setLocked] = useState(false);
+  // Ausdrueckliche Einwilligung zur Verarbeitung personenbezogener Daten
+  // (Art. 6 Abs. 1 lit. a DSGVO) -- bewusst NICHT vorausgewaehlt und bewusst
+  // bei jedem neuen Durchlauf wieder zurueckgesetzt (siehe resetErgebnis()):
+  // eine einmal erteilte Zustimmung fuer EIN Foto deckt nicht automatisch
+  // jeden folgenden Upload ab.
+  const [consent, setConsent] = useState(false);
 
   // Verhindert, dass ein noch laufender Poll nach reset()/Unmount weiterlaeuft
   // und veraltete Daten in einen neuen Durchlauf schreibt.
@@ -225,7 +231,7 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
   const ready =
     Boolean(person) && filledItems.length > 0 && filledItems.every((i) => i.type && i.size);
   const notEnough = cost > credits;
-  const readyToGenerate = ready && !notEnough && cost > 0;
+  const readyToGenerate = ready && !notEnough && cost > 0 && consent;
 
   // Tipp-Inhalte aus der Altanwendung uebernommen (dort als "photoGuide"/
   // "clothingGuide"-Modal bereits vorhanden) -- als Daten statt JSX, weil
@@ -309,6 +315,10 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
     setError(null);
     setGenerationId(null);
     setLocked(false);
+    // Zustimmung gilt nur fuer den EINEN, gerade abgeschickten Durchlauf --
+    // sowohl "Neue Anprobe" als auch "Nochmal versuchen" senden Fotos erneut
+    // an den KI-Dienstleister und verlangen deshalb erneut ein bewusstes Haekchen.
+    setConsent(false);
   }
 
   function reset() {
@@ -834,7 +844,36 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
         </Field>
       </section>
 
-      <div className="flex flex-col items-center gap-2 border-t border-line pt-6 md:items-start">
+      <div className="flex flex-col items-center gap-3 border-t border-line pt-6 md:items-start">
+        {/* Ausdrueckliche Einwilligung zur Datenverarbeitung -- bewusst als
+            eigener, nicht vorausgewaehlter Schritt direkt vor dem Auslösen
+            der Verarbeitung, statt beilaeufig beim Registrieren erledigt.
+            items-start statt items-center: der Text ist zweizeilig, das
+            Kaestchen soll oben an der ersten Zeile ausgerichtet bleiben. */}
+        <label className="flex max-w-md cursor-pointer items-start gap-2.5 text-left text-xs leading-relaxed text-ink-soft">
+          <input
+            type="checkbox"
+            checked={consent}
+            onChange={(e) => setConsent(e.target.checked)}
+            className="mt-0.5 h-4 w-4 shrink-0 rounded border-line-strong accent-ink"
+          />
+          <span>
+            Ich bin ausdrücklich damit einverstanden, dass mein Personenfoto
+            und die Kleidungsfotos — personenbezogene Daten — zur Erstellung
+            des Anprobebilds an unseren KI-Dienstleister übermittelt und dort
+            verarbeitet werden.{' '}
+            <Link
+              href="/datenschutz"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-accent underline underline-offset-4 hover:opacity-80"
+            >
+              Mehr dazu in der Datenschutzerklärung
+            </Link>
+            .
+          </span>
+        </label>
+
         {/* key erzwingt ein Neu-Mounten, sobald der Button klickbar wird —
             dadurch startet die pop-ready-Animation garantiert frisch, statt
             nur einmal beim ersten Laden zu greifen. */}
@@ -843,11 +882,14 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
           size="lg"
           onClick={generate}
           disabled={!readyToGenerate}
-          className={readyToGenerate ? 'pop-ready hover:-translate-y-0.5' : ''}
+          className={readyToGenerate ? 'pop-ready' : ''}
         >
           {cost > 0 ? `Generieren (${cost} ${cost === 1 ? 'Credit' : 'Credits'})` : 'Generieren'}
         </Button>
         {notEnough && <span className="text-xs text-accent">Guthaben reicht nicht — {cost} Credits nötig.</span>}
+        {ready && !notEnough && cost > 0 && !consent && (
+          <span className="text-xs text-muted">Bitte bestätige die Datenverarbeitung, um fortzufahren.</span>
+        )}
         {mode === 'single' && filledItems.length > 1 && (
           <span className="text-xs text-muted">{filledItems.length} Stücke = {filledItems.length} Bilder</span>
         )}

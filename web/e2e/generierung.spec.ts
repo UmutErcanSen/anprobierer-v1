@@ -71,6 +71,10 @@ test.describe('Generierung @lokal', () => {
 
     await page.getByLabel('Kleidungstyp').selectOption({ index: 1 });
     await page.getByLabel('Größe').selectOption({ index: 1 });
+
+    // Ausdrueckliche Einwilligung zur Datenverarbeitung -- ohne das bleibt
+    // der Generieren-Knopf deaktiviert (siehe generate-flow.tsx).
+    await page.getByRole('checkbox').check();
   }
 
   test('erfolgreiche Generierung zeigt ein Ergebnis und bucht Credits ab', async ({ page }) => {

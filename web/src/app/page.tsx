@@ -3,6 +3,8 @@ import { Eye, Search, ShieldCheck } from "lucide-react";
 import { LinkButton } from "@/components/ui/button";
 import { SiteHeader } from "@/components/site/site-header";
 import { SiteFooter } from "@/components/site/site-footer";
+import { Reveal } from "@/components/site/reveal";
+import { CountUp } from "@/components/site/count-up";
 import { PLATFORMS } from "@/lib/generation/platforms";
 import { PLATFORM_ICONS, PlatformIcon } from "@/components/generation/platform-icon";
 
@@ -21,10 +23,13 @@ import { PLATFORM_ICONS, PlatformIcon } from "@/components/generation/platform-i
 // hat bisher einen einzigen Testnutzer). Fake-Social-Proof untergraebt genau
 // das Vertrauen, das eine Landing Page aufbauen soll -- deshalb ausschliesslich
 // Aussagen, die schon heute technisch/vertraglich zutreffen.
+//
+// value als Zahl statt fertigem Text: CountUp animiert nur die Ziffer, "0"
+// zaehlt bewusst nicht hoch (siehe count-up.tsx) und bleibt einfach stehen.
 const STATS = [
-  { value: "1 gratis", label: "Ergebnis in voller Auflösung" },
-  { value: "3 Plattformen", label: "bereit zum Einfügen" },
-  { value: "0 €", label: "ohne Zahlungsdaten" },
+  { value: 1, suffix: " gratis", label: "Ergebnis in voller Auflösung" },
+  { value: 3, suffix: " Plattformen", label: "bereit zum Einfügen" },
+  { value: 0, suffix: " €", label: "ohne Zahlungsdaten" },
 ];
 
 // Fuer den Logo-Marquee wiederholt, sonst wirkt das Band bei nur drei
@@ -84,7 +89,11 @@ export default function HomePage() {
             gestapelt. Text auf Paper statt ueber dem Foto — das haelt die
             Display-Typo und den Terrakotta-Akzent gestochen lesbar. */}
         <section className="grid min-h-[calc(100dvh-4rem)] md:grid-cols-2">
-          <div className="flex flex-col justify-center px-6 py-16 md:px-12 lg:px-16">
+          {/* hero-enter: laeuft beim Laden einmal automatisch, gestaffelt
+              nach Kind-Element (kein Scroll noetig, siehe globals.css) --
+              anders als Reveal unten, das auf das Erreichen des
+              Sichtbereichs wartet. */}
+          <div className="hero-enter flex flex-col justify-center px-6 py-16 md:px-12 lg:px-16">
             <p className="kicker">KI-Anprobe für Vinted und Kleinanzeigen</p>
 
             <h1 className="display mt-6 text-5xl sm:text-6xl lg:text-7xl">
@@ -111,7 +120,7 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="relative min-h-[52vh] border-t border-line md:min-h-0 md:border-t-0 md:border-l">
+          <div className="hero-image-enter relative min-h-[52vh] border-t border-line md:min-h-0 md:border-t-0 md:border-l">
             <Image
               src="/examples/beispiel-1.png"
               alt="Beispiel eines generierten Anprobebilds"
@@ -132,7 +141,9 @@ export default function HomePage() {
             mask-image blendet den Rand weich aus, damit die Wiederholung am
             linken/rechten Bildschirmrand nicht hart abgeschnitten wirkt. */}
         <section className="overflow-hidden border-t border-line pt-16 pb-12">
-          <p className="text-center text-xs uppercase tracking-[0.14em] text-muted">Verkaufsbereit auf</p>
+          <Reveal>
+            <p className="text-center text-xs uppercase tracking-[0.14em] text-muted">Verkaufsbereit auf</p>
+          </Reveal>
           {/* gap waechst mit der Bildschirmbreite: bei nur drei Plattformen
               wirkte ein fixer Abstand auf breiten Desktop-Monitoren zu eng
               (die Zeile blieb "mobil-dicht", obwohl viel mehr Platz da war). */}
@@ -153,12 +164,16 @@ export default function HomePage() {
 
         {/* Vorher/Nachher als Beleg der Verwandlung */}
         <section className="border-t border-line">
-          <div className="mx-auto w-full max-w-6xl px-6 py-20 text-center">
+          <Reveal className="mx-auto w-full max-w-6xl px-6 py-20 text-center">
             <p className="kicker">Aus einem Alltagsfoto</p>
             <h2 className="display mx-auto mt-5 max-w-2xl text-3xl md:text-5xl">
               Vorher, <em>nachher</em>.
             </h2>
 
+            {/* wipe-reveal auf dem "Nachher"-Bild: faehrt von rechts ein,
+                sobald das Elternelement (derselbe Reveal-Trigger) sichtbar
+                wird -- macht die Verwandlung selbst sichtbar statt zwei
+                fertige Bilder nebeneinanderzustellen. */}
             <div className="mx-auto mt-12 grid max-w-4xl grid-cols-2 overflow-hidden rounded-md border border-line">
               <figure className="relative">
                 <Image
@@ -172,7 +187,7 @@ export default function HomePage() {
                   Vorher
                 </figcaption>
               </figure>
-              <figure className="relative border-l border-paper">
+              <figure className="wipe-reveal relative border-l border-paper">
                 <Image
                   src="/examples/beispiel-1.png"
                   alt="Generiertes Anprobebild"
@@ -189,30 +204,37 @@ export default function HomePage() {
             <dl className="mx-auto mt-12 flex max-w-2xl flex-wrap items-start justify-center gap-x-16 gap-y-6">
               {STATS.map((s) => (
                 <div key={s.label} className="text-center">
-                  <dt className="text-3xl font-semibold tracking-tight text-ink">{s.value}</dt>
+                  <dt className="text-3xl font-semibold tracking-tight text-ink">
+                    <CountUp value={s.value} suffix={s.suffix} />
+                  </dt>
                   <dd className="mt-1 text-sm text-muted">{s.label}</dd>
                 </div>
               ))}
             </dl>
-          </div>
+          </Reveal>
         </section>
 
         {/* Warum bessere Fotos/Texte verkaufen -- bewusst als nachvollziehbare
             Gruende statt als (unbelegte) Statistik-Behauptung aufgebaut. */}
         <section className="border-t border-line">
           <div className="mx-auto w-full max-w-6xl px-6 py-20">
-            <p className="kicker">Mehr als nur ein Foto</p>
-            <h2 className="display mt-5 max-w-2xl text-3xl md:text-5xl">
-              Warum bessere Anzeigen <em>verkaufen</em>.
-            </h2>
+            <Reveal>
+              <p className="kicker">Mehr als nur ein Foto</p>
+              <h2 className="display mt-5 max-w-2xl text-3xl md:text-5xl">
+                Warum bessere Anzeigen <em>verkaufen</em>.
+              </h2>
+            </Reveal>
 
+            {/* delay={i * 100}: die drei Karten blenden nacheinander statt
+                gleichzeitig ein -- signalisiert mehr Sorgfalt als ein
+                einziger Block. */}
             <div className="mt-14 grid gap-8 md:grid-cols-3">
-              {SELL_POINTS.map(({ icon: Icon, title, body }) => (
-                <div key={title}>
+              {SELL_POINTS.map(({ icon: Icon, title, body }, i) => (
+                <Reveal key={title} delay={i * 100}>
                   <Icon size={22} className="text-accent" aria-hidden />
                   <h3 className="mt-4 text-lg font-medium tracking-tight text-ink">{title}</h3>
                   <p className="mt-2 text-[15px] leading-relaxed text-ink-soft">{body}</p>
-                </div>
+                </Reveal>
               ))}
             </div>
           </div>
@@ -221,16 +243,18 @@ export default function HomePage() {
         {/* So funktioniert's */}
         <section id="so-gehts" className="border-t border-line">
           <div className="mx-auto w-full max-w-6xl px-6 py-20">
-            <h2 className="display max-w-2xl text-3xl md:text-5xl">
-              In drei Schritten <em>fertig</em>.
-            </h2>
+            <Reveal>
+              <h2 className="display max-w-2xl text-3xl md:text-5xl">
+                In drei Schritten <em>fertig</em>.
+              </h2>
+            </Reveal>
             <div className="mt-14 grid gap-px overflow-hidden rounded-md border border-line bg-line md:grid-cols-3">
-              {STEPS.map((step) => (
-                <div key={step.n} className="bg-paper p-8">
+              {STEPS.map((step, i) => (
+                <Reveal key={step.n} delay={i * 100} className="bg-paper p-8">
                   <span className="font-mono text-sm text-muted">{step.n}</span>
                   <h3 className="mt-5 text-xl font-medium tracking-tight">{step.title}</h3>
                   <p className="mt-2 text-[15px] leading-relaxed text-ink-soft">{step.body}</p>
-                </div>
+                </Reveal>
               ))}
             </div>
 
@@ -238,10 +262,10 @@ export default function HomePage() {
                 obwohl Button+Text als eigener Block optisch mittig wirken
                 sollen (anders als die Ueberschrift darueber, die bewusst
                 linksbuendig bleibt). Ab sm wieder normale Zeile. */}
-            <div className="mt-14 flex flex-col items-center gap-4 text-center sm:flex-row sm:items-center sm:text-left">
+            <Reveal className="mt-14 flex flex-col items-center gap-4 text-center sm:flex-row sm:items-center sm:text-left">
               <LinkButton href="/registrieren" size="lg">Jetzt kostenlos starten</LinkButton>
               <span className="text-sm text-muted">Erstes Ergebnis gratis · keine Zahlungsdaten nötig</span>
-            </div>
+            </Reveal>
           </div>
         </section>
       </main>

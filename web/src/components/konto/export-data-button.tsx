@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Download, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 /*
   Datenexport nach DSGVO Art. 15/20 -- vollstaendiges ZIP mit allen
@@ -92,17 +93,16 @@ export function ExportDataButton() {
   }
 
   return (
-    <span className="inline-flex items-center gap-2">
-      <button
-        type="button"
-        onClick={exportieren}
-        disabled={loading}
-        className="flex items-center gap-1.5 text-sm text-muted underline underline-offset-4 transition-colors hover:text-ink disabled:opacity-50"
-      >
-        {loading ? <Loader2 size={14} className="animate-spin" aria-hidden /> : <Download size={14} aria-hidden />}
-        {loading ? 'Wird erstellt …' : 'Meine Daten exportieren'}
-      </button>
+    <div className="flex shrink-0 flex-col items-start gap-1.5 sm:items-end">
+      {/* variant="outline" statt Textlink -- in der neuen Einstellungs-Zeile
+          (konto/page.tsx) steht daneben mit DeleteAccountButton ein
+          gleichwertiger, echter Button; ein blosser Link wirkte dagegen
+          zu leicht. */}
+      <Button variant="outline" size="md" onClick={exportieren} disabled={loading}>
+        {loading ? <Loader2 size={15} className="animate-spin" aria-hidden /> : <Download size={15} aria-hidden />}
+        {loading ? 'Wird erstellt …' : 'Exportieren'}
+      </Button>
       {error && <span className="text-xs text-accent">{error}</span>}
-    </span>
+    </div>
   );
 }

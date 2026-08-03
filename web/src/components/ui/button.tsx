@@ -7,7 +7,7 @@ import type { ComponentProps, ReactNode } from "react";
   Aktion pro Ansicht; alles andere bleibt zurueckhaltend.
 */
 
-type Variant = "primary" | "outline" | "ghost";
+type Variant = "primary" | "outline" | "ghost" | "danger";
 type Size = "md" | "lg";
 
 // Dezenter Lift statt Schatten (bleibt beim "Haarlinie statt Schatten"-
@@ -28,6 +28,14 @@ const variants: Record<Variant, string> = {
   primary: "bg-ink text-on-ink hover:opacity-90",
   outline: "border border-line-strong text-ink hover:bg-surface",
   ghost: "text-ink hover:bg-surface",
+  // Gefuellt statt nur umrandet, aus demselben Grund wie --danger selbst
+  // (siehe globals.css): fuer die eine wirklich unwiderrufliche Aktion darf
+  // die Farbe nicht mit einem zurueckhaltenden Outline-Button verwaessert
+  // werden. text-on-ink statt einer fixen Farbe, weil --on-ink pro Theme
+  // schon auf ausreichenden Kontrast zur jeweiligen Vollflaeche abgestimmt
+  // ist (genau das gleiche Prinzip wie bei "primary" oben, nur mit
+  // --danger statt --ink als Flaeche).
+  danger: "bg-danger text-on-ink hover:opacity-90",
 };
 
 const sizes: Record<Size, string> = {

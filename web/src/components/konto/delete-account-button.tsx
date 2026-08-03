@@ -42,24 +42,25 @@ export function DeleteAccountButton() {
 
   return (
     <>
-      {/* border-danger statt border-accent: eine eigene, gedaempfte Rotfarbe
-          nur fuer diese eine wirklich unwiderrufliche Aktion -- sonst liesse
-          sich der normale Terrakotta-Markenakzent nicht mehr von "hier droht
+      {/* variant="danger": eine eigene, gefuellte Rotfarbe nur fuer diese
+          eine wirklich unwiderrufliche Aktion -- sonst liesse sich der
+          normale Terrakotta-Markenakzent nicht mehr von "hier droht
           Datenverlust" unterscheiden (siehe --danger in globals.css). */}
-      <Button
-        variant="outline"
-        size="md"
-        onClick={() => setConfirming(true)}
-        className="border-danger/40 text-danger hover:bg-danger/5"
-      >
+      <Button variant="danger" size="md" onClick={() => setConfirming(true)}>
         <Trash2 size={15} aria-hidden />
         Konto endgültig löschen
       </Button>
 
+      {/* confirmWord: zweite, bewusst etwas laestige Huerde -- diese eine
+          Aktion der ganzen App loescht wirklich ALLES sofort und
+          unwiderruflich, ein einzelner Klick auf einen Bestaetigen-Knopf
+          reicht dafuer nicht. */}
       <ConfirmDialog
         open={confirming}
+        variant="danger"
         title="Konto wirklich endgültig löschen?"
         description="Das lässt sich nicht rückgängig machen: Ein laufendes Abo wird sofort gekündigt, alle Anprobebilder, Verkaufstexte und dein Guthaben-Verlauf werden unwiderruflich gelöscht. Es gibt danach keine Wiederherstellung."
+        confirmWord="LÖSCHEN"
         confirmLabel="Ja, endgültig löschen"
         pendingLabel="Wird gelöscht …"
         pending={deleting}

@@ -65,11 +65,11 @@ export function MobileNav({ items, children }: { items: Item[]; children?: React
         createPortal(
           <div
             inert={!open}
-            className={`fixed inset-0 z-[100] overflow-y-auto bg-paper transition-transform duration-300 ease-out ${
+            className={`fixed inset-0 z-[100] flex flex-col overflow-y-auto bg-paper transition-transform duration-300 ease-out ${
               open ? 'translate-x-0' : 'translate-x-full'
             }`}
           >
-            <div className="flex h-16 items-center justify-between px-6">
+            <div className="flex h-16 shrink-0 items-center justify-between px-6">
               <span className="text-[15px] font-medium uppercase tracking-[0.16em] text-ink">Anprobierer</span>
               <button
                 type="button"
@@ -80,7 +80,15 @@ export function MobileNav({ items, children }: { items: Item[]; children?: React
                 <X size={20} aria-hidden />
               </button>
             </div>
-            <nav className="flex flex-col gap-1 px-6 py-4">
+            {/* flex-1 auf <nav> + mt-auto auf dem children-Wrapper: "Abmelden"
+                (uebergeben als children, z.B. aus AppHeader) rutscht dadurch
+                bis zum unteren Bildschirmrand -- im Daumenbereich und klar
+                von den normalen Navigationspunkten abgesetzt, statt einfach
+                nur als letzter Listeneintrag mittendrin zu stehen. Bei einer
+                langen Liste (mehr Eintraege als Bildschirmhoehe) wirkt es
+                weiterhin wie ein normaler letzter Eintrag -- mt-auto greift
+                nur, wenn tatsaechlich Platz uebrig ist. */}
+            <nav className="flex flex-1 flex-col gap-1 px-6 py-4">
               {items.map((item) => (
                 <Link
                   key={item.href}
@@ -91,7 +99,7 @@ export function MobileNav({ items, children }: { items: Item[]; children?: React
                   {item.label}
                 </Link>
               ))}
-              {children}
+              {children && <div className="mt-auto pt-4">{children}</div>}
             </nav>
           </div>,
           document.body,

@@ -149,12 +149,16 @@ export default async function KontoPage() {
             aufladen" wie eine zweite, konkurrierende Geld-Aktion neben "Auf
             Pro upgraden" wirken. Jetzt: Aktion gehoert zum Titel, Aufladen
             gehoert zur Guthaben-Zeile, wo es inhaltlich hingehoert. */}
-        {/* items-center statt items-start: auf Mobil (gestapelt) stand der
-            ganze Block vorher hart am linken Rand -- bei einem einzelnen,
+        {/* Mobil (gestapelt): items-center statt items-start -- der ganze
+            Block wirkte vorher hart am linken Rand, bei einem einzelnen,
             mittig wirkenden Inhaltsblock (kein mehrspaltiges Layout wie auf
-            Desktop) liest sich zentriert ruhiger. Ab sm wieder Zeile mit
-            Titel links/Aktion rechts wie zuvor. */}
-        <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:items-center sm:justify-between sm:text-left">
+            Desktop) liest sich zentriert ruhiger.
+            Desktop: sm:items-start statt sm:items-center -- der Button
+            zentrierte sich sonst an der GESAMTEN dreizeiligen Textspalte
+            (Kicker+Ueberschrift+E-Mail) und schwebte dadurch mittig zwischen
+            den Zeilen, statt sich klar an der Kopfzeile auszurichten. Jetzt
+            fluchten Button und Kicker/Ueberschrift oben buendig. */}
+        <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:items-start sm:justify-between sm:text-left">
           <div>
             <p className="kicker">Mein Konto</p>
             <h1 className="mt-4 text-3xl font-semibold tracking-tight text-ink">
@@ -302,52 +306,70 @@ export default async function KontoPage() {
 
         {/* DSGVO: Art. 15/20 (Export) und Art. 17 (Loeschung) als
             Selbstbedienung statt ausschliesslich per E-Mail-Anfrage.
-            Der Warntext zur Loeschung steht bewusst IMMER sichtbar hier auf
-            der Seite, nicht nur im Bestaetigungsdialog -- eine Konsequenz,
-            die man erst nach dem Klick auf "Loeschen" liest, ist zu spaet
-            fuer eine informierte Entscheidung. */}
+            "Datenschutz" statt "Daten & Konto" -- deckt beide Rechte klarer
+            ab und ist derselbe Begriff, den die Datenschutzerklaerung selbst
+            verwendet. Als Einstellungs-Liste (eine Karte, zwei Zeilen) statt
+            loser Elemente -- auf Desktop vorher viel ungenutzter Platz und
+            unklare Gruppierung, jetzt eine in sich geschlossene Flaeche wie
+            bei typischen Kontoeinstellungen. Der Warntext zur Loeschung
+            steht bewusst IMMER sichtbar hier, nicht nur im Bestaetigungs-
+            dialog -- eine Konsequenz, die man erst nach dem Klick liest, ist
+            zu spaet fuer eine informierte Entscheidung. */}
         <section className="mt-14 border-t border-line pt-8">
-          <h2 className="text-sm font-medium text-ink">Daten &amp; Konto</h2>
+          <h2 className="text-sm font-medium text-ink">Datenschutz</h2>
 
-          <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-3">
-            <ExportDataButton />
-            <InfoModal label="Wie werden meine Daten gespeichert?" title="Wie werden meine Daten gespeichert?">
-              <p>Der Export ist ein ZIP-Archiv mit zwei Teilen:</p>
-              <ul className="flex flex-col gap-1.5 pl-4">
-                <li className="list-disc">
-                  Ein Ordner je Anprobe mit den Ergebnisbildern (<code className="text-xs text-ink">.png</code>) und den
-                  dazugehörigen Verkaufstexten (<code className="text-xs text-ink">.txt</code>).
-                </li>
-                <li className="list-disc">
-                  Eine Datei <code className="text-xs text-ink">konto.json</code> mit deinen Kontodaten, deinem
-                  Abo-Status und dem vollständigen Credit-Verlauf.
-                </li>
-              </ul>
-              <p>
-                Enthalten sind immer die echten, vollständigen Ergebnisse — unabhängig vom Tarif und
-                unabhängig davon, ob ein Ergebnis in der App nur als unscharfe Vorschau angezeigt wird.
-              </p>
-            </InfoModal>
-          </div>
-
-          {/* Auf Mobil zentriert (Text + Button), auf Desktop eine Zeile mit
-              dem Text links und dem Button rechts -- vorher blieb der Text
-              per max-w-xl schmal, waehrend die Box selbst die volle
-              Container-Breite einnahm: auf breiten Bildschirmen stand der
-              Button dadurch weit rechts im sonst leeren Rest der Flaeche.
-              Jetzt nutzt der Button genau diesen Platz, statt ihn
-              ungenutzt zu lassen. */}
-          <div className="mt-8 flex flex-col items-center gap-4 rounded-xl border border-danger/30 bg-danger/5 px-5 py-5 text-center sm:flex-row sm:items-center sm:justify-between sm:text-left">
-            <div>
-              <p className="text-sm font-medium text-danger">Konto endgültig löschen</p>
-              <p className="mx-auto mt-2 max-w-md text-[13px] leading-relaxed text-ink-soft sm:mx-0">
-                Löscht dein Konto sofort und unwiderruflich: ein laufendes Abo wird automatisch
-                gekündigt, alle Anprobebilder, Verkaufstexte und dein Guthaben-Verlauf werden
-                entfernt. Diese Aktion lässt sich <strong className="font-medium text-ink">nicht</strong>{" "}
-                rückgängig machen — lade dir vorher ggf. deine Daten herunter.
-              </p>
+          <div className="mt-4 overflow-hidden rounded-xl border border-line">
+            <div className="flex flex-col items-start gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="flex items-center gap-1.5 text-sm font-medium text-ink">
+                  Deine Daten exportieren
+                  <InfoModal label="Wie werden meine Daten gespeichert?" title="Wie werden meine Daten gespeichert?">
+                    <p>Der Export ist ein ZIP-Archiv mit zwei Teilen:</p>
+                    <ul className="flex flex-col gap-1.5 pl-4">
+                      <li className="list-disc">
+                        Ein Ordner je Anprobe mit den Ergebnisbildern (<code className="text-xs text-ink">.png</code>)
+                        und den dazugehörigen Verkaufstexten (<code className="text-xs text-ink">.txt</code>).
+                      </li>
+                      <li className="list-disc">
+                        Eine Datei <code className="text-xs text-ink">konto.json</code> mit deinen Kontodaten, deinem
+                        Abo-Status und dem vollständigen Credit-Verlauf.
+                      </li>
+                    </ul>
+                    {/* Baumstruktur statt nur Text -- zeigt auf einen Blick,
+                        was gemeint ist, ohne die Beschreibung erst gedanklich
+                        in eine Ordnerstruktur uebersetzen zu muessen. */}
+                    <pre className="overflow-x-auto rounded-lg border border-line bg-surface p-3 font-mono text-[11px] leading-relaxed text-ink-soft">
+{`meine-daten.zip
+├─ konto.json
+└─ anproben/
+   ├─ 01-a1b2c3d4/
+   │  ├─ ergebnis.png
+   │  └─ verkaufstext.txt
+   └─ 02-e5f6g7h8/
+      ├─ ergebnis.png
+      └─ verkaufstext.txt`}
+                    </pre>
+                    <p>
+                      Enthalten sind immer die echten, vollständigen Ergebnisse — unabhängig vom Tarif und
+                      unabhängig davon, ob ein Ergebnis in der App nur als unscharfe Vorschau angezeigt wird.
+                    </p>
+                  </InfoModal>
+                </p>
+                <p className="mt-1 text-[13px] leading-relaxed text-muted">
+                  Alle Anprobebilder, Verkaufstexte und Kontodaten als ZIP-Archiv.
+                </p>
+              </div>
+              <ExportDataButton />
             </div>
-            <div className="shrink-0">
+
+            <div className="flex flex-col items-start gap-4 border-t border-line bg-danger/5 p-5 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm font-medium text-danger">Konto endgültig löschen</p>
+                <p className="mt-1 max-w-md text-[13px] leading-relaxed text-ink-soft">
+                  Sofort und unwiderruflich: ein laufendes Abo wird automatisch gekündigt, alle
+                  Anprobebilder, Verkaufstexte und dein Guthaben-Verlauf werden entfernt.
+                </p>
+              </div>
               <DeleteAccountButton />
             </div>
           </div>

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
+import { Toaster } from "sonner";
 import "./globals.css";
 
 // Sans fuer UI und Fliesstext.
@@ -68,7 +69,31 @@ export default function RootLayout({
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        {children}
+        {/*
+          Toasts fuer kurze Erfolgsmeldungen (z.B. nach Mehrfach-Loeschen im
+          Verlauf) -- sonner steuert Farben ausschliesslich ueber diese CSS-
+          Variablen, keine eigene Theme-Erkennung noetig: dieselben Tokens,
+          die schon der Rest der Seite pro data-theme setzt (globals.css),
+          gelten hier automatisch mit. Ohne das wuerde sonner sein eigenes,
+          von unserem Editorial-Look losgeloestes Standarddesign zeigen.
+        */}
+        <Toaster
+          position="bottom-center"
+          style={
+            {
+              '--normal-bg': 'var(--paper)',
+              '--normal-text': 'var(--ink)',
+              '--normal-border': 'var(--line-strong)',
+              '--success-bg': 'var(--paper)',
+              '--success-text': 'var(--success)',
+              '--success-border': 'var(--line-strong)',
+              '--border-radius': '0.75rem',
+            } as React.CSSProperties
+          }
+        />
+      </body>
     </html>
   );
 }

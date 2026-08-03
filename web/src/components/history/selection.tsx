@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { Check, Download, ListChecks, Loader2, Trash2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
@@ -164,6 +165,7 @@ export function HistorySelection({ ids, children }: { ids: string[]; children: R
       return;
     }
 
+    toast.success(anzahl === 1 ? 'Anprobe gelöscht.' : `${anzahl} Anproben gelöscht.`);
     beenden();
     router.refresh();
   }
@@ -224,7 +226,12 @@ export function HistorySelection({ ids, children }: { ids: string[]; children: R
             Mehrere auswählen
           </Button>
         ) : (
-          <>
+          /* Eigene, in sich begrenzte Leiste statt loser Elemente auf voller
+             Containerbreite -- vorher schob "ml-auto" den Fertig-Knopf bis
+             zum rechten Rand des GESAMTEN (breiten) Verlauf-Layouts, auf
+             Desktop wirkte er dadurch weit vom Rest der Zeile abgerissen.
+             Jetzt ist "ganz rechts" nur noch der rechte Rand dieser Leiste. */
+          <div className="flex w-full flex-wrap items-center gap-3 rounded-xl border border-line bg-surface px-4 py-2.5 sm:w-auto">
             <span className="text-sm text-ink">
               {anzahl === 0 ? 'Nichts ausgewählt' : `${anzahl} ausgewählt`}
             </span>
@@ -235,14 +242,13 @@ export function HistorySelection({ ids, children }: { ids: string[]; children: R
             >
               {alleGewaehlt ? 'Auswahl aufheben' : 'Alle auswählen'}
             </button>
-            <button
-              type="button"
-              onClick={beenden}
-              className="ml-auto flex items-center gap-1.5 text-sm text-muted transition-colors hover:text-ink"
-            >
-              <X size={15} aria-hidden /> Fertig
-            </button>
-          </>
+            {/* Echter Button statt blossem Text -- war zuvor kaum als
+                eigenstaendige Aktion erkennbar. */}
+            <Button variant="outline" size="md" onClick={beenden} className="ml-auto">
+              <X size={15} aria-hidden />
+              Fertig
+            </Button>
+          </div>
         )}
       </div>
 
@@ -285,11 +291,11 @@ export function HistorySelection({ ids, children }: { ids: string[]; children: R
               </Button>
 
               <Button
-                variant="outline"
+                variant="danger"
                 size="md"
                 onClick={() => setLoeschDialog(true)}
                 disabled={laeuft !== null}
-                className="flex-1 border-accent/40 text-accent hover:bg-accent/5 sm:flex-none"
+                className="flex-1 sm:flex-none"
               >
                 <Trash2 size={15} aria-hidden />
                 Löschen
@@ -301,8 +307,9 @@ export function HistorySelection({ ids, children }: { ids: string[]; children: R
 
       <ConfirmDialog
         open={loeschDialog}
-        title={`${anzahl} ${anzahl === 1 ? 'Anprobe' : 'Anproben'} löschen?`}
-        description="Bilder und Verkaufstexte werden endgültig entfernt. Das lässt sich nicht rückgängig machen."
+        variant="danger"
+        title="Sind Sie sicher?"
+        description={`${anzahl} ${anzahl === 1 ? 'Anprobe wird' : 'Anproben werden'} endgültig entfernt — Bilder und Verkaufstexte lassen sich danach nicht wiederherstellen.`}
         confirmLabel="Ja, endgültig löschen"
         pendingLabel="Wird gelöscht …"
         pending={laeuft === 'loeschen'}

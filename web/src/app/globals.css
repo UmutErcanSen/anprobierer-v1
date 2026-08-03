@@ -235,17 +235,44 @@ body {
 }
 
 /* Scroll-Reveal: siehe components/site/reveal.tsx. Faehrt beim Erreichen
-   des Sichtbereichs sanft hoch statt fertig gerendert dazustehen. Dieselbe
+   des Sichtbereichs sanft ein statt fertig gerendert dazustehen. Dieselbe
    Kurve wie ring-draw/bar-rise oben, fuer ein einheitliches Bewegungsgefuehl
-   ueber alle "kommt-ins-Bild"-Effekte der Seite hinweg. */
+   ueber alle "kommt-ins-Bild"-Effekte der Seite hinweg. Drei Varianten
+   (Ausgangszustand je Richtung), damit sich Abschnitte mit unterschiedlichem
+   Charakter (Standardtext, fokussierte Karten, nummerierte Reihenfolge)
+   beim Einblenden auch unterschiedlich anfuehlen statt alle identisch von
+   unten hochzufahren. */
 .reveal {
   opacity: 0;
-  transform: translateY(28px);
   transition: opacity 0.7s cubic-bezier(0.2, 0.8, 0.2, 1), transform 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.reveal--up {
+  transform: translateY(28px);
+}
+.reveal--scale {
+  transform: scale(0.93);
+}
+.reveal--left {
+  transform: translateX(-32px);
 }
 .reveal-visible {
   opacity: 1;
-  transform: translateY(0);
+  transform: none;
+}
+
+/* Begleitet reveal--scale: das Icon einer Feature-Karte poppt mit einem
+   kleinen Dreh hinein statt nur stillzustehen, waehrend Text und Karte
+   selbst ganz normal per reveal--scale wachsen. Haengt am reveal-visible
+   des UMGEBENDEN Reveal-Elements (Kind-Selektor), damit derselbe
+   Sichtbarkeits-Trigger beide Bewegungen gemeinsam ausloest -- kein
+   zusaetzlicher Beobachter noetig. */
+@keyframes sell-icon-pop {
+  0% { transform: scale(0.5) rotate(-8deg); opacity: 0; }
+  60% { transform: scale(1.12) rotate(4deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+.reveal-visible .sell-icon {
+  animation: sell-icon-pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 
 /* Hero-Einstieg beim Laden: kein Scroll noetig (die Elemente sind sofort im

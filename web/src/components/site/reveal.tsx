@@ -13,6 +13,14 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
   `delay` (ms) erlaubt gestaffeltes Einblenden mehrerer Geschwister-Elemente
   (z.B. drei Feature-Karten nacheinander statt gleichzeitig).
 
+  `variant` waehlt die Bewegungsrichtung -- verschiedene Abschnitte der Seite
+  sollen sich beim Einblenden unterscheiden lassen, statt dass jede Section
+  optisch identisch "hochfaehrt":
+    'up'    Standard: faehrt von unten hoch (Ueberschriften, Standard-Bloecke)
+    'scale' waechst leicht aus der Mitte -- fuer Karten mit eigenem Icon/Fokuspunkt
+    'left'  faehrt von links ein -- fuer Inhalte mit erkennbarer Lesereihenfolge
+            (nummerierte Schritte, Tabellenzeilen)
+
   Reduzierte Bewegung ist bereits ueber die globale
   `prefers-reduced-motion`-Regel in globals.css abgedeckt (setzt
   transition-duration global auf ~0) -- keine gesonderte Behandlung noetig.
@@ -20,10 +28,12 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 export function Reveal({
   children,
   delay = 0,
+  variant = 'up',
   className = '',
 }: {
   children: ReactNode;
   delay?: number;
+  variant?: 'up' | 'scale' | 'left';
   className?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -48,7 +58,7 @@ export function Reveal({
   return (
     <div
       ref={ref}
-      className={`reveal${visible ? ' reveal-visible' : ''}${className ? ` ${className}` : ''}`}
+      className={`reveal reveal--${variant}${visible ? ' reveal-visible' : ''}${className ? ` ${className}` : ''}`}
       style={delay ? { transitionDelay: `${delay}ms` } : undefined}
     >
       {children}

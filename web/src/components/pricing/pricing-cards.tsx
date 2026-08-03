@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { LinkButton, Button } from "@/components/ui/button";
+import { Reveal } from "@/components/site/reveal";
 import { PLANS, type PaidPlan } from "@/components/pricing/plans-data";
 import type { PlanKey } from "@/lib/generation/constants";
 
@@ -112,14 +113,19 @@ export function PricingCards({ currentPlan }: PricingCardsProps) {
         </p>
       )}
 
+      {/* variant="scale": waechst leicht aus der Mitte -- dieselbe Bewegung
+          wie die Feature-Karten auf der Startseite (bewusst konsistent, hier
+          sind es ebenfalls fokussierte Auswahl-Karten, keine Reihenfolge wie
+          bei nummerierten Schritten). delay je Kartenindex fuer gestaffeltes
+          Einblenden. */}
       <div className="mt-8 grid gap-px overflow-hidden rounded-xl border border-line bg-line md:grid-cols-3">
-        {PLANS.map((plan) => {
+        {PLANS.map((plan, i) => {
           const isPaid = plan.key !== "free";
           const price = interval === "yearly" && plan.yearlyPrice ? plan.yearlyPrice : plan.monthlyPrice;
           const period = plan.key === "free" ? undefined : interval === "yearly" ? "/ Jahr" : "/ Monat";
 
           return (
-            <div key={plan.key} className="flex flex-col gap-5 bg-paper p-8">
+            <Reveal key={plan.key} variant="scale" delay={i * 100} className="flex flex-col gap-5 bg-paper p-8">
               <div>
                 <div className="flex items-center gap-2">
                   <h2 className="text-lg font-medium tracking-tight text-ink">{plan.name}</h2>
@@ -185,7 +191,7 @@ export function PricingCards({ currentPlan }: PricingCardsProps) {
                   );
                 })()
               )}
-            </div>
+            </Reveal>
           );
         })}
       </div>

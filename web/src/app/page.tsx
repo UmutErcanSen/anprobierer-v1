@@ -225,13 +225,17 @@ export default function HomePage() {
               </h2>
             </Reveal>
 
-            {/* delay={i * 100}: die drei Karten blenden nacheinander statt
-                gleichzeitig ein -- signalisiert mehr Sorgfalt als ein
-                einziger Block. */}
+            {/* variant="scale": waechst leicht aus der Mitte statt hochzufahren
+                -- unterscheidet diese Karten bewusst von den nummerierten
+                Schritten unten, die stattdessen von links einfahren
+                (variant="left"). delay={i * 100}: die drei Karten blenden
+                zusaetzlich nacheinander statt gleichzeitig ein. Das Icon
+                bekommt per .sell-icon-Klasse einen eigenen kleinen Pop
+                (siehe globals.css), der Rest der Karte waechst ganz normal. */}
             <div className="mt-14 grid gap-8 md:grid-cols-3">
               {SELL_POINTS.map(({ icon: Icon, title, body }, i) => (
-                <Reveal key={title} delay={i * 100}>
-                  <Icon size={22} className="text-accent" aria-hidden />
+                <Reveal key={title} variant="scale" delay={i * 100}>
+                  <Icon size={22} className="sell-icon text-accent" aria-hidden />
                   <h3 className="mt-4 text-lg font-medium tracking-tight text-ink">{title}</h3>
                   <p className="mt-2 text-[15px] leading-relaxed text-ink-soft">{body}</p>
                 </Reveal>
@@ -248,9 +252,13 @@ export default function HomePage() {
                 In drei Schritten <em>fertig</em>.
               </h2>
             </Reveal>
+            {/* variant="left": faehrt von links ein statt aus der Mitte zu
+                wachsen -- passt zur Lesereihenfolge 01 -> 02 -> 03 und
+                unterscheidet diese Sektion bewusst von den Feature-Karten
+                oben (variant="scale"). */}
             <div className="mt-14 grid gap-px overflow-hidden rounded-md border border-line bg-line md:grid-cols-3">
               {STEPS.map((step, i) => (
-                <Reveal key={step.n} delay={i * 100} className="bg-paper p-8">
+                <Reveal key={step.n} variant="left" delay={i * 100} className="bg-paper p-8">
                   <span className="font-mono text-sm text-muted">{step.n}</span>
                   <h3 className="mt-5 text-xl font-medium tracking-tight">{step.title}</h3>
                   <p className="mt-2 text-[15px] leading-relaxed text-ink-soft">{step.body}</p>

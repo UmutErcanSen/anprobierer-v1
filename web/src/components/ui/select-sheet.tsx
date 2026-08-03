@@ -40,18 +40,11 @@ export function MobilePickerSheet({
   open,
   onClose,
   children,
-  // Reine Text-Listen (SelectSheet) trennen Zeilen ueber Abstand. Listen mit
-  // einem visuellen Zusatzelement je Zeile (ColorSelect: Farbkreis) brauchen
-  // dagegen eine harte Trennlinie statt Luft, sonst verklickt man sich beim
-  // schnellen Scrollen leicht in der Nachbarzeile -- Abstand allein reichte
-  // dafuer laut Nutzer-Feedback nicht. Deshalb konfigurierbar statt fest.
-  listClassName = 'flex flex-col gap-3 overflow-y-auto p-5',
 }: {
   title: string;
   open: boolean;
   onClose: () => void;
   children: ReactNode;
-  listClassName?: string;
 }) {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
@@ -94,7 +87,7 @@ export function MobilePickerSheet({
             <X size={18} aria-hidden />
           </button>
         </div>
-        <div className={listClassName}>{children}</div>
+        <div className="flex flex-col gap-3 overflow-y-auto p-5">{children}</div>
       </div>
     </div>,
     document.body,

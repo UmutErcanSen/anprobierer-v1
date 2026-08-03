@@ -87,7 +87,7 @@ export function MobilePickerSheet({
             <X size={18} aria-hidden />
           </button>
         </div>
-        <div className="flex flex-col gap-1 overflow-y-auto p-5">{children}</div>
+        <div className="flex flex-col gap-2 overflow-y-auto p-5">{children}</div>
       </div>
     </div>,
     document.body,

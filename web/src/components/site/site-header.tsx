@@ -27,8 +27,12 @@ export async function SiteHeader() {
   } = await supabase.auth.getUser();
 
   const nav = user ? BASE_NAV : [...BASE_NAV, { href: "/anmelden", label: "Anmelden" }];
+  // Direkt zur Aktion statt zum Umweg ueber die Kontouebersicht: "Kostenlos
+  // starten" heisst "ich will jetzt etwas erstellen", nicht "ich will meine
+  // Kontouebersicht sehen" -- die bleibt ueber die App-Navigation (Erstellen/
+  // Verlauf/Konto) weiterhin einen Klick entfernt.
   const cta = user
-    ? { href: "/konto", label: "Mein Konto" }
+    ? { href: "/anzeige-erstellen", label: "Erstellen" }
     : { href: "/registrieren", label: "Kostenlos starten" };
 
   return (

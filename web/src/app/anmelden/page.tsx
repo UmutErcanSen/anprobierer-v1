@@ -1,8 +1,10 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { AuthForm } from "@/components/auth/auth-form";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { signInAction } from "@/lib/auth/actions";
+import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Anmelden" };
 
@@ -10,6 +12,14 @@ export const metadata: Metadata = { title: "Anmelden" };
 export default async function AnmeldenPage(props: PageProps<"/anmelden">) {
   const params = await props.searchParams;
   const hatBestaetigungsfehler = params.fehler === "bestaetigung";
+
+  // Siehe registrieren/page.tsx: dieselbe Absicherung gegen tote Links auf
+  // eine Auth-Seite, wenn schon eine Sitzung besteht.
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (user) redirect("/anzeige-erstellen");
 
   return (
     <AuthShell

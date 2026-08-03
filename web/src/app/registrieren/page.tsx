@@ -1,12 +1,28 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { AuthForm } from "@/components/auth/auth-form";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { signUpAction } from "@/lib/auth/actions";
+import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = { title: "Konto erstellen" };
 
-export default function RegistrierenPage() {
+/*
+  Wer bereits angemeldet ist, hat auf dieser Seite nichts verloren.
+  proxy.ts faengt das fuer /anmelden und /registrieren bereits ab (erste
+  Verteidigungslinie) -- diese Pruefung ist die zweite, fuer den Fall, dass
+  diese Seite je auf anderem Weg als ueber den Proxy erreicht wird. Selbes
+  Prinzip wie bei den GESCHUETZTEN_PFADEN dort: der Proxy ist nicht die
+  einzige Instanz, die entscheidet.
+*/
+export default async function RegistrierenPage() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (user) redirect("/anzeige-erstellen");
+
   return (
     <AuthShell
       title="Konto erstellen"

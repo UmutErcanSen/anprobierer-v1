@@ -58,10 +58,13 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Angemeldete Nutzer haben auf den Auth-Seiten nichts verloren.
+  // Angemeldete Nutzer haben auf den Auth-Seiten nichts verloren. Ziel ist
+  // /anzeige-erstellen statt /konto: Wer auf "Anmelden"/"Registrieren"
+  // klickt, will etwas TUN, nicht nur seine Kontouebersicht sehen -- die
+  // bleibt ueber die App-Navigation trotzdem einen Klick entfernt.
   if (user && (pfad === '/anmelden' || pfad === '/registrieren')) {
     const url = request.nextUrl.clone();
-    url.pathname = '/konto';
+    url.pathname = '/anzeige-erstellen';
     url.search = '';
     return NextResponse.redirect(url);
   }

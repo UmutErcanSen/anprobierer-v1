@@ -686,8 +686,15 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
           und object-cover schnitt zunehmend mehr vom Foto ab (untere Haelfte
           verschwand). Bleibt trotzdem randbuendig zum linken Bildschirmrand. */}
       <section className="relative flex flex-col gap-3 md:sticky md:top-16 md:max-w-[38rem] md:flex-[0.9] md:border-r md:border-line">
-        <h2 className="flex items-center gap-1.5 text-sm font-medium text-ink md:hidden">
-          Dein Foto
+        {/* Ueberschrift und TipModal als Geschwister statt TipModal INNERHALB
+            des <h2> -- <h2> erlaubt laut HTML-Spezifikation nur "Phrasing
+            Content", TipModal rendert aber ein <dialog> (Flow Content). Das
+            fuehrte zu einem Hydration-Fehler ("<dialog> cannot be a
+            descendant of <h2>" bzw. hier <p>), den React im Dev-Modus als
+            Konsolenfehler meldet. Der umschliessende Flex-Container haelt
+            die bisherige Optik (Text + Icon nebeneinander) unveraendert. */}
+        <div className="flex items-center gap-1.5 md:hidden">
+          <h2 className="text-sm font-medium text-ink">Dein Foto</h2>
           <TipModal
             label="Tipps für ein gutes Personenfoto"
             title="So sollte dein Personenfoto aussehen"
@@ -695,7 +702,7 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
             good={personGood}
             bad={personBad}
           />
-        </h2>
+        </div>
         {/* mx-auto: auf Mobil blieb das Foto sonst links ausgerichtet und
             liess rechts sichtbar ungenutzten Platz -- die Karte selbst ist
             durch flex-col volle Breite, aber der Block darin nicht. w-56 war
@@ -769,8 +776,9 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
       </section>
 
       <section className="flex flex-col gap-3">
-        <h2 className="flex items-center gap-1.5 text-sm font-medium text-ink">
-          Kleidungsstücke
+        {/* Siehe Kommentar bei "Dein Foto" oben -- gleicher Grund. */}
+        <div className="flex items-center gap-1.5">
+          <h2 className="text-sm font-medium text-ink">Kleidungsstücke</h2>
           <TipModal
             label="Tipps für ein gutes Kleidungsfoto"
             title="So sollten deine Kleidungsfotos aussehen"
@@ -778,7 +786,7 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
             good={clothingGood}
             bad={clothingBad}
           />
-        </h2>
+        </div>
 
         <div className="flex flex-col gap-4">
           {items.map((item, idx) => (

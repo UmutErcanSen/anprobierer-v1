@@ -321,7 +321,12 @@ export default async function KontoPage() {
           <div className="mt-4 overflow-hidden rounded-xl border border-line">
             <div className="flex flex-col items-start gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="flex items-center gap-1.5 text-sm font-medium text-ink">
+                {/* <div> statt <p>: <p> erlaubt laut HTML-Spezifikation nur
+                    "Phrasing Content", InfoModal rendert aber ein <dialog>
+                    (Flow Content) -- das loeste den gemeldeten Hydration-
+                    Fehler aus ("<dialog> cannot be a descendant of <p>").
+                    Visuell identisch, da dieselben Klassen weiterhin gelten. */}
+                <div className="flex items-center gap-1.5 text-sm font-medium text-ink">
                   Deine Daten exportieren
                   <InfoModal label="Wie werden meine Daten gespeichert?" title="Wie werden meine Daten gespeichert?">
                     <p>Der Export ist ein ZIP-Archiv mit zwei Teilen:</p>
@@ -354,7 +359,7 @@ export default async function KontoPage() {
                       unabhängig davon, ob ein Ergebnis in der App nur als unscharfe Vorschau angezeigt wird.
                     </p>
                   </InfoModal>
-                </p>
+                </div>
                 <p className="mt-1 text-[13px] leading-relaxed text-muted">
                   Alle Anprobebilder, Verkaufstexte und Kontodaten als ZIP-Archiv.
                 </p>

@@ -27,11 +27,17 @@ export async function SiteHeader() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const nav = user ? BASE_NAV : [...BASE_NAV, { href: "/anmelden", label: "Anmelden" }];
-  // Direkt zur Aktion statt zum Umweg ueber die Kontouebersicht: "Kostenlos
+  // "Mein Konto" gehoerte hier bisher NICHT dazu -- fuer angemeldete Nutzer
+  // war der Desktop-Header damit eine Sackgasse: Auf einer Marketing-Seite
+  // (z.B. der Startseite) gab es keinen einzigen Link zur Kontouebersicht.
+  // Erst ein Umweg ueber "Erstellen" -> AppHeader zeigte ueberhaupt Credits/
+  // Tarif/Konto an. Jetzt direkt hier verfuegbar, ohne den Umweg.
+  const nav = user
+    ? [...BASE_NAV, { href: "/konto", label: "Mein Konto" }]
+    : [...BASE_NAV, { href: "/anmelden", label: "Anmelden" }];
+  // "Erstellen" bleibt trotzdem die primaere, gefuellte Aktion: "Kostenlos
   // starten" heisst "ich will jetzt etwas erstellen", nicht "ich will meine
-  // Kontouebersicht sehen" -- die bleibt ueber die App-Navigation (Erstellen/
-  // Verlauf/Konto) weiterhin einen Klick entfernt.
+  // Kontouebersicht sehen".
   const cta = user
     ? { href: "/anzeige-erstellen", label: "Erstellen" }
     : { href: "/registrieren", label: "Kostenlos starten" };

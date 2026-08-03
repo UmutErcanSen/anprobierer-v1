@@ -100,32 +100,39 @@ export function ColorSelect({ id, value, onChange }: { id: string; value: string
         <ChevronDown size={14} className="shrink-0 text-muted" aria-hidden />
       </button>
 
-      {/* h-14 statt h-12, Farbkreis h-5 w-5 statt h-3.5 w-3.5, plus das
-          gap-2 zwischen den Zeilen aus MobilePickerSheet -- vorher wirkten
-          19 dicht gestapelte, kleine Kreise auf Mobil kaum unterscheidbar
-          (direktes Nutzer-Feedback: "zu nah beieinander und relativ
-          klein"). */}
-      <MobilePickerSheet title="Farbe" open={mobileOpen} onClose={() => setMobileOpen(false)}>
+      {/* Zweiter Anlauf nach Nutzer-Feedback ("immer noch zu klein, man
+          verklickt sich"): h-16 statt h-14 (deutlich groesseres Tap-Ziel),
+          Farbkreis 24px statt 20px. Zusaetzlich harte Trennlinien (border-b)
+          STATT Zeilenabstand (listClassName ohne gap) -- reiner Abstand
+          liess sich beim schnellen Scrollen/Tippen offenbar nicht
+          zuverlaessig genug erfassen, eine durchgezogene Linie zwischen den
+          Zeilen macht die Grenze dagegen eindeutig. */}
+      <MobilePickerSheet
+        title="Farbe"
+        open={mobileOpen}
+        onClose={() => setMobileOpen(false)}
+        listClassName="flex flex-col overflow-y-auto p-5"
+      >
         <button
           type="button"
           onClick={() => choose('')}
-          className={`flex h-14 w-full items-center justify-between rounded-lg px-3.5 text-left text-[15px] transition-colors hover:bg-surface ${
+          className={`flex h-16 w-full items-center justify-between border-b border-line px-3.5 text-left text-[15px] transition-colors hover:bg-surface ${
             value === '' ? 'font-medium text-ink' : 'text-ink-soft'
           }`}
         >
           Keine Angabe
           {value === '' && <Check size={16} className="text-ink" aria-hidden />}
         </button>
-        {COLORS.map((c) => (
+        {COLORS.map((c, i) => (
           <button
             key={c}
             type="button"
             onClick={() => choose(c)}
-            className={`flex h-14 w-full items-center gap-3.5 rounded-lg px-3.5 text-left text-[15px] transition-colors hover:bg-surface ${
-              c === value ? 'font-medium text-ink' : 'text-ink-soft'
-            }`}
+            className={`flex h-16 w-full items-center gap-4 px-3.5 text-left text-[15px] transition-colors hover:bg-surface ${
+              i < COLORS.length - 1 ? 'border-b border-line' : ''
+            } ${c === value ? 'font-medium text-ink' : 'text-ink-soft'}`}
           >
-            <span className="h-5 w-5 shrink-0 rounded-full border border-line-strong" style={{ background: COLOR_SWATCH[c] }} aria-hidden />
+            <span className="h-6 w-6 shrink-0 rounded-full border border-line-strong" style={{ background: COLOR_SWATCH[c] }} aria-hidden />
             <span className="flex-1">{c}</span>
             {c === value && <Check size={16} className="text-ink" aria-hidden />}
           </button>

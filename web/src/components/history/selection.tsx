@@ -1,8 +1,9 @@
 'use client';
 
-import { createContext, useCallback, useContext, useMemo, useState, type MouseEvent, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { CheckSquare, Download, Loader2, Square, Trash2, X } from 'lucide-react';
+import { Check, Download, ListChecks, Loader2, Trash2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { downloadZip, type ResultCard } from '@/components/generation/result-view';
@@ -17,11 +18,13 @@ import { downloadZip, type ResultCard } from '@/components/generation/result-vie
   Karten liegen als `children` in diesem Provider, durchgereichte Props wären
   über die Server/Client-Grenze hinweg nicht möglich.
 
-  Die Karten navigieren auch im Auswahlmodus weiter (sie sind <Link>). Das ist
-  Absicht: Ein Klick auf die Kachel öffnet das Ergebnis, ein Klick auf das
-  Kästchen wählt aus — dasselbe Muster wie bei Favorit und Papierkorb, die
-  ihre Klicks ebenfalls per stopPropagation abfangen. Ein Modus, in dem die
-  Kachel plötzlich etwas anderes tut, wäre schwerer vorhersehbar.
+  Frueher navigierten die Karten im Auswahlmodus weiter wie sonst auch (ein
+  <Link>), und ein kleines Kaestchen in der Ecke fing seinen eigenen Klick per
+  stopPropagation ab -- zwei UEBERLAPPENDE Klickziele auf derselben Flaeche.
+  Genau das fuehrte zu Fehlklicks (ausversehen in die Anprobe statt in die
+  Auswahl). Jetzt gibt es im Auswahlmodus nur noch EIN Klickziel: die ganze
+  Karte wird zum Auswahl-Knopf (SelectableCard unten), das Kaestchen ist nur
+  noch eine rein visuelle Anzeige des Zustands, kein zweites Ziel mehr.
 */
 
 type SelectionContext = {
@@ -36,37 +39,68 @@ export function useSelection() {
   return useContext(Ctx);
 }
 
-/** Kästchen in der Kartenecke. Rendert nichts, solange der Modus aus ist. */
-export function SelectCheckbox({ generationId }: { generationId: string }) {
+/**
+ * Ersetzt im Auswahlmodus das <Link> der Karte durch einen Auswahl-Knopf,
+ * der die komplette Karte einnimmt -- ausserhalb des Auswahlmodus (oder ohne
+ * umgebenden HistorySelection-Provider, z.B. auf /konto) unveraendert ein
+ * ganz normales <Link>. `children` ist der bestehende Karteninhalt
+ * (Bild + Metadaten), unveraendert von HistoryCard uebernommen.
+ */
+export function SelectableCard({ id, href, children }: { id: string; href: string; children: ReactNode }) {
+  const auswahl = useSelection();
+  const aktiv = auswahl?.aktiv ?? false;
+  const gewaehlt = auswahl?.ausgewaehlt.has(id) ?? false;
+
+  const rahmen = gewaehlt ? 'border-accent' : 'border-line hover:border-line-strong';
+
+  if (aktiv) {
+    return (
+      <button
+        type="button"
+        onClick={() => auswahl!.umschalten(id)}
+        aria-pressed={gewaehlt}
+        aria-label={gewaehlt ? 'Auswahl aufheben' : 'Auswählen'}
+        className={`group flex w-full flex-col overflow-hidden rounded-xl border text-left transition-colors ${rahmen}`}
+      >
+        {children}
+      </button>
+    );
+  }
+
+  return (
+    <Link href={href} className={`group flex flex-col overflow-hidden rounded-xl border transition-colors ${rahmen}`}>
+      {children}
+    </Link>
+  );
+}
+
+/**
+ * Rein visuelle Markierung im Bildbereich der Karte -- rendert nichts,
+ * solange der Auswahlmodus aus ist, und hat selbst KEINEN eigenen
+ * Klick-Handler mehr (siehe SelectableCard oben: die ganze Karte ist jetzt
+ * das Klickziel, dieses Element zeigt nur noch den Zustand an).
+ */
+export function SelectionMark({ generationId }: { generationId: string }) {
   const auswahl = useSelection();
   if (!auswahl?.aktiv) return null;
 
   const gewaehlt = auswahl.ausgewaehlt.has(generationId);
 
-  function klick(e: MouseEvent) {
-    // Die Karte ist ein <Link> — ohne das würde der Klick navigieren.
-    e.preventDefault();
-    e.stopPropagation();
-    auswahl!.umschalten(generationId);
-  }
-
   return (
-    <button
-      type="button"
-      onClick={klick}
-      aria-pressed={gewaehlt}
-      aria-label={gewaehlt ? 'Auswahl aufheben' : 'Auswählen'}
-      /* Unten links statt oben links: Oben sitzen bereits die Status-Kennzeichen
-         (Fertig/Einzeln), oben rechts Favorit und Papierkorb. Unten ist die
-         einzige freie Ecke -- und auf Mobil ohnehin die besser erreichbare. */
-      className={`absolute bottom-2 left-2 z-10 flex h-8 w-8 items-center justify-center rounded-lg border transition-colors ${
-        gewaehlt
-          ? 'border-accent bg-accent text-on-ink'
-          : 'border-line-strong bg-paper/90 text-muted backdrop-blur hover:text-ink'
+    <div
+      aria-hidden
+      className={`pointer-events-none absolute inset-0 flex items-start justify-end p-2.5 transition-colors ${
+        gewaehlt ? 'bg-ink/30' : 'bg-ink/0 group-hover:bg-ink/10'
       }`}
     >
-      {gewaehlt ? <CheckSquare size={16} aria-hidden /> : <Square size={16} aria-hidden />}
-    </button>
+      <span
+        className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border transition-colors ${
+          gewaehlt ? 'border-accent bg-accent text-on-ink' : 'border-line-strong bg-paper/90 text-muted'
+        }`}
+      >
+        {gewaehlt && <Check size={15} strokeWidth={3} aria-hidden />}
+      </span>
+    </div>
   );
 }
 
@@ -177,15 +211,18 @@ export function HistorySelection({ ids, children }: { ids: string[]; children: R
 
   return (
     <Ctx.Provider value={ctx}>
+      {/* Ausserhalb des Auswahlmodus ein richtiger Button statt eines
+          unterstrichenen Textlinks -- die Aktion "einen ganzen Bedienmodus
+          umschalten" verdient mehr Gewicht als ein beilaeufiger Link, sonst
+          wirkt sie leicht uebersehbar. Innerhalb bleibt der Ton bewusst
+          zurueckhaltender (Text statt Buttons): dort ist die Aufmerksamkeit
+          schon auf die Auswahl selbst gerichtet. */}
       <div className="mb-4 flex flex-wrap items-center gap-3">
         {!aktiv ? (
-          <button
-            type="button"
-            onClick={() => setAktiv(true)}
-            className="text-sm text-muted underline underline-offset-4 transition-colors hover:text-ink"
-          >
+          <Button variant="outline" size="md" onClick={() => setAktiv(true)}>
+            <ListChecks size={15} aria-hidden />
             Mehrere auswählen
-          </button>
+          </Button>
         ) : (
           <>
             <span className="text-sm text-ink">

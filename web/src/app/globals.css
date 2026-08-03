@@ -25,6 +25,12 @@
      ist entsaettigt und waermer -- er ordnet sich unter, bleibt aber eindeutig
      als "erledigt" lesbar. NUR fuer echten Status, niemals als Dekor. */
   --success: #3f6b43;
+  /* Eigener, gedaempfter Rotton NUR fuer die eine wirklich unwiderrufliche
+     Aktion der ganzen App (Konto loeschen) -- bewusst getrennt vom Terrakotta-
+     Akzent, sonst liesse sich "normale" Markenfarbe nicht mehr von "hier
+     droht Datenverlust" unterscheiden. Dezent statt knallig (kein reines
+     Warnrot), passend zum zurueckhaltenden Rest der Seite. */
+  --danger: #b3261e;
 }
 
 [data-theme="dark"] {
@@ -47,6 +53,9 @@
      Dunkelgrund wie ein Fremdkoerper wirkte. Dieser Salbeiton teilt die
      Waerme des Hintergrunds und der Akzentfarbe. */
   --success: #8fbb96;
+  /* Heller als im hellen Theme, sonst zu dunkel/kontrastarm auf dem warmen
+     Dunkelgrund -- gleiches Prinzip wie bei --accent oben. */
+  --danger: #e56b62;
 }
 
 /* Semantische Tokens -> Tailwind-Utilities (bg-paper, text-ink, border-line …). */
@@ -61,6 +70,7 @@
   --color-on-ink: var(--on-ink);
   --color-accent: var(--accent);
   --color-success: var(--success);
+  --color-danger: var(--danger);
 
   --font-sans: var(--font-geist-sans);
   --font-display: var(--font-instrument-serif);

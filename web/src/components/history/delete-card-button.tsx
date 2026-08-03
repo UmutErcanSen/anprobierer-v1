@@ -4,14 +4,15 @@ import { useState, type MouseEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { Trash2 } from 'lucide-react';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { useSelection } from '@/components/history/selection';
 
 /*
-  Kompakte Lösch-Variante fürs Karten-Raster (Verlauf/Konto) -- die Karte
-  selbst ist ein <Link>, deshalb stoppt der Klick auf den Papierkorb per
-  preventDefault/stopPropagation die Weiterleitung (gleiches Muster wie
-  FavoriteToggle). Die eigentliche Bestätigung läuft über das gemeinsame
-  ConfirmDialog-Modal (siehe dort) statt einer Inline-Bestätigung in der
-  Karte -- bei einer unwiderruflichen Aktion soll die Unterbrechung
+  Kompakte Lösch-Variante fürs Karten-Raster (Verlauf/Konto) -- die Karte ist
+  ausserhalb des Auswahlmodus ein <Link>, deshalb stoppt der Klick auf den
+  Papierkorb per preventDefault/stopPropagation die Weiterleitung (gleiches
+  Muster wie FavoriteToggle). Die eigentliche Bestätigung läuft über das
+  gemeinsame ConfirmDialog-Modal (siehe dort) statt einer Inline-Bestätigung
+  in der Karte -- bei einer unwiderruflichen Aktion soll die Unterbrechung
   deutlich spürbar sein, nicht nebenbei in einer Karten-Ecke passieren.
 */
 export function DeleteCardButton({ generationId }: { generationId: string }) {
@@ -19,6 +20,13 @@ export function DeleteCardButton({ generationId }: { generationId: string }) {
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const auswahl = useSelection();
+
+  // Im Auswahlmodus ist die ganze Karte selbst ein <button> (SelectableCard)
+  // -- siehe FavoriteToggle fuer denselben Grund (ungueltiges verschachteltes
+  // <button>, zweites konkurrierendes Klickziel). Das Loeschen mehrerer
+  // Anproben laeuft in diesem Modus ohnehin gebuendelt ueber die Aktionsleiste.
+  if (auswahl?.aktiv) return null;
 
   async function handleDelete() {
     setDeleting(true);

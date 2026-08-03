@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Star } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
+import { useSelection } from '@/components/history/selection';
 
 /*
   Favorit-Umschalter direkt vom Client aus -- keine eigene API-Route noetig:
@@ -11,13 +12,20 @@ import { createClient } from '@/lib/supabase/client';
   20260725090000_favorites.sql), RLS stellt sicher, dass nur die eigene Zeile
   betroffen ist.
 
-  Liegt auf der Bild-Karte, die selbst ein <Link> ist (siehe HistoryCard) --
-  deshalb stopPropagation/preventDefault, sonst wuerde ein Klick auf den
-  Stern zusaetzlich zur Detailseite navigieren.
+  Liegt auf der Bild-Karte, die ausserhalb des Auswahlmodus ein <Link> ist
+  (siehe HistoryCard) -- deshalb stopPropagation/preventDefault, sonst wuerde
+  ein Klick auf den Stern zusaetzlich zur Detailseite navigieren.
 */
 export function FavoriteToggle({ generationId, initialFavorite }: { generationId: string; initialFavorite: boolean }) {
   const [favorite, setFavorite] = useState(initialFavorite);
   const [pending, setPending] = useState(false);
+  const auswahl = useSelection();
+
+  // Im Auswahlmodus ist die ganze Karte selbst ein <button> (SelectableCard)
+  // -- ein verschachtelter <button> hier waere ungueltiges HTML UND ein
+  // zweites, mit der Kartenflaeche konkurrierendes Klickziel (genau das
+  // Problem, das die Auswahl ueberhaupt erst umgebaut hat).
+  if (auswahl?.aktiv) return null;
 
   async function toggle(e: React.MouseEvent) {
     e.preventDefault();

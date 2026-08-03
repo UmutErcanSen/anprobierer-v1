@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Check, ImagePlus, Loader2, MinusCircle, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Field, Select, Textarea } from '@/components/ui/field';
+import { Field, Textarea } from '@/components/ui/field';
+import { SelectSheet } from '@/components/ui/select-sheet';
 import { ColorSelect } from '@/components/ui/color-select';
 import { InfoTip } from '@/components/ui/info-tip';
 import { TipModal } from '@/components/ui/tip-modal';
@@ -44,6 +45,12 @@ const PROGRESS = [
   'Licht berechnen',
   'Qualitätsprüfung',
 ];
+
+// Fuer SelectSheet (siehe ui/select-sheet.tsx) als {value,label}-Paare statt
+// als <option>-JSX -- dieselbe Umwandlung wie CATEGORY_OPTIONS/SIZE_OPTIONS
+// in history-filters.tsx.
+const CLOTHING_TYPE_OPTIONS = Object.entries(CLOTHING_TYPES).map(([value, { de }]) => ({ value, label: de }));
+const SIZE_OPTIONS = SIZES.map((s) => ({ value: s, label: s }));
 
 const emptyItem = (id: number): ClothingItem => ({ id, file: null, type: '', size: '', color: '' });
 
@@ -806,18 +813,24 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
 
               <div className="flex flex-1 flex-col gap-3 sm:pr-8">
                 <Field label="Kleidungstyp" htmlFor={`type-${item.id}`}>
-                  <Select id={`type-${item.id}`} value={item.type} onChange={(e) => updateItem(item.id, { type: e.target.value })}>
-                    <option value="" disabled>Bitte wählen …</option>
-                    {Object.entries(CLOTHING_TYPES).map(([key, { de }]) => (
-                      <option key={key} value={key}>{de}</option>
-                    ))}
-                  </Select>
+                  <SelectSheet
+                    id={`type-${item.id}`}
+                    label="Kleidungstyp"
+                    placeholder="Bitte wählen …"
+                    value={item.type}
+                    onChange={(v) => updateItem(item.id, { type: v })}
+                    options={CLOTHING_TYPE_OPTIONS}
+                  />
                 </Field>
                 <Field label="Größe" htmlFor={`size-${item.id}`}>
-                  <Select id={`size-${item.id}`} value={item.size} onChange={(e) => updateItem(item.id, { size: e.target.value })}>
-                    <option value="" disabled>Bitte wählen …</option>
-                    {SIZES.map((s) => <option key={s} value={s}>{s}</option>)}
-                  </Select>
+                  <SelectSheet
+                    id={`size-${item.id}`}
+                    label="Größe"
+                    placeholder="Bitte wählen …"
+                    value={item.size}
+                    onChange={(v) => updateItem(item.id, { size: v })}
+                    options={SIZE_OPTIONS}
+                  />
                 </Field>
                 <Field label="Farbe (optional, für den Verkaufstext)" htmlFor={`color-${item.id}`}>
                   <ColorSelect id={`color-${item.id}`} value={item.color} onChange={(v) => updateItem(item.id, { color: v })} />

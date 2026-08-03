@@ -3,6 +3,7 @@ import { LinkButton } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/site/theme-toggle";
 import { MobileNav } from "@/components/site/mobile-nav";
 import { createClient } from "@/lib/supabase/server";
+import { signOutAction } from "@/lib/auth/actions";
 
 /*
   Marketing-Navigation. Wortmarke links, wenige Links, eine gefuellte Aktion
@@ -71,10 +72,37 @@ export async function SiteHeader() {
               {cta.label}
             </LinkButton>
           </span>
-          {/* cta zuerst: die wichtigste Aktion ("Mein Konto"/"Kostenlos
-              starten") soll im Menue oben stehen, nicht hinter den
-              Info-Links verschwinden. */}
-          <MobileNav items={[cta, ...nav]} />
+          {/*
+            Eigene Reihenfolge fuer Mobil statt einfach [cta, ...nav]:
+
+            Vorher stand "Anmelden" ganz unten, nach den Info-Links (So
+            funktioniert's, Preise) -- von der anderen Konto-Aktion
+            "Kostenlos starten" oben im Menue durch zwei fachfremde Links
+            getrennt. Jetzt stehen beide Konto-Aktionen direkt
+            nebeneinander, Info-Links folgen danach.
+
+            Fuer angemeldete Nutzer fehlten ausserdem "Mein Konto" und
+            "Abmelden" komplett -- auf einer Marketing-Seite (z.B. der
+            Startseite) kam man mobil nur ueber den Umweg "Erstellen" ->
+            AppHeader an diese Punkte. Jetzt direkt hier verfuegbar, ohne
+            dass der Desktop-Header (der uebers Klicken von "Erstellen"
+            ohnehin schnell zum AppHeader kommt) etwas davon mitbekommt.
+          */}
+          <MobileNav
+            items={
+              user
+                ? [cta, { href: "/konto", label: "Mein Konto" }, ...BASE_NAV]
+                : [cta, { href: "/anmelden", label: "Anmelden" }, ...BASE_NAV]
+            }
+          >
+            {user && (
+              <form action={signOutAction}>
+                <button type="submit" className="w-full py-4 text-left text-lg text-accent/80 transition-colors hover:text-accent">
+                  Abmelden
+                </button>
+              </form>
+            )}
+          </MobileNav>
         </div>
       </div>
     </header>

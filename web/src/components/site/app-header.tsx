@@ -75,12 +75,18 @@ export function AppHeader({ credits, plan }: { credits?: number; plan?: PlanKey 
           {/* Auf Mobil ersetzt das Burger-Menue Erstellen/Verlauf/Konto/
               Abmelden komplett. Konto zuerst: die wichtigste Zieladresse
               (Guthaben, Verlauf-Zugriff) soll oben stehen, nicht hinter
-              "Erstellen"/"Verlauf" verschwinden. */}
+              "Erstellen"/"Verlauf" verschwinden. "Preise" ergaenzt -- die
+              Credits-Pille oben verlinkt zwar auch dorthin, ist aber
+              `md:inline-flex` und damit auf Mobil unsichtbar. Ohne diese
+              Zeile gab es auf dem Handy also GAR keinen Weg zu /preise,
+              solange man sich innerhalb der App (statt der Marketing-Seiten)
+              bewegte. */}
           <MobileNav
             items={[
               { href: "/konto", label: "Konto" },
               { href: "/anzeige-erstellen", label: "Erstellen" },
               { href: "/konto/verlauf", label: "Verlauf" },
+              { href: "/preise", label: "Preise" },
             ]}
           >
             <form action={signOutAction}>

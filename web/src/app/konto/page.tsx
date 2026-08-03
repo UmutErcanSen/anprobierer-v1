@@ -10,6 +10,9 @@ import { isGenerationLocked, lockedImagePath } from "@/lib/generation/lock";
 import type { PlanKey } from "@/lib/generation/constants";
 import { ManageSubscriptionLink } from "@/components/pricing/manage-subscription-link";
 import { UsageOverview } from "@/components/konto/usage-overview";
+import { ExportDataButton } from "@/components/konto/export-data-button";
+import { DeleteAccountButton } from "@/components/konto/delete-account-button";
+import { InfoModal } from "@/components/ui/info-modal";
 import { buildTip, lastGrant, monthlyUsage, usedSince, type LedgerRow } from "@/lib/usage/summary";
 
 export const metadata: Metadata = { title: "Mein Konto" };
@@ -146,7 +149,12 @@ export default async function KontoPage() {
             aufladen" wie eine zweite, konkurrierende Geld-Aktion neben "Auf
             Pro upgraden" wirken. Jetzt: Aktion gehoert zum Titel, Aufladen
             gehoert zur Guthaben-Zeile, wo es inhaltlich hingehoert. */}
-        <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
+        {/* items-center statt items-start: auf Mobil (gestapelt) stand der
+            ganze Block vorher hart am linken Rand -- bei einem einzelnen,
+            mittig wirkenden Inhaltsblock (kein mehrspaltiges Layout wie auf
+            Desktop) liest sich zentriert ruhiger. Ab sm wieder Zeile mit
+            Titel links/Aktion rechts wie zuvor. */}
+        <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:items-center sm:justify-between sm:text-left">
           <div>
             <p className="kicker">Mein Konto</p>
             <h1 className="mt-4 text-3xl font-semibold tracking-tight text-ink">
@@ -173,7 +181,11 @@ export default async function KontoPage() {
             Ausrichtung leicht verschoben. items-center zentriert den
             Textblock optisch an der Zahl, das balanciert sich bei diesem
             Groessenunterschied sauberer aus. */}
-        <div className="mt-10 flex items-center gap-4">
+        {/* justify-center nur auf Mobil, aus demselben Grund wie beim
+            Titel-Block oben -- die Zahl+Beschriftung als eigenstaendiger
+            Block wirkt zentriert ruhiger als hart links, sobald daneben kein
+            zweispaltiges Layout mehr existiert. */}
+        <div className="mt-10 flex items-center justify-center gap-4 sm:justify-start">
           <span className="text-5xl font-medium tracking-tight text-ink tabular-nums">{credits}</span>
           <div>
             <p className="text-sm text-ink-soft">{credits === 1 ? "Credit übrig" : "Credits übrig"}</p>
@@ -287,6 +299,59 @@ export default async function KontoPage() {
             </div>
           </section>
         )}
+
+        {/* DSGVO: Art. 15/20 (Export) und Art. 17 (Loeschung) als
+            Selbstbedienung statt ausschliesslich per E-Mail-Anfrage.
+            Der Warntext zur Loeschung steht bewusst IMMER sichtbar hier auf
+            der Seite, nicht nur im Bestaetigungsdialog -- eine Konsequenz,
+            die man erst nach dem Klick auf "Loeschen" liest, ist zu spaet
+            fuer eine informierte Entscheidung. */}
+        <section className="mt-14 border-t border-line pt-8">
+          <h2 className="text-sm font-medium text-ink">Daten &amp; Konto</h2>
+
+          <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-3">
+            <ExportDataButton />
+            <InfoModal label="Wie werden meine Daten gespeichert?" title="Wie werden meine Daten gespeichert?">
+              <p>Der Export ist ein ZIP-Archiv mit zwei Teilen:</p>
+              <ul className="flex flex-col gap-1.5 pl-4">
+                <li className="list-disc">
+                  Ein Ordner je Anprobe mit den Ergebnisbildern (<code className="text-xs text-ink">.png</code>) und den
+                  dazugehörigen Verkaufstexten (<code className="text-xs text-ink">.txt</code>).
+                </li>
+                <li className="list-disc">
+                  Eine Datei <code className="text-xs text-ink">konto.json</code> mit deinen Kontodaten, deinem
+                  Abo-Status und dem vollständigen Credit-Verlauf.
+                </li>
+              </ul>
+              <p>
+                Enthalten sind immer die echten, vollständigen Ergebnisse — unabhängig vom Tarif und
+                unabhängig davon, ob ein Ergebnis in der App nur als unscharfe Vorschau angezeigt wird.
+              </p>
+            </InfoModal>
+          </div>
+
+          {/* Auf Mobil zentriert (Text + Button), auf Desktop eine Zeile mit
+              dem Text links und dem Button rechts -- vorher blieb der Text
+              per max-w-xl schmal, waehrend die Box selbst die volle
+              Container-Breite einnahm: auf breiten Bildschirmen stand der
+              Button dadurch weit rechts im sonst leeren Rest der Flaeche.
+              Jetzt nutzt der Button genau diesen Platz, statt ihn
+              ungenutzt zu lassen. */}
+          <div className="mt-8 flex flex-col items-center gap-4 rounded-xl border border-danger/30 bg-danger/5 px-5 py-5 text-center sm:flex-row sm:items-center sm:justify-between sm:text-left">
+            <div>
+              <p className="text-sm font-medium text-danger">Konto endgültig löschen</p>
+              <p className="mx-auto mt-2 max-w-md text-[13px] leading-relaxed text-ink-soft sm:mx-0">
+                Löscht dein Konto sofort und unwiderruflich: ein laufendes Abo wird automatisch
+                gekündigt, alle Anprobebilder, Verkaufstexte und dein Guthaben-Verlauf werden
+                entfernt. Diese Aktion lässt sich <strong className="font-medium text-ink">nicht</strong>{" "}
+                rückgängig machen — lade dir vorher ggf. deine Daten herunter.
+              </p>
+            </div>
+            <div className="shrink-0">
+              <DeleteAccountButton />
+            </div>
+          </div>
+        </section>
       </main>
     </>
   );

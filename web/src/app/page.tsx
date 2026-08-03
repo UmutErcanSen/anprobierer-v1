@@ -78,10 +78,25 @@ const STEPS = [
   },
 ];
 
-export default function HomePage() {
+// searchParams ist seit Next.js 16 ein Promise und muss awaited werden.
+export default async function HomePage(props: PageProps<"/">) {
+  const params = await props.searchParams;
+  const kontoGeloescht = params.konto === "geloescht";
+
   return (
     <>
       <SiteHeader />
+
+      {/* Bestaetigung nach dem Loeschen des eigenen Kontos (siehe
+          DeleteAccountButton) -- die Sitzung existiert zu diesem Zeitpunkt
+          nicht mehr, deshalb landet der Nutzer hier statt auf /konto. Ohne
+          diesen Hinweis wirkte ein plötzliches Zurückfallen auf die
+          Startseite wie ein Fehler, nicht wie das erwartete Ergebnis. */}
+      {kontoGeloescht && (
+        <div className="border-b border-line bg-surface px-6 py-3 text-center text-sm text-ink-soft">
+          Dein Konto wurde vollständig gelöscht.
+        </div>
+      )}
 
       <main className="flex-1">
         {/* Fullscreen-Hero: Text links, bildfuellendes Standbild rechts.

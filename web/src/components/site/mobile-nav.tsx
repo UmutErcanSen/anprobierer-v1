@@ -80,14 +80,10 @@ export function MobileNav({ items, children }: { items: Item[]; children?: React
                 <X size={20} aria-hidden />
               </button>
             </div>
-            {/* flex-1 auf <nav> + mt-auto auf dem children-Wrapper: "Abmelden"
-                (uebergeben als children, z.B. aus AppHeader) rutscht dadurch
-                bis zum unteren Bildschirmrand -- im Daumenbereich und klar
-                von den normalen Navigationspunkten abgesetzt, statt einfach
-                nur als letzter Listeneintrag mittendrin zu stehen. Bei einer
-                langen Liste (mehr Eintraege als Bildschirmhoehe) wirkt es
-                weiterhin wie ein normaler letzter Eintrag -- mt-auto greift
-                nur, wenn tatsaechlich Platz uebrig ist. */}
+            {/* "Abmelden" (als children uebergeben, z.B. aus AppHeader) stand
+                zwischenzeitlich per mt-auto ganz unten im Menue -- auf
+                ausdruecklichen Wunsch zurueckgesetzt: wieder direkt nach den
+                normalen Navigationspunkten, oben im sichtbaren Bereich. */}
             <nav className="flex flex-1 flex-col gap-1 px-6 py-4">
               {items.map((item) => (
                 <Link
@@ -99,7 +95,7 @@ export function MobileNav({ items, children }: { items: Item[]; children?: React
                   {item.label}
                 </Link>
               ))}
-              {children && <div className="mt-auto pt-4">{children}</div>}
+              {children}
             </nav>
           </div>,
           document.body,

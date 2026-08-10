@@ -4,18 +4,32 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { rewriteSaleTextForPlatform, type RewritablePlatform } from '@/lib/openai/platform-text';
 import { isGenerationLocked } from '@/lib/generation/lock';
+import { resolveCardRows } from '@/lib/generation/cards';
 import type { PlanKey } from '@/lib/generation/constants';
 
 /*
   Schreibt den Verkaufstext einer Karte fuer eine andere Plattform um
   (Kleinanzeigen/eBay -- Vinted braucht das nicht, siehe platform-text.ts).
 
-  Wird zwingend zwischengespeichert (generations.cards[].platformTexts), BEVOR
-  ein zweiter Aufruf erneut kostet: derselbe Nutzer soll denselben Tab beliebig
-  oft oeffnen koennen, ohne dass jedes Mal ein neuer OpenAI-Aufruf faellig wird.
-  Bei Legacy-Generierungen (vor der cards-Spalte, siehe lib/generation/cards.ts)
-  gibt es keine Karte zum Zwischenspeichern -- dort wird ohne Cache erzeugt,
-  das betrifft nur eine schrumpfende Menge alter Zeilen.
+  Dieser Endpunkt loest einen ECHTEN, kostenpflichtigen OpenAI-Aufruf aus.
+  Zwei Eigenschaften halten die Kosten deshalb hart begrenzt:
+
+  1. Jedes Ergebnis wird zwischengespeichert (generations.cards[].platformTexts).
+     Frueher galt das NUR fuer Zeilen mit gefuellter cards-Spalte -- bei
+     Legacy-Generierungen (vor Migration 20260723090000) lief jeder Aufruf
+     ungecacht durch, derselbe Aufruf in einer Schleife erzeugte also
+     unbegrenzt Kosten. Jetzt werden Legacy-Karten beim ersten Aufruf einmalig
+     aus result_paths/sale_text materialisiert (exakt dieselbe Ableitung wie
+     resolveCardRows, die Anzeige aendert sich dadurch nicht), womit der Cache
+     ausnahmslos greift. Damit ist die Obergrenze: Karten × 2 Plattformen,
+     einmalig je Generierung -- und neue Generierungen kosten Credits und
+     unterliegen bereits dem Rate-Limit.
+
+  2. Der Ausgangstext kommt AUSSCHLIESSLICH aus der Datenbank. Frueher durfte
+     der Client fuer Legacy-Zeilen einen eigenen `baseText` (bis 4000 Zeichen)
+     mitschicken -- damit war der Endpunkt faktisch ein kostenloser
+     LLM-Umschreibedienst fuer beliebige Texte. Der Server leitet ihn jetzt
+     selbst ab; das Feld wird ignoriert.
 */
 
 export const runtime = 'nodejs';
@@ -23,11 +37,6 @@ export const runtime = 'nodejs';
 const bodySchema = z.object({
   itemIndex: z.number(),
   platform: z.enum(['kleinanzeigen', 'ebay']),
-  // Fallback fuer Legacy-Generierungen (vor der cards-Spalte): dort ist
-  // generations.cards leer, der Server kennt den Ausgangstext also nicht.
-  // Der Client schickt ihn deshalb mit -- er zeigt ohnehin genau diesen
-  // Text bereits an, kein zusaetzliches Risiko.
-  baseText: z.string().max(4000).optional(),
 });
 
 type CardRow = {
@@ -49,11 +58,18 @@ export async function POST(request: Request, ctx: { params: Promise<{ id: string
 
   const parsed = bodySchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: 'Ungültige Anfrage.' }, { status: 400 });
-  const { itemIndex, platform, baseText: fallbackBaseText } = parsed.data;
+  const { itemIndex, platform } = parsed.data;
 
   const admin = createAdminClient();
   const [{ data: generation, error }, { data: profile }] = await Promise.all([
-    admin.from('generations').select('id, user_id, cards, cost_usd, is_free_reveal').eq('id', id).single(),
+    // mode/result_paths/sale_text zusaetzlich: noetig, um Legacy-Karten
+    // serverseitig abzuleiten (resolveCardRows) statt sie vom Client zu
+    // uebernehmen.
+    admin
+      .from('generations')
+      .select('id, user_id, mode, cards, result_paths, sale_text, cost_usd, is_free_reveal')
+      .eq('id', id)
+      .single(),
     supabase.from('profiles').select('plan').single(),
   ]);
 
@@ -69,17 +85,26 @@ export async function POST(request: Request, ctx: { params: Promise<{ id: string
     return NextResponse.json({ error: 'Für dieses Ergebnis ist ein bezahlter Tarif nötig.' }, { status: 403 });
   }
 
-  const cards = (generation.cards ?? []) as CardRow[];
+  // Bei Legacy-Zeilen (cards leer) leitet resolveCardRows die Karten aus
+  // result_paths/sale_text ab -- exakt wie die Anzeige es ohnehin tut. Das
+  // Ergebnis wird unten mitgespeichert, wodurch die Zeile ab dann eine
+  // normale cards-Zeile ist und der Cache greift.
+  const cards = resolveCardRows(generation) as CardRow[];
   const cardPos = cards.findIndex((c) => c.itemIndex === itemIndex);
-  const card = cardPos !== -1 ? cards[cardPos] : null;
+  if (cardPos === -1) {
+    return NextResponse.json({ error: 'Kein Ausgangstext für diese Karte vorhanden.' }, { status: 400 });
+  }
+  const card = cards[cardPos];
 
-  const baseText = card?.saleText ?? fallbackBaseText;
+  const cached = card.platformTexts?.[platform];
+  if (cached) return NextResponse.json({ text: cached });
+
+  // Ausschliesslich der serverseitig bekannte Text -- kein vom Client
+  // geschickter Inhalt (siehe Kopfkommentar).
+  const baseText = card.saleText;
   if (!baseText) {
     return NextResponse.json({ error: 'Kein Ausgangstext für diese Karte vorhanden.' }, { status: 400 });
   }
-
-  const cached = card?.platformTexts?.[platform];
-  if (cached) return NextResponse.json({ text: cached });
 
   let text: string;
   let costUsd: number | null;
@@ -90,20 +115,14 @@ export async function POST(request: Request, ctx: { params: Promise<{ id: string
     return NextResponse.json({ error: 'Text konnte nicht erstellt werden.' }, { status: 502 });
   }
 
-  // Kosten immer nachtragen, unabhaengig vom Cache -- ein realer OpenAI-
-  // Aufruf ist gerade erst passiert, auch wenn diese Karte (Legacy) das
-  // Ergebnis nicht zwischenspeichern kann.
+  // Kosten nachtragen -- ein realer OpenAI-Aufruf ist gerade passiert.
   const newCostUsd = (generation.cost_usd ?? 0) + (costUsd ?? 0);
 
-  // Nur echte (nicht-Legacy) Karten koennen zwischengespeichert werden --
-  // cardPos ist bei Legacy-Generierungen immer -1, da generations.cards dort
-  // leer ist (siehe resolveCardRows in lib/generation/cards.ts).
-  if (cardPos !== -1) {
-    cards[cardPos] = { ...cards[cardPos], platformTexts: { ...cards[cardPos].platformTexts, [platform]: text } };
-    await admin.from('generations').update({ cards, cost_usd: newCostUsd }).eq('id', id);
-  } else {
-    await admin.from('generations').update({ cost_usd: newCostUsd }).eq('id', id);
-  }
+  // Immer schreiben: Bei Legacy-Zeilen materialisiert das zusaetzlich die
+  // abgeleiteten Karten, sodass jeder weitere Aufruf aus dem Cache bedient
+  // wird statt erneut zu kosten.
+  cards[cardPos] = { ...card, platformTexts: { ...card.platformTexts, [platform]: text } };
+  await admin.from('generations').update({ cards, cost_usd: newCostUsd }).eq('id', id);
 
   return NextResponse.json({ text });
 }

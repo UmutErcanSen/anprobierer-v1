@@ -105,7 +105,22 @@ export function SelectionMark({ generationId }: { generationId: string }) {
   );
 }
 
-export function HistorySelection({ ids, children }: { ids: string[]; children: ReactNode }) {
+export function HistorySelection({
+  ids,
+  filters,
+  extraAction,
+  children,
+}: {
+  ids: string[];
+  /** Filterleiste -- liegt links in derselben Werkzeugzeile wie die
+   *  Auswahl-Aktionen, statt in einer eigenen Zeile darueber. */
+  filters?: ReactNode;
+  /** Zusaetzliche, seltene Listenaktion rechts (aktuell "Alle Anproben
+   *  loeschen") -- gehoert inhaltlich zu "was mache ich mit dieser Liste"
+   *  und damit neben "Mehrere auswaehlen", nicht ans Seitenende. */
+  extraAction?: ReactNode;
+  children: ReactNode;
+}) {
   const router = useRouter();
   const [aktiv, setAktiv] = useState(false);
   const [ausgewaehlt, setAusgewaehlt] = useState<Set<string>>(new Set());
@@ -203,6 +218,11 @@ export function HistorySelection({ ids, children }: { ids: string[]; children: R
       }
 
       await downloadZip(alle, `anproben-${alle.length}.zip`);
+      // Der Download kann bei mehreren Anproben spuerbar dauern (jedes Bild
+      // wird einzeln geholt). Ohne Abschlussmeldung bleibt unklar, ob die
+      // Datei fertig ist oder noch gearbeitet wird -- der Auswahlmodus
+      // schliesst sich gleich darauf ohne weiteren Hinweis.
+      toast.success(alle.length === 1 ? 'Download bereit.' : `${alle.length} Dateien als ZIP heruntergeladen.`);
       setLaeuft(null);
       beenden();
     } catch {
@@ -219,32 +239,71 @@ export function HistorySelection({ ids, children }: { ids: string[]; children: R
           wirkt sie leicht uebersehbar. Innerhalb bleibt der Ton bewusst
           zurueckhaltender (Text statt Buttons): dort ist die Aufmerksamkeit
           schon auf die Auswahl selbst gerichtet. */}
-      <div className="mb-4 flex flex-wrap items-center gap-3">
+      <div className="mb-6">
         {!aktiv ? (
-          <Button variant="outline" size="md" onClick={() => setAktiv(true)}>
-            <ListChecks size={15} aria-hidden />
-            Mehrere auswählen
-          </Button>
+          /* Eine gemeinsame Werkzeugzeile: links "wie filtere ich diese
+             Liste", rechts "was mache ich mit ihr". Vorher standen Filter,
+             "Neue Anprobe erstellen" und "Mehrere auswaehlen" in drei
+             getrennten Zeilen mit unklarer Zuordnung -- die Primaeraktion
+             sitzt jetzt oben beim Seitentitel (verlauf/page.tsx), hier
+             bleiben nur noch die Aktionen, die sich wirklich auf die Liste
+             beziehen.
+
+             Mobil-Aufteilung: Zeile 1 die beiden HAEUFIGEN Bedienelemente
+             (Filter links, Mehrere auswaehlen rechts) -- beide kompakt, das
+             passt auch auf 320px nebeneinander. Zeile 2 allein die seltene,
+             destruktive Aktion. Vorher standen "Alle Anproben loeschen" und
+             "Mehrere auswaehlen" gemeinsam in einer Zeile: der lange
+             Loeschen-Text wurde dabei auf drei Zeilen umbrochen und die
+             Zeile wirkte gequetscht.
+
+             sm:contents loest den Mobil-Wrapper ab sm wieder auf, sodass
+             seine Kinder direkte Flex-Kinder der aeusseren Zeile werden --
+             erst dadurch greifen die order-Angaben und alles steht wieder in
+             EINER Zeile (Filter links, dann Loeschen, ganz rechts der
+             Auswahl-Knopf). */
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+            <div className="flex items-center justify-between gap-3 sm:contents">
+              {filters}
+              <Button
+                variant="outline"
+                size="md"
+                onClick={() => setAktiv(true)}
+                className="shrink-0 sm:order-3"
+              >
+                <ListChecks size={15} aria-hidden />
+                Mehrere auswählen
+              </Button>
+            </div>
+            {extraAction && <div className="shrink-0 sm:order-2 sm:ml-auto">{extraAction}</div>}
+          </div>
         ) : (
           /* Eigene, in sich begrenzte Leiste statt loser Elemente auf voller
              Containerbreite -- vorher schob "ml-auto" den Fertig-Knopf bis
              zum rechten Rand des GESAMTEN (breiten) Verlauf-Layouts, auf
              Desktop wirkte er dadurch weit vom Rest der Zeile abgerissen.
              Jetzt ist "ganz rechts" nur noch der rechte Rand dieser Leiste. */
-          <div className="flex w-full flex-wrap items-center gap-3 rounded-xl border border-line bg-surface px-4 py-2.5 sm:w-auto">
-            <span className="text-sm text-ink">
-              {anzahl === 0 ? 'Nichts ausgewählt' : `${anzahl} ausgewählt`}
-            </span>
-            <button
-              type="button"
-              onClick={() => setAusgewaehlt(alleGewaehlt ? new Set() : new Set(ids))}
-              className="text-sm text-muted underline underline-offset-4 transition-colors hover:text-ink"
-            >
-              {alleGewaehlt ? 'Auswahl aufheben' : 'Alle auswählen'}
-            </button>
+          /* flex-wrap entfernt: auf Mobil brach "Fertig" sonst auf eine
+             eigene, halb leere Zeile um und die Leiste wirkte auseinander-
+             gerissen. Jetzt eine feste Zeile -- Statustext und "Alle
+             auswaehlen" links (min-w-0 laesst sie bei Bedarf schrumpfen),
+             "Fertig" bleibt rechts am Rand der Leiste. */
+          <div className="flex w-full items-center gap-3 rounded-xl border border-line bg-surface px-4 py-2.5 sm:w-auto">
+            <div className="flex min-w-0 items-center gap-3">
+              <span className="whitespace-nowrap text-sm text-ink">
+                {anzahl === 0 ? 'Nichts ausgewählt' : `${anzahl} ausgewählt`}
+              </span>
+              <button
+                type="button"
+                onClick={() => setAusgewaehlt(alleGewaehlt ? new Set() : new Set(ids))}
+                className="truncate text-sm text-muted underline underline-offset-4 transition-colors hover:text-ink"
+              >
+                {alleGewaehlt ? 'Auswahl aufheben' : 'Alle auswählen'}
+              </button>
+            </div>
             {/* Echter Button statt blossem Text -- war zuvor kaum als
                 eigenstaendige Aktion erkennbar. */}
-            <Button variant="outline" size="md" onClick={beenden} className="ml-auto">
+            <Button variant="outline" size="md" onClick={beenden} className="ml-auto shrink-0">
               <X size={15} aria-hidden />
               Fertig
             </Button>

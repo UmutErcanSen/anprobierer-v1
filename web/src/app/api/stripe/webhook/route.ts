@@ -78,7 +78,11 @@ async function handleSubscriptionUpsert(admin: ReturnType<typeof createAdminClie
     p_current_period_end: item ? new Date(item.current_period_end * 1000).toISOString() : null,
     p_cancel_at_period_end: subscription.cancel_at_period_end,
   });
-  if (error) console.error('[stripe/webhook] upsert_subscription fehlgeschlagen', error);
+  // Werfen statt nur loggen: Der Aufrufer antwortet daraufhin mit 500 und
+  // Stripe wiederholt das Event. Frueher wurde der Fehler nur protokolliert
+  // und trotzdem 200 zurueckgegeben -- Stripe hielt das fuer erfolgreich,
+  // wiederholte nie, und der Abo-Zustand blieb dauerhaft falsch.
+  if (error) throw new Error(`upsert_subscription fehlgeschlagen: ${error.message}`);
 }
 
 export async function POST(request: Request) {
@@ -102,6 +106,29 @@ export async function POST(request: Request) {
 
   const admin = createAdminClient();
 
+  /*
+    Eingang protokollieren, BEVOR verarbeitet wird. Erst dadurch laesst sich
+    spaeter ueberhaupt unterscheiden, ob ein Event nie ankam (keine Zeile) oder
+    ankam und scheiterte (Zeile mit status 'failed') -- siehe Migration
+    20260810130000_stripe_event_protokoll.sql.
+
+    onConflict: Stripe wiederholt Events; die vorhandene Zeile bleibt dabei
+    unangetastet (ignoreDuplicates), damit ein frueherer Fehlerstand nicht
+    ueberschrieben wird, bevor der neue Versuch sein Ergebnis kennt.
+  */
+  await admin
+    .from('stripe_events')
+    .upsert({ id: event.id, type: event.type, status: 'received' }, { onConflict: 'id', ignoreDuplicates: true });
+
+  async function protokolliere(status: 'processed' | 'ignored' | 'failed', fehler?: string) {
+    await admin
+      .from('stripe_events')
+      .update({ status, error_message: fehler ?? null, processed_at: new Date().toISOString() })
+      .eq('id', event.id);
+  }
+
+  let verarbeitet = true;
+
   try {
     switch (event.type) {
       case 'customer.subscription.created':
@@ -114,7 +141,12 @@ export async function POST(request: Request) {
         const subscription = event.data.object;
         const userId = subscription.metadata?.user_id;
         if (!userId) {
+          // Kein Wiederholen: fehlende Metadaten heilen sich nicht von selbst,
+          // eine Endlosschleife brächte nichts. Aber als 'failed' vermerken,
+          // damit es in admin.webhook_fehler auffaellt.
           console.error('[stripe/webhook] Kündigung ohne user_id-Metadata', subscription.id);
+          verarbeitet = false;
+          await protokolliere('failed', `Kündigung ohne user_id-Metadata (${subscription.id})`);
           break;
         }
         const { error } = await admin.rpc('upsert_subscription', {
@@ -126,7 +158,7 @@ export async function POST(request: Request) {
           p_current_period_end: null,
           p_cancel_at_period_end: false,
         });
-        if (error) console.error('[stripe/webhook] Kündigung konnte nicht gespeichert werden', error);
+        if (error) throw new Error(`Kündigung konnte nicht gespeichert werden: ${error.message}`);
         break;
       }
 
@@ -150,15 +182,25 @@ export async function POST(request: Request) {
         const mapped = priceId ? planForPriceId(priceId) : null;
 
         if (!userId) {
+          // Zahlung erfolgt, aber niemand zuzuordnen -- der schlimmste Fall,
+          // muss zwingend sichtbar werden.
           console.error('[stripe/webhook] invoice.paid ohne user_id-Metadata', invoice.id);
+          verarbeitet = false;
+          await protokolliere('failed', `invoice.paid ohne user_id-Metadata (${invoice.id})`);
           break;
         }
         if (!line) {
+          // Kein Fehler: reine Proration-Rechnungen sollen bewusst keine
+          // Credits ausloesen.
           console.log('[stripe/webhook] invoice.paid enthält nur Proration-Posten — keine Gutschrift', invoice.id);
+          verarbeitet = false;
+          await protokolliere('ignored');
           break;
         }
         if (!mapped) {
           console.error('[stripe/webhook] invoice.paid mit unbekannter Price-ID', invoice.id, { priceId });
+          verarbeitet = false;
+          await protokolliere('failed', `Unbekannte Price-ID ${priceId} (${invoice.id})`);
           break;
         }
 
@@ -169,8 +211,10 @@ export async function POST(request: Request) {
           p_stripe_event_id: event.id,
           p_note: `Rechnung ${invoice.id} (${mapped.plan}, ${mapped.interval})`,
         });
-        if (error) console.error('[stripe/webhook] Credit-Gutschrift fehlgeschlagen', error);
-        else if (!granted) console.log('[stripe/webhook] Event bereits verarbeitet (Idempotenz)', event.id);
+        if (error) throw new Error(`Credit-Gutschrift fehlgeschlagen: ${error.message}`);
+        // granted === false ist KEIN Fehler, sondern die Idempotenzsperre:
+        // dieses Event wurde bereits gutgeschrieben (Stripe-Wiederholung).
+        if (!granted) console.log('[stripe/webhook] Event bereits verarbeitet (Idempotenz)', event.id);
         break;
       }
 
@@ -182,18 +226,27 @@ export async function POST(request: Request) {
             .from('subscriptions')
             .update({ status: 'past_due', updated_at: new Date().toISOString() })
             .eq('user_id', userId);
-          if (error) console.error('[stripe/webhook] Status past_due fehlgeschlagen', error);
+          if (error) throw new Error(`Status past_due fehlgeschlagen: ${error.message}`);
         }
         break;
       }
 
       default:
+        // Event-Typ, den wir bewusst nicht auswerten.
+        verarbeitet = false;
+        await protokolliere('ignored');
         break;
     }
   } catch (err) {
     console.error('[stripe/webhook] Unerwarteter Fehler bei', event.type, err);
+    await protokolliere('failed', err instanceof Error ? err.message : String(err));
+    // 500 ist hier Absicht: Stripe wiederholt das Event dann nach eigenem
+    // Zeitplan (bis zu drei Tage). Ein voreiliges 200 wuerde den Fehlschlag
+    // endgueltig machen.
     return NextResponse.json({ error: 'Verarbeitung fehlgeschlagen.' }, { status: 500 });
   }
+
+  if (verarbeitet) await protokolliere('processed');
 
   return NextResponse.json({ received: true });
 }

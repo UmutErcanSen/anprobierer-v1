@@ -62,3 +62,40 @@ export async function createLockedPreview(resultBytes: Buffer): Promise<Buffer> 
     .jpeg({ quality: 55 })
     .toBuffer();
 }
+
+/**
+ * Scharfe, kleine Variante fuer das Karten-Raster in Verlauf und Konto.
+ *
+ * Vorher zeigte das Raster die ECHTEN Ergebnisbilder: rund 3,2 MB je PNG, bei
+ * zwoelf Karten also ~38 MB pro Seitenaufruf -- fuer Kacheln, die auf dem
+ * Handy keine 200 Pixel breit sind. Kurios dabei: Free-Nutzer bekamen dank der
+ * unscharfen Vorschau (2 KB) die schnelle Seite, waehrend ausgerechnet
+ * zahlende Nutzer die volle Datenmenge luden.
+ *
+ * 480 px Breite deckt auch zweispaltige Handy-Raster auf Bildschirmen mit
+ * hoher Pixeldichte ab. WebP statt JPEG, weil diese Datei den Browser nie
+ * verlaesst -- fuer das herunterladbare Ergebnis waere die Formatfrage eine
+ * andere (Vinted/Kleinanzeigen muessen es annehmen), hier gibt es dieses
+ * Risiko schlicht nicht.
+ */
+export async function createThumbnail(resultBytes: Buffer): Promise<Buffer> {
+  return sharp(resultBytes)
+    .resize({ width: 480, withoutEnlargement: true })
+    .webp({ quality: 80 })
+    .toBuffer();
+}
+
+/**
+ * Speicherpfad der Rasterr-Variante, aus dem Pfad des Ergebnisbilds
+ * abgeleitet -- gleiches Prinzip wie lockedImagePath() in lock.ts, damit
+ * keine zusaetzliche Spalte noetig ist.
+ *
+ * ACHTUNG bei Generierungen von VOR dieser Aenderung: Zu ihnen existiert
+ * keine solche Datei. Die Aufrufer muessen das beruecksichtigen (siehe
+ * `hatThumbnail` in konto/page.tsx und konto/verlauf/page.tsx) -- eine
+ * signierte URL entsteht auch fuer nicht vorhandene Objekte, das Bild liefe
+ * sonst still in einen 404.
+ */
+export function thumbnailPath(path: string): string {
+  return path.replace(/\.png$/i, '-thumb.webp');
+}

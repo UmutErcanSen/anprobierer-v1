@@ -95,6 +95,58 @@ zeigt, bevor sie im Umsatz auftaucht.
 
 ---
 
+## Die zwei Kontrollabfragen
+
+Anders als die fünf oben liefern diese beiden im Normalfall **nichts**. Genau
+das ist ihr Zweck: Jede Zeile darin ist ein Fehler, der sonst unbemerkt bliebe.
+
+### Sind Stripe-Events verlorengegangen?
+
+```sql
+select * from admin.webhook_fehler;
+```
+
+Sollte leer sein. Eine Zeile bedeutet: Der Kunde hat bezahlt, aber der Zustand
+in der App wurde womöglich nicht aktualisiert — falscher Tarif, fehlende
+Credits.
+
+Das ist genau der Fall, der beim Testkonto auftrat und wochenlang nur durch
+Zufall auffiel. Wichtig ist der Unterschied zwischen zwei Situationen:
+
+- **Zeile mit `failed`** — das Event kam an, die Verarbeitung scheiterte. Der
+  Fehlertext steht dabei. Stripe wiederholt das Event von sich aus (bis zu drei
+  Tage lang).
+- **Gar keine Zeile, obwohl Stripe eine Zahlung zeigt** — das Event kam nie an.
+  Dann liegt es an der Zustellung: falsche Webhook-URL, Endpunkt nicht
+  erreichbar, oder das Ereignis ist im Stripe-Dashboard gar nicht erst
+  ausgelöst worden.
+
+Alle eingegangenen Events, nicht nur die gescheiterten:
+
+```sql
+select status, count(*) from public.stripe_events group by status;
+```
+
+### Liegen gelöschte Bilder noch im Speicher?
+
+```sql
+select * from admin.verwaiste_dateien;
+```
+
+Sollte leer sein. Inhalt bedeutet: Eine Anprobe oder ein Konto wurde gelöscht,
+die zugehörigen Bilddateien blieben aber liegen — das Aufräumen im Storage ist
+bewusst „best effort", weil das Konto zu dem Zeitpunkt bereits weg ist.
+
+Das ist nicht nur Speicherplatz: Die Datenschutzerklärung sagt die Löschung zu
+(Art. 17 DSGVO). Ein täglicher Job räumt das automatisch nach; bleibt hier
+dauerhaft etwas stehen, scheitert er systematisch. Manuell anstoßen:
+
+```sql
+select public.delete_orphaned_results();
+```
+
+---
+
 ## Nützliche Einzelabfragen
 
 **Marge eines Tarifs überschlagen** (Beispiel Pro bei Vollnutzung):

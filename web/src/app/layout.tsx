@@ -81,6 +81,24 @@ export default function RootLayout({
         */}
         <Toaster
           position="bottom-center"
+          /*
+            mobileOffset: Auf Mobil blendet der Verlauf im Auswahlmodus eine
+            fest am unteren Rand verankerte Aktionsleiste ein ("Als ZIP" /
+            "Löschen", siehe history/selection.tsx). Eine Meldung an der
+            Standardposition legte sich genau darüber -- ausgerechnet die
+            Rückmeldung zum Löschen hätte den Knopf verdeckt, den man gerade
+            gedrückt hat. Der Abstand hält beides frei; ohne Leiste steht die
+            Meldung dadurch etwas höher, was auf dem Handy ohnehin besser
+            lesbar ist als direkt am Bildschirmrand.
+          */
+          mobileOffset={{ bottom: '5.5rem' }}
+          /*
+            Schliessen-Knopf vor allem wegen der Fehlermeldungen: Eine
+            Erfolgsmeldung darf nach ein paar Sekunden von selbst gehen, eine
+            Fehlermeldung sollte man aktiv wegklicken koennen, statt auf sie
+            warten zu muessen.
+          */
+          closeButton
           style={
             {
               '--normal-bg': 'var(--paper)',
@@ -89,6 +107,12 @@ export default function RootLayout({
               '--success-bg': 'var(--paper)',
               '--success-text': 'var(--success)',
               '--success-border': 'var(--line-strong)',
+              // Fehlerfarbe bewusst auf unser eigenes --danger-Token statt auf
+              // sonners Standardrot: Sonst hätte die App zwei verschiedene
+              // Rottöne für dieselbe Aussage ("hier ist etwas schiefgegangen").
+              '--error-bg': 'var(--paper)',
+              '--error-text': 'var(--danger)',
+              '--error-border': 'var(--line-strong)',
               '--border-radius': '0.75rem',
             } as React.CSSProperties
           }

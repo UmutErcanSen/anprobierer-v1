@@ -22,6 +22,13 @@ export type LedgerRow = {
 export type MonthUsage = {
   /** Ausgeschriebener Monatsname fuer die Achse, z.B. "Juli". */
   label: string;
+  /** Dreibuchstabige Kurzform, z.B. "Jul" -- fuer schmale Bildschirme, wo
+   *  sechs ausgeschriebene Namen nebeneinander nicht lesbar umbrechen. */
+  shortLabel: string;
+  /** Vierstelliges Jahr. Das Fenster rollt und kann einen Jahreswechsel
+   *  ueberspannen (z.B. November bis April) -- dann sagen die Monatsnamen
+   *  allein nicht mehr, welches Jahr gemeint ist. */
+  year: number;
   /** Netto verbrauchte Credits in diesem Monat (Abbuchungen minus Rueckbuchungen). */
   used: number;
   /** Ob dieser Monat noch laeuft -- der Balken ist dann noch nicht vollstaendig. */
@@ -36,6 +43,13 @@ const USAGE_REASONS = new Set(["generation_charge", "generation_refund"]);
 const MONTH_LABELS = [
   "Januar", "Februar", "März", "April", "Mai", "Juni",
   "Juli", "August", "September", "Oktober", "November", "Dezember",
+];
+/** Kurzformen fuer schmale Achsen. Bewusst fest verdrahtet statt ueber
+ *  Intl.DateTimeFormat: dessen deutsche Kurzform haengt einen Punkt an
+ *  ("Jan.") und ist je nach Node-/ICU-Version uneinheitlich. */
+const MONTH_SHORT_LABELS = [
+  "Jan", "Feb", "Mär", "Apr", "Mai", "Jun",
+  "Jul", "Aug", "Sep", "Okt", "Nov", "Dez",
 ];
 
 /**
@@ -70,7 +84,13 @@ export function monthlyUsage(
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
     if (createdOrdinal !== null && d.getFullYear() * 12 + d.getMonth() < createdOrdinal) continue;
     keys.push(`${d.getFullYear()}-${d.getMonth()}`);
-    buckets.push({ label: MONTH_LABELS[d.getMonth()], used: 0, isCurrent: i === 0 });
+    buckets.push({
+      label: MONTH_LABELS[d.getMonth()],
+      shortLabel: MONTH_SHORT_LABELS[d.getMonth()],
+      year: d.getFullYear(),
+      used: 0,
+      isCurrent: i === 0,
+    });
   }
 
   for (const row of rows) {

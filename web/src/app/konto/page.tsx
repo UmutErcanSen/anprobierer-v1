@@ -7,11 +7,13 @@ import { LinkButton } from "@/components/ui/button";
 import { HistoryCard, type HistoryGeneration } from "@/components/history/history-card";
 import { resolveCardRows } from "@/lib/generation/cards";
 import { isGenerationLocked, lockedImagePath } from "@/lib/generation/lock";
+import { thumbnailPath } from "@/lib/generation/prepare-image";
 import type { PlanKey } from "@/lib/generation/constants";
 import { ManageSubscriptionLink } from "@/components/pricing/manage-subscription-link";
 import { UsageOverview } from "@/components/konto/usage-overview";
 import { ExportDataButton } from "@/components/konto/export-data-button";
 import { DeleteAccountButton } from "@/components/konto/delete-account-button";
+import { DisplayNameForm } from "@/components/konto/display-name-form";
 import { InfoModal } from "@/components/ui/info-modal";
 import { buildTip, lastGrant, monthlyUsage, usedSince, type LedgerRow } from "@/lib/usage/summary";
 
@@ -131,7 +133,8 @@ export default async function KontoPage() {
     recentCardRows.map(async (cards, i) => {
       const firstImage = cards.find((c) => c.imagePath)?.imagePath;
       if (!firstImage) return null;
-      const path = recent[i].locked ? lockedImagePath(firstImage) : firstImage;
+      // Siehe konto/verlauf/page.tsx: Raster-Variante statt vollem Ergebnis.
+      const path = recent[i].locked ? lockedImagePath(firstImage) : thumbnailPath(firstImage);
       const { data } = await supabase.storage.from("results").createSignedUrl(path, 60 * 5);
       return data?.signedUrl ?? null;
     }),
@@ -194,15 +197,21 @@ export default async function KontoPage() {
           <div>
             <p className="text-sm text-ink-soft">{credits === 1 ? "Credit übrig" : "Credits übrig"}</p>
             <p className="mt-0.5 text-xs uppercase tracking-[0.1em] text-muted">
-              <span className="capitalize">{plan}-Tarif</span> ·{" "}
-              {/* War "Guthaben aufladen" -- irrefuehrend, denn es gibt kein
-                  Aufladen. Es gibt nur Abos (siehe Entscheidung: keine
-                  Credit-Pakete), Credits kommen ausschliesslich ueber den
-                  monatlichen/jaehrlichen Abo-Rhythmus. */}
-              <Link href="/preise" className="normal-case underline underline-offset-4 hover:text-ink">
-                Tarife ansehen
-              </Link>
+              <span className="capitalize">{plan}-Tarif</span>
             </p>
+            {/* Eigene Zeile statt an "Basic-Tarif ·" angehaengt -- auf
+                schmalen Bildschirmen wirkte die Zeile zusammengequetscht und
+                der Link ging im Fliesstext optisch unter. War "Guthaben
+                aufladen" -- irrefuehrend, denn es gibt kein Aufladen. Es gibt
+                nur Abos (siehe Entscheidung: keine Credit-Pakete), Credits
+                kommen ausschliesslich ueber den monatlichen/jaehrlichen
+                Abo-Rhythmus. */}
+            <Link
+              href="/preise"
+              className="mt-1 inline-block text-xs normal-case text-muted underline underline-offset-4 hover:text-ink"
+            >
+              Tarife ansehen
+            </Link>
           </div>
         </div>
 
@@ -220,16 +229,25 @@ export default async function KontoPage() {
           </p>
         )}
 
-        <div className="mt-6 flex flex-wrap items-center gap-7 border-t border-line pt-5">
-          <div>
-            <p className="text-lg font-semibold tabular-nums text-ink">{totalGenerations ?? 0}</p>
-            <p className="text-xs uppercase tracking-[0.1em] text-muted">Erstellt</p>
+        {/* ml-auto setzt eine Zeile voraus -- bei flex-wrap auf schmalen
+            Bildschirmen brach "Abo verwalten"/"Auf Pro upgraden" zwar in eine
+            zweite Zeile um, blieb dabei aber weiter rechtsbuendig (ml-auto
+            wirkt je Flex-Zeile), wodurch der Block schief/abgeschnitten
+            wirkte. Jetzt zwei klar getrennte Gruppen: auf Mobil gestapelt und
+            zentriert (gleiches Muster wie Titel- und Guthaben-Zeile oben),
+            ab sm wieder eine Zeile mit der zweiten Gruppe rechtsbuendig. */}
+        <div className="mt-6 flex flex-col items-center gap-5 border-t border-line pt-5 text-center sm:flex-row sm:text-left">
+          <div className="flex items-center gap-7">
+            <div>
+              <p className="text-lg font-semibold tabular-nums text-ink">{totalGenerations ?? 0}</p>
+              <p className="text-xs uppercase tracking-[0.1em] text-muted">Erstellt</p>
+            </div>
+            <div>
+              <p className="text-lg font-semibold tabular-nums text-ink">{totalFavorites ?? 0}</p>
+              <p className="text-xs uppercase tracking-[0.1em] text-muted">Favoriten</p>
+            </div>
           </div>
-          <div>
-            <p className="text-lg font-semibold tabular-nums text-ink">{totalFavorites ?? 0}</p>
-            <p className="text-xs uppercase tracking-[0.1em] text-muted">Favoriten</p>
-          </div>
-          <div className="ml-auto flex items-center gap-5">
+          <div className="flex items-center gap-5 sm:ml-auto">
             {plan !== "free" && <ManageSubscriptionLink />}
             {plan !== "pro" && (
               <Link
@@ -319,6 +337,21 @@ export default async function KontoPage() {
           <h2 className="text-sm font-medium text-ink">Datenschutz</h2>
 
           <div className="mt-4 overflow-hidden rounded-xl border border-line">
+            {/* Berichtigung (Art. 16 DSGVO): Der Anzeigename war bisher nur
+                bei der Registrierung setzbar -- ein Tippfehler liess sich nur
+                durch Loeschen des ganzen Kontos beheben. Steht bewusst als
+                ERSTE Zeile: die harmloseste der drei Aktionen zuerst, die
+                unwiderrufliche zuletzt. */}
+            <div className="flex flex-col items-start gap-4 border-b border-line p-5 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm font-medium text-ink">Anzeigename</p>
+                <p className="mt-1 text-[13px] leading-relaxed text-muted">
+                  So wirst du in der App begrüßt. Erscheint nirgends öffentlich.
+                </p>
+              </div>
+              <DisplayNameForm initialName={profile?.display_name ?? ""} />
+            </div>
+
             <div className="flex flex-col items-start gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 {/* <div> statt <p>: <p> erlaubt laut HTML-Spezifikation nur

@@ -72,7 +72,11 @@ export function PlatformExport({ card, generationId }: { card: ResultCard; gener
     fetch(`/api/generate/${generationId}/platform-text`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ itemIndex: card.itemIndex, platform: platform.key, baseText: card.saleText }),
+      // Kein baseText mehr: der Server leitet den Ausgangstext selbst aus der
+      // Datenbank ab (siehe Kopfkommentar der Route) -- ein vom Client
+      // geschickter Text machte den Endpunkt zu einem kostenlosen
+      // LLM-Umschreibedienst fuer beliebige Inhalte.
+      body: JSON.stringify({ itemIndex: card.itemIndex, platform: platform.key }),
     })
       .then((res) => res.json())
       .then((data) => {
@@ -115,8 +119,13 @@ export function PlatformExport({ card, generationId }: { card: ResultCard; gener
       {/* overflow-x-auto statt flex-wrap: bei drei Tabs (Vinted, Kleinanzeigen,
           eBay) samt Logo reisst ein Umbruch auf Mobil die Reihe unschoen
           auseinander -- eine horizontal scrollbare Zeile bleibt kompakt und
-          bleibt trotzdem vollstaendig erreichbar. */}
-      <div className="-mx-0.5 overflow-x-auto px-0.5">
+          bleibt trotzdem vollstaendig erreichbar. no-scrollbar (globals.css):
+          bei drei Tabs ist auf den meisten Bildschirmen gar kein Scrollen
+          noetig, Windows/Chrome zeigt den (dann rein kosmetischen) Scrollbalken
+          aber trotzdem dauerhaft an, sobald overflow-x:auto gesetzt ist -- das
+          war der gemeldete sichtbare Balken auf Mobil. Scroll-FUNKTION bleibt
+          erhalten, nur die sichtbare Leiste wird ausgeblendet. */}
+      <div className="no-scrollbar -mx-0.5 overflow-x-auto px-0.5">
         <div
           role="tablist"
           className="inline-flex gap-1 rounded-full border border-line p-1 text-sm"
@@ -128,10 +137,12 @@ export function PlatformExport({ card, generationId }: { card: ResultCard; gener
               role="tab"
               aria-selected={platform.key === active.key}
               onClick={() => selectPlatform(platform)}
+              /* Ausgewaehlter Tab jetzt gefuellt (bg-ink) statt nur mit einem
+                 duennen Rand -- die reine Umrandung war neben den unmarkierten
+                 Tabs kaum zu unterscheiden. Gleiches Prinzip wie beim
+                 Modus-Umschalter (Einzeln/Kombiniert) weiter oben im Formular. */
               className={`flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
-                platform.key === active.key
-                  ? 'border border-ink text-ink'
-                  : 'border border-transparent text-muted hover:text-ink'
+                platform.key === active.key ? 'bg-ink text-on-ink' : 'text-muted hover:text-ink'
               }`}
             >
               <PlatformIcon icon={PLATFORM_ICONS[platform.key]} />
@@ -143,6 +154,13 @@ export function PlatformExport({ card, generationId }: { card: ResultCard; gener
       </div>
 
       {preview && (
+        /* min-h + overflow-y-auto auf der Beschreibung: Vinted nutzt den
+           Basistext, Kleinanzeigen/eBay bekommen einen eigens umgeschriebenen
+           (unterschiedlich langen) Text -- ohne feste Hoehe sprang die ganze
+           Box beim Tab-Wechsel sichtbar in der Groesse, und mit ihr alles
+           darunter (Button, Meta-Zeile). Lange Beschreibungen bleiben trotzdem
+           vollstaendig erreichbar, nur eben ueber einen kurzen internen Scroll
+           statt einer wachsenden Box. */
         <div className="flex flex-col gap-2 rounded-lg border border-line bg-surface p-3 text-xs">
           <div>
             <div className="flex items-center justify-between text-[11px] text-muted">
@@ -151,7 +169,7 @@ export function PlatformExport({ card, generationId }: { card: ResultCard; gener
                 {preview.title.length}/{active.titleMaxLength}
               </span>
             </div>
-            <p className="mt-0.5 font-medium text-ink">{preview.title}</p>
+            <p className="mt-0.5 min-h-[2.5em] font-medium text-ink">{preview.title}</p>
           </div>
           <div>
             <div className="flex items-center justify-between text-[11px] text-muted">
@@ -160,7 +178,9 @@ export function PlatformExport({ card, generationId }: { card: ResultCard; gener
                 {preview.description.length}/{active.descriptionMaxLength}
               </span>
             </div>
-            <p className="mt-0.5 whitespace-pre-wrap text-ink-soft">{preview.description}</p>
+            <p className="mt-0.5 max-h-40 min-h-[6em] overflow-y-auto whitespace-pre-wrap text-ink-soft">
+              {preview.description}
+            </p>
           </div>
         </div>
       )}

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Download, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 
 /*
@@ -34,11 +35,9 @@ type ExportPayload = {
 
 export function ExportDataButton() {
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   async function exportieren() {
     setLoading(true);
-    setError(null);
     try {
       const res = await fetch('/api/account/export');
       if (!res.ok) throw new Error('export fehlgeschlagen');
@@ -85,8 +84,29 @@ export function ExportDataButton() {
       a.download = `meine-daten-${new Date().toISOString().slice(0, 10)}.zip`;
       a.click();
       URL.revokeObjectURL(url);
+      // Von allen Aktionen der App dauert diese am laengsten (jedes
+      // Ergebnisbild wird einzeln geladen und ins Archiv gepackt). Der
+      // Browser legt die Datei still im Download-Ordner ab -- ohne Meldung
+      // sieht man nur, wie der Knopf wieder normal aussieht, und weiss nicht,
+      // ob etwas passiert ist.
+      // Anzahl bewusst nach Fall unterschieden: "0 Anproben als ZIP" las sich
+      // wie ein Fehlschlag, obwohl der Export korrekt war -- er enthaelt dann
+      // eben nur die Kontodaten. Genau dieser Fall tritt bei einem frisch
+      // angelegten Konto auf, also ausgerechnet beim ersten Ausprobieren.
+      const anzahl = data.generierungen.length;
+      toast.success(
+        anzahl === 0
+          ? 'Export fertig: deine Kontodaten als ZIP.'
+          : anzahl === 1
+            ? 'Export fertig: 1 Anprobe als ZIP.'
+            : `Export fertig: ${anzahl} Anproben als ZIP.`,
+      );
     } catch {
-      setError('Der Export ist fehlgeschlagen. Bitte versuch es erneut.');
+      // Als Toast statt als Zeile unter dem Knopf: Der Export dauert lange,
+      // in der Zeit ist der Knopf oft aus dem sichtbaren Bereich gescrollt --
+      // eine Meldung genau dort haette man dann gar nicht gesehen. Erfolg und
+      // Fehlschlag melden sich jetzt zudem auf demselben Weg.
+      toast.error('Der Export ist fehlgeschlagen. Bitte versuch es erneut.');
     } finally {
       setLoading(false);
     }
@@ -102,7 +122,6 @@ export function ExportDataButton() {
         {loading ? <Loader2 size={15} className="animate-spin" aria-hidden /> : <Download size={15} aria-hidden />}
         {loading ? 'Wird erstellt …' : 'Exportieren'}
       </Button>
-      {error && <span className="text-xs text-accent">{error}</span>}
     </div>
   );
 }

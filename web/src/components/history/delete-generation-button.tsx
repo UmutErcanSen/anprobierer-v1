@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 
 /*
@@ -30,6 +31,10 @@ export function DeleteGenerationButton({ generationId }: { generationId: string 
         setDeleting(false);
         return;
       }
+      // Hier besonders wichtig: Diese Aktion wechselt zusaetzlich die Seite.
+      // Ohne Meldung landet man unvermittelt in der Liste und muss selbst
+      // pruefen, ob das Loeschen ueberhaupt geklappt hat.
+      toast.success('Anprobe gelöscht.');
       router.push('/konto/verlauf');
       router.refresh();
     } catch {

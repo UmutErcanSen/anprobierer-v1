@@ -6,9 +6,11 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { prepareImage } from '@/lib/generation/prepare-image';
 import { processGeneration, type PreparedImage } from '@/lib/generation/process';
 import { rateLimitError } from '@/lib/generation/rate-limit';
+import { lockedImagePath } from '@/lib/generation/lock';
 import {
   CREDITS_PER_QUALITY,
   MAX_UPLOAD_BYTES,
+  UNSUPPORTED_FORMAT_ERROR,
   isAllowedImageFile,
   isClothingType,
   maxItemsForPlan,
@@ -47,7 +49,7 @@ const scalarSchema = z.object({
 });
 
 function fileError(file: File): string | null {
-  if (!isAllowedImageFile(file.type, file.name)) return 'Nur JPG, PNG, WebP oder HEIC (iPhone-Fotos) sind erlaubt.';
+  if (!isAllowedImageFile(file.type, file.name)) return UNSUPPORTED_FORMAT_ERROR;
   if (file.size > MAX_UPLOAD_BYTES) return 'Jedes Bild darf höchstens 10 MB groß sein.';
   if (file.size === 0) return 'Eine hochgeladene Datei ist leer.';
   return null;
@@ -183,4 +185,64 @@ export async function POST(request: Request) {
   );
 
   return NextResponse.json({ generationId: genId }, { status: 202 });
+}
+
+type CardRow = { imagePath: string | null };
+
+/**
+ * Loescht ALLE eigenen Generierungen -- der Verlauf ist paginiert (12 pro
+ * Seite), "Mehrere auswaehlen" (siehe history/selection.tsx) kann deshalb nur
+ * die auf der aktuellen Seite sichtbaren markieren. Ohne diese Route musste
+ * man sich seitenweise durchklicken, um wirklich ALLES loeschen zu koennen --
+ * genau das war die gemeldete Luecke.
+ *
+ * Laufende Generierungen (queued/processing) werden bewusst NICHT geloescht:
+ * process.ts schreibt waehrenddessen aktiv in die Zeile; ein Loeschen mitten
+ * im Lauf wuerde am Ende verwaiste Storage-Dateien hinterlassen, ohne dass
+ * noch jemand ihre Pfade kennt (die stuenden nur in der geloeschten Zeile).
+ * Die kleine Verzoegerung bis zum naechsten Aufraeumen ist der sicherere Weg.
+ */
+export async function DELETE() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: 'Nicht angemeldet.' }, { status: 401 });
+
+  const admin = createAdminClient();
+
+  const { data: generations, error: fetchError } = await admin
+    .from('generations')
+    .select('id, cards, result_paths')
+    .eq('user_id', user.id)
+    .not('status', 'in', '(queued,processing)');
+
+  if (fetchError) {
+    console.error('[generate] Massenloeschung: Abfrage fehlgeschlagen', user.id, fetchError);
+    return NextResponse.json({ error: 'Die Anproben konnten nicht geladen werden.' }, { status: 500 });
+  }
+
+  const rows = generations ?? [];
+  if (rows.length === 0) return NextResponse.json({ ok: true, deleted: 0 });
+
+  const paths = new Set<string>();
+  for (const g of rows) {
+    for (const c of (g.cards ?? []) as CardRow[]) if (c.imagePath) paths.add(c.imagePath);
+    for (const p of g.result_paths ?? []) paths.add(p);
+  }
+  const allPaths = [...paths].flatMap((p) => [p, lockedImagePath(p)]);
+
+  if (allPaths.length > 0) {
+    const { error: removeError } = await admin.storage.from('results').remove(allPaths);
+    if (removeError) console.error('[generate] Massenloeschung: Storage-Aufraeumen fehlgeschlagen', user.id, removeError);
+  }
+
+  const ids = rows.map((g) => g.id);
+  const { error: deleteError } = await admin.from('generations').delete().in('id', ids);
+  if (deleteError) {
+    console.error('[generate] Massenloeschung fehlgeschlagen', user.id, deleteError);
+    return NextResponse.json({ error: 'Die Anproben konnten nicht gelöscht werden.' }, { status: 500 });
+  }
+
+  return NextResponse.json({ ok: true, deleted: ids.length });
 }

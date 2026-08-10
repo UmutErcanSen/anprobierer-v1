@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Star } from 'lucide-react';
+import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
 import { useSelection } from '@/components/history/selection';
 
@@ -37,7 +38,14 @@ export function FavoriteToggle({ generationId, initialFavorite }: { generationId
     setPending(true);
     const supabase = createClient();
     const { error } = await supabase.from('generations').update({ is_favorite: next }).eq('id', generationId);
-    if (error) setFavorite(!next); // zuruecksetzen, falls es doch nicht geklappt hat
+    if (error) {
+      // Zuruecksetzen allein reichte nicht: Der Stern sprang wortlos in den
+      // alten Zustand zurueck: aus Nutzersicht nicht von einem verschluckten
+      // Klick zu unterscheiden. Ein Fehlversuch braucht eine Erklaerung,
+      // gerade weil die Anzeige vorher optimistisch schon umgesprungen war.
+      setFavorite(!next);
+      toast.error('Der Favorit konnte nicht gespeichert werden.');
+    }
     setPending(false);
   }
 

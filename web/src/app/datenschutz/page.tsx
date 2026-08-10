@@ -6,11 +6,25 @@ export const metadata: Metadata = { title: "Datenschutzerklärung" };
 /*
   ACHTUNG — Entwurf, kein Ersatz fuer Rechtsberatung.
 
-  Dieser Text beschreibt die AKTUELLE Architektur:
+  Dieser Text beschreibt den TATSAECHLICHEN Stand der Anwendung:
     - Supabase (Irland, EU) fuer Konto, Datenbank und Dateispeicher
     - OpenAI (USA) als Auftragsverarbeiter fuer Bild- und Textgenerierung
+    - Stripe fuer Abo und Zahlungsabwicklung (Kartendaten sehen wir nie)
     - Personenfoto wird direkt nach der Generierung geloescht
-    - KEIN eigener OpenAI-Schluessel des Nutzers mehr (BYOK entfaellt)
+    - KEIN eigener OpenAI-Schluessel des Nutzers (BYOK entfaellt)
+    - Einwilligung wird bei Registrierung UND je Generierung eingeholt
+    - Auskunft/Loeschung/Berichtigung laufen als Selbstbedienung im Konto
+    - Ergebnisbilder tragen eine KI-Kennzeichnung (Art. 50 EU AI Act)
+
+  Bewusst NICHT behauptet: eine IP-Verarbeitung. Die Anwendung wertet
+  IP-Adressen an keiner Stelle aus (Missbrauchsschutz laeuft ueber Konto,
+  Guthaben und Zaehlung der Generierungen, siehe lib/generation/rate-limit.ts).
+  Eine Schutzmassnahme zu beschreiben, die es nicht gibt, waere eine falsche
+  Angabe in einer Pflichtinformation -- deshalb steht hier, was wirklich
+  passiert.
+
+  Bei JEDER Aenderung an diesem Text pruefen, ob PRIVACY_VERSION in
+  lib/legal/consent.ts hochgezaehlt werden muss (Nachweis nach Art. 7 DSGVO).
 
   Vor dem Livegang zwingend zu erledigen:
     1. Platzhalter in eckigen Klammern ausfuellen
@@ -21,7 +35,7 @@ export const metadata: Metadata = { title: "Datenschutzerklärung" };
 
 export default function DatenschutzPage() {
   return (
-    <LegalShell title="Datenschutzerklärung" updated="Stand: Juli 2026">
+    <LegalShell title="Datenschutzerklärung" updated="Stand: 10. August 2026">
       <h2>1. Verantwortlicher</h2>
       <p>
         [Vollständiger Name]
@@ -37,7 +51,8 @@ export default function DatenschutzPage() {
       <ul>
         <li>
           <strong>Kontodaten:</strong> E-Mail-Adresse und optionaler Anzeigename,
-          Zeitpunkt der Registrierung.
+          Zeitpunkt der Registrierung sowie Zeitpunkt und Fassung deiner
+          Einwilligung in diese Datenschutzerklärung.
         </li>
         <li>
           <strong>Hochgeladene Fotos:</strong> Dein Personenfoto und die Fotos der
@@ -45,26 +60,61 @@ export default function DatenschutzPage() {
         </li>
         <li>
           <strong>Ergebnisse:</strong> Die generierten Anprobebilder und die dazu
-          erzeugten Verkaufstexte.
+          erzeugten Verkaufstexte. Von jedem Anprobebild wird zusätzlich eine
+          verkleinerte, unscharfe Vorschauversion gespeichert; sie wird im
+          Free-Tarif anstelle des vollen Bildes angezeigt.
         </li>
         <li>
           <strong>Angaben zum Kleidungsstück:</strong> Typ, Größe, optionale Farbe
           und freiwillige Hinweise.
         </li>
         <li>
-          <strong>Nutzungsdaten:</strong> Guthabenbuchungen, Zeitpunkt und Umfang
-          der Generierungen sowie technische Ereignisse zur Missbrauchserkennung.
-          Deine IP-Adresse wird dabei nur in gekürzter bzw. gehashter Form
-          verarbeitet.
+          <strong>Zahlungs- und Abodaten:</strong> Gewählter Tarif, Abo-Status und
+          Datum der nächsten Abrechnung sowie die Kundennummer, unter der dich
+          unser Zahlungsdienstleister führt. <strong>Deine Kartendaten sehen und
+          speichern wir zu keinem Zeitpunkt</strong> — sie werden ausschließlich
+          direkt bei Stripe eingegeben und dort verarbeitet.
+        </li>
+        <li>
+          <strong>Nutzungsdaten:</strong> Guthabenbuchungen sowie Zeitpunkt und
+          Umfang deiner Generierungen. Diese Angaben brauchen wir für die
+          Abrechnung deines Guthabens und für die Begrenzung der Nutzung
+          (Kostenschutz).
+        </li>
+        <li>
+          <strong>Missbrauchsschutz:</strong> Von deiner E-Mail-Adresse wird eine
+          vereinheitlichte Fassung gespeichert (ohne Zusätze wie „+kennwort“ und
+          bei Gmail ohne Punkte). Damit stellen wir sicher, dass die einmaligen
+          Gratis-Credits nicht durch mehrfache Registrierung mit Adressvarianten
+          desselben Postfachs mehrfach in Anspruch genommen werden. Ein Konto
+          anlegen kannst du trotzdem.
         </li>
       </ul>
-
-      <h2>3. Löschung des Personenfotos</h2>
       <p>
-        Dein hochgeladenes Personenfoto wird <strong>unmittelbar nach der
-        Generierung automatisch gelöscht</strong> und nicht dauerhaft gespeichert.
-        Erhalten bleiben nur die erzeugten Ergebnisbilder, damit du sie später
-        erneut herunterladen kannst.
+        <strong>Keine IP-Auswertung:</strong> Wir werten deine IP-Adresse nicht aus
+        und speichern sie nicht in der Anwendung. Der Schutz vor Missbrauch läuft
+        ausschließlich über dein Konto, dein Guthaben und die Zahl deiner
+        Generierungen. Beim Betrieb der Server können IP-Adressen technisch
+        bedingt kurzzeitig in Protokolldateien anfallen; darauf haben wir keinen
+        gestaltenden Einfluss.
+      </p>
+      <p>
+        Es findet <strong>keine Reichweitenmessung, kein Tracking und keine
+        Profilbildung</strong> statt. Wir binden keine Analyse- oder
+        Werbedienste ein.
+      </p>
+
+      <h2>3. Löschung der hochgeladenen Fotos</h2>
+      <p>
+        Dein hochgeladenes Personenfoto und die Kleidungsfotos werden{" "}
+        <strong>unmittelbar nach der Generierung automatisch gelöscht</strong> und
+        nicht dauerhaft gespeichert. Erhalten bleiben nur die erzeugten
+        Ergebnisbilder, damit du sie später erneut herunterladen kannst.
+      </p>
+      <p>
+        Bricht ein Vorgang technisch ab, bevor das Löschen ausgeführt werden
+        konnte, entfernt ein automatischer Aufräumlauf die betroffenen Uploads
+        spätestens innerhalb von 24 Stunden.
       </p>
 
       <h2>4. Zwecke und Rechtsgrundlagen</h2>
@@ -78,12 +128,23 @@ export default function DatenschutzPage() {
           <strong>Verarbeitung deiner Fotos:</strong> Art. 6 Abs. 1 lit. b DSGVO;
           soweit die Fotos besondere Kategorien personenbezogener Daten erkennen
           lassen, zusätzlich Art. 9 Abs. 2 lit. a DSGVO — deine ausdrückliche
-          Einwilligung, die du mit dem Hochladen erteilst und jederzeit widerrufen
-          kannst.
+          Einwilligung. Diese holen wir an zwei Stellen ein: einmal bei der
+          Registrierung (Bestätigung dieser Datenschutzerklärung) und zusätzlich
+          vor <em>jeder einzelnen</em> Generierung. Eine einmal erteilte
+          Zustimmung gilt also nie automatisch für spätere Uploads. Du kannst sie
+          jederzeit mit Wirkung für die Zukunft widerrufen.
+        </li>
+        <li>
+          <strong>Abo und Zahlungsabwicklung:</strong> Art. 6 Abs. 1 lit. b DSGVO
+          — Erfüllung des Vertrags; hinsichtlich der Aufbewahrung von
+          Rechnungsdaten zusätzlich Art. 6 Abs. 1 lit. c DSGVO (gesetzliche
+          Pflicht).
         </li>
         <li>
           <strong>Missbrauchs- und Kostenschutz:</strong> Art. 6 Abs. 1 lit. f
           DSGVO — berechtigtes Interesse am sicheren und wirtschaftlichen Betrieb.
+          Jede Bildgenerierung verursacht bei uns unmittelbar Kosten; ohne diese
+          Begrenzungen wäre der Dienst nicht wirtschaftlich zu betreiben.
         </li>
       </ul>
 
@@ -98,6 +159,15 @@ export default function DatenschutzPage() {
         Dafür werden dein Personenfoto und die Kleidungsfotos an OpenAI
         übermittelt. Die Verarbeitung erfolgt als Auftragsverarbeitung; API-Daten
         werden nach Angaben von OpenAI nicht zum Training der Modelle verwendet.
+        Die Übermittlung erfolgt ausschließlich von unserem Server aus — dein
+        Browser nimmt zu OpenAI zu keinem Zeitpunkt selbst Verbindung auf.
+      </p>
+      <p>
+        <strong>Stripe</strong> — Abwicklung von Abo und Zahlung. Die Eingabe
+        deiner Zahlungsdaten findet auf einer Seite von Stripe statt; wir
+        erhalten von dort nur die Information, welcher Tarif für dich aktiv ist,
+        bis wann er läuft und unter welcher Kundennummer du dort geführt wirst.
+        Kartennummern oder Bankverbindungen erreichen unsere Systeme nicht.
       </p>
       <p>
         <strong>Hosting</strong> — [Hosting-Anbieter und Serverstandort ergänzen,
@@ -107,32 +177,57 @@ export default function DatenschutzPage() {
 
       <h2>6. Übermittlung in Drittländer</h2>
       <p>
-        Die Übermittlung an OpenAI erfolgt in die USA. Grundlage sind die
-        EU-Standardvertragsklauseln nach Art. 46 Abs. 2 lit. c DSGVO bzw. eine
-        Zertifizierung nach dem EU-US Data Privacy Framework. Trotz dieser
-        Garantien kann in Drittländern ein geringeres Datenschutzniveau bestehen,
-        insbesondere hinsichtlich behördlicher Zugriffsmöglichkeiten.
+        Die Übermittlung an <strong>OpenAI</strong> erfolgt in die USA. Auch bei{" "}
+        <strong>Stripe</strong> kann es zu einer Verarbeitung in den USA kommen,
+        obwohl der Vertragspartner für Europa in Irland ansässig ist.
+      </p>
+      <p>
+        Grundlage sind jeweils die EU-Standardvertragsklauseln nach Art. 46 Abs. 2
+        lit. c DSGVO bzw. eine Zertifizierung nach dem EU-US Data Privacy
+        Framework. Trotz dieser Garantien kann in Drittländern ein geringeres
+        Datenschutzniveau bestehen, insbesondere hinsichtlich behördlicher
+        Zugriffsmöglichkeiten.
+      </p>
+      <p>
+        Die Daten deines Kontos, deine Ergebnisbilder und deine Verkaufstexte
+        verlassen die Europäische Union nicht — sie liegen ausschließlich bei
+        Supabase in Irland.
       </p>
 
       <h2>7. Speicherdauer</h2>
       <ul>
-        <li>Personenfoto: Löschung unmittelbar nach der Generierung.</li>
-        <li>Kleidungsfotos: Löschung unmittelbar nach der Generierung.</li>
+        <li>
+          Personenfoto und Kleidungsfotos: Löschung unmittelbar nach der
+          Generierung, im Fall eines technischen Abbruchs spätestens nach
+          24 Stunden.
+        </li>
         <li>
           Ergebnisbilder, Verkaufstexte und Kontodaten: bis zur Löschung durch dich
           oder bis zur Löschung deines Kontos.
         </li>
         <li>
           Abrechnungsrelevante Daten: solange gesetzliche Aufbewahrungsfristen
-          bestehen (regelmäßig bis zu zehn Jahre nach § 147 AO, § 257 HGB).
+          bestehen (regelmäßig bis zu zehn Jahre nach § 147 AO, § 257 HGB). Diese
+          Daten bleiben auch nach einer Kontolöschung bestehen, weil wir sie
+          gesetzlich aufbewahren müssen.
+        </li>
+        <li>
+          Technisches Protokoll der Zahlungsvorgänge (Kennung und Zeitpunkt der
+          von Stripe gemeldeten Ereignisse, ohne Zahlungsdaten): dient dem
+          Nachweis, dass dein Tarif korrekt gebucht wurde.
         </li>
       </ul>
 
-      <h2>8. Cookies</h2>
+      <h2>8. Cookies und lokale Speicherung</h2>
       <p>
         Wir setzen keine Cookies zu Werbe- oder Analysezwecken. Für die Anmeldung
         ist ein technisch notwendiges Sitzungs-Cookie erforderlich; es dient
         ausschließlich dazu, dich angemeldet zu halten (§ 25 Abs. 2 Nr. 2 TDDDG).
+      </p>
+      <p>
+        Zusätzlich merkt sich dein Browser lokal, ob du die helle oder dunkle
+        Darstellung gewählt hast. Diese Angabe verlässt dein Gerät nicht und wird
+        von uns nicht ausgelesen.
       </p>
 
       <h2>9. Deine Rechte</h2>
@@ -149,7 +244,36 @@ export default function DatenschutzPage() {
           Abs. 3 DSGVO)
         </li>
       </ul>
-      <p>Wende dich dafür an die oben genannte E-Mail-Adresse.</p>
+      <p>
+        Drei dieser Rechte kannst du direkt in der Anwendung ausüben, ohne uns
+        anschreiben zu müssen — unter <strong>Mein Konto → Datenschutz</strong>:
+      </p>
+      <ul>
+        <li>
+          <strong>Auskunft und Datenübertragbarkeit (Art. 15, 20):</strong> Über
+          „Exportieren“ erhältst du sofort ein ZIP-Archiv mit allen
+          Anprobebildern, Verkaufstexten, Kontodaten, deinem Abo-Status und dem
+          vollständigen Guthaben-Verlauf. Enthalten sind immer die vollständigen
+          Ergebnisse — auch dann, wenn ein Bild in der App wegen deines Tarifs
+          nur unscharf angezeigt wird.
+        </li>
+        <li>
+          <strong>Berichtigung (Art. 16):</strong> Deinen Anzeigenamen kannst du
+          dort jederzeit ändern.
+        </li>
+        <li>
+          <strong>Löschung (Art. 17):</strong> Über „Konto endgültig löschen“
+          werden dein Konto, alle Anprobebilder, Verkaufstexte und dein
+          Guthaben-Verlauf sofort und unwiderruflich entfernt; ein laufendes Abo
+          wird dabei automatisch gekündigt. Einzelne Anproben kannst du auch
+          jederzeit im Verlauf löschen.
+        </li>
+      </ul>
+      <p>
+        Für alle übrigen Anliegen — insbesondere Einschränkung, Widerspruch und
+        Widerruf deiner Einwilligung — wende dich an die oben genannte
+        E-Mail-Adresse.
+      </p>
 
       <h2>10. Beschwerderecht</h2>
       <p>
@@ -163,6 +287,32 @@ export default function DatenschutzPage() {
         Es findet keine automatisierte Entscheidungsfindung mit rechtlicher Wirkung
         dir gegenüber statt. Die eingesetzte KI erzeugt ausschließlich Bilder und
         Textvorschläge.
+      </p>
+
+      <h2>12. Kennzeichnung der KI-generierten Bilder</h2>
+      <p>
+        Jedes erzeugte Anprobebild zeigt eine Person, die es in dieser Form nie
+        gegeben hat — die Kleidung wurde künstlich hinzugefügt. Solche Bilder
+        müssen nach Art. 50 der EU-Verordnung über künstliche Intelligenz
+        (AI Act) als KI-erzeugt erkennbar sein.
+      </p>
+      <p>Wir setzen das auf zwei Wegen um, für alle Tarife gleichermaßen:</p>
+      <ul>
+        <li>
+          Ein sichtbarer Hinweis <em>„KI-generiert“</em> wird dauerhaft in das
+          Bild eingefügt. Er bleibt erhalten, wohin auch immer du das Bild
+          weitergibst.
+        </li>
+        <li>
+          Zusätzlich wird ein maschinenlesbarer Vermerk in die Bilddatei
+          geschrieben, den Plattformen und Programme auslesen können.
+        </li>
+      </ul>
+      <p>
+        Diese Kennzeichnung lässt sich nicht abschalten und ist an keinen Tarif
+        gebunden. Bitte beachte: Wenn du die Bilder gewerblich veröffentlichst,
+        trifft die Kennzeichnungspflicht auch dich selbst — unsere Kennzeichnung
+        soll dir dabei helfen, sie zu erfüllen.
       </p>
     </LegalShell>
   );

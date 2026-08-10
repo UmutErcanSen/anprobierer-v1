@@ -29,6 +29,18 @@ export const signUpSchema = z.object({
     .max(100, 'Der Name darf höchstens 100 Zeichen haben.')
     .optional()
     .or(z.literal('')),
+  /*
+    Einwilligung in die Datenschutzerklaerung -- Pflicht, keine Vorauswahl.
+    Serverseitig erzwungen und nicht nur im Formular: Art. 7 Abs. 1 DSGVO
+    verlangt den NACHWEIS der Einwilligung, ein rein clientseitiges Haekchen
+    liesse sich umgehen und waere damit kein Nachweis.
+    'on' ist der Wert, den ein angehaktes <input type="checkbox"> ohne
+    eigenes value-Attribut sendet; fehlt das Haekchen, kommt das Feld gar
+    nicht erst mit.
+  */
+  consent: z.literal('on', {
+    message: 'Bitte stimme der Datenschutzerklärung zu, um ein Konto zu erstellen.',
+  }),
 });
 
 export const signInSchema = z.object({

@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, type ReactNode } from 'react';
 import type { AuthState } from '@/lib/auth/actions';
 import { Button } from '@/components/ui/button';
 import { Field, inputClasses } from '@/components/ui/field';
@@ -19,9 +19,14 @@ type Props = {
   fields: FieldDef[];
   submitLabel: string;
   pendingLabel: string;
+  /** Zusaetzliche Zeile zwischen Feldern und Absenden-Knopf -- aktuell die
+   *  Einwilligungs-Checkbox bei der Registrierung. Als `children` statt als
+   *  weiterer FieldDef-Typ: eine Checkbox mit Fliesstext und eingebettetem
+   *  Link passt nicht in das Label/Input-Schema von `fields`. */
+  children?: ReactNode;
 };
 
-export function AuthForm({ action, fields, submitLabel, pendingLabel }: Props) {
+export function AuthForm({ action, fields, submitLabel, pendingLabel, children }: Props) {
   const [state, formAction, pending] = useActionState<AuthState, FormData>(action, {});
 
   return (
@@ -60,6 +65,19 @@ export function AuthForm({ action, fields, submitLabel, pendingLabel }: Props) {
           </Field>
         );
       })}
+
+      {/* Fehler zur Einwilligung erscheint hier, nicht im children-Block --
+          so muss die aufrufende Seite den Formularzustand nicht kennen. */}
+      {children && (
+        <div className="flex flex-col gap-1.5">
+          {children}
+          {state.fieldErrors?.consent && (
+            <p role="alert" className="text-xs text-accent">
+              {state.fieldErrors.consent}
+            </p>
+          )}
+        </div>
+      )}
 
       <Button type="submit" disabled={pending} className="mt-1 w-full" size="lg">
         {pending ? pendingLabel : submitLabel}

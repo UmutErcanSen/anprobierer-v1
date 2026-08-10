@@ -223,6 +223,40 @@ body {
   animation: sparkle-twinkle 3.2s ease-in-out infinite;
 }
 
+/* Wandernde Streifentextur auf der Fortschrittsbalken-Fuellung waehrend der
+   Generierung (generate-flow.tsx) -- eine reine Flaechenfarbe stand bei
+   laengeren Wartezeiten zwischen zwei Prozent-Schritten oft minutenlang
+   optisch still. Der Streifen bewegt sich unabhaengig davon durchgehend,
+   signalisiert also "arbeitet gerade" statt nur "X % erreicht". Diagonal
+   (135deg) und mit gedaempfter Deckkraft, damit die Prozentzahl-Fuellfarbe
+   selbst die Hauptaussage bleibt. */
+@keyframes progress-shimmer {
+  from { background-position: 0 0; }
+  to { background-position: 28px 0; }
+}
+.progress-shimmer {
+  background-image: repeating-linear-gradient(
+    135deg,
+    rgb(255 255 255 / 30%) 0 7px,
+    transparent 7px 14px
+  );
+  animation: progress-shimmer 0.9s linear infinite;
+}
+
+/* Versteckt die sichtbare Scrollleiste bei horizontal scrollbaren Zeilen
+   (z.B. die Plattform-Tabs in platform-export.tsx), OHNE das Scrollen selbst
+   zu deaktivieren -- manche Browser/Betriebssysteme (u.a. Windows/Chrome)
+   zeigen die Leiste dauerhaft an, sobald overflow-x:auto gesetzt ist, auch
+   wenn der Inhalt kaum breiter als der Container ist. Das wirkte dort wie ein
+   optischer Fehler statt einer bewussten Scroll-Zeile. */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 /* Konto-Uebersicht: Fortschrittsring zeichnet sich einmalig ein, Balken
    wachsen gestaffelt von unten. Beides laeuft rein ueber CSS -- die
    Uebersicht bleibt dadurch eine Server-Komponente ohne Client-JavaScript.

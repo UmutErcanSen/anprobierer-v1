@@ -41,6 +41,7 @@ export default async function RegistrierenPage() {
         submitLabel="Konto erstellen"
         pendingLabel="Wird erstellt …"
         fields={[
+
           { name: "displayName", label: "Name (optional)", type: "text", autoComplete: "name" },
           { name: "email", label: "E-Mail-Adresse", type: "email", autoComplete: "email", required: true },
           {
@@ -52,7 +53,33 @@ export default async function RegistrierenPage() {
             hint: "Mindestens 8 Zeichen, davon ein Buchstabe und eine Zahl.",
           },
         ]}
-      />
+      >
+        {/* Pflicht-Einwilligung, bewusst NICHT vorangehakt: Art. 7 Abs. 2
+            DSGVO verlangt eine aktive Handlung, ein voreingestelltes Haekchen
+            waere keine wirksame Einwilligung. Der Zeitpunkt und die Fassung
+            werden mitgespeichert (siehe lib/legal/consent.ts) -- ohne diesen
+            Nachweis waere die Einwilligung im Streitfall wertlos. */}
+        <label className="flex cursor-pointer items-start gap-2.5 text-[13px] leading-relaxed text-ink-soft">
+          <input
+            type="checkbox"
+            name="consent"
+            required
+            className="mt-0.5 h-4 w-4 shrink-0 rounded border-line-strong accent-ink"
+          />
+          <span>
+            Ich habe die{" "}
+            <Link
+              href="/datenschutz"
+              target="_blank"
+              className="text-ink underline underline-offset-4 hover:text-accent"
+            >
+              Datenschutzerklärung
+            </Link>{" "}
+            gelesen und willige in die Verarbeitung meiner Fotos zur Erstellung der Anprobebilder ein.
+            Die Einwilligung kann ich jederzeit widerrufen.
+          </span>
+        </label>
+      </AuthForm>
     </AuthShell>
   );
 }

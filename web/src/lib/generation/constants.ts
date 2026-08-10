@@ -138,7 +138,25 @@ export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024; // 10 MB
  * vorkompilierten Builds aus Lizenzgruenden) -- siehe die Konvertierung
  * per `heic-convert` in prepare-image.ts, BEVOR die Bytes an sharp gehen.
  */
-export const ALLOWED_UPLOAD_MIME = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'] as const;
+/* AVIF ergaenzt: Einige neuere Android-Kameras und Bildbearbeitungs-Apps
+   speichern darin. Solche Uploads wurden bisher abgewiesen, obwohl `sharp`
+   AVIF direkt dekodieren kann -- anders als HEIC braucht es dafuer keine
+   Vorab-Konvertierung (AV1 ist in den vorkompilierten Builds enthalten, nur
+   der HEVC-Codec fehlt aus Lizenzgruenden). */
+export const ALLOWED_UPLOAD_MIME = [
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/avif',
+  'image/heic',
+  'image/heif',
+] as const;
+
+/** Fuer das accept-Attribut der Dateiauswahl. MIME-Typen UND Endungen, weil
+ *  manche Browser HEIC nur ueber die Endung erkennen (siehe HEIC_EXTENSIONS
+ *  unten) -- mit reinen MIME-Typen waeren iPhone-Fotos im Auswahldialog dort
+ *  ausgegraut. */
+export const UPLOAD_ACCEPT = [...ALLOWED_UPLOAD_MIME, '.heic', '.heif'].join(',');
 /** Manche Browser (u.a. aeltere Safari-Versionen unter iOS) liefern bei
  *  HEIC-Dateien einen leeren file.type statt "image/heic" -- anhand der
  *  Dateiendung nachreichen, statt die Datei faelschlich abzulehnen. */
@@ -153,7 +171,12 @@ export function isAllowedImageFile(type: string, filename: string): boolean {
   return type === '' && HEIC_EXTENSIONS.some((ext) => lower.endsWith(ext));
 }
 
-const UNSUPPORTED_FORMAT_ERROR = 'Nur JPG, PNG, WebP oder HEIC (iPhone-Fotos) sind erlaubt.';
+/** Exportiert, weil dieselbe Meldung auch serverseitig gebraucht wird
+ *  (fileError() in api/generate/route.ts). Sie stand dort bisher ein zweites
+ *  Mal woertlich im Code -- beim Ergaenzen von AVIF waere eine der beiden
+ *  Fassungen zwangslaeufig veraltet. */
+export const UNSUPPORTED_FORMAT_ERROR =
+  'Nur JPG, PNG, WebP, AVIF oder HEIC (iPhone-Fotos) sind erlaubt.';
 
 /**
  * Dieselbe Pruefung wie fileError() in api/generate/route.ts, aber CLIENT-

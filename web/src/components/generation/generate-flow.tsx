@@ -16,6 +16,7 @@ import {
   CLOTHING_TYPES,
   SIZES,
   CREDITS_PER_QUALITY,
+  UPLOAD_ACCEPT,
   maxItemsForPlan,
   qualityForPlan,
   validateImageFiles,
@@ -166,10 +167,15 @@ function PhotoField({
         </span>
       )}
 
+      {/* Genau die unterstuetzten Formate statt "image/*": Vorher liessen sich
+          am Rechner auch .gif oder .bmp auswaehlen -- die Absage kam dann erst
+          NACH dem Aussuchen. Die HEIC-Endungen stehen zusaetzlich zu den
+          MIME-Typen in der Liste, sonst waeren iPhone-Fotos in Browsern, die
+          den HEIC-Typ nicht kennen, im Auswahldialog ausgegraut. */}
       <input
         id={id}
         type="file"
-        accept="image/*"
+        accept={UPLOAD_ACCEPT}
         multiple
         className="sr-only"
         onChange={(e) => handleFiles(Array.from(e.target.files ?? []))}
@@ -531,7 +537,13 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
               aria-valuemax={100}
               aria-label="Fortschritt der Generierung"
             >
-              <div className="h-full rounded-full bg-success transition-all duration-700 ease-out" style={{ width: `${pct}%` }} />
+              {/* progress-shimmer: dezente wandernde Textur auf der Fuellung
+                  statt einer toten Flaechenfarbe -- signalisiert "arbeitet
+                  gerade", nicht nur "X Prozent erreicht". */}
+              <div
+                className="progress-shimmer h-full rounded-full bg-success transition-[width] duration-700 ease-out"
+                style={{ width: `${pct}%` }}
+              />
             </div>
 
             {/* Liste der einzelnen Stuecke -- nur im Einzeln-Modus sinnvoll:
@@ -554,7 +566,11 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
                         istAktiv ? 'bg-surface text-ink' : istFertig ? 'text-ink' : 'text-muted/70'
                       }`}
                     >
-                      <span className="shrink-0">
+                      {/* key wechselt genau dann, wenn ein Stueck fertig
+                          wird -- der dadurch ausgeloeste Remount spielt
+                          "icon-pop" (siehe globals.css) einmalig ab, statt
+                          dass der Haken einfach kommentarlos erscheint. */}
+                      <span key={istFertig ? 'done' : 'pending'} className="icon-pop shrink-0">
                         {istFertig ? (
                           <Check size={15} strokeWidth={3} className="text-success" aria-hidden />
                         ) : istAktiv ? (
@@ -600,7 +616,8 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
                     }`}
                   >
                     <span
-                      className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full transition-colors ${
+                      key={done ? 'done' : active ? 'active' : 'pending'}
+                      className={`icon-pop flex h-5 w-5 shrink-0 items-center justify-center rounded-full transition-colors ${
                         done
                           ? 'bg-success text-paper'
                           : active
@@ -617,13 +634,17 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
             </ul>
             )}
 
-            <p className="text-xs text-muted">
-              {mehrere
-                ? fertig > 0
-                  ? `${fertig} von ${imageCount} Bildern fertig — noch etwa ${Math.max(1, imageCount - fertig)} ${imageCount - fertig === 1 ? 'Minute' : 'Minuten'}.`
-                  : `${imageCount} Bilder — das dauert ein paar Minuten.`
-                : 'Das dauert in der Regel unter einer Minute.'}
-            </p>
+            {/* Bewusst KEINE Zeitangabe (weder fest noch "noch etwa X Minuten"):
+                die tatsaechliche Dauer ist unvalidiert und haengt stark von
+                der Anzahl der Stuecke ab (Pro bis zu 9 auf einmal) -- eine
+                falsche Erwartung waere schlimmer als gar keine Angabe. Bei
+                mehreren Stuecken bleibt der reine Fortschritt (X von Y
+                fertig) stehen, weil das ein FAKT ist, kein Versprechen. */}
+            {mehrere && (
+              <p className="text-xs text-muted">
+                {fertig > 0 ? `${fertig} von ${imageCount} Bildern fertig.` : `${imageCount} Bilder werden erstellt.`}
+              </p>
+            )}
 
             {/* Der Hinweis, der die gefuehlte Wartezeit am staerksten senkt:
                 Die Generierung laeuft serverseitig in after() weiter, voellig
@@ -685,6 +706,21 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
           gedeckelt blieb -- das Seitenverhaeltnis wurde dadurch immer breiter
           und object-cover schnitt zunehmend mehr vom Foto ab (untere Haelfte
           verschwand). Bleibt trotzdem randbuendig zum linken Bildschirmrand. */}
+      {/* Ueberschrift "Anprobe erstellen" auf Mobil VOR dem Personenfoto --
+          nur hier fuer Mobil sichtbar (md:hidden), das identische <h1> weiter
+          unten im Formular-Block ist dort per "hidden md:block" ausgeblendet.
+          Kein order-Trick auf den beiden grossen Spalten: der haette nicht
+          nur die Ueberschrift, sondern den GESAMTEN Formular-Block (inkl.
+          Kleidung, Generieren-Button) hinter das Foto geschoben -- genau der
+          gemeldete Folgefehler. Zwei kleine <h1>-Vorkommen statt einem sind
+          hier der sauberere Weg, gleiches Muster wie beim TipModal direkt
+          darunter (separates Mobil-/Desktop-Rendering statt Reihenfolge-
+          Verrenkung). */}
+      <div className="md:hidden">
+        <h1 className="text-2xl font-semibold tracking-tight text-ink">Anprobe erstellen</h1>
+        <p className="mt-1 text-sm text-muted">Guthaben: {credits} Credits</p>
+      </div>
+
       <section className="relative flex flex-col gap-3 md:sticky md:top-16 md:max-w-[38rem] md:flex-[0.9] md:border-r md:border-line">
         {/* Ueberschrift und TipModal als Geschwister statt TipModal INNERHALB
             des <h2> -- <h2> erlaubt laut HTML-Spezifikation nur "Phrasing
@@ -735,7 +771,10 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
       </section>
 
       <div className="flex flex-col gap-8 md:flex-[1.4] md:max-w-2xl md:px-12 md:py-10">
-      <div>
+      {/* Mobil-Variante der Ueberschrift steht bereits vor der Foto-Sektion
+          oben -- hier nur ab Desktop sichtbar, sonst stuende der Titel
+          doppelt auf der Seite. */}
+      <div className="hidden md:block">
         <h1 className="text-2xl font-semibold tracking-tight text-ink">Anprobe erstellen</h1>
         <p className="mt-1 text-sm text-muted">Guthaben: {credits} Credits</p>
       </div>
@@ -749,21 +788,25 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
           Modus
           <InfoTip label="Was bedeuten die beiden Modi?">{modeTips}</InfoTip>
         </h2>
-        {/* self-start: sonst streckt der flex-col-Container die Pille.
-            Auf Mobil dafuer zentriert (self-center), ab md wieder linksbuendig
-            wie der Rest der Einstellungsspalte. */}
-        <div className="inline-flex self-center rounded-full border border-line p-1 text-sm md:self-start">
+        {/* Auf Mobil volle Breite statt einer schmalen, mittig schwebenden
+            Pille -- groessere Tastflaeche und einheitlicher mit den anderen
+            vollbreiten Formularfeldern darunter (Foto-Upload, Kleidung).
+            flex-1 auf den Buttons teilt die Breite gleichmaessig auf. Ab md
+            wieder eine kompakte, linksbuendige Pille (self-start) wie der
+            Rest der Einstellungsspalte -- dort stuende eine vollbreite Pille
+            neben viel freiem Platz unnatuerlich gestreckt da. */}
+        <div className="flex w-full rounded-full border border-line p-1 text-sm md:inline-flex md:w-auto md:self-start">
           <button
             type="button"
             onClick={() => setMode('single')}
-            className={`rounded-full px-4 py-1.5 transition-colors ${mode === 'single' ? 'bg-ink text-on-ink' : 'text-muted hover:text-ink'}`}
+            className={`flex-1 rounded-full px-4 py-1.5 text-center transition-colors md:flex-none ${mode === 'single' ? 'bg-ink text-on-ink' : 'text-muted hover:text-ink'}`}
           >
             Einzeln
           </button>
           <button
             type="button"
             onClick={() => setMode('combined')}
-            className={`rounded-full px-4 py-1.5 transition-colors ${mode === 'combined' ? 'bg-ink text-on-ink' : 'text-muted hover:text-ink'}`}
+            className={`flex-1 rounded-full px-4 py-1.5 text-center transition-colors md:flex-none ${mode === 'combined' ? 'bg-ink text-on-ink' : 'text-muted hover:text-ink'}`}
           >
             Kombiniert
           </button>

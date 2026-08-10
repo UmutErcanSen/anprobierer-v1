@@ -137,7 +137,16 @@ export function UsageOverview({ planLabel, grantAmount, usedSinceGrant, monthly,
 
       {hasHistory && (
         <div className="mt-8">
-          <p className="text-sm text-muted">Verbrauchte Credits pro Monat</p>
+          {/* "Letzte 6 Monate" explizit benannt: Das Fenster ROLLT -- mit
+              jedem neuen Monat faellt der aelteste hinten heraus und der neue
+              kommt rechts dazu. Es waechst also nie und wird nie scrollbar.
+              Ohne diesen Zusatz koennte man die Reihe fuer ein vollstaendiges
+              Archiv halten und sich fragen, wo aeltere Monate geblieben sind
+              (dafuer gibt es den Link unten zum vollstaendigen Verlauf). */}
+          <p className="text-sm text-muted">
+            Verbrauchte Credits pro Monat
+            {monthly.length > 1 && <span className="text-muted"> · letzte {monthly.length} Monate</span>}
+          </p>
 
           {/* Werte ueber den Balken statt einer eigenen Y-Achse: bei sechs
               Datenpunkten ist der direkte Wert schneller zu lesen als eine
@@ -169,34 +178,29 @@ export function UsageOverview({ planLabel, grantAmount, usedSinceGrant, monthly,
             ))}
           </div>
 
-          {/* Ausgeschriebene Monatsnamen statt Kuerzel ("September" statt
-              "Sep"). Das laengste Wort ist neun Zeichen -- bei sechs Spalten
-              auf einem 320px-Bildschirm reicht der Platz dafuer nicht immer
-              in einer Zeile.
+          {/* Kurzform auf schmalen Bildschirmen, ausgeschrieben ab sm.
+              Vorher standen ueberall die vollen Namen -- bei sechs Spalten
+              auf einem 320px-Handy passt "September" nicht in eine Zeile und
+              wurde mitten im Wort umbrochen ("Septe"/"mber"). Beide Varianten
+              sind gerendert und werden nur per CSS umgeschaltet: So bleibt
+              die Komponente eine Server-Komponente ohne Breakpoint-JavaScript.
 
-              Zwei Sicherungen, in dieser Reihenfolge unbedingt noetig:
-              - min-w-0 erlaubt der Spalte, unter ihre Inhaltsbreite zu
-                schrumpfen -- ohne das wuerde die Reihe insgesamt breiter als
-                der Container und liefe seitlich aus dem Rahmen.
-              - break-words zwingt lange Woerter zum Umbruch auf eine zweite
-                Zeile. Wurde das getestet: OHNE break-words (nur hyphens-auto)
-                bricht die Silbentrennung in der Praxis oft gar nicht (kein
-                Woerterbuch verfuegbar), das Wort laeuft dann als eine Zeile
-                seitlich UEBER die eigene Spalte hinweg in die Nachbarspalte --
-                "September" und "November" beruehrten sich ohne jeden Abstand.
-                Ein Wortumbruch ohne Trennstrich ("Septe" / "mber") sieht
-                schlechter aus als ein sauberes Wort, verhindert aber
-                zuverlaessig genau diese Kollision. hyphens-auto bleibt
-                zusaetzlich gesetzt: wo der Browser eine Trennstelle kennt,
-                nutzt er sie. */}
+              Jahreszahl nur beim Jahreswechsel: Das Fenster rollt und kann
+              zwei Jahre ueberspannen (z.B. November bis April) -- dann sagen
+              Monatsnamen allein nicht mehr, welches Jahr gemeint ist. Sie
+              erscheint genau einmal je Jahr, beim jeweils ersten Monat --
+              sechsmal dieselbe Jahreszahl waere nur Rauschen. */}
           <div className="mt-2 flex gap-2 text-[11px] text-muted sm:text-xs">
             {monthly.map((m, i) => (
               <span
                 key={`${m.label}-label-${i}`}
-                lang="de"
-                className="min-w-0 max-w-[72px] flex-1 break-words text-center [hyphens:auto]"
+                className={`min-w-0 max-w-[72px] flex-1 text-center ${m.isCurrent ? "font-medium text-ink" : ""}`}
               >
-                {m.label}
+                <span className="sm:hidden">{m.shortLabel}</span>
+                <span className="hidden sm:inline">{m.label}</span>
+                {(i === 0 || m.year !== monthly[i - 1].year) && (
+                  <span className="block text-[10px] text-muted/70">{m.year}</span>
+                )}
               </span>
             ))}
           </div>

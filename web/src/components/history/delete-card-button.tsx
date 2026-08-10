@@ -3,6 +3,7 @@
 import { useState, type MouseEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useSelection } from '@/components/history/selection';
 
@@ -39,6 +40,11 @@ export function DeleteCardButton({ generationId }: { generationId: string }) {
         setDeleting(false);
         return;
       }
+      // Gleiche Rueckmeldung wie beim Mehrfach-Loeschen (history/selection.tsx).
+      // Ohne sie verschwand die Karte kommentarlos aus dem Raster -- bei einer
+      // unwiderruflichen Aktion soll bestaetigt sein, dass sie wirklich
+      // ausgefuehrt wurde und nicht nur die Ansicht gesprungen ist.
+      toast.success('Anprobe gelöscht.');
       router.refresh();
       setConfirming(false);
       setDeleting(false);

@@ -7,8 +7,10 @@ import { LinkButton } from "@/components/ui/button";
 import { HistoryFilters } from "@/components/history/history-filters";
 import { HistoryCard, type HistoryGeneration } from "@/components/history/history-card";
 import { HistorySelection } from "@/components/history/selection";
+import { DeleteAllButton } from "@/components/history/delete-all-button";
 import { resolveCardRows } from "@/lib/generation/cards";
 import { isGenerationLocked, lockedImagePath } from "@/lib/generation/lock";
+import { thumbnailPath } from "@/lib/generation/prepare-image";
 import type { PlanKey } from "@/lib/generation/constants";
 
 export const metadata: Metadata = { title: "Verlauf" };
@@ -48,9 +50,13 @@ export default async function VerlaufPage(props: PageProps<"/konto/verlauf">) {
   const favorit = first(params.favorit) === "1";
   const page = Math.max(1, Number(first(params.page)) || 1);
 
-  const [{ data: balance }, { data: profile }] = await Promise.all([
+  const [{ data: balance }, { data: profile }, { count: totalAllCount }] = await Promise.all([
     supabase.from("credit_balances").select("balance").maybeSingle(),
     supabase.from("profiles").select("plan").single(),
+    // Ungefiltert und seitenunabhaengig -- fuer "Alle Anproben loeschen"
+    // unten, das (anders als die Mehrfachauswahl) wirklich ALLES loescht,
+    // nicht nur die aktuelle Seite/den aktuellen Filter.
+    supabase.from("generations").select("id", { count: "exact", head: true }),
   ]);
   const credits = balance?.balance ?? 0;
   const plan = (profile?.plan as PlanKey) ?? "free";
@@ -105,11 +111,14 @@ export default async function VerlaufPage(props: PageProps<"/konto/verlauf">) {
   // signierten URLs laufen ab und duerfen deshalb nicht mitgespeichert werden.
   // Verdeckte Generierungen bekommen die unscharfe Vorschau-Variante statt
   // des echten Bilds (siehe lock.ts) -- niemals die echte URL an den Client.
+  // Alle anderen bekommen die kleine Raster-Variante (thumbnailPath) statt des
+  // vollen Ergebnisses: Vorher lud diese Seite je Karte rund 3,2 MB, bei zwoelf
+  // Karten also ~38 MB -- fuer Kacheln von wenigen hundert Pixeln Breite.
   const thumbnails = await Promise.all(
     cardRowsByGeneration.map(async (cards, i) => {
       const firstImage = cards.find((c) => c.imagePath)?.imagePath;
       if (!firstImage) return null;
-      const path = generations[i].locked ? lockedImagePath(firstImage) : firstImage;
+      const path = generations[i].locked ? lockedImagePath(firstImage) : thumbnailPath(firstImage);
       const { data } = await supabase.storage.from("results").createSignedUrl(path, 60 * 5);
       return data?.signedUrl ?? null;
     }),
@@ -131,6 +140,13 @@ export default async function VerlaufPage(props: PageProps<"/konto/verlauf">) {
   const isFiltered =
     status !== "all" || mode !== "all" || kategorie.length > 0 || groesse.length > 0 || farbe.length > 0 || favorit;
 
+  // Einmal definiert, in zwei sich gegenseitig ausschliessenden Zweigen
+  // verwendet (Ergebnisliste bzw. leeres Filterergebnis) -- spart die
+  // sechsfache Prop-Wiederholung, ohne dass sie je doppelt gerendert wird.
+  const filterLeiste = (
+    <HistoryFilters status={status} mode={mode} kategorie={kategorie} groesse={groesse} farbe={farbe} favorit={favorit} />
+  );
+
   return (
     <>
       <AppHeader credits={credits} plan={plan} />
@@ -141,16 +157,17 @@ export default async function VerlaufPage(props: PageProps<"/konto/verlauf">) {
           Flaeche rechts und links entstehen. Mehr Spalten (bis xl:6) fuellen
           den zusaetzlichen Platz, statt ihn nur zu vergroessern. */}
       <main className="mx-auto w-full max-w-7xl flex-1 px-6 py-14">
-        <p className="kicker">Verlauf</p>
-        <h1 className="mt-4 text-3xl font-semibold tracking-tight text-ink">Deine Anproben</h1>
-
-        {/* Filter und primäre Aktion in einer Werkzeugleiste: die
-            "Neue Anprobe"-Aktion gehört inhaltlich zu "was mache ich mit
-            dieser Liste", nicht zur Überschrift -- vorher stand sie lose
-            neben dem Titel und rutschte auf schmalen Bildschirmen direkt vor
-            die Filter, ohne erkennbaren Zusammenhang zu beidem. */}
-        <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
-          <HistoryFilters status={status} mode={mode} kategorie={kategorie} groesse={groesse} farbe={farbe} favorit={favorit} />
+        {/* Primaeraktion oben beim Titel (sm:items-start haelt sie auf einer
+            Linie mit der Ueberschrift, nicht mittig zum ganzen Textblock) --
+            gleiches Muster wie auf /konto. Zwischenzeitlich stand sie unten
+            in der Filterzeile; dort konkurrierte die wichtigste Aktion der
+            Seite mit den Filtern um dieselbe Zeile und war auf schmalen
+            Bildschirmen zwischen Filtern und Auswahl-Knopf eingeklemmt. */}
+        <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:items-start sm:justify-between sm:text-left">
+          <div>
+            <p className="kicker">Verlauf</p>
+            <h1 className="mt-4 text-3xl font-semibold tracking-tight text-ink">Deine Anproben</h1>
+          </div>
           <LinkButton href="/anzeige-erstellen" size="md" className="shrink-0">
             Neue Anprobe erstellen
           </LinkButton>
@@ -161,8 +178,13 @@ export default async function VerlaufPage(props: PageProps<"/konto/verlauf">) {
              Satz bekamen: "nichts gefunden" ist ein Filter-Problem (Ausweg:
              Filter loesen), "noch nichts erstellt" ist ein Leerzustand
              (Ausweg: anfangen). Ohne Handlungsmoeglichkeit war beides eine
-             Sackgasse. */
-          <div className="mt-10 rounded-xl border border-dashed border-line-strong bg-surface px-6 py-12 text-center">
+             Sackgasse. Die Filterleiste bleibt bei einem leeren Filter-
+             Ergebnis sichtbar (sonst koennte man den Filter nur noch ueber
+             "zuruecksetzen" komplett verwerfen, statt ihn anzupassen); im
+             echten Leerzustand waere sie dagegen nur Ballast. */
+          <>
+            {isFiltered && <div className="mt-6">{filterLeiste}</div>}
+            <div className="mt-10 rounded-xl border border-dashed border-line-strong bg-surface px-6 py-12 text-center">
             {isFiltered ? (
               <>
                 <p className="text-sm text-ink-soft">Keine Anproben für diese Filter gefunden.</p>
@@ -187,13 +209,23 @@ export default async function VerlaufPage(props: PageProps<"/konto/verlauf">) {
                 </div>
               </>
             )}
-          </div>
+            </div>
+          </>
         ) : (
           /* Die Karten bleiben Server-Komponenten (serverseitig signierte
              Thumbnail-URLs) und liegen als children in der Auswahl-Insel --
-             nur der Auswahlzustand ist Client-Code. */
+             nur der Auswahlzustand ist Client-Code. Filter und Listen-
+             Aktionen rendert HistorySelection in EINER gemeinsamen Zeile,
+             damit sie nicht als drei zusammenhanglose Reihen untereinander
+             stehen. */
           <div className="mt-8">
-            <HistorySelection ids={generations.map((g) => g.id)}>
+            <HistorySelection
+              ids={generations.map((g) => g.id)}
+              filters={filterLeiste}
+              extraAction={
+                (totalAllCount ?? 0) > PAGE_SIZE ? <DeleteAllButton count={totalAllCount ?? 0} /> : undefined
+              }
+            >
               <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
                 {generations.map((g, i) => (
                   <HistoryCard key={g.id} generation={g} thumbnail={thumbnails[i] ?? null} />

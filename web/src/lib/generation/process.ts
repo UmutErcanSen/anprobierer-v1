@@ -4,7 +4,8 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { generateTryOn } from '@/lib/openai/images';
 import { generateSaleText } from '@/lib/openai/text';
 import { buildTryOnPrompt, buildSalePrompt, COMBINED_PROMPT } from '@/lib/generation/prompts';
-import { createLockedPreview } from '@/lib/generation/prepare-image';
+import { createLockedPreview, createThumbnail, thumbnailPath } from '@/lib/generation/prepare-image';
+import { watermarkResultImage } from '@/lib/generation/watermark';
 import { lockedImagePath } from '@/lib/generation/lock';
 import { isClothingType, type ClothingType } from '@/lib/generation/constants';
 import type { Quality } from '@/lib/generation/constants';
@@ -73,13 +74,19 @@ export async function processGeneration(input: ProcessGenerationInput): Promise<
     if (mode === 'combined') {
       try {
         const r = await generateTryOn({ person, clothing, prompt: COMBINED_PROMPT, quality });
+        // Kennzeichnungspflicht (Art. 50 AI Act, siehe watermark.ts) --
+        // fuer JEDES Ergebnis, unabhaengig vom Tarif. Vor dem Upload, damit
+        // auch die Vorschau-Variante gleich vom gekennzeichneten Bild
+        // abgeleitet wird.
+        const marked = await watermarkResultImage(r.image);
         const path = `${dir}/0.png`;
-        const { error: upErr } = await admin.storage.from('results').upload(path, r.image, { contentType: r.mimeType, upsert: true });
+        const { error: upErr } = await admin.storage.from('results').upload(path, marked, { contentType: r.mimeType, upsert: true });
         if (!upErr) {
           anyImage = true;
           model = r.model;
           costUsd += r.costUsd ?? 0;
-          await uploadLockedPreview(admin, path, r.image);
+          await uploadLockedPreview(admin, path, marked);
+          await uploadThumbnail(admin, path, marked);
           await pushCard({ itemIndex: -1, title: 'Kombiniertes Bild', imagePath: path, saleText: null });
         } else {
           failures = 1;
@@ -112,14 +119,16 @@ export async function processGeneration(input: ProcessGenerationInput): Promise<
             prompt: buildTryOnPrompt(type, sizes[i], notes),
             quality,
           });
+          const marked = await watermarkResultImage(r.image);
           const path = `${dir}/${i}.png`;
-          const { error: upErr } = await admin.storage.from('results').upload(path, r.image, { contentType: r.mimeType, upsert: true });
+          const { error: upErr } = await admin.storage.from('results').upload(path, marked, { contentType: r.mimeType, upsert: true });
           if (!upErr) {
             imagePath = path;
             anyImage = true;
             model = r.model;
             costUsd += r.costUsd ?? 0;
-            await uploadLockedPreview(admin, path, r.image);
+            await uploadLockedPreview(admin, path, marked);
+            await uploadThumbnail(admin, path, marked);
           } else {
             failures++;
           }
@@ -184,6 +193,26 @@ async function uploadLockedPreview(
     await admin.storage.from('results').upload(lockedImagePath(path), preview, { contentType: 'image/jpeg', upsert: true });
   } catch (err) {
     console.error('[process] Vorschau-Variante fehlgeschlagen', path, err);
+  }
+}
+
+/**
+ * Kleine, scharfe Variante fuers Karten-Raster (siehe createThumbnail).
+ * Ebenfalls "best effort" und aus demselben Grund wie oben: Schlaegt es fehl,
+ * bleibt das bezahlte Ergebnis unangetastet -- die Rasteransicht faellt dann
+ * fuer dieses eine Bild auf das Original zurueck, was lediglich langsamer ist,
+ * aber nichts kaputt macht.
+ */
+async function uploadThumbnail(
+  admin: ReturnType<typeof createAdminClient>,
+  path: string,
+  image: Buffer,
+): Promise<void> {
+  try {
+    const thumb = await createThumbnail(image);
+    await admin.storage.from('results').upload(thumbnailPath(path), thumb, { contentType: 'image/webp', upsert: true });
+  } catch (err) {
+    console.error('[process] Raster-Variante fehlgeschlagen', path, err);
   }
 }
 

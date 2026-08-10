@@ -9,8 +9,11 @@ import { BadgeCheck, Layers, RotateCw, Ruler, ScanFace, Shirt, Sparkle, Sun } fr
   statt die ganze Wartezeit ueber statisch zu sein. Ein Fortschrittsring
   daneben spiegelt denselben Prozentwert wie der Balken in generate-flow.tsx.
 
-  Auf Mobil ausgeblendet (siehe hidden md:flex im Aufrufer) -- fuer ein
-  zweites Panel ist auf schmalen Bildschirmen kein sinnvoller Platz.
+  Frueher auf Mobil komplett ausgeblendet -- dort blieb waehrend der
+  Wartezeit nur die nackte Checkliste, ohne die Sparkles/den atmenden Icon/
+  den Fortschrittsring. Jetzt stattdessen responsive: auf Mobil eine volle
+  Breite als Banner UEBER der Checkliste (der Elternflex ist dort flex-col,
+  siehe generate-flow.tsx), ab md wieder die schmale linke Spalte wie bisher.
 */
 
 const STEP_ICONS = [ScanFace, Shirt, Ruler, Layers, RotateCw, Sun, BadgeCheck];
@@ -33,7 +36,7 @@ export function GenerationIconPanel({ progressIdx, pct }: { progressIdx: number;
   const offset = CIRCUMFERENCE * (1 - pct / 100);
 
   return (
-    <div className="relative hidden aspect-[3/4] w-[220px] shrink-0 items-center justify-center overflow-hidden border-line border-r bg-surface md:flex">
+    <div className="relative flex aspect-[16/9] w-full shrink-0 items-center justify-center overflow-hidden border-b border-line bg-surface md:aspect-[3/4] md:w-[220px] md:border-b-0 md:border-r">
       {SPARKLES.map((s, i) => (
         <Sparkle
           key={i}

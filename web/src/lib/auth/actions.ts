@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { headers } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import { newPasswordSchema, resetRequestSchema, signInSchema, signUpSchema } from '@/lib/validation/auth';
+import { PRIVACY_VERSION } from '@/lib/legal/consent';
 
 export type AuthState = {
   error?: string;
@@ -29,6 +30,7 @@ export async function signUpAction(
     email: formData.get('email'),
     password: formData.get('password'),
     displayName: formData.get('displayName'),
+    consent: formData.get('consent'),
   });
 
   if (!parsed.success) {
@@ -44,7 +46,14 @@ export async function signUpAction(
     options: {
       emailRedirectTo: `${origin}/auth/callback?next=/konto`,
       // Wird vom Datenbank-Trigger handle_new_user() in das Profil übernommen.
-      data: { display_name: parsed.data.displayName || '' },
+      // consent_version kommt aus der SERVER-Konstante, nicht aus dem
+      // Formular: Andernfalls koennte der Client behaupten, einer beliebigen
+      // (etwa laengst ersetzten) Fassung zugestimmt zu haben -- der Nachweis
+      // waere damit wertlos. Den Zeitstempel setzt der Trigger.
+      data: {
+        display_name: parsed.data.displayName || '',
+        consent_version: PRIVACY_VERSION,
+      },
     },
   });
 

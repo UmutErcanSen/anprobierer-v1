@@ -21,6 +21,11 @@ export const metadata: Metadata = { title: "Mein Konto" };
 
 const RECENT_COUNT = 4;
 
+/** Ausgeschriebenes Datum wie in der Verbrauchsuebersicht ("29. August"). */
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString("de-DE", { day: "numeric", month: "long" });
+}
+
 /* Kurzfassung der drei Schritte von der Landing Page -- hier braucht es
    keine Ueberzeugungsarbeit mehr (der Nutzer ist ja schon angemeldet),
    sondern nur die Erwartung, was gleich passiert. */
@@ -62,7 +67,10 @@ export default async function KontoPage() {
       )
       .order("created_at", { ascending: false })
       .limit(RECENT_COUNT),
-    supabase.from("subscriptions").select("current_period_end, status").maybeSingle(),
+    supabase
+      .from("subscriptions")
+      .select("current_period_end, status, scheduled_plan, scheduled_change_at")
+      .maybeSingle(),
     // Die letzte Gutschrift ist die Bezugsgroesse des Fortschrittsrings --
     // separat geholt, weil sie bei Jahresabos oder Free-Konten aelter sein
     // kann als das 6-Monats-Fenster des Verlaufsdiagramms.
@@ -77,6 +85,15 @@ export default async function KontoPage() {
 
   const credits = balance?.balance ?? 0;
   const plan = (profile?.plan as PlanKey) ?? "free";
+
+  // Nur anzeigen, wenn der geplante Tarif sich vom aktuellen unterscheidet --
+  // Stripe legt auch bei einem Upgrade kurzzeitig einen Zeitplan an, der
+  // lediglich die laufende Periode abbildet.
+  const scheduledPlan =
+    subscription?.scheduled_plan && subscription.scheduled_plan !== plan
+      ? (subscription.scheduled_plan as PlanKey)
+      : null;
+  const scheduledAt = scheduledPlan ? (subscription?.scheduled_change_at ?? null) : null;
 
   // Ledger nur so weit zurueck laden, wie tatsaechlich gebraucht: bis zum
   // Beginn des Diagramm-Fensters ODER bis zur letzten Gutschrift, je nachdem
@@ -214,6 +231,24 @@ export default async function KontoPage() {
             </Link>
           </div>
         </div>
+
+        {/* Geplanter Tarifwechsel.
+            Stripe fuehrt eine Herabstufung erst zum Ende der bezahlten
+            Periode aus. Bisher stand davon nirgends etwas: Der Nutzer stufte
+            im Kundenportal herab, bekam dort eine Bestaetigung, sah hier
+            unveraendert seinen alten Tarif -- und hielt den Vorgang fuer
+            fehlgeschlagen. Ein realer Fall endete in vier Versuchen
+            innerhalb von 31 Sekunden. */}
+        {scheduledPlan && scheduledAt && (
+          <p className="mt-6 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-lg border border-line bg-surface px-4 py-3 text-sm text-ink-soft">
+            <span>
+              Dein Tarif wechselt am <span className="font-medium text-ink">{formatDate(scheduledAt)}</span> zu{" "}
+              <span className="font-medium capitalize text-ink">{scheduledPlan}</span>. Bis dahin behältst du alle
+              Vorteile deines {plan.charAt(0).toUpperCase() + plan.slice(1)}-Tarifs.
+            </span>
+            <ManageSubscriptionLink label="Wechsel rückgängig machen" />
+          </p>
+        )}
 
         {/* Bei 0 Credits ist die App faktisch gesperrt -- das stand bisher nur
             als beilaeufiges "0 Credits übrig" da. Ein Nutzer, der auf

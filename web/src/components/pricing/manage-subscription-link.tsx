@@ -8,7 +8,7 @@ import { useState } from "react";
   keine statische URL dafuer). Der Klick loest also erst einen Request aus,
   der die Weiterleitung liefert.
 */
-export function ManageSubscriptionLink() {
+export function ManageSubscriptionLink({ label = "Abo verwalten" }: { label?: string } = {}) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -38,7 +38,7 @@ export function ManageSubscriptionLink() {
         disabled={loading}
         className="text-sm text-muted underline underline-offset-4 transition-colors hover:text-ink disabled:opacity-50"
       >
-        {loading ? "Öffnet …" : "Abo verwalten"}
+        {loading ? "Öffnet …" : label}
       </button>
       {error && <span className="text-xs text-accent">{error}</span>}
     </span>

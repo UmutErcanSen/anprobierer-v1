@@ -51,22 +51,76 @@ export const PLATFORMS: Platform[] = [
   },
 ];
 
+/** Zeile, die zu einer Aufzählung gehört ("- ", "• ", "1. "). */
+const LISTENPUNKT = /^([-•*]|\d+[.)])\s+/;
+
 /**
- * Zerlegt unseren generierten Verkaufstext (Überschrift in der ersten
- * Zeile, ggf. mit Markdown "**" umrandet, danach die Beschreibung, siehe
- * buildSalePrompt in prompts.ts) und kürzt beides auf das Limit der
- * Zielplattform, ohne mitten im Wort abzuschneiden.
+ * Entfernt Markdown-Reste, die das Sprachmodell trotz Anweisung gelegentlich
+ * einstreut. In einem Plattform-Formular ist "### Größe" schlicht falscher
+ * Text -- dort gibt es kein Markdown, das gerendert würde.
+ * Listenzeichen bleiben absichtlich stehen: Sie sind im eBay-Stil erwünscht
+ * und dort auch als reiner Text lesbar.
+ */
+function bereinige(zeile: string): string {
+  return zeile
+    .replace(/^#{1,6}\s*/, '')
+    .replace(/\*\*/g, '')
+    .replace(/__/g, '')
+    .trim();
+}
+
+/**
+ * Zerlegt unseren generierten Verkaufstext (Überschrift in der ersten Zeile,
+ * danach die Beschreibung, siehe buildSalePrompt in prompts.ts) und kürzt
+ * beides auf das Limit der Zielplattform, ohne mitten im Wort abzuschneiden.
+ *
+ * WICHTIG ist die Behandlung der Zeilenumbrüche. Sprachmodelle brechen Sätze
+ * gern mitten im Absatz um ("weiche" Umbrüche). Diese Funktion trennte
+ * vorher an JEDEM \n und fügte alles mit \n\n wieder zusammen -- aus einem
+ * umbrochenen Satz wurden dadurch zwei Absätze, und die Vorschau (und damit
+ * das, was bei Vinted eingefügt wurde) sah so aus:
+ *
+ *     Wunderschönes Top aus filigraner Häkelspitze mit Zackensaum. Der
+ *
+ *     schmale Trägerschnitt und der gerade Ausschnitt wirken leicht,
+ *
+ * Ein mitten entzweigerissener Satz -- genau der Eindruck von Nachlässigkeit,
+ * den ein Verkaufstext nicht machen darf.
+ *
+ * Jetzt gilt: Eine LEERZEILE trennt Absätze, ein einfacher Umbruch innerhalb
+ * eines Absatzes ist ein weicher Umbruch und wird zu einem Leerzeichen.
+ * Ausnahme sind Aufzählungen -- die behalten ihre eigene Zeile, sonst würde
+ * aus dem strukturierten eBay-Text eine einzige Wurst.
  */
 export function formatSaleTextForPlatform(
   saleText: string,
   platform: Platform,
 ): { title: string; description: string } {
-  const lines = saleText
-    .split('\n')
-    .map((l) => l.trim())
+  const zeilen = saleText.replace(/\r\n/g, '\n').split('\n');
+
+  // Titel ist die erste Zeile MIT Inhalt -- führende Leerzeilen kommen vor.
+  const titelIndex = zeilen.findIndex((z) => z.trim());
+  const rawTitle = titelIndex === -1 ? '' : bereinige(zeilen[titelIndex]);
+
+  const absaetze = zeilen
+    .slice(titelIndex + 1)
+    .join('\n')
+    .split(/\n\s*\n/) // echte Absatzgrenze: mindestens eine Leerzeile
+    .map((absatz) => {
+      // Innerhalb eines Absatzes: weiche Umbrüche zusammenziehen, echte
+      // Aufzählungspunkte auf eigener Zeile lassen.
+      const teile: string[] = [];
+      for (const roh of absatz.split('\n')) {
+        const zeile = bereinige(roh);
+        if (!zeile) continue;
+        if (teile.length === 0 || LISTENPUNKT.test(zeile)) teile.push(zeile);
+        else teile[teile.length - 1] += ` ${zeile}`;
+      }
+      return teile.join('\n');
+    })
     .filter(Boolean);
-  const rawTitle = (lines[0] ?? '').replace(/\*\*/g, '').trim();
-  const body = lines.slice(1).join('\n\n') || rawTitle;
+
+  const body = absaetze.join('\n\n') || rawTitle;
 
   return {
     title: truncate(rawTitle, platform.titleMaxLength),

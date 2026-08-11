@@ -156,8 +156,17 @@ export default async function HomePage(props: PageProps<"/">) {
             mask-image blendet den Rand weich aus, damit die Wiederholung am
             linken/rechten Bildschirmrand nicht hart abgeschnitten wirkt. */}
         <section className="overflow-hidden border-t border-line pt-16 pb-12">
+          {/* War "Verkaufsbereit auf". Zusammen mit den grossen Logos las sich
+              das wie eine Anbindung an die Plattformen -- die es nicht gibt
+              und geben kann (weder Vinted noch Kleinanzeigen bieten Dritten
+              eine Listing-Schnittstelle, siehe lib/generation/platforms.ts).
+              "Passend aufbereitet fuer" beschreibt, was wir tatsaechlich
+              liefern: Titel, Text und Bild im richtigen Format und in den
+              richtigen Zeichengrenzen. Der Hinweis darunter stellt die
+              Unabhaengigkeit klar -- das ist auch markenrechtlich sauberer,
+              wenn fremde Logos so prominent stehen. */}
           <Reveal>
-            <p className="text-center text-xs uppercase tracking-[0.14em] text-muted">Verkaufsbereit auf</p>
+            <p className="text-center text-xs uppercase tracking-[0.14em] text-muted">Passend aufbereitet für</p>
           </Reveal>
           {/* gap waechst mit der Bildschirmbreite: bei nur drei Plattformen
               wirkte ein fixer Abstand auf breiten Desktop-Monitoren zu eng
@@ -175,6 +184,18 @@ export default async function HomePage(props: PageProps<"/">) {
               ))}
             </div>
           </div>
+
+          {/* Klarstellung direkt unter den Logos: Wir stehen in keiner
+              Verbindung zu diesen Anbietern, und der Upload bleibt beim
+              Nutzer. Kostet eine Zeile und nimmt der Marke jede Angriffs-
+              flaeche -- sowohl bei enttaeuschten Erwartungen als auch
+              markenrechtlich. */}
+          <Reveal>
+            <p className="mx-auto mt-8 max-w-md px-6 text-center text-xs leading-relaxed text-muted">
+              Titel, Text und Bild werden für die jeweilige Plattform aufbereitet — eingestellt wird das Inserat von
+              dir. Wir stehen in keiner Verbindung zu den genannten Anbietern.
+            </p>
+          </Reveal>
         </section>
 
         {/* Vorher/Nachher als Beleg der Verwandlung */}

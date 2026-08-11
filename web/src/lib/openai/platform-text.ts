@@ -52,7 +52,14 @@ ${baseText}
 
 ${PLATFORM_STYLE[platform]}
 
-Struktur: Überschrift in der ersten Zeile, danach eine Leerzeile, danach die Beschreibung. Antworte NUR mit dem neuen Text, ohne Erklärungen und ohne Anführungszeichen drumherum.`;
+Struktur: Überschrift in der ersten Zeile, danach eine Leerzeile, danach die Beschreibung.
+
+Format (der Text wird unverändert in ein Verkaufsformular eingefügt):
+- KEIN Markdown für Hervorhebungen oder Überschriften (kein **, ##, ###)
+- Absätze durch eine Leerzeile trennen, innerhalb eines Absatzes nicht vorzeitig umbrechen
+- Aufzählungen, falls sinnvoll, mit "- " am Zeilenanfang
+
+Antworte NUR mit dem neuen Text, ohne Erklärungen und ohne Anführungszeichen drumherum.`;
 
   const res = await fetch(`${OPENAI_API}/chat/completions`, {
     method: 'POST',

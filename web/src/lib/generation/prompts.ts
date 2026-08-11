@@ -46,5 +46,12 @@ STRICT RULES:
 - Do NOT guess the material, do NOT suggest a price
 - Do NOT include condition, fit-on-body, or style tips
 ${colorInfo}${sizeInfo}
+FORMAT (wichtig — der Text wird unveraendert in Verkaufsformulare eingefuegt):
+- Zeile 1: die Ueberschrift, sonst nichts
+- danach eine Leerzeile, dann die Beschreibung, am Ende die Groesse
+- KEIN Markdown: keine ** ## ### oder Aufzaehlungszeichen
+- Absaetze durch eine LEERZEILE trennen, innerhalb eines Absatzes NICHT
+  vorzeitig umbrechen
+
 Structure: Überschrift (SEO, max 80 Zeichen, Emojis) | Beschreibung (nur das Kleidungsstück) | Größe. Use an engaging tone with emojis. Max 130 words.${notes}`;
 }

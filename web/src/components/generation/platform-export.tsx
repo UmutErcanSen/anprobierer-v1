@@ -162,6 +162,19 @@ export function PlatformExport({ card, generationId }: { card: ResultCard; gener
     <div className="flex flex-col gap-2.5">
       <span className="text-xs uppercase tracking-[0.14em] text-muted">Für andere Plattformen vorbereiten</span>
 
+      {/* Sagt VOR dem Klick, was passiert. Vorher stand hier nur die
+          Ueberschrift: Wer "Bei Vinted oeffnen" liest, darf einen
+          Ein-Klick-Upload erwarten -- und ist enttaeuscht, wenn er selbst
+          einfuegen muss. Vinted und Kleinanzeigen bieten dafuer schlicht
+          keine oeffentliche Schnittstelle an (siehe platforms.ts); eine
+          inoffizielle Anbindung wuerde Nutzerkonten gefaehrden. Die Erwartung
+          hier ehrlich zu setzen kostet nichts und verhindert genau die
+          Enttaeuschung, die sonst beim ersten Verkauf entsteht. */}
+      <p className="text-xs leading-relaxed text-muted">
+        Wir passen Titel und Text an die jeweilige Plattform an und legen alles bereit. Einfügen und Hochladen machst
+        du selbst — die Plattformen erlauben keinen automatischen Upload durch Dritte.
+      </p>
+
       {/* overflow-x-auto statt flex-wrap: bei drei Tabs (Vinted, Kleinanzeigen,
           eBay) samt Logo reisst ein Umbruch auf Mobil die Reihe unschoen
           auseinander -- eine horizontal scrollbare Zeile bleibt kompakt und

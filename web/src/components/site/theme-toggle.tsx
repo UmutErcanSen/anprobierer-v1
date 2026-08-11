@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { SunMoon } from 'lucide-react';
 
 /*
@@ -21,10 +21,34 @@ export function ThemeToggle() {
     setDark(document.documentElement.getAttribute('data-theme') === 'dark');
   }, []);
 
+  /* Dauer muss zur .theme-wechselt-Regel in globals.css passen. */
+  const UEBERGANG_MS = 320;
+  const timer = useRef<number | null>(null);
+  useEffect(() => () => { if (timer.current) window.clearTimeout(timer.current); }, []);
+
   function toggle() {
     const next = !dark;
     setDark(next);
-    document.documentElement.setAttribute('data-theme', next ? 'dark' : 'light');
+
+    /*
+      Uebergangsklasse nur waehrend des Wechsels: Damit fahren alle Farben
+      weich ineinander, statt schlagartig umzuspringen. Danach kommt sie
+      wieder weg -- dauerhaft gesetzt wuerde sie auch jeden Hover-Zustand
+      verzoegern (siehe Begruendung in globals.css).
+
+      Beim mehrfachen schnellen Umschalten wird der laufende Timer verworfen
+      und neu gesetzt, sonst nimmt der erste Timer die Klasse mitten im
+      zweiten Uebergang weg.
+    */
+    const wurzel = document.documentElement;
+    wurzel.classList.add('theme-wechselt');
+    if (timer.current) window.clearTimeout(timer.current);
+    timer.current = window.setTimeout(() => {
+      wurzel.classList.remove('theme-wechselt');
+      timer.current = null;
+    }, UEBERGANG_MS);
+
+    wurzel.setAttribute('data-theme', next ? 'dark' : 'light');
     try {
       localStorage.setItem('theme', next ? 'dark' : 'light');
     } catch {

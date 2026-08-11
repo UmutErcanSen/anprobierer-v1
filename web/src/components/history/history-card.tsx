@@ -3,6 +3,8 @@ import { Check, ImageOff, Loader2, Lock } from 'lucide-react';
 import { FavoriteToggle } from '@/components/history/favorite-toggle';
 import { DeleteCardButton } from '@/components/history/delete-card-button';
 import { SelectableCard, SelectionMark } from '@/components/history/selection';
+import { PLATFORM_ICONS, PlatformIcon } from '@/components/generation/platform-icon';
+import type { PlatformKey } from '@/lib/generation/platforms';
 import { CLOTHING_TYPES, COLOR_SWATCH, type ClothingType } from '@/lib/generation/constants';
 
 export type HistoryGeneration = {
@@ -22,10 +24,10 @@ export type HistoryGeneration = {
    * markieren. */
   locked: boolean;
   /** Wie viele Stuecke dieser Generierung bereits fuer mindestens eine
-   *  Plattform vorbereitet wurden -- und wie viele es insgesamt gibt.
+   *  Plattform vorbereitet wurden, wie viele es insgesamt gibt, und wofuer.
    *  Beantwortet im Raster die Frage "habe ich das schon eingestellt?",
    *  ohne dass man jede Anprobe einzeln oeffnen muss. */
-  exportiert: { fertig: number; gesamt: number };
+  exportiert: { fertig: number; gesamt: number; plattformen: string[] };
 };
 
 const MODE_LABEL: Record<string, string> = { single: 'Einzeln', combined: 'Kombiniert' };
@@ -145,26 +147,6 @@ export function HistoryCard({ generation, thumbnail }: { generation: HistoryGene
               <Lock size={11} aria-hidden /> Vorschau
             </span>
           )}
-          {/* Export-Stand unten RECHTS -- die linke untere Ecke gehoert
-              bereits dem Vorschau-Hinweis, und beide koennen gleichzeitig
-              auftreten. Bewusst dezent in Erfolgsgruen und nur, wenn wirklich
-              etwas vorbereitet wurde: Eine Karte ohne Markierung ist der
-              Normalfall und braucht kein eigenes Abzeichen. */}
-          {exportiert.fertig > 0 && (
-            <span
-              className="absolute bottom-2 right-2 flex items-center gap-1 rounded-full bg-paper/90 px-2.5 py-1 text-xs font-medium text-success"
-              title={
-                exportiert.fertig === exportiert.gesamt
-                  ? 'Für eine Verkaufsplattform vorbereitet'
-                  : `${exportiert.fertig} von ${exportiert.gesamt} Stücken vorbereitet`
-              }
-            >
-              <Check size={11} strokeWidth={3} aria-hidden />
-              {exportiert.fertig === exportiert.gesamt
-                ? 'Eingestellt'
-                : `${exportiert.fertig}/${exportiert.gesamt}`}
-            </span>
-          )}
         </div>
         <div className="flex flex-col gap-0.5 p-3">
           <span className="text-sm font-medium text-ink">{formatCardDate(created_at)}</span>
@@ -172,6 +154,37 @@ export function HistoryCard({ generation, thumbnail }: { generation: HistoryGene
             {imageCount} {imageCount === 1 ? 'Bild' : 'Bilder'}
             {quality === 'hd' && ' · HD'} · {credits_charged} {credits_charged === 1 ? 'Credit' : 'Credits'}
           </span>
+
+          {/* Export-Stand als Chip UNTER dem Bild, nicht darauf.
+              Als Overlay unten rechts lag er genau auf dem eingebrannten
+              "KI-generiert"-Wasserzeichen (siehe watermark.ts) und verdeckte
+              damit ausgerechnet die gesetzlich vorgeschriebene Kennzeichnung.
+              Hier steht er ausserdem in derselben Formsprache wie die
+              Kategorie- und Farb-Chips darunter.
+
+              Die Plattform-Logos machen auf einen Blick klar, WOHIN das Stueck
+              schon gegangen ist -- "Eingestellt" allein liess genau diese
+              Frage offen. */}
+          {exportiert.fertig > 0 && (
+            <div className="mt-1.5 flex flex-wrap gap-1">
+              <span
+                className="flex items-center gap-1.5 rounded-full border border-success/30 bg-success/5 px-2 py-0.5 text-[11px] font-medium text-success"
+                title={
+                  exportiert.fertig === exportiert.gesamt
+                    ? `Vorbereitet für ${exportiert.plattformen.join(', ')}`
+                    : `${exportiert.fertig} von ${exportiert.gesamt} Stücken vorbereitet`
+                }
+              >
+                <Check size={10} strokeWidth={3} aria-hidden />
+                {exportiert.plattformen.map((key) => (
+                  <PlatformIcon key={key} icon={PLATFORM_ICONS[key as PlatformKey]} size={11} />
+                ))}
+                {exportiert.fertig === exportiert.gesamt
+                  ? 'Eingestellt'
+                  : `${exportiert.fertig}/${exportiert.gesamt}`}
+              </span>
+            </div>
+          )}
           {/* Kategorie und Farbe je in eigener Zeile statt in einer
               gemeinsamen Zeile mit der Groesse -- bei mehreren Stuecken pro
               Generierung liefen Kategorie/Groesse/Farbe-Punkte vorher schnell

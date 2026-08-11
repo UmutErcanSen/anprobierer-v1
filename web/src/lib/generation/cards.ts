@@ -63,10 +63,23 @@ export function resolveCardRows(generation: {
  * sich gar nicht einzeln inserieren und wuerde die Quote sonst dauerhaft
  * unvollstaendig aussehen lassen ("1/2", obwohl alles erledigt ist).
  */
-export function exportStand(cards: CardRow[]): { fertig: number; gesamt: number } {
+export function exportStand(cards: CardRow[]): {
+  fertig: number;
+  gesamt: number;
+  /** Alle Plattformen, fuer die mindestens ein Stueck vorbereitet wurde --
+   *  in der festen Reihenfolge von PLATFORMS, damit das Abzeichen nicht je
+   *  nach Klickreihenfolge die Icons umsortiert. */
+  plattformen: string[];
+} {
   const inserierbar = cards.filter((c) => c.saleText);
+  const gesehen = new Set<string>();
+  for (const c of inserierbar) {
+    for (const key of Object.keys(c.exports ?? {})) gesehen.add(key);
+  }
+  const REIHENFOLGE = ['vinted', 'kleinanzeigen', 'ebay'];
   return {
     fertig: inserierbar.filter((c) => c.exports && Object.keys(c.exports).length > 0).length,
     gesamt: inserierbar.length,
+    plattformen: REIHENFOLGE.filter((k) => gesehen.has(k)),
   };
 }

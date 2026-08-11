@@ -370,6 +370,37 @@ body {
   border-radius: 2px;
 }
 
+/* ---------------------------------------------------------------------------
+   Weicher Uebergang beim Wechsel zwischen hellem und dunklem Design.
+
+   Der Umschalter tauscht nur das data-theme-Attribut; saemtliche Farbtokens
+   springen dadurch schlagartig um -- bei einem fast vollflaechigen
+   Farbwechsel wirkt das hart und kurz irritierend.
+
+   Bewusst NICHT als dauerhafte Regel: Ein `transition: background-color` auf
+   allen Elementen wuerde auch jeden Hover-Zustand verzoegern (Knoepfe fuehlten
+   sich traege an) und bei langen Listen unnoetig Rechenzeit kosten. Deshalb
+   setzt der Umschalter diese Klasse nur fuer die Dauer des Uebergangs auf
+   <html> und nimmt sie danach wieder weg (siehe theme-toggle.tsx).
+
+   `fill` ist mit dabei, weil die Icons SVGs sind; `box-shadow` bleibt bewusst
+   aussen vor -- der Fokusrahmen soll sofort erscheinen, nicht einblenden.
+
+   Diese Regel steht VOR dem prefers-reduced-motion-Block: Beide arbeiten mit
+   !important, bei gleicher Spezifitaet gewinnt die spaetere -- wer reduzierte
+   Bewegung eingestellt hat, bekommt also weiterhin den sofortigen Wechsel.
+   --------------------------------------------------------------------------- */
+.theme-wechselt,
+.theme-wechselt *,
+.theme-wechselt *::before,
+.theme-wechselt *::after {
+  transition:
+    background-color 320ms cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 320ms cubic-bezier(0.4, 0, 0.2, 1),
+    color 320ms cubic-bezier(0.4, 0, 0.2, 1),
+    fill 320ms cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;

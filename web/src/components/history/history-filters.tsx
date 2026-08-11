@@ -529,8 +529,18 @@ export function HistoryFilters({
 
   return (
     <div className="flex flex-wrap items-center gap-3">
-      {/* Desktop: Zeile wie bisher. */}
-      <div className="hidden sm:flex sm:flex-wrap sm:items-center sm:gap-3">
+      {/*
+        Die ausgeklappte Zeile erst ab lg (1024px), nicht schon ab sm (640px).
+
+        Sechs Bedienelemente brauchen zusammen rund 830px (Status 160 + Modi
+        160 + Kategorie/Groesse/Farbe je ~110 + Favoriten ~130 + Abstaende).
+        Ab 640px umgebrochen ergab das auf Tablets zwei bis drei zerfranste
+        Zeilen, bei denen "Favoriten" allein in der letzten stand -- deutlich
+        unruhiger als die kompakte Variante, die es fuer Mobil ohnehin schon
+        gibt. Statt das Umbruchverhalten zu flicken, gilt die aufgeraeumte
+        Loesung jetzt bis 1024px.
+      */}
+      <div className="hidden lg:flex lg:flex-wrap lg:items-center lg:gap-3">
         {filterControls}
         {resetButton}
       </div>
@@ -540,7 +550,7 @@ export function HistoryFilters({
       <button
         type="button"
         onClick={() => setSheetOpen(true)}
-        className="flex h-11 items-center gap-2 rounded-lg border border-line px-4 text-[15px] text-ink transition-colors hover:border-line-strong sm:hidden"
+        className="flex h-11 items-center gap-2 rounded-lg border border-line px-4 text-[15px] text-ink transition-colors hover:border-line-strong lg:hidden"
       >
         <SlidersHorizontal size={16} aria-hidden />
         Filter
@@ -573,7 +583,7 @@ export function HistoryFilters({
           wenn geschlossen. */}
       {mounted &&
         createPortal(
-          <div className="fixed inset-0 z-[100] sm:hidden" inert={!sheetOpen}>
+          <div className="fixed inset-0 z-[100] lg:hidden" inert={!sheetOpen}>
             <div
               className={`absolute inset-0 bg-ink/40 transition-opacity duration-300 ${
                 sheetOpen ? 'opacity-100' : 'pointer-events-none opacity-0'

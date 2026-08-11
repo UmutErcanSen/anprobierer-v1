@@ -62,6 +62,27 @@ export function SiteFooter() {
           <span>sowie Link &amp; Amazon Pay</span>
         </div>
       </div>
+
+      {/*
+        Klarstellung zu den Fremdmarken. Stand zuerst direkt unter dem
+        Logo-Laufband auf der Startseite -- dort unterbrach der Kleintext die
+        Bewegung und nahm dem Band die Wirkung. Im Kleingedruckten gehoert er
+        ohnehin besser hin und ist so auf JEDER Seite sichtbar, nicht nur
+        dort, wo die Logos stehen.
+
+        Inhaltlich zwei Aussagen, beide bewusst: Der Upload bleibt beim
+        Nutzer (weder Vinted noch Kleinanzeigen bieten Dritten eine
+        Listing-Schnittstelle, siehe lib/generation/platforms.ts), und es
+        besteht keine Verbindung zu den Anbietern -- Letzteres ist bei so
+        prominent gezeigten fremden Logos auch markenrechtlich die sauberere
+        Variante.
+      */}
+      <div className="border-t border-line">
+        <div className="mx-auto w-full max-w-6xl px-6 py-5 text-center text-xs leading-relaxed text-muted md:text-left">
+          Vinted, Kleinanzeigen und eBay sind Marken der jeweiligen Anbieter. Wir stehen in keiner Verbindung zu ihnen
+          — Titel, Text und Bild werden nur passend aufbereitet, eingestellt wird das Inserat von dir.
+        </div>
+      </div>
     </footer>
   );
 }

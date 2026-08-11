@@ -184,18 +184,11 @@ export default async function HomePage(props: PageProps<"/">) {
               ))}
             </div>
           </div>
-
-          {/* Klarstellung direkt unter den Logos: Wir stehen in keiner
-              Verbindung zu diesen Anbietern, und der Upload bleibt beim
-              Nutzer. Kostet eine Zeile und nimmt der Marke jede Angriffs-
-              flaeche -- sowohl bei enttaeuschten Erwartungen als auch
-              markenrechtlich. */}
-          <Reveal>
-            <p className="mx-auto mt-8 max-w-md px-6 text-center text-xs leading-relaxed text-muted">
-              Titel, Text und Bild werden für die jeweilige Plattform aufbereitet — eingestellt wird das Inserat von
-              dir. Wir stehen in keiner Verbindung zu den genannten Anbietern.
-            </p>
-          </Reveal>
+          {/* Die Klarstellung zu den Fremdmarken steht bewusst im Footer
+              (site-footer.tsx) und nicht hier: Direkt unter den Logos
+              unterbrach der Kleintext das Laufband und nahm ihm die Wirkung.
+              Im Kleingedruckten ist sie ausserdem auf JEDER Seite sichtbar,
+              nicht nur auf der Startseite. */}
         </section>
 
         {/* Vorher/Nachher als Beleg der Verwandlung */}

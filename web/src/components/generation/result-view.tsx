@@ -18,7 +18,16 @@ import { PlatformExport } from '@/components/generation/platform-export';
  * -- der PlatformExport braucht ihn, um plattformspezifische Texte serverseitig
  * zwischenzuspeichern (fehlt er, z.B. auf der Demo-Testseite, faellt der
  * Export auf reine Client-Kuerzung ohne KI-Anfrage zurueck). */
-export type ResultCard = { itemIndex?: number; title: string; imageUrl: string | null; saleText: string | null };
+export type ResultCard = {
+  itemIndex?: number;
+  title: string;
+  imageUrl: string | null;
+  saleText: string | null;
+  /** Plattformen, fuer die dieses Stueck bereits vorbereitet wurde
+   *  (Schluessel = PlatformKey, Wert = Zeitpunkt). Siehe mark_card_export
+   *  in Migration 20260810180000. */
+  exports?: Record<string, string>;
+};
 
 /** Laedt Bild und Text gemeinsam als ZIP — beides braucht man fuer eine Anzeige. */
 export async function downloadZip(cards: ResultCard[], filename: string) {

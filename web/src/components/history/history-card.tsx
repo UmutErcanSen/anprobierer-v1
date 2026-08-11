@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import { ImageOff, Loader2, Lock } from 'lucide-react';
+import { Check, ImageOff, Loader2, Lock } from 'lucide-react';
 import { FavoriteToggle } from '@/components/history/favorite-toggle';
 import { DeleteCardButton } from '@/components/history/delete-card-button';
 import { SelectableCard, SelectionMark } from '@/components/history/selection';
@@ -21,6 +21,11 @@ export type HistoryGeneration = {
    * bereits die serverseitig unscharfe Variante, hier nur noch als Hinweis
    * markieren. */
   locked: boolean;
+  /** Wie viele Stuecke dieser Generierung bereits fuer mindestens eine
+   *  Plattform vorbereitet wurden -- und wie viele es insgesamt gibt.
+   *  Beantwortet im Raster die Frage "habe ich das schon eingestellt?",
+   *  ohne dass man jede Anprobe einzeln oeffnen muss. */
+  exportiert: { fertig: number; gesamt: number };
 };
 
 const MODE_LABEL: Record<string, string> = { single: 'Einzeln', combined: 'Kombiniert' };
@@ -89,7 +94,7 @@ function ModeBadge({ mode }: { mode: string }) {
 
 /** Eine Karte im Verlauf-Raster. Rein darstellend -- die Daten (inkl. signierter Thumbnail-URL) kommen fertig von der Server Component. */
 export function HistoryCard({ generation, thumbnail }: { generation: HistoryGeneration; thumbnail: string | null }) {
-  const { id, status, mode, quality, credits_charged, created_at, imageCount, isFavorite, categories, sizes, colors, locked } =
+  const { id, status, mode, quality, credits_charged, created_at, imageCount, isFavorite, categories, sizes, colors, locked, exportiert } =
     generation;
 
   const categoryList = unique(categories.map((c) => CLOTHING_TYPES[c as ClothingType]?.de ?? c));
@@ -138,6 +143,26 @@ export function HistoryCard({ generation, thumbnail }: { generation: HistoryGene
           {locked && (
             <span className="absolute bottom-2 left-2 flex items-center gap-1 rounded-full bg-paper/90 px-2.5 py-1 text-xs font-medium text-ink">
               <Lock size={11} aria-hidden /> Vorschau
+            </span>
+          )}
+          {/* Export-Stand unten RECHTS -- die linke untere Ecke gehoert
+              bereits dem Vorschau-Hinweis, und beide koennen gleichzeitig
+              auftreten. Bewusst dezent in Erfolgsgruen und nur, wenn wirklich
+              etwas vorbereitet wurde: Eine Karte ohne Markierung ist der
+              Normalfall und braucht kein eigenes Abzeichen. */}
+          {exportiert.fertig > 0 && (
+            <span
+              className="absolute bottom-2 right-2 flex items-center gap-1 rounded-full bg-paper/90 px-2.5 py-1 text-xs font-medium text-success"
+              title={
+                exportiert.fertig === exportiert.gesamt
+                  ? 'Für eine Verkaufsplattform vorbereitet'
+                  : `${exportiert.fertig} von ${exportiert.gesamt} Stücken vorbereitet`
+              }
+            >
+              <Check size={11} strokeWidth={3} aria-hidden />
+              {exportiert.fertig === exportiert.gesamt
+                ? 'Eingestellt'
+                : `${exportiert.fertig}/${exportiert.gesamt}`}
             </span>
           )}
         </div>

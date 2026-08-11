@@ -46,6 +46,9 @@ export default async function VerlaufDetailPage(props: PageProps<"/konto/verlauf
     cardRows.map(async (c) => ({
       itemIndex: c.itemIndex,
       title: c.title,
+      // Merkposten "wofuer schon vorbereitet" -- gehoert nicht zur
+      // Bezahlschranke und wird deshalb unveraendert durchgereicht.
+      exports: c.exports,
       saleText: locked && c.saleText ? redactSaleText(c.saleText) : c.saleText,
       imageUrl: c.imagePath
         ? ((await supabase.storage.from("results").createSignedUrl(locked ? lockedImagePath(c.imagePath) : c.imagePath, 60 * 60))

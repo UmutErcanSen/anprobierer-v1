@@ -8,7 +8,7 @@ import { HistoryFilters } from "@/components/history/history-filters";
 import { HistoryCard, type HistoryGeneration } from "@/components/history/history-card";
 import { HistorySelection } from "@/components/history/selection";
 import { DeleteAllButton } from "@/components/history/delete-all-button";
-import { resolveCardRows } from "@/lib/generation/cards";
+import { resolveCardRows, exportStand } from "@/lib/generation/cards";
 import { isGenerationLocked, lockedImagePath } from "@/lib/generation/lock";
 import { thumbnailPath } from "@/lib/generation/prepare-image";
 import type { PlanKey } from "@/lib/generation/constants";
@@ -105,6 +105,7 @@ export default async function VerlaufPage(props: PageProps<"/konto/verlauf">) {
     sizes: g.sizes ?? [],
     colors: g.colors ?? [],
     locked: isGenerationLocked(plan, g.is_free_reveal),
+    exportiert: exportStand(cardRowsByGeneration[i]),
   }));
 
   // Thumbnails frisch signieren -- die Pfade in der DB sind dauerhaft, die

@@ -9,7 +9,16 @@
  * Daten tatsaechlich vorhanden waren.
  */
 
-export type CardRow = { itemIndex: number; title: string; imagePath: string | null; saleText: string | null };
+export type CardRow = {
+  itemIndex: number;
+  title: string;
+  imagePath: string | null;
+  saleText: string | null;
+  /** Fuer welche Plattformen dieses Stueck bereits vorbereitet wurde --
+   *  gesetzt von mark_card_export (Migration 20260810180000). Bei Karten aus
+   *  der Zeit davor schlicht nicht vorhanden. */
+  exports?: Record<string, string>;
+};
 
 export function resolveCardRows(generation: {
   mode: string;
@@ -43,4 +52,21 @@ export function resolveCardRows(generation: {
     imagePath: resultPaths[i] ?? null,
     saleText: texts[i] ?? null,
   }));
+}
+
+/**
+ * Wie viele Stuecke einer Generierung wurden schon fuer eine Plattform
+ * vorbereitet? Fuer das Abzeichen im Verlauf-Raster.
+ *
+ * Gezaehlt werden nur Karten mit Verkaufstext: Im Kombiniert-Modus gibt es
+ * zusaetzlich eine reine Bildkarte (itemIndex -1) ohne Text -- die laesst
+ * sich gar nicht einzeln inserieren und wuerde die Quote sonst dauerhaft
+ * unvollstaendig aussehen lassen ("1/2", obwohl alles erledigt ist).
+ */
+export function exportStand(cards: CardRow[]): { fertig: number; gesamt: number } {
+  const inserierbar = cards.filter((c) => c.saleText);
+  return {
+    fertig: inserierbar.filter((c) => c.exports && Object.keys(c.exports).length > 0).length,
+    gesamt: inserierbar.length,
+  };
 }

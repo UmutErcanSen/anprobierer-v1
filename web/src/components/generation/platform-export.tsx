@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { Check, Copy, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
+import { createClient } from '@/lib/supabase/client';
 import { PLATFORMS, formatSaleTextForPlatform, type Platform, type PlatformKey } from '@/lib/generation/platforms';
 import { PLATFORM_ICONS, PlatformIcon } from '@/components/generation/platform-icon';
 import type { ResultCard } from '@/components/generation/result-view';
@@ -94,6 +96,43 @@ export function PlatformExport({ card, generationId }: { card: ResultCard; gener
   const [loading, setLoading] = useState<PlatformKey | null>(null);
   const [copied, setCopied] = useState<boolean | null>(null);
 
+  /*
+    Merkposten: fuer welche Plattformen wurde dieses Stueck schon vorbereitet?
+    Beantwortet die Frage "habe ich das schon eingestellt?", die sich ab etwa
+    zehn Anproben unweigerlich stellt -- vorher sah eine Karte davor und
+    danach identisch aus.
+
+    Lokaler Zustand zusaetzlich zur Serverantwort, damit die Markierung sofort
+    erscheint. Der Schreibvorgang laeuft im Hintergrund; scheitert er, wird
+    zurueckgenommen (siehe markiere()).
+  */
+  const [exports, setExports] = useState<Record<string, string>>(card.exports ?? {});
+  const kannMerken = Boolean(generationId) && card.itemIndex !== undefined;
+
+  async function markiere(platform: PlatformKey, gesetzt: boolean) {
+    if (!kannMerken) return;
+    const vorher = exports;
+    setExports((prev) => {
+      const next = { ...prev };
+      if (gesetzt) next[platform] = new Date().toISOString();
+      else delete next[platform];
+      return next;
+    });
+
+    const supabase = createClient();
+    const { error } = await supabase.rpc('mark_card_export', {
+      p_generation_id: generationId,
+      p_item_index: card.itemIndex,
+      p_platform: platform,
+      p_gesetzt: gesetzt,
+    });
+    if (error) {
+      console.error('[platform-export] Markierung fehlgeschlagen', error);
+      setExports(vorher);
+      toast.error('Die Markierung konnte nicht gespeichert werden.');
+    }
+  }
+
   if (!card.saleText && !card.imageUrl) return null;
 
   // Vinted nutzt immer den Basistext (schon im richtigen Ton). Fuer die
@@ -156,6 +195,10 @@ export function PlatformExport({ card, generationId }: { card: ResultCard; gener
     }
 
     setCopied(didCopy);
+    // Ohne Warten und ohne Erfolgsmeldung: Der Nutzer ist in diesem Moment
+    // schon im anderen Tab. Die Markierung ist ein Merkposten, kein Vorgang,
+    // ueber den berichtet werden muesste.
+    void markiere(active.key, true);
   }
 
   return (
@@ -206,6 +249,17 @@ export function PlatformExport({ card, generationId }: { card: ResultCard; gener
             >
               <PlatformIcon icon={PLATFORM_ICONS[platform.key]} />
               {platform.label}
+              {/* Haekchen direkt am Tab: So sieht man beim Blick auf die
+                  Leiste, was noch offen ist, ohne jeden Tab einzeln
+                  anzuklicken. */}
+              {exports[platform.key] && (
+                <Check
+                  size={11}
+                  strokeWidth={3}
+                  className={platform.key === active.key ? 'text-on-ink' : 'text-success'}
+                  aria-label="bereits vorbereitet"
+                />
+              )}
               {loading === platform.key && <Loader2 size={11} className="animate-spin" aria-hidden />}
             </button>
           ))}
@@ -262,6 +316,27 @@ export function PlatformExport({ card, generationId }: { card: ResultCard; gener
         <PlatformIcon icon={PLATFORM_ICONS[active.key]} size={13} />
         Bei {active.label} öffnen
       </button>
+
+      {/* Korrekturmoeglichkeit. Wir wissen nur, dass der Export angestossen
+          wurde -- nicht, ob das Inserat wirklich online ging. Wer den Vorgang
+          abgebrochen hat, muss die Markierung zuruecknehmen koennen, sonst
+          steht dauerhaft ein falscher Haken. Bewusst zurueckhaltend: eine
+          Bestaetigung, kein Hinweis, der Aufmerksamkeit fordert. */}
+      {kannMerken && exports[active.key] && (
+        <p className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center text-xs text-muted">
+          <span className="inline-flex items-center gap-1 text-success">
+            <Check size={12} strokeWidth={3} aria-hidden />
+            Für {active.label} vorbereitet
+          </span>
+          <button
+            type="button"
+            onClick={() => markiere(active.key, false)}
+            className="underline underline-offset-4 transition-colors hover:text-ink"
+          >
+            Markierung entfernen
+          </button>
+        </p>
+      )}
 
       {/* Nach dem Klick steht der Nutzer im fremden Formular und muss wissen,
           was als Naechstes kommt. Vorher endete die Meldung bei "jetzt

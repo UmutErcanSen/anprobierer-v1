@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { AppHeader } from "@/components/site/app-header";
 import { LinkButton } from "@/components/ui/button";
 import { HistoryCard, type HistoryGeneration } from "@/components/history/history-card";
-import { resolveCardRows } from "@/lib/generation/cards";
+import { resolveCardRows, exportStand } from "@/lib/generation/cards";
 import { isGenerationLocked, lockedImagePath } from "@/lib/generation/lock";
 import { thumbnailPath } from "@/lib/generation/prepare-image";
 import type { PlanKey } from "@/lib/generation/constants";
@@ -143,6 +143,7 @@ export default async function KontoPage() {
     sizes: g.sizes ?? [],
     colors: g.colors ?? [],
     locked: isGenerationLocked(plan, g.is_free_reveal),
+    exportiert: exportStand(recentCardRows[i]),
   }));
   // Verdeckte Generierungen bekommen die unscharfe Vorschau-Variante statt
   // des echten Bilds (siehe lock.ts) -- niemals die echte URL an den Client.

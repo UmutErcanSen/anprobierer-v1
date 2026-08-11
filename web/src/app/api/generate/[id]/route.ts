@@ -16,7 +16,13 @@ import { isGenerationLocked, lockedImagePath, redactSaleText } from '@/lib/gener
 
 export const runtime = 'nodejs';
 
-type CardRow = { itemIndex: number; title: string; imagePath: string | null; saleText: string | null };
+type CardRow = {
+  itemIndex: number;
+  title: string;
+  imagePath: string | null;
+  saleText: string | null;
+  exports?: Record<string, string>;
+};
 
 export async function GET(_request: Request, ctx: { params: Promise<{ id: string }> }) {
   const { id } = await ctx.params;
@@ -55,6 +61,10 @@ export async function GET(_request: Request, ctx: { params: Promise<{ id: string
     cards.map(async (c) => ({
       itemIndex: c.itemIndex,
       title: c.title,
+      // Merkposten "wofuer schon vorbereitet" -- rein organisatorisch, hat
+      // mit der Bezahlschranke nichts zu tun und wird deshalb auch bei
+      // verdeckten Ergebnissen unveraendert durchgereicht.
+      exports: c.exports,
       saleText: locked && c.saleText ? redactSaleText(c.saleText) : c.saleText,
       imageUrl: c.imagePath
         ? (await admin.storage.from('results').createSignedUrl(locked ? lockedImagePath(c.imagePath) : c.imagePath, 60 * 60)).data

@@ -51,36 +51,43 @@ export function SiteFooter() {
         <span>© {new Date().getFullYear()} Anprobierer</span>
       </div>
 
-      <div className="border-t border-line">
-        <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-3 px-6 py-6 text-xs text-muted sm:flex-row sm:justify-center md:justify-start">
-          <span>Sichere Bezahlung mit</span>
-          <div className="flex items-center gap-3">
-            {PAYMENT_ICONS.map(({ icon, color }) => (
-              <PaymentIcon key={icon.title} icon={icon} color={color} />
-            ))}
-          </div>
-          <span>sowie Link &amp; Amazon Pay</span>
-        </div>
-      </div>
-
       {/*
-        Klarstellung zu den Fremdmarken. Stand zuerst direkt unter dem
-        Logo-Laufband auf der Startseite -- dort unterbrach der Kleintext die
-        Bewegung und nahm dem Band die Wirkung. Im Kleingedruckten gehoert er
-        ohnehin besser hin und ist so auf JEDER Seite sichtbar, nicht nur
-        dort, wo die Logos stehen.
+        EIN gemeinsames Kleingedruckt-Band statt zwei getrennter Zeilen mit
+        Trennlinie dazwischen. Der Markenhinweis stand zuerst als eigener
+        Block ganz unten und wirkte dort angeklebt -- beides ist Kleintext
+        derselben Art (Zahlungsarten, rechtliche Klarstellung) und gehoert
+        deshalb sichtbar zusammen.
+
+        Der Markenhinweis selbst stand urspruenglich direkt unter dem
+        Logo-Laufband der Startseite. Dort unterbrach er die Bewegung des
+        Bands; hier ist er ausserdem auf JEDER Seite sichtbar, nicht nur
+        dort, wo die Logos laufen.
 
         Inhaltlich zwei Aussagen, beide bewusst: Der Upload bleibt beim
         Nutzer (weder Vinted noch Kleinanzeigen bieten Dritten eine
         Listing-Schnittstelle, siehe lib/generation/platforms.ts), und es
         besteht keine Verbindung zu den Anbietern -- Letzteres ist bei so
-        prominent gezeigten fremden Logos auch markenrechtlich die sauberere
-        Variante.
+        prominent gezeigten fremden Logos auch markenrechtlich sauberer.
       */}
-      <div className="border-t border-line">
-        <div className="mx-auto w-full max-w-6xl px-6 py-5 text-center text-xs leading-relaxed text-muted md:text-left">
-          Vinted, Kleinanzeigen und eBay sind Marken der jeweiligen Anbieter. Wir stehen in keiner Verbindung zu ihnen
-          — Titel, Text und Bild werden nur passend aufbereitet, eingestellt wird das Inserat von dir.
+      <div className="border-t border-line bg-surface/40">
+        <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-6 py-6 text-xs text-muted">
+          <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center md:justify-start">
+            <span>Sichere Bezahlung mit</span>
+            <div className="flex items-center gap-3">
+              {PAYMENT_ICONS.map(({ icon, color }) => (
+                <PaymentIcon key={icon.title} icon={icon} color={color} />
+              ))}
+            </div>
+            <span>sowie Link &amp; Amazon Pay</span>
+          </div>
+
+          {/* max-w-3xl: Ueber die volle Breite von 1152px waere eine
+              einzelne Kleintextzeile kaum noch lesbar -- zu lange Zeilen
+              verlieren beim Zurueckspringen den Anschluss. */}
+          <p className="max-w-3xl text-center leading-relaxed md:text-left">
+            Vinted, Kleinanzeigen und eBay sind Marken der jeweiligen Anbieter. Es besteht keine Verbindung zu ihnen:
+            Wir bereiten Titel, Text und Bild passend auf — eingestellt wird das Inserat von dir.
+          </p>
         </div>
       </div>
     </footer>

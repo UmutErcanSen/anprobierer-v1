@@ -243,19 +243,13 @@ body {
   animation: progress-shimmer 0.9s linear infinite;
 }
 
-/* Versteckt die sichtbare Scrollleiste bei horizontal scrollbaren Zeilen
-   (z.B. die Plattform-Tabs in platform-export.tsx), OHNE das Scrollen selbst
-   zu deaktivieren -- manche Browser/Betriebssysteme (u.a. Windows/Chrome)
-   zeigen die Leiste dauerhaft an, sobald overflow-x:auto gesetzt ist, auch
-   wenn der Inhalt kaum breiter als der Container ist. Das wirkte dort wie ein
-   optischer Fehler statt einer bewussten Scroll-Zeile. */
-.no-scrollbar {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
+/* Hier stand eine .no-scrollbar-Utility fuer die horizontal scrollbare
+   Plattform-Tableiste. Die Leiste scrollt nicht mehr (siehe
+   platform-export.tsx: alle drei Plattformen muessen gleichzeitig sichtbar
+   sein), damit war die Klasse ungenutzt -- und ungenutztes CSS bleibt sonst
+   jahrelang liegen. Falls wieder eine scrollbare Zeile gebraucht wird:
+   scrollbar-width: none, -ms-overflow-style: none und
+   ::-webkit-scrollbar { display: none }. */
 
 /* Konto-Uebersicht: Fortschrittsring zeichnet sich einmalig ein, Balken
    wachsen gestaffelt von unten. Beides laeuft rein ueber CSS -- die

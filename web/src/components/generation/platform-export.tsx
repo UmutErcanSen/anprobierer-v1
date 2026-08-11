@@ -218,19 +218,27 @@ export function PlatformExport({ card, generationId }: { card: ResultCard; gener
         du selbst — die Plattformen erlauben keinen automatischen Upload durch Dritte.
       </p>
 
-      {/* overflow-x-auto statt flex-wrap: bei drei Tabs (Vinted, Kleinanzeigen,
-          eBay) samt Logo reisst ein Umbruch auf Mobil die Reihe unschoen
-          auseinander -- eine horizontal scrollbare Zeile bleibt kompakt und
-          bleibt trotzdem vollstaendig erreichbar. no-scrollbar (globals.css):
-          bei drei Tabs ist auf den meisten Bildschirmen gar kein Scrollen
-          noetig, Windows/Chrome zeigt den (dann rein kosmetischen) Scrollbalken
-          aber trotzdem dauerhaft an, sobald overflow-x:auto gesetzt ist -- das
-          war der gemeldete sichtbare Balken auf Mobil. Scroll-FUNKTION bleibt
-          erhalten, nur die sichtbare Leiste wird ausgeblendet. */}
-      <div className="no-scrollbar -mx-0.5 overflow-x-auto px-0.5">
+      {/*
+        Alle drei Plattformen muessen gleichzeitig sichtbar sein -- man waehlt
+        hier zwischen ihnen, eine weggescrollte Option findet niemand.
+
+        Vorher lag die Reihe in einem horizontal scrollbaren Container. Auf
+        Mobil blieben davon nur 298px verfuegbar, und mit dem Haekchen am
+        bereits vorbereiteten Tab (siehe unten) wuchs die Reihe auf 308px --
+        eBay rutschte aus dem Bild. Zwei Aenderungen dagegen:
+
+        1. Schmalere Innenabstaende auf Mobil (px-2.5 statt px-3, gap-1 statt
+           gap-1.5). Das schafft rund 16px Luft, die Reihe passt damit auch
+           MIT Haekchen.
+        2. flex-wrap statt overflow-x-auto als Notnagel. Sollte es doch einmal
+           zu eng werden (sehr grosse Systemschriften, spaetere vierte
+           Plattform), bricht die Reihe um -- alle Optionen bleiben sichtbar,
+           statt eine davon aus dem Blickfeld zu schieben.
+      */}
+      <div>
         <div
           role="tablist"
-          className="inline-flex gap-1 rounded-full border border-line p-1 text-sm"
+          className="flex flex-wrap gap-1 rounded-2xl border border-line p-1 text-sm sm:rounded-full"
         >
           {PLATFORMS.map((platform) => (
             <button
@@ -243,21 +251,31 @@ export function PlatformExport({ card, generationId }: { card: ResultCard; gener
                  duennen Rand -- die reine Umrandung war neben den unmarkierten
                  Tabs kaum zu unterscheiden. Gleiches Prinzip wie beim
                  Modus-Umschalter (Einzeln/Kombiniert) weiter oben im Formular. */
-              className={`flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
+              className={`relative flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-1.5 text-xs font-medium transition-colors sm:gap-1.5 sm:px-3 ${
                 platform.key === active.key ? 'bg-ink text-on-ink' : 'text-muted hover:text-ink'
               }`}
             >
               <PlatformIcon icon={PLATFORM_ICONS[platform.key]} />
               {platform.label}
-              {/* Haekchen direkt am Tab: So sieht man beim Blick auf die
-                  Leiste, was noch offen ist, ohne jeden Tab einzeln
-                  anzuklicken. */}
+              {/*
+                Markierung "schon vorbereitet" -- absolut positioniert, damit
+                sie den Tab NICHT verbreitert. Als mitfliessendes Haekchen
+                wuchs die Reihe je markierter Plattform um rund 15px; bei nur
+                zwei Pixeln Reserve auf Mobil brach sie damit sofort um. So
+                bleibt die Breite konstant, egal wie viele Plattformen
+                markiert sind.
+
+                Punkt statt Haken, weil auf so kleiner Flaeche ohnehin keine
+                Form mehr erkennbar waere. Der Rahmen in Hintergrundfarbe
+                hebt ihn sowohl vom gefuellten als auch vom leeren Tab ab.
+                Die ausgeschriebene Bedeutung steht unter dem Knopf ("Fuer X
+                vorbereitet"), hier genuegt der Hinweis, dass es etwas gibt.
+              */}
               {exports[platform.key] && (
-                <Check
-                  size={11}
-                  strokeWidth={3}
-                  className={platform.key === active.key ? 'text-on-ink' : 'text-success'}
+                <span
                   aria-label="bereits vorbereitet"
+                  title="Bereits vorbereitet"
+                  className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-paper bg-success"
                 />
               )}
               {loading === platform.key && <Loader2 size={11} className="animate-spin" aria-hidden />}

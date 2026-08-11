@@ -98,7 +98,7 @@ export default async function HomePage(props: PageProps<"/">) {
         </div>
       )}
 
-      <main className="flex-1">
+      <main id="inhalt" className="flex-1">
         {/* Fullscreen-Hero: Text links, bildfuellendes Standbild rechts.
             Fuellt den sichtbaren Bereich (100dvh minus Header), auf Mobil
             gestapelt. Text auf Paper statt ueber dem Foto — das haelt die

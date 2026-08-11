@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { stripe } from '@/lib/stripe/client';
+import { limitUeberschritten } from '@/lib/rate-limit/aktionen';
 
 /*
   Stripe Customer Portal statt eigener Kuendigungs-/Rechnungs-Verwaltung --
@@ -17,6 +18,11 @@ export async function POST(request: Request) {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Bitte melde dich zuerst an.' }, { status: 401 });
+
+  // Siehe lib/rate-limit/aktionen.ts -- bewusst hoeher als beim Checkout,
+  // weil man im Portal legitim mehrfach hin- und herwechselt.
+  const limit = await limitUeberschritten(user.id, 'portal');
+  if (limit) return NextResponse.json({ error: limit }, { status: 429 });
 
   const { data: sub } = await supabase
     .from('subscriptions')

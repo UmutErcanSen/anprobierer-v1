@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { stripe } from '@/lib/stripe/client';
 import { priceIdFor } from '@/lib/stripe/plans';
+import { limitUeberschritten } from '@/lib/rate-limit/aktionen';
 
 /*
   Erstellt eine Stripe Checkout Session fuer ein Abo und gibt deren URL
@@ -34,6 +35,10 @@ export async function POST(request: Request) {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Bitte melde dich zuerst an.' }, { status: 401 });
+
+  // Jeder Aufruf legt ein Objekt bei Stripe an -- siehe lib/rate-limit/aktionen.ts.
+  const limit = await limitUeberschritten(user.id, 'checkout');
+  if (limit) return NextResponse.json({ error: limit }, { status: 429 });
 
   let body: unknown;
   try {

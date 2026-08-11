@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { resolveCardRows } from '@/lib/generation/cards';
+import { limitUeberschritten } from '@/lib/rate-limit/aktionen';
 
 /*
   Datenexport nach DSGVO Art. 15 (Auskunft) und Art. 20 (Datenuebertragbarkeit).
@@ -24,6 +25,12 @@ export async function GET() {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Nicht angemeldet.' }, { status: 401 });
+
+  /* Teuerster Endpunkt nach der Generierung -- siehe lib/rate-limit/aktionen.ts.
+     Die Begrenzung steht VOR den Abfragen, sonst waere die Last schon
+     entstanden, bevor abgelehnt wird. */
+  const limit = await limitUeberschritten(user.id, 'export');
+  if (limit) return NextResponse.json({ error: limit }, { status: 429 });
 
   const admin = createAdminClient();
 

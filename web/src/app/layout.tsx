@@ -70,6 +70,16 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body className="min-h-full flex flex-col">
+        {/* Sprunglink: Ohne ihn muessen Tastaturnutzer auf JEDER Seite erst
+            durch die komplette Navigation, bevor sie den Inhalt erreichen.
+            Unsichtbar, bis er den Fokus bekommt -- dann erscheint er oben
+            links. Das Ziel `#inhalt` setzt jede Seite auf ihr <main>. */}
+        <a
+          href="#inhalt"
+          className="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-[300] focus:rounded-lg focus:border focus:border-line-strong focus:bg-paper focus:px-4 focus:py-2 focus:text-sm focus:text-ink"
+        >
+          Zum Inhalt springen
+        </a>
         {children}
         {/*
           Toasts fuer kurze Erfolgsmeldungen (z.B. nach Mehrfach-Loeschen im

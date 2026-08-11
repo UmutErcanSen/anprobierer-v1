@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { Menu, X } from 'lucide-react';
+import { useFocusTrap } from '@/lib/a11y/use-focus-trap';
 
 /*
   Mobiles Navigationsmenue. Ohne das war "Anmelden" auf dem Handy nur ueber
@@ -27,6 +28,14 @@ export function MobileNav({ items, children }: { items: Item[]; children?: React
   // erscheint/verschwindet.
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
+
+  // Das Menue verdeckt die ganze Seite, bleibt aber (wegen der
+  // Slide-Animation) dauerhaft im DOM. Ohne Fokusfalle wanderte man per Tab
+  // aus dem offenen Menue heraus in die verdeckte Seite -- sichtbar blieb der
+  // Fokus dabei nirgends. Der Rueckgabefokus landet wieder auf dem
+  // Menue-Knopf, statt am Seitenanfang.
+  const menuRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(open, menuRef);
 
   // Body-Scroll sperren, solange das Overlay offen ist.
   useEffect(() => {
@@ -64,7 +73,11 @@ export function MobileNav({ items, children }: { items: Item[]; children?: React
       {mounted &&
         createPortal(
           <div
+            ref={menuRef}
             inert={!open}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Navigation"
             className={`fixed inset-0 z-[100] flex flex-col overflow-y-auto bg-paper transition-transform duration-300 ease-out ${
               open ? 'translate-x-0' : 'translate-x-full'
             }`}

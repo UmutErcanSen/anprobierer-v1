@@ -79,7 +79,7 @@ export default async function VerlaufDetailPage(props: PageProps<"/konto/verlauf
     <>
       <AppHeader credits={credits} plan={plan} />
 
-      <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-14">
+      <main id="inhalt" className="mx-auto w-full max-w-2xl flex-1 px-6 py-14">
         {backLink}
 
         {generation.status === "queued" || generation.status === "processing" ? (

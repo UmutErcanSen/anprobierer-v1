@@ -30,7 +30,7 @@ export default async function AnzeigeErstellenPage() {
           Foto-Spalte von GenerateFlow bis an den Bildschirmrand reicht --
           genau wie der Hero auf der Landingpage. Die Einstellungsspalte
           bringt ihre eigene, lesbare Breite dann selbst mit. */}
-      <main className="mx-auto w-full max-w-xl flex-1 px-6 py-10 md:max-w-none md:px-0 md:py-0">
+      <main id="inhalt" className="mx-auto w-full max-w-xl flex-1 px-6 py-10 md:max-w-none md:px-0 md:py-0">
         <GenerateFlow credits={credits} plan={plan} />
       </main>
     </>

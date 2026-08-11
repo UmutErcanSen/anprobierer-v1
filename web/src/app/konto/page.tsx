@@ -161,7 +161,7 @@ export default async function KontoPage() {
     <>
       <AppHeader credits={credits} plan={plan} />
 
-      <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-14">
+      <main id="inhalt" className="mx-auto w-full max-w-3xl flex-1 px-6 py-14">
         {/* Titel + Primaeraktion in einer Zeile, wie im Verlauf (dort
             "Deine Anproben" + "Neue Anprobe erstellen") -- vorher stand der
             Button als eigener, schwerer Block MITTEN in der Seite, direkt

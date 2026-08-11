@@ -37,6 +37,35 @@ import {
 type Status = 'idle' | 'generating' | 'done' | 'error';
 type ClothingItem = { id: number; file: File | null; type: string; size: string; color: string };
 
+/** Antwort von GET /api/generate/[id] -- siehe dort. */
+type PollAntwort = {
+  status?: string;
+  cards?: ResultCard[];
+  failures?: number;
+  creditsCharged?: number;
+  locked?: boolean;
+  error?: string;
+};
+
+/**
+ * Abstand bis zur naechsten Statusabfrage, gestaffelt statt fest.
+ *
+ * Vorher wurde stur alle 3 Sekunden gefragt, ohne Obergrenze. Ein Job, den
+ * erst die serverseitige Aufraeumung nach 10 Minuten beendet, erzeugte so
+ * 200 Anfragen -- jede mit Token-Pruefung, Datenbankabfrage und einer frisch
+ * signierten URL je Karte. Das Ergebnis kommt aber fast immer in der ersten
+ * Minute; danach lohnt sich schnelles Nachfragen nicht mehr.
+ *
+ * Erste ~30 s alle 2 s (da faellt die Entscheidung), dann 5 s, ab etwa zwei
+ * Minuten 10 s. Ueber zehn Minuten sind das rund 90 statt 200 Anfragen, bei
+ * spuerbar schnellerer Reaktion am Anfang.
+ */
+function wartezeit(versuch: number): number {
+  if (versuch < 15) return 2000;
+  if (versuch < 40) return 5000;
+  return 10000;
+}
+
 const PROGRESS = [
   'Personenfoto analysieren',
   'Kleidung erkennen',
@@ -380,17 +409,33 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
    * sofort zurück, hier wird nur der Fortschritt beobachtet.
    */
   async function poll(generationId: string, myToken: number) {
+    let versuch = 0;
+
     while (pollToken.current === myToken) {
+      versuch++;
       let res: Response;
       try {
         res = await fetch(`/api/generate/${generationId}`);
       } catch {
-        await new Promise((r) => setTimeout(r, 3000));
+        await new Promise((r) => setTimeout(r, wartezeit(versuch)));
         continue; // kurzer Netzwerkfehler — einfach erneut versuchen
       }
       if (pollToken.current !== myToken) return; // inzwischen verworfen
 
-      const data = await res.json();
+      // Antwort-Body ebenso absichern wie den Request selbst: Kommt statt
+      // JSON eine HTML-Fehlerseite zurueck (Proxy-Timeout, 502, abgebrochene
+      // Antwort), warf res.json() bisher eine Ausnahme, die niemand auffing --
+      // die Schleife endete still und die Wartephase blieb FUER IMMER stehen,
+      // bei bereits abgebuchten Credits. Ein solcher Ausfall ist voruebergehend,
+      // also wird er wie ein Netzwerkfehler behandelt: erneut versuchen.
+      let data: PollAntwort;
+      try {
+        data = (await res.json()) as PollAntwort;
+      } catch {
+        await new Promise((r) => setTimeout(r, wartezeit(versuch)));
+        continue;
+      }
+
       if (!res.ok) {
         setError(data.error ?? 'Die Generierung wurde nicht gefunden.');
         setStatus('error');
@@ -410,7 +455,7 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
 
       // Noch in Arbeit: Zwischenstand zeigen, dann erneut abfragen.
       setLiveCards(data.cards ?? []);
-      await new Promise((r) => setTimeout(r, 3000));
+      await new Promise((r) => setTimeout(r, wartezeit(versuch)));
     }
   }
 
@@ -442,7 +487,19 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
         return;
       }
       setGenerationId(data.generationId);
-      void poll(data.generationId, myToken);
+      // .catch() ist hier Pflicht, nicht Kosmetik: Ohne ihn verschwaende eine
+      // Ausnahme aus poll() als unbehandelte Promise-Rejection, und die
+      // Wartephase bliebe stehen, ohne dass jemals etwas passiert. Lieber ein
+      // ehrlicher Fehler mit dem Hinweis, wo das Ergebnis trotzdem landet --
+      // die Generierung laeuft serverseitig ja weiter.
+      void poll(data.generationId, myToken).catch((err) => {
+        console.error('[generate] Statusabfrage abgebrochen', err);
+        if (pollToken.current !== myToken) return; // Nutzer hat die Ansicht verlassen
+        setError(
+          'Die Verbindung zur Statusanzeige ist abgerissen. Deine Anprobe wird im Hintergrund fertiggestellt und erscheint unter „Mein Konto".',
+        );
+        setStatus('error');
+      });
     } catch {
       setError('Netzwerkfehler. Bitte versuch es erneut.');
       setStatus('error');

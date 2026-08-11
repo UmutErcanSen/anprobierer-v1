@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { useFocusTrap } from '@/lib/a11y/use-focus-trap';
 
 /*
   Generisches Bestaetigungs-Modal fuer destruktive, nicht umkehrbare
@@ -58,6 +59,11 @@ export function ConfirmDialog({
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
+  // Ohne das war aria-modal="true" unten ein leeres Versprechen: Der Fokus
+  // blieb hinter dem Overlay, Tab lief durch die verdeckte Seite.
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(open, dialogRef);
+
   const [eingabe, setEingabe] = useState('');
   // Eingabe zuruecksetzen, wenn der Dialog erneut geoeffnet wird -- sonst
   // bliebe ein zweiter Aufruf (z.B. nach einem fehlgeschlagenen ersten
@@ -109,6 +115,7 @@ export function ConfirmDialog({
       />
 
       <div
+        ref={dialogRef}
         role="alertdialog"
         aria-modal="true"
         aria-label={title}

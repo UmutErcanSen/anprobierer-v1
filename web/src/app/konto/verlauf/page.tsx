@@ -156,7 +156,7 @@ export default async function VerlaufPage(props: PageProps<"/konto/verlauf">) {
           1024px liess sich auf breiten Monitoren viel ungenutzte weisse
           Flaeche rechts und links entstehen. Mehr Spalten (bis xl:6) fuellen
           den zusaetzlichen Platz, statt ihn nur zu vergroessern. */}
-      <main className="mx-auto w-full max-w-7xl flex-1 px-6 py-14">
+      <main id="inhalt" className="mx-auto w-full max-w-7xl flex-1 px-6 py-14">
         {/* Primaeraktion oben beim Titel (sm:items-start haelt sie auf einer
             Linie mit der Ueberschrift, nicht mittig zum ganzen Textblock) --
             gleiches Muster wie auf /konto. Zwischenzeitlich stand sie unten

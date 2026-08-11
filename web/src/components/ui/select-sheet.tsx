@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { Check, ChevronDown, X } from 'lucide-react';
 import { inputClasses } from '@/components/ui/field';
+import { useFocusTrap } from '@/lib/a11y/use-focus-trap';
 
 export type SelectOption = { value: string; label: string };
 
@@ -49,6 +50,12 @@ export function MobilePickerSheet({
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
+  // Selbstgebautes Overlay statt nativem <dialog> (das kann keine
+  // Slide-Animation aus dem geschlossenen Zustand heraus) -- die Fokusfalle,
+  // die showModal() sonst mitbringt, muss deshalb von Hand kommen.
+  const sheetRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(open, sheetRef);
+
   useEffect(() => {
     document.body.style.overflow = open ? 'hidden' : '';
     return () => {
@@ -72,6 +79,10 @@ export function MobilePickerSheet({
         onClick={onClose}
       />
       <div
+        ref={sheetRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
         className={`absolute inset-x-0 bottom-0 flex max-h-[75vh] flex-col rounded-t-2xl border-t border-line bg-paper shadow-lg transition-transform duration-300 ease-out ${
           open ? 'translate-y-0' : 'translate-y-full'
         }`}

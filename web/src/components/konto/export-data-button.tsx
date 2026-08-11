@@ -40,7 +40,16 @@ export function ExportDataButton() {
     setLoading(true);
     try {
       const res = await fetch('/api/account/export');
-      if (!res.ok) throw new Error('export fehlgeschlagen');
+      if (!res.ok) {
+        // Die Meldung des Servers durchreichen statt sie durch ein pauschales
+        // "fehlgeschlagen" zu ersetzen: Beim Rate-Limit (429) erklaert sie,
+        // dass es an der Haeufigkeit liegt und wann es wieder geht -- sonst
+        // haelt der Nutzer den Export fuer kaputt und versucht es sofort
+        // wieder, was die Sperre nur verlaengert.
+        const fehler = (await res.json().catch(() => null)) as { error?: string } | null;
+        toast.error(fehler?.error ?? 'Der Export ist fehlgeschlagen. Bitte versuch es erneut.');
+        return;
+      }
       const data = (await res.json()) as ExportPayload;
 
       const JSZip = (await import('jszip')).default;

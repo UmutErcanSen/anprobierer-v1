@@ -45,7 +45,7 @@ export default async function PreisePage() {
     <>
       <SiteHeader />
 
-      <main className="flex-1">
+      <main id="inhalt" className="flex-1">
         {/* hero-enter statt Reveal: laeuft beim Laden sofort (kein Scroll
             noetig, die Seite oeffnet direkt hier) -- dieselbe Logik wie beim
             Hero der Landing Page, siehe globals.css. */}

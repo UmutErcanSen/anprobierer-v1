@@ -12,7 +12,7 @@ export const metadata: Metadata = { title: "Seite nicht gefunden" };
 */
 export default function NotFound() {
   return (
-    <main className="flex flex-1 items-center justify-center px-6 py-24">
+    <main id="inhalt" className="flex flex-1 items-center justify-center px-6 py-24">
       <div className="w-full max-w-md text-center">
         <p className="kicker">Fehler 404</p>
         <h1 className="display mt-5 text-4xl md:text-5xl">

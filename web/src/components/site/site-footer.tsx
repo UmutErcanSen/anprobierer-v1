@@ -17,23 +17,35 @@ import { siVisa, siMastercard, siApplepay, siGooglepay, siKlarna, type SimpleIco
   Markenfarben statt Einheitsfarbe: Nutzer erkennen Visa/Mastercard/Klarna
   ueber Jahre antrainiert an ihrer Farbe schneller als an der Form allein --
   hier zaehlt Wiedererkennung mehr als das eine-Akzentfarbe-Prinzip der
-  restigen Seite. Apple Pay bildet dabei die Ausnahme: Apples Richtlinien
-  verlangen Schwarz oder Weiss je nach Hintergrund, nie eine Markenfarbe --
-  deshalb `var(--ink)` statt Marken-Hex, damit es im dunklen Theme nicht
-  unsichtbar wird.
+  restlichen Seite.
+
+  JEDES Zeichen sitzt deshalb auf einer hellen Kachel. Grund: Diese
+  Markenfarben sind fuer helle Untergruende entworfen -- Visa ist ein sehr
+  dunkles Marineblau (#1A1F71), das im dunklen Theme direkt auf dem
+  Hintergrund praktisch verschwand. Die Kachel loest das, ohne die
+  Wiedererkennung zu opfern, und ist ausserdem die Darstellungsform, die man
+  von Kassenseiten gewohnt ist.
+
+  Weil die Kachel IMMER hell ist, bekommt Apple Pay ein festes Schwarz statt
+  `var(--ink)`: Apples Richtlinien verlangen Schwarz oder Weiss je nach
+  Untergrund, und der Untergrund ist hier in beiden Themes hell. Mit
+  `var(--ink)` waere es im dunklen Theme hell auf hell gewesen -- also genau
+  der Fehler, den die Kachel beheben soll.
 */
 function PaymentIcon({ icon, color }: { icon: SimpleIcon; color?: string }) {
   return (
-    <svg role="img" viewBox="0 0 24 24" width={20} height={20} fill={color ?? `#${icon.hex}`} aria-label={icon.title}>
-      <path d={icon.path} />
-    </svg>
+    <span className="flex h-8 w-11 items-center justify-center rounded-md border border-black/5 bg-white">
+      <svg role="img" viewBox="0 0 24 24" width={22} height={22} fill={color ?? `#${icon.hex}`} aria-label={icon.title}>
+        <path d={icon.path} />
+      </svg>
+    </span>
   );
 }
 
 const PAYMENT_ICONS: { icon: SimpleIcon; color?: string }[] = [
   { icon: siVisa },
   { icon: siMastercard },
-  { icon: siApplepay, color: "var(--ink)" },
+  { icon: siApplepay, color: "#000000" },
   { icon: siGooglepay },
   { icon: siKlarna },
 ];
@@ -73,7 +85,9 @@ export function SiteFooter() {
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-6 py-6 text-xs text-muted">
           <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center md:justify-start">
             <span>Sichere Bezahlung mit</span>
-            <div className="flex items-center gap-3">
+            {/* Engerer Abstand als zuvor: Die Kacheln bringen eigene Raender
+                mit, mit gap-3 wirkte die Reihe dadurch auseinandergezogen. */}
+            <div className="flex items-center gap-1.5">
               {PAYMENT_ICONS.map(({ icon, color }) => (
                 <PaymentIcon key={icon.title} icon={icon} color={color} />
               ))}

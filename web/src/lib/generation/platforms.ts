@@ -25,6 +25,17 @@ export type Platform = {
   newListingUrl: string;
   titleMaxLength: number;
   descriptionMaxLength: number;
+  /**
+   * In einem Satz: Was unterscheidet den Text dieser Plattform von den
+   * anderen? Wird direkt unter der Tab-Leiste angezeigt.
+   *
+   * Grund: Die Anpassung ist die eigentliche Leistung dieses Bereichs -- und
+   * sie war vollstaendig unsichtbar. Man haette zwischen den Tabs hin- und
+   * herklicken und aufmerksam lesen muessen, um ueberhaupt zu bemerken, dass
+   * der Text umgeschrieben wurde. Der Aufwand steckte drin, kam aber nicht
+   * an. Dieser Satz macht ihn in einer Zeile sichtbar.
+   */
+  hinweis: string;
 };
 
 export const PLATFORMS: Platform[] = [
@@ -34,6 +45,7 @@ export const PLATFORMS: Platform[] = [
     newListingUrl: 'https://www.vinted.de/items/new',
     titleMaxLength: 60,
     descriptionMaxLength: 1000,
+    hinweis: 'Lockerer Ton mit Emojis — so verfasst, wie es auf Vinted üblich ist.',
   },
   {
     key: 'kleinanzeigen',
@@ -41,6 +53,7 @@ export const PLATFORMS: Platform[] = [
     newListingUrl: 'https://www.kleinanzeigen.de/p-anzeige-aufgeben-schritt2.html',
     titleMaxLength: 65,
     descriptionMaxLength: 4000,
+    hinweis: 'Sachlich umgeschrieben, ohne Emojis und Hashtags.',
   },
   {
     key: 'ebay',
@@ -48,6 +61,7 @@ export const PLATFORMS: Platform[] = [
     newListingUrl: 'https://www.ebay.de/sl/sell',
     titleMaxLength: 80,
     descriptionMaxLength: 4000,
+    hinweis: 'Strukturiert umgeschrieben, mit Stichpunkten zu Zustand und Größe.',
   },
 ];
 

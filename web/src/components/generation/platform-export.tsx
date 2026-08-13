@@ -168,12 +168,12 @@ export function PlatformExport({ card, generationId }: { card: ResultCard; gener
       .finally(() => setLoading((current) => (current === platform.key ? null : current)));
   }
 
+  /**
+   * Begleitet den Klick auf den Link: kopieren, Bild laden, Stand merken.
+   * Das Oeffnen selbst uebernimmt der Link (siehe Begruendung dort) -- hier
+   * darf deshalb nichts mehr `preventDefault()` aufrufen.
+   */
   async function run() {
-    // Fenster SOFORT oeffnen, noch synchron im Klick-Handler -- nach einem
-    // await zaehlt der Klick fuer Popup-Blocker oft nicht mehr als
-    // Nutzeraktion, das Fenster wuerde sonst stumm blockiert.
-    window.open(active.newListingUrl, '_blank', 'noopener,noreferrer');
-
     // NUR der Titel: Er ist das erste Feld jedes Inseratsformulars, also das,
     // was unmittelbar nach dem Wechsel gebraucht wird. Frueher wanderten
     // Titel UND Beschreibung als ein Block in die Zwischenablage -- eingefuegt
@@ -203,7 +203,15 @@ export function PlatformExport({ card, generationId }: { card: ResultCard; gener
 
   return (
     <div className="flex flex-col gap-2.5">
-      <span className="text-xs uppercase tracking-[0.14em] text-muted">Für andere Plattformen vorbereiten</span>
+      {/* War "Für andere Plattformen vorbereiten". Das klang nach Logistik,
+          tatsaechlich geht es um Textqualitaet -- und genau die ist der Teil,
+          den ein Nutzer allein nicht ohne Weiteres hinbekommt: dass ein Text,
+          der auf Vinted gut wirkt, auf Kleinanzeigen unseriös klingt, und
+          dass jede Plattform ein anderes Zeichenlimit im Titel hat. Die
+          Ueberschrift benennt jetzt den eigentlichen Nutzen. */}
+      <span className="text-xs uppercase tracking-[0.14em] text-muted">
+        Text für die jeweilige Plattform anpassen
+      </span>
 
       {/* Sagt VOR dem Klick, was passiert. Vorher stand hier nur die
           Ueberschrift: Wer "Bei Vinted oeffnen" liest, darf einen
@@ -284,6 +292,22 @@ export function PlatformExport({ card, generationId }: { card: ResultCard; gener
         </div>
       </div>
 
+      {/* Macht die eigentliche Leistung sichtbar. Ohne diese Zeile musste man
+          zwischen den Tabs hin- und herklicken UND aufmerksam lesen, um
+          ueberhaupt zu bemerken, dass der Text je Plattform ein anderer ist.
+          Waehrend die Umschreibung laeuft, steht das hier ebenfalls -- sonst
+          wirkt der Ladekreis im Tab wie ein Hänger ohne Anlass. */}
+      <p className="flex items-center gap-1.5 text-xs leading-relaxed text-muted">
+        {loading === active.key ? (
+          <>
+            <Loader2 size={11} className="animate-spin" aria-hidden />
+            Text wird für {active.label} angepasst …
+          </>
+        ) : (
+          active.hinweis
+        )}
+      </p>
+
       {preview && (
         /* min-h + overflow-y-auto auf der Beschreibung: Vinted nutzt den
            Basistext, Kleinanzeigen/eBay bekommen einen eigens umgeschriebenen
@@ -326,14 +350,41 @@ export function PlatformExport({ card, generationId }: { card: ResultCard; gener
         </div>
       )}
 
-      <button
-        type="button"
+      {/*
+        Echter Link statt eines Knopfes mit window.open() -- aus zwei Gruenden:
+
+        1. AUF DEM HANDY OEFFNET SICH DIE APP. Vinted, Kleinanzeigen und eBay
+           registrieren ihre Web-Adressen als Universal Links (iOS) bzw. App
+           Links (Android): Das Betriebssystem leitet einen normalen Klick auf
+           https://www.vinted.de/... an die installierte App weiter. Bei einem
+           per JavaScript geoeffneten Fenster greift dieser Mechanismus auf iOS
+           NICHT -- dort landete man immer im Browser, obwohl die App da war.
+           Ein echter Link ueberlaesst die Entscheidung dem Betriebssystem:
+           App wenn vorhanden, sonst die Webseite.
+
+           Bewusst KEINE App-eigenen Adressen (vinted://...): Ist die App nicht
+           installiert, laeuft so ein Aufruf ins Leere und der Nutzer sieht gar
+           nichts. Der https-Weg funktioniert immer.
+
+        2. Ein Link wird nie vom Popup-Blocker abgefangen. window.open() konnte
+           stillschweigend blockiert werden, und die Meldung darunter behauptete
+           trotzdem "geoeffnet" -- ein Fehler, der sich nicht einmal erkennen
+           liess, weil window.open() mit gesetztem `noopener` laut Spezifikation
+           immer null zurueckgibt.
+
+        onClick laeuft zusaetzlich zur Navigation: Kopieren, Bild-Download und
+        Markierung passieren im selben Klick.
+      */}
+      <a
+        href={active.newListingUrl}
+        target="_blank"
+        rel="noopener noreferrer"
         onClick={run}
         className="mx-auto inline-flex w-fit items-center gap-1.5 rounded-full bg-ink px-4 py-2 text-xs font-medium text-on-ink transition-opacity hover:opacity-90"
       >
         <PlatformIcon icon={PLATFORM_ICONS[active.key]} size={13} />
         Bei {active.label} öffnen
-      </button>
+      </a>
 
       {/* Korrekturmoeglichkeit. Wir wissen nur, dass der Export angestossen
           wurde -- nicht, ob das Inserat wirklich online ging. Wer den Vorgang
@@ -361,10 +412,16 @@ export function PlatformExport({ card, generationId }: { card: ResultCard; gener
           einfuegen" -- was einfuegen, und was danach, blieb offen. */}
       {copied !== null && (
         <div className="rounded-lg border border-line bg-surface px-3 py-2.5 text-xs text-ink-soft">
+          {/* Meldet nur noch, was wir SELBST getan haben. "X geöffnet" stand
+              hier frueher unabhaengig davon, ob das Fenster wirklich aufging --
+              beim blockierten Popup war das schlicht falsch. Ob die App oder
+              der Browser aufgeht, entscheidet jetzt ohnehin das Betriebssystem
+              (siehe Link oben); wir wissen es nicht und behaupten es nicht. */}
           <p>
-            {active.label} geöffnet
-            {card.imageUrl && ' · Bild heruntergeladen'}
-            {preview && (copied ? ' · Titel kopiert' : '')}.
+            {card.imageUrl && 'Bild heruntergeladen'}
+            {card.imageUrl && preview && copied && ' · '}
+            {preview && copied && 'Titel kopiert'}
+            {(card.imageUrl || (preview && copied)) && '.'}
           </p>
           {preview && (
             <p className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1.5">

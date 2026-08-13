@@ -728,6 +728,65 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
     );
   }
 
+  /*
+    Modus-Wahl, EINMAL beschrieben und an zwei Stellen eingesetzt.
+
+    Auf Mobil steht sie ganz oben, noch vor dem Personenfoto: Sie entscheidet,
+    ob je Kleidungsstueck ein eigenes Bild entsteht oder alle zusammen in
+    eines kommen -- also ueber die Form des Ergebnisses. Diese Entscheidung
+    zuerst zu treffen und danach die Fotos zu waehlen, entspricht der
+    natuerlichen Reihenfolge; umgekehrt laedt man erst hoch und stolpert
+    danach ueber eine Grundsatzfrage.
+
+    Ab md bleibt sie dagegen in der rechten Einstellungsspalte -- dort steht
+    sie ohnehin ganz oben, und das Foto hat als eigene Spalte links seinen
+    festen Platz.
+
+    Zwei Einsatzstellen statt Umsortierung per CSS-order: Die beiden Spalten
+    sind auf Mobil EIN Fluss, auf Desktop zwei nebeneinander -- ein einzelnes
+    Element kann nicht gleichzeitig vor der Fotospalte und in der zweiten
+    Spalte stehen. Da immer nur eine der beiden Fassungen angezeigt wird
+    (display:none blendet die andere auch fuer Screenreader aus), entstehen
+    weder doppelte Bedienelemente noch doppelte Ansagen. InfoTip vergibt
+    keine IDs, es kann also auch nichts kollidieren.
+  */
+  const modusAuswahl = (
+    <section className="flex flex-col gap-3">
+      <h2 className="flex items-center gap-1.5 text-sm font-medium text-ink">
+        Modus
+        <InfoTip label="Was bedeuten die beiden Modi?">{modeTips}</InfoTip>
+      </h2>
+      {/* Auf Mobil volle Breite statt einer schmalen, mittig schwebenden
+          Pille -- groessere Tastflaeche und einheitlicher mit den anderen
+          vollbreiten Formularfeldern (Foto-Upload, Kleidung). flex-1 auf den
+          Buttons teilt die Breite gleichmaessig auf. Ab md wieder eine
+          kompakte, linksbuendige Pille (self-start) wie der Rest der
+          Einstellungsspalte -- dort stuende eine vollbreite Pille neben viel
+          freiem Platz unnatuerlich gestreckt da. */}
+      <div className="flex w-full rounded-full border border-line p-1 text-sm md:inline-flex md:w-auto md:self-start">
+        <button
+          type="button"
+          onClick={() => setMode('single')}
+          className={`flex-1 rounded-full px-4 py-1.5 text-center transition-colors md:flex-none ${mode === 'single' ? 'bg-ink text-on-ink' : 'text-muted hover:text-ink'}`}
+        >
+          Einzeln
+        </button>
+        <button
+          type="button"
+          onClick={() => setMode('combined')}
+          className={`flex-1 rounded-full px-4 py-1.5 text-center transition-colors md:flex-none ${mode === 'combined' ? 'bg-ink text-on-ink' : 'text-muted hover:text-ink'}`}
+        >
+          Kombiniert
+        </button>
+      </div>
+      <p className="text-xs text-muted">
+        {mode === 'single'
+          ? 'Je Kleidungsstück ein eigenes Anprobebild.'
+          : 'Alle Stücke zusammen in einem Bild.'}
+      </p>
+    </section>
+  );
+
   // ----------------------------------------------------------------- Eingabe
   //
   // Layout: auf Mobil ein einziger vertikaler Fluss (Standardverhalten von
@@ -773,9 +832,13 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
           hier der sauberere Weg, gleiches Muster wie beim TipModal direkt
           darunter (separates Mobil-/Desktop-Rendering statt Reihenfolge-
           Verrenkung). */}
-      <div className="md:hidden">
-        <h1 className="text-2xl font-semibold tracking-tight text-ink">Anprobe erstellen</h1>
-        <p className="mt-1 text-sm text-muted">Guthaben: {credits} Credits</p>
+      <div className="flex flex-col gap-8 md:hidden">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight text-ink">Anprobe erstellen</h1>
+          <p className="mt-1 text-sm text-muted">Guthaben: {credits} Credits</p>
+        </div>
+        {/* Modus VOR dem Personenfoto -- siehe Begruendung bei modusAuswahl. */}
+        {modusAuswahl}
       </div>
 
       <section className="relative flex flex-col gap-3 md:sticky md:top-16 md:max-w-[38rem] md:flex-[0.9] md:border-r md:border-line">
@@ -840,40 +903,10 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
         <p role="alert" className="rounded-lg border border-line bg-surface px-4 py-3 text-sm text-accent">{error}</p>
       )}
 
-      <section className="flex flex-col gap-3">
-        <h2 className="flex items-center gap-1.5 text-sm font-medium text-ink">
-          Modus
-          <InfoTip label="Was bedeuten die beiden Modi?">{modeTips}</InfoTip>
-        </h2>
-        {/* Auf Mobil volle Breite statt einer schmalen, mittig schwebenden
-            Pille -- groessere Tastflaeche und einheitlicher mit den anderen
-            vollbreiten Formularfeldern darunter (Foto-Upload, Kleidung).
-            flex-1 auf den Buttons teilt die Breite gleichmaessig auf. Ab md
-            wieder eine kompakte, linksbuendige Pille (self-start) wie der
-            Rest der Einstellungsspalte -- dort stuende eine vollbreite Pille
-            neben viel freiem Platz unnatuerlich gestreckt da. */}
-        <div className="flex w-full rounded-full border border-line p-1 text-sm md:inline-flex md:w-auto md:self-start">
-          <button
-            type="button"
-            onClick={() => setMode('single')}
-            className={`flex-1 rounded-full px-4 py-1.5 text-center transition-colors md:flex-none ${mode === 'single' ? 'bg-ink text-on-ink' : 'text-muted hover:text-ink'}`}
-          >
-            Einzeln
-          </button>
-          <button
-            type="button"
-            onClick={() => setMode('combined')}
-            className={`flex-1 rounded-full px-4 py-1.5 text-center transition-colors md:flex-none ${mode === 'combined' ? 'bg-ink text-on-ink' : 'text-muted hover:text-ink'}`}
-          >
-            Kombiniert
-          </button>
-        </div>
-        <p className="text-xs text-muted">
-          {mode === 'single'
-            ? 'Je Kleidungsstück ein eigenes Anprobebild.'
-            : 'Alle Stücke zusammen in einem Bild.'}
-        </p>
-      </section>
+      {/* Auf Mobil steht die Modus-Wahl bereits GANZ OBEN, noch vor dem
+          Personenfoto -- hier deshalb erst ab md. Siehe die Begruendung bei
+          der Definition von modusAuswahl. */}
+      <div className="hidden md:block">{modusAuswahl}</div>
 
       <section className="flex flex-col gap-3">
         {/* Siehe Kommentar bei "Dein Foto" oben -- gleicher Grund. */}

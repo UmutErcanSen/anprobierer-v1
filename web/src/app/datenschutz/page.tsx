@@ -225,9 +225,19 @@ export default function DatenschutzPage() {
         ausschließlich dazu, dich angemeldet zu halten (§ 25 Abs. 2 Nr. 2 TDDDG).
       </p>
       <p>
-        Zusätzlich merkt sich dein Browser lokal, ob du die helle oder dunkle
-        Darstellung gewählt hast. Diese Angabe verlässt dein Gerät nicht und wird
-        von uns nicht ausgelesen.
+        Zusätzlich merkt sich dein Browser, ob du die helle oder dunkle
+        Darstellung gewählt hast — aber <strong>erst, wenn du den Umschalter
+        tatsächlich betätigst</strong>. Wer die Darstellung nie umstellt, bei
+        dem wird dafür nichts gespeichert. Die Angabe verlässt dein Gerät
+        nicht, wird von uns nicht ausgelesen und ist keinem Konto zugeordnet;
+        sie dient allein der von dir angeforderten Einstellung
+        (§ 25 Abs. 2 Nr. 2 TDDDG).
+      </p>
+      <p>
+        Ein Zustimmungsbanner brauchen wir deshalb nicht: Wir speichern
+        ausschließlich, was für den von dir angeforderten Dienst erforderlich
+        ist. Es findet keinerlei Analyse, Reichweitenmessung oder Werbung
+        statt.
       </p>
 
       <h2>9. Deine Rechte</h2>

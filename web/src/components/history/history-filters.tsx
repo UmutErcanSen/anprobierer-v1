@@ -590,16 +590,21 @@ export function HistoryFilters({
               }`}
               onClick={closeSheet}
             />
-            {/* Feste Hoehe statt mitwachsendem Inhalt: vorher wurde das Sheet
-                beim Aufklappen einer Options-Liste selbst groesser und rutschte
-                sichtbar nach oben -- wenig elegant, und die Liste bekam
-                zusaetzlich ihre eigene verschachtelte Scrollbar. Jetzt ist die
-                Hoehe fix, Ober- und Unterebene teilen sich EINEN Scrollbereich
-                (siehe "relative flex-1 overflow-hidden" unten) und schieben
-                sich nur noch seitlich uebereinander (Drilldown-Muster:
-                Filterliste -> Optionsseite -> per Pfeil zurueck). */}
+            {/* Hoehe richtet sich nach der Filterliste, gedeckelt bei 85vh.
+                Vorher war sie mit h-[min(75vh,34rem)] fest verdrahtet -- weil
+                BEIDE Ebenen absolut positioniert waren, hatte der Container
+                keine eigene Hoehe und haette sonst nichts angezeigt. Bei nur
+                sechs Filterzeilen blieben dadurch rund 40px totes Feld
+                zwischen "Favoriten" und dem Knopf unten.
+
+                Jetzt bestimmt die obere Ebene die Hoehe (normaler Fluss), die
+                Unterebene liegt weiterhin absolut darueber. Damit bleibt die
+                Hoehe beim Wechsel zwischen den Ebenen trotzdem konstant --
+                genau das war der Grund fuer die feste Hoehe -- ohne den
+                Leerraum. Lange Optionslisten (Kategorie, Farbe) scrollen
+                innerhalb dieser Hoehe, wie zuvor. */}
             <div
-              className={`absolute inset-x-0 bottom-0 flex h-[min(75vh,34rem)] flex-col rounded-t-2xl border-t border-line bg-paper shadow-lg transition-transform duration-300 ease-out ${
+              className={`absolute inset-x-0 bottom-0 flex max-h-[85vh] flex-col rounded-t-2xl border-t border-line bg-paper shadow-lg transition-transform duration-300 ease-out ${
                 sheetOpen ? 'translate-y-0' : 'translate-y-full'
               }`}
             >
@@ -626,11 +631,15 @@ export function HistoryFilters({
                 </button>
               </div>
 
-              <div className="relative flex-1 overflow-hidden">
-                {/* Oberste Ebene: die sechs Filterzeilen. */}
+              <div className="relative min-h-0 flex-1 overflow-hidden">
+                {/* Oberste Ebene: die sechs Filterzeilen. BEWUSST im normalen
+                    Fluss (nicht absolut) -- sie gibt dem Sheet seine Hoehe.
+                    max-h-full laesst sie scrollen, sobald der 85vh-Deckel des
+                    Sheets greift; ohne definierte Obergrenze wuerde
+                    overflow-y-auto ins Leere laufen. */}
                 <div
                   inert={mobilePanel !== null}
-                  className={`absolute inset-0 overflow-y-auto p-5 transition-transform duration-300 ease-out ${
+                  className={`max-h-full overflow-y-auto p-5 transition-transform duration-300 ease-out ${
                     mobilePanel ? '-translate-x-full' : 'translate-x-0'
                   }`}
                 >

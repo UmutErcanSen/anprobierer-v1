@@ -388,11 +388,20 @@ body {
 .theme-wechselt *,
 .theme-wechselt *::before,
 .theme-wechselt *::after {
+  /*
+    Text und Icons wechseln BEWUSST schneller als die Flaechen (110ms statt
+    320ms). Bei gleicher Dauer laufen Schriftfarbe und Hintergrund gemeinsam
+    durch die Mitte -- und genau dort liegen dunkler Text auf dunklem Grund
+    bzw. heller auf hellem. Der Text wird also fuer rund eine Zehntelsekunde
+    unlesbar, was als Ruckeln wahrgenommen wird, obwohl technisch nichts
+    stockt. Mit dem kuerzeren Wert ist die Schrift laengst umgestellt,
+    waehrend die Flaeche in Ruhe nachzieht.
+  */
   transition:
     background-color 320ms cubic-bezier(0.4, 0, 0.2, 1),
     border-color 320ms cubic-bezier(0.4, 0, 0.2, 1),
-    color 320ms cubic-bezier(0.4, 0, 0.2, 1),
-    fill 320ms cubic-bezier(0.4, 0, 0.2, 1) !important;
+    color 110ms linear,
+    fill 110ms linear !important;
 }
 
 @media (prefers-reduced-motion: reduce) {

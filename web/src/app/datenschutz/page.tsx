@@ -35,7 +35,7 @@ export const metadata: Metadata = { title: "Datenschutzerklärung" };
 
 export default function DatenschutzPage() {
   return (
-    <LegalShell title="Datenschutzerklärung" updated="Stand: 10. August 2026">
+    <LegalShell title="Datenschutzerklärung" updated="Stand: 13. August 2026">
       <h2>1. Verantwortlicher</h2>
       <p>
         [Vollständiger Name]
@@ -313,6 +313,28 @@ export default function DatenschutzPage() {
         gebunden. Bitte beachte: Wenn du die Bilder gewerblich veröffentlichst,
         trifft die Kennzeichnungspflicht auch dich selbst — unsere Kennzeichnung
         soll dir dabei helfen, sie zu erfüllen.
+      </p>
+
+      <h2>13. Weiterleitung zu Verkaufsplattformen</h2>
+      <p>
+        Im Ergebnisbereich kannst du dein Anprobebild und den Verkaufstext für
+        Vinted, Kleinanzeigen oder eBay aufbereiten lassen. Der Knopf öffnet
+        dabei lediglich die normale Inserats-Seite der jeweiligen Plattform in
+        einem neuen Fenster; auf Mobilgeräten kann dein Betriebssystem
+        stattdessen die installierte App öffnen.
+      </p>
+      <p>
+        <strong>Dabei werden von uns keinerlei Daten an diese Anbieter
+        übermittelt.</strong> Titel, Text und Bild landen nur in deiner
+        Zwischenablage bzw. in deinem Download-Ordner — eingefügt und
+        hochgeladen wird das Inserat ausschließlich von dir. Sobald du die
+        Seite der Plattform erreichst, gilt dort deren eigene
+        Datenschutzerklärung, auf die wir keinen Einfluss haben.
+      </p>
+      <p>
+        Vinted, Kleinanzeigen und eBay sind Marken der jeweiligen Anbieter. Es
+        besteht keine geschäftliche Verbindung oder Partnerschaft zwischen uns
+        und diesen Unternehmen.
       </p>
     </LegalShell>
   );

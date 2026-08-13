@@ -15,4 +15,4 @@
  * eine erneute Zustimmung einzuholen ist eine eigene, bewusste Entscheidung
  * und passiert nicht automatisch.
  */
-export const PRIVACY_VERSION = '2026-08-10';
+export const PRIVACY_VERSION = '2026-08-13';

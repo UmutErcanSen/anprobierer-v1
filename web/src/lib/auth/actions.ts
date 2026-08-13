@@ -5,6 +5,7 @@ import { headers } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import { newPasswordSchema, resetRequestSchema, signInSchema, signUpSchema } from '@/lib/validation/auth';
 import { PRIVACY_VERSION } from '@/lib/legal/consent';
+import { BETA_AKTIV, betaZugangErlaubt } from '@/lib/beta/config';
 
 export type AuthState = {
   error?: string;
@@ -35,6 +36,19 @@ export async function signUpAction(
 
   if (!parsed.success) {
     return { fieldErrors: toFieldErrors(parsed.error) };
+  }
+
+  /*
+    Waehrend der geschlossenen Beta gibt es keine Selbstregistrierung. Die
+    Pruefung steht bewusst HIER und nicht nur im Formular: Das Formular ist
+    ausgeblendet, aber eine Server Action laesst sich auch ohne sichtbares
+    Formular aufrufen. Ausgeblendete Oberflaeche ist keine Zugangskontrolle.
+  */
+  if (BETA_AKTIV) {
+    return {
+      error:
+        'Die Registrierung ist während der geschlossenen Beta nicht möglich. Wenn du teilnehmen möchtest, melde dich bei uns.',
+    };
   }
 
   const supabase = await createClient();
@@ -83,6 +97,24 @@ export async function signInAction(
 
   if (!parsed.success) {
     return { fieldErrors: toFieldErrors(parsed.error) };
+  }
+
+  /*
+    Waehrend der Beta kommen nur vorab freigeschaltete Adressen durch
+    (BETA_ALLOWLIST). Die Pruefung laeuft VOR dem Anmeldeversuch, damit fuer
+    nicht freigeschaltete Adressen gar keine Sitzung entstehen kann.
+
+    Eigene, klare Meldung statt der unspezifischen darunter: Hier geht es
+    nicht um falsche Zugangsdaten, sondern um fehlende Freischaltung. Wer
+    seine richtigen Daten eingibt und "E-Mail oder Passwort stimmt nicht"
+    liest, sucht den Fehler sonst ewig bei sich. Ein Rueckschluss auf
+    fremde Konten entsteht dadurch nicht -- die Meldung sagt nur etwas
+    ueber die Beta-Liste aus, nicht darueber, ob ein Konto existiert.
+  */
+  if (!betaZugangErlaubt(parsed.data.email)) {
+    return {
+      error: 'Diese Adresse ist für die geschlossene Beta nicht freigeschaltet.',
+    };
   }
 
   const supabase = await createClient();

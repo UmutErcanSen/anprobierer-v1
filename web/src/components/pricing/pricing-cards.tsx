@@ -6,6 +6,7 @@ import { LinkButton, Button } from "@/components/ui/button";
 import { Reveal } from "@/components/site/reveal";
 import { PLANS, type PaidPlan } from "@/components/pricing/plans-data";
 import type { PlanKey } from "@/lib/generation/constants";
+import { BETA_AKTIV } from "@/lib/beta/config";
 
 type Interval = "monthly" | "yearly";
 
@@ -169,9 +170,20 @@ export function PricingCards({ currentPlan }: PricingCardsProps) {
                 </span>
               ) : plan.key === "free" ? (
                 currentPlan == null ? (
-                  <LinkButton href="/registrieren" size="lg">
-                    Kostenlos starten
-                  </LinkButton>
+                  /* In der geschlossenen Beta gibt es keine Selbst-
+                     registrierung -- der Knopf wuerde nur zur Absage
+                     fuehren. Die Preise bleiben trotzdem sichtbar: Sie
+                     erklaeren das Produkt, auch wenn man noch nicht
+                     buchen kann. */
+                  BETA_AKTIV ? (
+                    <span className="inline-flex h-12 items-center justify-center rounded-full border border-line px-7 text-[15px] text-muted">
+                      Bald verfügbar
+                    </span>
+                  ) : (
+                    <LinkButton href="/registrieren" size="lg">
+                      Kostenlos starten
+                    </LinkButton>
+                  )
                 ) : (
                   <Button size="lg" variant="outline" onClick={openPortal} disabled={portalLoading}>
                     {portalLoading ? "Öffnet …" : "Abo verwalten"}

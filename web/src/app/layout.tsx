@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
 import { Toaster } from "sonner";
+import { BetaBanner } from "@/components/site/beta-banner";
 import "./globals.css";
 
 // Sans fuer UI und Fliesstext.
@@ -80,6 +81,11 @@ export default function RootLayout({
         >
           Zum Inhalt springen
         </a>
+
+        {/* Beta-Hinweis ueber ALLEN Seiten -- hier im Layout statt in jeder
+            Seite einzeln. Blendet sich selbst aus, sobald die Beta endet
+            (siehe lib/beta/config.ts). */}
+        <BetaBanner />
         {children}
         {/*
           Toasts fuer kurze Erfolgsmeldungen (z.B. nach Mehrfach-Loeschen im

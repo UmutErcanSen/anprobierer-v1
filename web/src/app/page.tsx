@@ -7,6 +7,7 @@ import { Reveal } from "@/components/site/reveal";
 import { CountUp } from "@/components/site/count-up";
 import { PLATFORMS } from "@/lib/generation/platforms";
 import { PLATFORM_ICONS, PlatformIcon } from "@/components/generation/platform-icon";
+import { BETA_AKTIV } from "@/lib/beta/config";
 
 /*
   Landing Page — Richtung "Editorial & bildstark".
@@ -125,9 +126,22 @@ export default async function HomePage(props: PageProps<"/">) {
                 linksbuendig, aber zwei Buttons nebeneinander sahen dort auf
                 der schmalen, sonst mittigen Flaeche schief aus. Ab md wieder
                 linksbuendig wie der restliche Textblock. */}
+            {/* Waehrend der geschlossenen Beta fuehrt "Kostenlos starten"
+                nirgendwohin -- der Knopf entfaellt deshalb, statt in eine
+                Absage zu laufen. "So funktioniert's" bleibt: Wer die Seite
+                findet, darf sie verstehen duerfen, auch wenn er noch nicht
+                mitmachen kann. */}
             <div className="mt-9 flex flex-wrap items-center justify-center gap-3 md:justify-start">
-              <LinkButton href="/registrieren" size="lg">Kostenlos starten</LinkButton>
-              <LinkButton href="/#so-gehts" variant="outline" size="lg">So funktioniert's</LinkButton>
+              {!BETA_AKTIV && (
+                <LinkButton href="/registrieren" size="lg">Kostenlos starten</LinkButton>
+              )}
+              <LinkButton
+                href="/#so-gehts"
+                variant={BETA_AKTIV ? undefined : 'outline'}
+                size="lg"
+              >
+                So funktioniert&apos;s
+              </LinkButton>
             </div>
 
             <p className="mt-6 text-sm text-muted">
@@ -300,8 +314,16 @@ export default async function HomePage(props: PageProps<"/">) {
                 sollen (anders als die Ueberschrift darueber, die bewusst
                 linksbuendig bleibt). Ab sm wieder normale Zeile. */}
             <Reveal className="mt-14 flex flex-col items-center gap-4 text-center sm:flex-row sm:items-center sm:text-left">
-              <LinkButton href="/registrieren" size="lg">Jetzt kostenlos starten</LinkButton>
-              <span className="text-sm text-muted">Erstes Ergebnis gratis · keine Zahlungsdaten nötig</span>
+              {BETA_AKTIV ? (
+                <span className="text-sm text-muted">
+                  Anprobierer ist derzeit in einer geschlossenen Testphase. Der öffentliche Start folgt in Kürze.
+                </span>
+              ) : (
+                <>
+                  <LinkButton href="/registrieren" size="lg">Jetzt kostenlos starten</LinkButton>
+                  <span className="text-sm text-muted">Erstes Ergebnis gratis · keine Zahlungsdaten nötig</span>
+                </>
+              )}
             </Reveal>
           </div>
         </section>

@@ -4,6 +4,7 @@ import { ThemeToggle } from "@/components/site/theme-toggle";
 import { MobileNav } from "@/components/site/mobile-nav";
 import { createClient } from "@/lib/supabase/server";
 import { signOutAction } from "@/lib/auth/actions";
+import { BETA_AKTIV } from "@/lib/beta/config";
 
 /*
   Marketing-Navigation. Wortmarke links, wenige Links, eine gefuellte Aktion
@@ -32,15 +33,28 @@ export async function SiteHeader() {
   // (z.B. der Startseite) gab es keinen einzigen Link zur Kontouebersicht.
   // Erst ein Umweg ueber "Erstellen" -> AppHeader zeigte ueberhaupt Credits/
   // Tarif/Konto an. Jetzt direkt hier verfuegbar, ohne den Umweg.
+  /*
+    Waehrend der geschlossenen Beta zeigt der Header Abgemeldeten weder
+    "Anmelden" noch "Kostenlos starten" -- beides waere eine Einladung, die
+    wir gerade nicht einloesen koennen.
+
+    Die Testenden rufen /anmelden direkt auf; die Seite bleibt erreichbar und
+    funktioniert fuer freigeschaltete Adressen unveraendert. Angemeldete
+    Nutzer sehen die normale Navigation, sonst waere die Beta unbenutzbar.
+  */
   const nav = user
     ? [...BASE_NAV, { href: "/konto", label: "Mein Konto" }]
-    : [...BASE_NAV, { href: "/anmelden", label: "Anmelden" }];
+    : BETA_AKTIV
+      ? BASE_NAV
+      : [...BASE_NAV, { href: "/anmelden", label: "Anmelden" }];
   // "Erstellen" bleibt trotzdem die primaere, gefuellte Aktion: "Kostenlos
   // starten" heisst "ich will jetzt etwas erstellen", nicht "ich will meine
   // Kontouebersicht sehen".
   const cta = user
     ? { href: "/anzeige-erstellen", label: "Erstellen" }
-    : { href: "/registrieren", label: "Kostenlos starten" };
+    : BETA_AKTIV
+      ? null
+      : { href: "/registrieren", label: "Kostenlos starten" };
 
   return (
     <header className="sticky top-0 z-50 border-b border-line bg-paper/85 backdrop-blur-md">
@@ -73,11 +87,13 @@ export async function SiteHeader() {
               Wrapper mit eigenem display hat dieses Problem nicht: bei
               display:none verschwindet das gesamte Kind unabhaengig von
               dessen eigenem inline-flex. */}
-          <span className="hidden sm:inline-flex">
-            <LinkButton href={cta.href} size="md">
-              {cta.label}
-            </LinkButton>
-          </span>
+          {cta && (
+            <span className="hidden sm:inline-flex">
+              <LinkButton href={cta.href} size="md">
+                {cta.label}
+              </LinkButton>
+            </span>
+          )}
           {/*
             Eigene Reihenfolge fuer Mobil statt einfach [cta, ...nav]:
 
@@ -97,8 +113,10 @@ export async function SiteHeader() {
           <MobileNav
             items={
               user
-                ? [cta, { href: "/konto", label: "Mein Konto" }, ...BASE_NAV]
-                : [cta, { href: "/anmelden", label: "Anmelden" }, ...BASE_NAV]
+                ? [cta!, { href: "/konto", label: "Mein Konto" }, ...BASE_NAV]
+                : BETA_AKTIV
+                  ? BASE_NAV
+                  : [cta!, { href: "/anmelden", label: "Anmelden" }, ...BASE_NAV]
             }
           >
             {user && (

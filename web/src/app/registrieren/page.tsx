@@ -5,6 +5,7 @@ import { AuthForm } from "@/components/auth/auth-form";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { signUpAction } from "@/lib/auth/actions";
 import { createClient } from "@/lib/supabase/server";
+import { BETA_AKTIV } from "@/lib/beta/config";
 
 export const metadata: Metadata = { title: "Konto erstellen" };
 
@@ -22,6 +23,37 @@ export default async function RegistrierenPage() {
     data: { user },
   } = await supabase.auth.getUser();
   if (user) redirect("/anzeige-erstellen");
+
+  /* Waehrend der geschlossenen Beta gibt es kein Formular -- die Seite bleibt
+     aber erreichbar, damit bestehende Links und Lesezeichen nicht ins Leere
+     laufen, sondern erklaeren, warum es gerade nicht weitergeht. Die
+     eigentliche Sperre sitzt in signUpAction (siehe dort). */
+  if (BETA_AKTIV) {
+    return (
+      <AuthShell
+        title="Noch geschlossen"
+        subtitle="Anprobierer befindet sich in einer geschlossenen Testphase."
+        footer={
+          <>
+            Du hast bereits einen Testzugang?{" "}
+            <Link href="/anmelden" className="text-ink underline underline-offset-4">
+              Anmelden
+            </Link>
+          </>
+        }
+      >
+        <div className="flex flex-col gap-4 rounded-lg border border-line bg-surface px-5 py-4 text-sm leading-relaxed text-ink-soft">
+          <p>
+            Neue Konten lassen sich derzeit nicht selbst anlegen. Wir testen mit einer kleinen, festen Gruppe, um
+            Fehler zu finden, bevor der Dienst öffentlich wird.
+          </p>
+          <p>
+            Wenn du dabei sein möchtest, schreib uns — wir schalten dich frei und melden uns mit deinen Zugangsdaten.
+          </p>
+        </div>
+      </AuthShell>
+    );
+  }
 
   return (
     <AuthShell

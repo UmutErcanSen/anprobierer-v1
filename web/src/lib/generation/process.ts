@@ -116,7 +116,7 @@ export async function processGeneration(input: ProcessGenerationInput): Promise<
           const r = await generateTryOn({
             person,
             clothing: [clothing[i]],
-            prompt: buildTryOnPrompt(type, sizes[i], notes),
+            prompt: buildTryOnPrompt(type, sizes[i]),
             quality,
           });
           const marked = await watermarkResultImage(r.image);

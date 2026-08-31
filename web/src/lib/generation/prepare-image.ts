@@ -99,3 +99,23 @@ export async function createThumbnail(resultBytes: Buffer): Promise<Buffer> {
 export function thumbnailPath(path: string): string {
   return path.replace(/\.png$/i, '-thumb.webp');
 }
+
+/**
+ * Kleine Kopie ausschliesslich fuer die Inhaltspruefung (lib/openai/moderation).
+ *
+ * Die vorbereiteten Bilder sind 1536 px grosse PNGs -- als Base64 in einem
+ * JSON-Rumpf waeren das schnell mehrere Megabyte pro Bild, und bei mehreren
+ * Kleidungsstuecken ginge die Anfrage in die Zehner-Megabyte. 768 px JPEG
+ * reicht der Moderation vollauf: Sie beurteilt Motiv und Darstellung, nicht
+ * Stoffstruktur.
+ *
+ * JPEG statt WebP, weil dieses Bild an einen FREMDEN Dienst geht -- bei der
+ * Rastervariante (createThumbnail) gibt es diese Frage nicht, die verlaesst
+ * den eigenen Browser nie.
+ */
+export async function createModerationCopy(bytes: Buffer): Promise<Buffer> {
+  return sharp(bytes)
+    .resize({ width: 768, height: 768, fit: 'inside', withoutEnlargement: true })
+    .jpeg({ quality: 80 })
+    .toBuffer();
+}

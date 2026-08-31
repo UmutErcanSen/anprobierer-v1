@@ -34,7 +34,13 @@ const PNG_1x1 =
 */
 let bildFehler = 0; // 0 = Erfolg, sonst der zu liefernde HTTP-Status
 let textFehler = 0;
-const zaehler = { bilder: 0, texte: 0 };
+/* Inhaltspruefung: standardmaessig unbedenklich. Tests koennen beides
+   umschalten -- eine Beanstandung (die Route muss dann 422 liefern, OHNE
+   Credits abzubuchen) und einen Ausfall der Pruefung (die Route muss dann
+   sperren statt durchzulassen, 503). */
+let pruefungBeanstandet = false;
+let pruefungFehler = 0;
+const zaehler = { bilder: 0, texte: 0, pruefungen: 0 };
 
 const json = (res, status, body) => {
   res.writeHead(status, { 'Content-Type': 'application/json' });
@@ -53,9 +59,20 @@ const server = createServer((req, res) => {
     if (befehl === 'reset') {
       bildFehler = 0;
       textFehler = 0;
+      pruefungBeanstandet = false;
+      pruefungFehler = 0;
       zaehler.bilder = 0;
       zaehler.texte = 0;
+      zaehler.pruefungen = 0;
       return json(res, 200, { ok: true });
+    }
+    if (befehl === 'flag-moderation') {
+      pruefungBeanstandet = true;
+      return json(res, 200, { ok: true, pruefungBeanstandet });
+    }
+    if (befehl === 'fail-moderation') {
+      pruefungFehler = Number(new URL(req.url, 'http://x').searchParams.get('status') ?? 500);
+      return json(res, 200, { ok: true, pruefungFehler });
     }
     if (befehl === 'fail-images') {
       bildFehler = Number(new URL(req.url, 'http://x').searchParams.get('status') ?? 500);
@@ -100,6 +117,32 @@ const server = createServer((req, res) => {
           einfach auf `cost_usd is not null` filtern und treffen dann
           garantiert nur echte Aufrufe.
         */
+      });
+    }
+
+    /*
+      Inhaltspruefung (siehe lib/openai/moderation.ts). Liefert bewusst nur
+      EIN Ergebnis, egal wie viele Eingaben geschickt wurden -- die Route
+      wertet die Liste als Ganzes aus, eine Beanstandung genuegt. Ein
+      originalgetreuer Nachbau pro Eingabe braechte keinen Erkenntnisgewinn.
+    */
+    if (pfad === '/v1/moderations') {
+      zaehler.pruefungen++;
+      if (pruefungFehler) {
+        return json(res, pruefungFehler, {
+          error: { message: 'Vom Mock erzwungener Pruefungsfehler.', type: 'server_error' },
+        });
+      }
+      const treffer = pruefungBeanstandet;
+      return json(res, 200, {
+        model: 'omni-moderation-latest',
+        results: [
+          {
+            flagged: treffer,
+            categories: { 'sexual/minors': false, sexual: false, violence: treffer, illicit: false },
+            category_scores: { 'sexual/minors': 0, sexual: 0.0001, violence: treffer ? 0.99 : 0.0001, illicit: 0.0001 },
+          },
+        ],
       });
     }
 

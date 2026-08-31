@@ -3,7 +3,8 @@ import { after } from 'next/server';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { prepareImage } from '@/lib/generation/prepare-image';
+import { prepareImage, createModerationCopy } from '@/lib/generation/prepare-image';
+import { pruefeInhalte, PruefungNichtMoeglich, type PruefEingabe } from '@/lib/openai/moderation';
 import { processGeneration, type PreparedImage } from '@/lib/generation/process';
 import { rateLimitError } from '@/lib/generation/rate-limit';
 import { lockedImagePath } from '@/lib/generation/lock';
@@ -123,9 +124,92 @@ export async function POST(request: Request) {
 
   const imageCount = mode === 'combined' ? 1 : clothingFiles.length;
 
+  const admin = createAdminClient();
+
+  /*
+    Bilder einlesen und aufbereiten -- BEVOR abgebucht wird.
+
+    Die Reihenfolge ist Absicht und war vorher andersherum: Erst wurde
+    bezahlt, dann aufbereitet, und ein Fehler dabei musste umstaendlich
+    zurueckgebucht werden. Jetzt kann hier nichts mehr schiefgehen, wofuer
+    jemand bezahlt hat.
+
+    Der Speicherpfad haengt an der Generierungs-ID, die es erst nach dem
+    Abbuchen gibt -- die Dateinamen werden deshalb weiter unten nachgetragen.
+  */
+  let vorbereitetePerson: PreparedImage;
+  let vorbereiteteKleidung: PreparedImage[];
+  try {
+    vorbereitetePerson = await toPrepared(personFile, 'person');
+    vorbereiteteKleidung = await Promise.all(clothingFiles.map((c, i) => toPrepared(c, `clothing-${i}`)));
+  } catch (err) {
+    console.error('[generate] Bildvorbereitung fehlgeschlagen', user.id, err);
+    return NextResponse.json({ error: 'Die Fotos konnten nicht verarbeitet werden.' }, { status: 400 });
+  }
+
+  /*
+    Inhaltspruefung -- ebenfalls vor dem Abbuchen, und vor dem ersten
+    kostenpflichtigen Aufruf.
+
+    Geprueft wird BEIDES: der freie Notiztext und jedes hochgeladene Bild.
+    Ein abgelehnter Auftrag kostet dadurch weder Credits noch OpenAI-Gebuehren,
+    und es landet nichts davon in unserem Speicher.
+  */
+  const zuPruefen: PruefEingabe[] = [];
+  if (notes?.trim()) zuPruefen.push({ art: 'text', text: notes });
+  try {
+    for (const bild of [vorbereitetePerson, ...vorbereiteteKleidung]) {
+      zuPruefen.push({ art: 'bild', bytes: await createModerationCopy(bild.bytes), mimeType: 'image/jpeg' });
+    }
+  } catch (err) {
+    console.error('[generate] Pruefkopie fehlgeschlagen', user.id, err);
+    return NextResponse.json({ error: 'Die Fotos konnten nicht verarbeitet werden.' }, { status: 400 });
+  }
+
+  try {
+    const pruefung = await pruefeInhalte(zuPruefen);
+    if (pruefung.beanstandet) {
+      /*
+        Fuer die Missbrauchserkennung protokollieren -- ohne Inhalt, nur die
+        Tatsache und die Kategorien. Wer hier wiederholt auffaellt, laesst
+        sich damit finden, ohne dass wir das Material aufbewahren.
+      */
+      console.warn('[moderation] abgelehnt', user.id, pruefung.kategorien.join(','));
+      await admin.from('usage_events').insert({
+        user_id: user.id,
+        event_type: `moderation_blocked:${pruefung.kategorien[0] ?? 'unbekannt'}`.slice(0, 60),
+      });
+      /*
+        Bewusst OHNE Nennung der ausgeloesten Kategorie: Eine genaue Auskunft
+        waere eine Anleitung zum Umgehen ("welcher Satz rutscht durch?").
+        Der Hinweis auf die Regeln reicht, um einen ehrlichen Fehler zu
+        korrigieren.
+      */
+      return NextResponse.json(
+        {
+          error:
+            'Diese Anfrage wurde abgelehnt. Erlaubt sind ausschließlich Fotos volljähriger Personen, die der Aufnahme zugestimmt haben, sowie sachliche Angaben zur Kleidung.',
+        },
+        { status: 422 },
+      );
+    }
+  } catch (err) {
+    /*
+      Bewusst SPERREN statt durchlassen, wenn die Pruefung ausfaellt. Eine
+      stillschweigend uebersprungene Pruefung waere schlimmer als eine
+      voruebergehend nicht nutzbare Funktion -- zumal die Generierung selbst
+      denselben Dienst braucht und ohnehin nicht laufen wuerde.
+    */
+    console.error('[generate] Inhaltspruefung nicht moeglich', user.id, err);
+    const grund = err instanceof PruefungNichtMoeglich ? 'derzeit nicht erreichbar' : 'fehlgeschlagen';
+    return NextResponse.json(
+      { error: `Die Sicherheitsprüfung ist ${grund}. Bitte versuche es in ein paar Minuten erneut.` },
+      { status: 503 },
+    );
+  }
+
   // Abbuchen: Kosten pro Bild × Bildanzahl, atomar. Ab hier ist bezahlt --
   // jeder Fehlerpfad danach muss zurückbuchen.
-  const admin = createAdminClient();
   const { data: generation, error: spendError } = await admin.rpc('spend_credits', {
     p_user_id: user.id,
     p_mode: mode,
@@ -154,18 +238,11 @@ export async function POST(request: Request) {
 
   const genId: string = generation.id;
 
-  // Dateien SOFORT einlesen — nach dem Return ist der Request-Stream weg.
-  let person: PreparedImage;
-  let clothing: PreparedImage[];
-  try {
-    const dir = `${user.id}/${genId}`;
-    person = await toPrepared(personFile, `${dir}/person`);
-    clothing = await Promise.all(clothingFiles.map((c, i) => toPrepared(c, `${dir}/clothing-${i}`)));
-  } catch (err) {
-    console.error('[generate] Bildvorbereitung fehlgeschlagen', genId, err);
-    await admin.rpc('refund_generation', { p_generation_id: genId, p_error_message: 'Bildvorbereitung fehlgeschlagen.' });
-    return NextResponse.json({ error: 'Die Fotos konnten nicht verarbeitet werden.' }, { status: 400 });
-  }
+  // Speicherpfade nachtragen: Die Bilder liegen laengst aufbereitet vor
+  // (siehe oben), erst jetzt ist die Generierungs-ID dafuer bekannt.
+  const dir = `${user.id}/${genId}`;
+  const person: PreparedImage = { ...vorbereitetePerson, filename: `${dir}/person` };
+  const clothing: PreparedImage[] = vorbereiteteKleidung.map((c, i) => ({ ...c, filename: `${dir}/clothing-${i}` }));
 
   // Verarbeitung laeuft nach dem Response weiter -- der Client wartet nicht.
   after(() =>

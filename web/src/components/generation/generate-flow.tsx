@@ -1016,8 +1016,26 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
       </section>
 
       <section>
-        <Field label="Zusätzliche Hinweise (optional)" htmlFor="notes">
-          <Textarea id="notes" rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} />
+        {/* Der Hinweis sagt bewusst, was HINEIN gehoert, statt zu drohen.
+            Wer sachlich beschreibt, bekommt bessere Verkaufstexte -- und
+            laeuft nebenbei nicht in die Inhaltspruefung (siehe
+            lib/openai/moderation.ts), die den Text serverseitig ablehnt. */}
+        <Field
+          label="Zusätzliche Hinweise (optional)"
+          htmlFor="notes"
+          hint="Sachliche Angaben zur Kleidung: Zustand, Material, Passform, Besonderheiten."
+        >
+          {/* aria-describedby von Hand: Field vergibt dem Hinweis zwar eine
+              id ("<htmlFor>-hint"), verknuepft sie aber mit nichts -- ohne
+              das hier bliebe der Hinweis fuer Screenreader unsichtbar. */}
+          <Textarea
+            id="notes"
+            rows={2}
+            maxLength={2000}
+            aria-describedby="notes-hint"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+          />
         </Field>
       </section>
 
@@ -1038,7 +1056,8 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
             Ich bin ausdrücklich damit einverstanden, dass mein Personenfoto
             und die Kleidungsfotos — personenbezogene Daten — zur Erstellung
             des Anprobebilds an unseren KI-Dienstleister übermittelt und dort
-            verarbeitet werden.{' '}
+            verarbeitet werden. Ich bestätige, dass die abgebildete Person
+            volljährig ist und der Verwendung zugestimmt hat.{' '}
             <Link
               href="/datenschutz"
               target="_blank"

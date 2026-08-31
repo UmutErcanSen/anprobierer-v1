@@ -79,6 +79,9 @@ export async function GET() {
       status: g.status as 'queued' | 'processing' | 'succeeded' | 'failed',
       fertig,
       gesamt,
+      // Fuer die Erkennung haengengebliebener Jobs: Was laenger als das
+      // Serverlimit auf 'processing' steht, wird von allein nie mehr fertig.
+      createdAt: g.created_at as string,
     };
   });
 

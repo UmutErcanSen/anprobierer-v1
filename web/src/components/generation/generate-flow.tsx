@@ -12,6 +12,7 @@ import { InfoTip } from '@/components/ui/info-tip';
 import { TipModal } from '@/components/ui/tip-modal';
 import { ResultView, type ResultCard } from '@/components/generation/result-view';
 import { GenerationIconPanel } from '@/components/generation/generation-icon-panel';
+import { alsGemeldetMerken } from '@/lib/generation/gemeldet';
 import {
   CLOTHING_TYPES,
   SIZES,
@@ -443,6 +444,11 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
       }
 
       if (data.status === 'succeeded' || data.status === 'failed') {
+        // Das Ergebnis steht gleich in voller Groesse auf DIESER Seite. Ohne
+        // diesen Vermerk meldete die globale Leiste es beim naechsten
+        // Seitenwechsel als frische Neuigkeit -- eine Information, die der
+        // Nutzer eine Sekunde vorher vor sich hatte.
+        alsGemeldetMerken(generationId);
         setCards(data.cards ?? []);
         setFailures(data.failures ?? 0);
         setRemaining(credits - (data.creditsCharged ?? 0));

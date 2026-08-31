@@ -419,3 +419,35 @@ body {
   }
 }
 
+/*
+  Laufbalken fuer die Leiste "Deine Anprobe entsteht" (laufende-anprobe.tsx).
+
+  Bewusst ein UNBESTIMMTER Balken, solange nur ein Bild erwartet wird: Wir
+  koennen den Fortschritt innerhalb eines Bildes nicht messen, und ein Balken,
+  der eine Genauigkeit vortaeuscht, die es nicht gibt, waere genau der
+  Zeitschaetzer, den wir bewusst entfernt haben. Er sagt hier nur "es passiert
+  etwas", nicht "so weit ist es".
+*/
+@keyframes anprobe-laeuft {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(500%); }
+}
+
+.anprobe-laeuft {
+  animation: anprobe-laeuft 1.7s ease-in-out infinite;
+}
+
+/*
+  Ohne Bewegung wuerde der 20% breite Balken bei translateX(-100%) ausserhalb
+  stehen -- die Leiste saehe schlicht kaputt aus. Deshalb hier kein blosses
+  `animation: none`, sondern ein ruhender, durchgehender Balken: dieselbe
+  Aussage, ohne Bewegung.
+*/
+@media (prefers-reduced-motion: reduce) {
+  .anprobe-laeuft {
+    animation: none;
+    transform: none;
+    width: 100%;
+    opacity: 0.55;
+  }
+}

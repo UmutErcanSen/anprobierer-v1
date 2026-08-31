@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
 import { Toaster } from "sonner";
 import { BetaBanner } from "@/components/site/beta-banner";
+import { ChromeOben } from "@/components/site/chrome-oben";
+import { LaufendeAnprobe } from "@/components/generation/laufende-anprobe";
 import "./globals.css";
 
 // Sans fuer UI und Fliesstext.
@@ -82,10 +84,15 @@ export default function RootLayout({
           Zum Inhalt springen
         </a>
 
-        {/* Beta-Hinweis ueber ALLEN Seiten -- hier im Layout statt in jeder
-            Seite einzeln. Blendet sich selbst aus, sobald die Beta endet
-            (siehe lib/beta/config.ts). */}
-        <BetaBanner />
+        {/* Klebende Leisten ueber ALLEN Seiten -- hier im Layout statt in
+            jeder Seite einzeln. Beide blenden sich selbst aus, wenn es
+            nichts zu sagen gibt: der Beta-Hinweis nach dem Livegang (siehe
+            lib/beta/config.ts), die Anprobe-Leiste, solange nichts laeuft.
+            Der Header darunter haelt automatisch Abstand (--chrome-oben). */}
+        <ChromeOben>
+          <BetaBanner />
+          <LaufendeAnprobe />
+        </ChromeOben>
         {children}
         {/*
           Toasts fuer kurze Erfolgsmeldungen (z.B. nach Mehrfach-Loeschen im

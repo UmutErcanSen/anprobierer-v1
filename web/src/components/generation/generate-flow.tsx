@@ -487,6 +487,11 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
         return;
       }
       setGenerationId(data.generationId);
+      // Der globalen Leiste Bescheid geben (siehe laufende-anprobe.tsx).
+      // Ohne dieses Signal wuerde sie die neue Anprobe erst beim naechsten
+      // Poll bemerken -- wer sofort wegnavigiert, saehe bis zu drei Sekunden
+      // lang keinerlei Hinweis darauf, dass etwas laeuft.
+      window.dispatchEvent(new Event('anprobe:gestartet'));
       // .catch() ist hier Pflicht, nicht Kosmetik: Ohne ihn verschwaende eine
       // Ausnahme aus poll() als unbehandelte Promise-Rejection, und die
       // Wartephase bliebe stehen, ohne dass jemals etwas passiert. Lieber ein

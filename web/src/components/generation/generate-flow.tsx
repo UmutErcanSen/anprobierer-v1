@@ -883,7 +883,19 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
             label="Personenfoto"
             file={person}
             onFiles={(files) => setPerson(files[0] ?? null)}
-            className="aspect-[3/4] md:aspect-auto md:h-[clamp(420px,calc(100vh-5rem),900px)]"
+            /*
+              Die Hoehe muss VON DEMSELBEN Anker ausgehen wie das `sticky`
+              der Spalte, sonst wird die Spalte hoeher als der Platz, der ihr
+              bleibt -- und eine Sticky-Spalte, die nicht in den Bildausschnitt
+              passt, scrollt zwangslaeufig mit, statt stehenzubleiben. Genau
+              das passierte, als der Beta-Hinweis dazukam: Der Anker wanderte
+              von 64px auf 127px, die 5rem hier blieben stehen, und die Spalte
+              stand ploetzlich 41px ueber.
+
+              --chrome-oben deckt die klebenden Leisten ab, 4rem den Header;
+              das zusaetzliche 1rem ist der Luftspalt nach unten.
+            */
+            className="aspect-[3/4] md:aspect-auto md:h-[clamp(420px,calc(100vh-var(--chrome-oben)-5rem),900px)]"
             panelOverlay
           />
         </div>

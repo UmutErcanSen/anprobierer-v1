@@ -57,7 +57,7 @@ export async function SiteHeader() {
       : { href: "/registrieren", label: "Kostenlos starten" };
 
   return (
-    <header className="sticky top-0 z-50 border-b border-line bg-paper/85 backdrop-blur-md">
+    <header className="sticky top-[var(--chrome-oben)] z-50 border-b border-line bg-paper/85 backdrop-blur-md">
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-6">
         <Link href="/" className="text-[15px] font-medium uppercase tracking-[0.16em] text-ink">
           Anprobierer

@@ -841,7 +841,7 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
         {modusAuswahl}
       </div>
 
-      <section className="relative flex flex-col gap-3 md:sticky md:top-16 md:max-w-[38rem] md:flex-[0.9] md:border-r md:border-line">
+      <section className="relative flex flex-col gap-3 md:sticky md:top-[calc(var(--chrome-oben)+4rem)] md:max-w-[38rem] md:flex-[0.9] md:border-r md:border-line">
         {/* Ueberschrift und TipModal als Geschwister statt TipModal INNERHALB
             des <h2> -- <h2> erlaubt laut HTML-Spezifikation nur "Phrasing
             Content", TipModal rendert aber ein <dialog> (Flow Content). Das

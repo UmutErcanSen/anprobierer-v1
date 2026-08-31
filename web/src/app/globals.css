@@ -11,6 +11,14 @@
 */
 
 :root {
+  /* Hoehe der klebenden Leisten GANZ oben (Beta-Hinweis, laufende Anprobe).
+     Wird von ChromeOben per ResizeObserver gesetzt -- die Leisten koennen je
+     nach Textumbruch unterschiedlich hoch sein, ein fester Wert waere also
+     entweder zu klein (Header rutscht darunter) oder zu gross (Luecke).
+     Beide Header kleben bei top: var(--chrome-oben), stapeln sich also
+     sauber darunter, statt sich zu ueberlagern. Standard 0px: Ohne Leisten
+     bleibt der Header exakt wie vorher am oberen Rand. */
+  --chrome-oben: 0px;
   --paper: #ffffff;        /* Seitenhintergrund */
   --surface: #fafafa;      /* leicht abgesetzte Flaeche */
   --ink: #0a0a0a;          /* Text und Vollflaechen */
@@ -410,3 +418,4 @@ body {
     transition-duration: 0.01ms !important;
   }
 }
+

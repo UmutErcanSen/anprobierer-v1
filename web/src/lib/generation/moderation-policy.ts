@@ -102,3 +102,49 @@ export function bewerteAntwort(roh: unknown): PruefErgebnis {
 
   return { beanstandet: kategorien.size > 0, kategorien: [...kategorien] };
 }
+
+/*
+  Hoechstzahl Bilder pro Anfrage an die Moderations-API.
+
+  Harte Grenze des Anbieters: Mehr als eines quittiert er mit
+  "Number of images (2) exceeds maximum of 1" und HTTP 400. Weil die Pruefung
+  bei einem Fehler bewusst SPERRT statt durchzulassen, hiess das in der Praxis:
+  Jede Anprobe mit Personenfoto UND Kleidungsstueck -- also jede einzelne --
+  wurde abgelehnt.
+
+  Aufgefallen ist es erst im echten Betrieb, weil die Tests immer nur ein Bild
+  pro Aufruf geschickt hatten. Deshalb steht die Aufteilung jetzt hier als
+  eigene, pruefbare Funktion und nicht als Schleife im Aufrufmodul.
+*/
+export const MAX_BILDER_PRO_ANFRAGE = 1;
+
+/**
+ * Teilt die Eingaben in so viele Anfragen auf, wie der Anbieter erlaubt:
+ * alle Texte zusammen in eine, danach jedes Bild in eine eigene.
+ *
+ * Generisch ueber `art`, damit diese Regel ohne Kenntnis von Buffern und
+ * MIME-Typen -- also ohne I/O -- geprueft werden kann.
+ */
+export function teileAnfragen<T extends { art: 'text' | 'bild' }>(eingaben: T[]): T[][] {
+  const texte = eingaben.filter((e) => e.art === 'text');
+  const bilder = eingaben.filter((e) => e.art === 'bild');
+
+  const gruppen: T[][] = [];
+  if (texte.length > 0) gruppen.push(texte);
+  for (let i = 0; i < bilder.length; i += MAX_BILDER_PRO_ANFRAGE) {
+    gruppen.push(bilder.slice(i, i + MAX_BILDER_PRO_ANFRAGE));
+  }
+  return gruppen;
+}
+
+/**
+ * Fuehrt die Ergebnisse mehrerer Anfragen zu einem zusammen.
+ *
+ * Eine einzige Beanstandung genuegt: Ein sauberes Personenfoto darf ein
+ * problematisches Kleidungsbild nicht aufwiegen.
+ */
+export function fasseZusammen(ergebnisse: PruefErgebnis[]): PruefErgebnis {
+  const kategorien = new Set<string>();
+  for (const e of ergebnisse) for (const k of e.kategorien) kategorien.add(k);
+  return { beanstandet: kategorien.size > 0, kategorien: [...kategorien] };
+}

@@ -1,5 +1,12 @@
 import { test, expect } from '@playwright/test';
-import { bewerteAntwort, PruefungNichtMoeglich, HARTE_SCHWELLEN } from '@/lib/generation/moderation-policy';
+import {
+  bewerteAntwort,
+  fasseZusammen,
+  teileAnfragen,
+  PruefungNichtMoeglich,
+  HARTE_SCHWELLEN,
+  MAX_BILDER_PRO_ANFRAGE,
+} from '@/lib/generation/moderation-policy';
 
 /*
   Auswertung der Moderations-Antwort (lib/generation/moderation-policy.ts).
@@ -119,5 +126,79 @@ test.describe('bewerteAntwort', () => {
 
   test('leere Ergebnisliste gilt als unbedenklich', () => {
     expect(bewerteAntwort({ results: [] }).beanstandet).toBe(false);
+  });
+});
+
+/*
+  Aufteilung in Einzelanfragen.
+
+  Diese Tests gibt es wegen eines Ausfalls im echten Betrieb: Personenfoto und
+  Kleidungsfotos gingen in EINER Anfrage raus, die API nimmt aber hoechstens
+  ein Bild ("Number of images (2) exceeds maximum of 1", HTTP 400). Weil die
+  Pruefung bei einem Fehler bewusst sperrt, war damit JEDE Anprobe blockiert.
+
+  Warum es niemand vorher merkte: Die Tests oben pruefen die Auswertung der
+  Antwort, und die Messungen an der echten API schickten immer nur ein Bild
+  pro Aufruf. Die Form der ANFRAGE war schlicht nirgends festgelegt. Jetzt ist
+  sie es.
+*/
+test.describe('teileAnfragen', () => {
+  const text = { art: 'text' as const };
+  const bild = { art: 'bild' as const };
+
+  test('nie mehr als ein Bild pro Anfrage -- der Ausfall vom 07.09.', () => {
+    // Der reale Fall: ein Personenfoto und ein Kleidungsstueck.
+    const gruppen = teileAnfragen([text, bild, bild]);
+    for (const g of gruppen) {
+      expect(g.filter((e) => e.art === 'bild').length).toBeLessThanOrEqual(MAX_BILDER_PRO_ANFRAGE);
+    }
+  });
+
+  test('haelt das auch bei vielen Kleidungsstuecken ein', () => {
+    const gruppen = teileAnfragen([text, ...Array(8).fill(bild)]);
+    expect(gruppen.length).toBe(9); // 1x Text + 8x je ein Bild
+    for (const g of gruppen) {
+      expect(g.filter((e) => e.art === 'bild').length).toBeLessThanOrEqual(MAX_BILDER_PRO_ANFRAGE);
+    }
+  });
+
+  test('verliert keine Eingabe', () => {
+    const eingaben = [text, bild, bild, text];
+    const gezaehlt = teileAnfragen(eingaben).flat().length;
+    expect(gezaehlt).toBe(eingaben.length);
+  });
+
+  test('erzeugt keine leere Anfrage, wenn es keinen Text gibt', () => {
+    const gruppen = teileAnfragen([bild]);
+    expect(gruppen.length).toBe(1);
+    expect(gruppen[0].length).toBe(1);
+  });
+
+  test('ohne Eingaben gar keine Anfrage', () => {
+    expect(teileAnfragen([])).toEqual([]);
+  });
+});
+
+test.describe('fasseZusammen', () => {
+  test('eine einzige Beanstandung genuegt -- Sauberes wiegt sie nicht auf', () => {
+    const r = fasseZusammen([
+      { beanstandet: false, kategorien: [] },
+      { beanstandet: true, kategorien: ['sexual'] },
+      { beanstandet: false, kategorien: [] },
+    ]);
+    expect(r.beanstandet).toBe(true);
+    expect(r.kategorien).toContain('sexual');
+  });
+
+  test('sammelt Kategorien aus allen Anfragen ohne Dopplung', () => {
+    const r = fasseZusammen([
+      { beanstandet: true, kategorien: ['sexual'] },
+      { beanstandet: true, kategorien: ['sexual', 'violence'] },
+    ]);
+    expect(r.kategorien.sort()).toEqual(['sexual', 'violence']);
+  });
+
+  test('alles sauber bleibt sauber', () => {
+    expect(fasseZusammen([{ beanstandet: false, kategorien: [] }]).beanstandet).toBe(false);
   });
 });

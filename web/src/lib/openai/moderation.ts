@@ -4,6 +4,8 @@ import { z } from 'zod';
 import { OPENAI_BASE_URL } from '@/lib/openai/base-url';
 import {
   bewerteAntwort,
+  fasseZusammen,
+  teileAnfragen,
   PruefungNichtMoeglich,
   type PruefErgebnis,
 } from '@/lib/generation/moderation-policy';
@@ -43,10 +45,9 @@ export type PruefEingabe =
 
 export { PruefungNichtMoeglich, type PruefErgebnis };
 
-export async function pruefeInhalte(eingaben: PruefEingabe[]): Promise<PruefErgebnis> {
-  if (eingaben.length === 0) return { beanstandet: false, kategorien: [] };
-
-  const input = eingaben.map((e) =>
+/** Eine einzelne Anfrage -- hoechstens ein Bild, siehe teileAnfragen(). */
+async function eineAnfrage(gruppe: PruefEingabe[]): Promise<PruefErgebnis> {
+  const input = gruppe.map((e) =>
     e.art === 'text'
       ? { type: 'text' as const, text: e.text }
       : {
@@ -82,4 +83,20 @@ export async function pruefeInhalte(eingaben: PruefEingabe[]): Promise<PruefErge
   }
 
   return bewerteAntwort(await res.json());
+}
+
+export async function pruefeInhalte(eingaben: PruefEingabe[]): Promise<PruefErgebnis> {
+  if (eingaben.length === 0) return { beanstandet: false, kategorien: [] };
+
+  /*
+    Aufgeteilt, weil die API hoechstens EIN Bild pro Anfrage annimmt (siehe
+    teileAnfragen). Parallel, damit die Wartezeit die einer einzelnen Anfrage
+    bleibt und nicht mit jedem Kleidungsstueck waechst.
+
+    Promise.all und nicht allSettled: Schlaegt auch nur eine Teilpruefung
+    fehl, ist das Gesamtergebnis unbekannt -- und unbekannt muss hier sperren,
+    nicht durchlassen.
+  */
+  const ergebnisse = await Promise.all(teileAnfragen(eingaben).map(eineAnfrage));
+  return fasseZusammen(ergebnisse);
 }

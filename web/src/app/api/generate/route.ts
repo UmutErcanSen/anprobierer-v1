@@ -7,6 +7,7 @@ import { prepareImage, createModerationCopy } from '@/lib/generation/prepare-ima
 import { pruefeInhalte, PruefungNichtMoeglich, type PruefEingabe } from '@/lib/openai/moderation';
 import { processGeneration, type PreparedImage } from '@/lib/generation/process';
 import { rateLimitError } from '@/lib/generation/rate-limit';
+import { tarifAbgleichen } from '@/lib/stripe/abgleich';
 import { lockedImagePath } from '@/lib/generation/lock';
 import {
   CREDITS_PER_QUALITY,
@@ -77,6 +78,18 @@ export async function POST(request: Request) {
   // Generierungen lostritt (CLAUDE.md §9 Missbrauchsschutz).
   const rateLimitMsg = await rateLimitError(supabase, user.id);
   if (rateLimitMsg) return NextResponse.json({ error: rateLimitMsg }, { status: 429 });
+
+  /*
+    Tarif gegen Stripe abgleichen, BEVOR er ueber Kosten und Grenzen
+    entscheidet. Loest fast immer gar keinen API-Aufruf aus (siehe
+    lib/stripe/abgleich-regeln.ts) -- nur wenn der eigene Datensatz danach
+    aussieht, als waere ein Webhook-Ereignis ausgeblieben.
+
+    Genau hier faellt der Schaden an: Stand in der Datenbank faelschlich noch
+    'pro', bekaeme das Konto Pro-Bildqualitaet und Pro-Stueckzahlen fuer
+    Basic-Geld -- bei jeder einzelnen Generierung aufs Neue.
+  */
+  await tarifAbgleichen(user.id);
 
   const { data: profile } = await supabase.from('profiles').select('plan').single();
   const plan = (profile?.plan ?? 'free') as PlanKey;

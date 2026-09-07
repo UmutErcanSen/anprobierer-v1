@@ -16,6 +16,7 @@ import { DeleteAccountButton } from "@/components/konto/delete-account-button";
 import { DisplayNameForm } from "@/components/konto/display-name-form";
 import { InfoModal } from "@/components/ui/info-modal";
 import { buildTip, lastGrant, monthlyUsage, usedSince, type LedgerRow } from "@/lib/usage/summary";
+import { tarifAbgleichen } from "@/lib/stripe/abgleich";
 
 export const metadata: Metadata = { title: "Mein Konto" };
 
@@ -47,6 +48,16 @@ export default async function KontoPage() {
 
   // Laeuft alles unter Row Level Security — kein user_id-Filter noetig, es
   // kommen ohnehin nur die eigenen Zeilen zurueck.
+  /*
+    Tarif gegen Stripe abgleichen, bevor die Seite ihn anzeigt -- sonst zeigte
+    die Kontouebersicht bei einem verlorenen Webhook-Ereignis dauerhaft einen
+    Tarif an, den der Nutzer laengst nicht mehr hat. Vor dem Promise.all,
+    damit die Abfragen darunter bereits den korrigierten Stand lesen.
+
+    Loest fast immer keinen API-Aufruf aus (siehe lib/stripe/abgleich-regeln).
+  */
+  await tarifAbgleichen(user.id);
+
   const [
     { data: profile },
     { data: balance },

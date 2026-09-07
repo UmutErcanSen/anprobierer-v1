@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
-import { Wortmarke } from "@/components/site/wortmarke";
+import { Marke } from "@/components/site/wortmarke";
 import { Menu, X } from 'lucide-react';
 import { useFocusTrap } from '@/lib/a11y/use-focus-trap';
 
@@ -84,7 +84,7 @@ export function MobileNav({ items, children }: { items: Item[]; children?: React
             }`}
           >
             <div className="flex h-16 shrink-0 items-center justify-between px-6">
-              <Wortmarke className="text-[15px] text-ink" />
+              <Marke className="text-[15px] text-ink" />
               <button
                 type="button"
                 onClick={() => setOpen(false)}

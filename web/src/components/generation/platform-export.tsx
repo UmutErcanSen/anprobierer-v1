@@ -246,7 +246,7 @@ export function PlatformExport({ card, generationId }: { card: ResultCard; gener
       <div>
         <div
           role="tablist"
-          className="flex flex-wrap gap-1 rounded-2xl border border-line p-1 text-sm sm:rounded-full"
+          className="flex gap-1 rounded-full border border-line p-1 text-sm"
         >
           {PLATFORMS.map((platform) => (
             <button
@@ -259,7 +259,14 @@ export function PlatformExport({ card, generationId }: { card: ResultCard; gener
                  duennen Rand -- die reine Umrandung war neben den unmarkierten
                  Tabs kaum zu unterscheiden. Gleiches Prinzip wie beim
                  Modus-Umschalter (Einzeln/Kombiniert) weiter oben im Formular. */
-              className={`relative flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-1.5 text-xs font-medium transition-colors sm:gap-1.5 sm:px-3 ${
+              /* flex-1 auf Mobil: Die drei Tabs teilen sich die volle Breite,
+                 statt linksbuendig zu stehen und rechts einen Rest Leerraum
+                 im Rahmen zu lassen -- das sah aus, als fehle etwas. Ab sm
+                 wieder inhaltsbreit (flex-none), weil sie sonst auf breiten
+                 Schirmen unnoetig auseinandergezogen wuerden.
+                 justify-center haelt Symbol und Text dabei mittig im nun
+                 breiteren Knopf. */
+              className={`relative flex flex-1 items-center justify-center gap-1 whitespace-nowrap rounded-full px-2.5 py-1.5 text-xs font-medium transition-colors sm:flex-none sm:gap-1.5 sm:px-3 ${
                 platform.key === active.key ? 'bg-ink text-on-ink' : 'text-muted hover:text-ink'
               }`}
             >

@@ -64,7 +64,7 @@ export function DeleteCardButton({ generationId }: { generationId: string }) {
           setConfirming(true);
         }}
         aria-label="Anprobe löschen"
-        className="absolute right-2 top-11 flex h-7 w-7 items-center justify-center rounded-full bg-paper/90 text-ink transition-colors hover:bg-paper hover:text-accent"
+        className="absolute right-2 top-11 flex h-7 w-7 items-center justify-center rounded-full bg-paper/90 text-ink transition-colors hover:bg-paper hover:text-danger"
       >
         <Trash2 size={13} aria-hidden />
       </button>

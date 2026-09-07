@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Wortmarke } from "@/components/site/wortmarke";
+import { Marke } from "@/components/site/wortmarke";
 import type { ReactNode } from "react";
 
 /*
@@ -22,7 +22,7 @@ export function AuthShell({
     <main className="flex min-h-dvh flex-col">
       <div className="px-6 py-6">
         <Link href="/" className="text-[15px] text-ink" aria-label="Wearify — zur Startseite">
-          <Wortmarke />
+          <Marke />
         </Link>
       </div>
 

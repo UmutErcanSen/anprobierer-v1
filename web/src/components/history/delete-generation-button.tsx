@@ -48,7 +48,22 @@ export function DeleteGenerationButton({ generationId }: { generationId: string 
       <button
         type="button"
         onClick={() => setConfirming(true)}
-        className="flex items-center gap-1.5 text-sm text-muted underline underline-offset-4 transition-colors hover:text-accent"
+        /*
+          Umrandet in --danger statt grau mit Terrakotta-Hover.
+
+          Zwei Fehler steckten darin: Die Aktion sah unwichtiger aus als
+          "Alle Anproben loeschen" (das laengst --danger nutzt), und der
+          Hover faerbte sie in die MARKENfarbe -- ausgerechnet fuer etwas
+          Unwiderrufliches.
+
+          Umrandet und nicht gefuellt, obwohl das Designsystem fuer --danger
+          eigentlich eine Vollflaeche vorsieht: Dieser Knopf loest die
+          Loeschung nicht aus, er oeffnet nur die Rueckfrage. Erst deren
+          Bestaetigung ist gefuellt. Aus Umriss wird beim Hover Flaeche, und
+          im Dialog bleibt sie es -- eine Steigerung statt zweier gleich
+          lauter Knoepfe hintereinander.
+        */
+        className="inline-flex items-center gap-2 rounded-full border border-danger/40 px-4 py-2 text-sm font-medium text-danger transition-colors hover:border-danger hover:bg-danger hover:text-on-ink"
       >
         <Trash2 size={14} aria-hidden /> Anprobe löschen
       </button>

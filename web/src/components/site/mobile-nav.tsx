@@ -84,7 +84,7 @@ export function MobileNav({ items, children }: { items: Item[]; children?: React
             }`}
           >
             <div className="flex h-16 shrink-0 items-center justify-between px-6">
-              <Marke className="text-[15px] text-ink" />
+              <Marke className="text-ink" />
               <button
                 type="button"
                 onClick={() => setOpen(false)}

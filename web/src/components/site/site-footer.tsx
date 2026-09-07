@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Wortmarke } from "@/components/site/wortmarke";
 import { siVisa, siMastercard, siApplepay, siGooglepay, siKlarna, type SimpleIcon } from "simple-icons";
 
 /*
@@ -67,7 +68,35 @@ export function SiteFooter() {
     */
     <footer className="mt-auto border-t border-line">
       <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-6 px-6 py-10 text-sm text-muted md:flex-row md:justify-between">
-        <span className="uppercase tracking-[0.16em] text-ink">Anprobierer</span>
+        {/*
+          Der einzige Ort auf der Seite, an dem das Signet gross genug sein
+          darf: Das Markenhandbuch nennt 56px als Mindestgroesse. In den
+          Kopfzeilen (64px hoch) waere das nicht unterzubringen, ohne die
+          Vorgabe zu verletzen -- dort steht deshalb nur die Wortmarke.
+
+          Als CSS-Maske statt als <img>: So folgt die Farbe dem Token --accent
+          und wechselt mit dem Theme automatisch von #C4471C auf #E4713D
+          (Handbuch: "Akzent nie unveraendert auf Dunkel"). Mit zwei
+          Bilddateien braeuchte es dafuer einen zweiten Download und eine
+          media-Abfrage, die den vom Nutzer gewaehlten Modus gar nicht kennt.
+        */}
+        <div className="flex flex-col items-center gap-3 md:flex-row md:gap-4">
+          <span
+            aria-hidden
+            className="block h-14 w-[76px] shrink-0 bg-accent"
+            style={{
+              maskImage: 'url(/marke/wearify-signet-light.svg)',
+              WebkitMaskImage: 'url(/marke/wearify-signet-light.svg)',
+              maskRepeat: 'no-repeat',
+              WebkitMaskRepeat: 'no-repeat',
+              maskPosition: 'center',
+              WebkitMaskPosition: 'center',
+              maskSize: 'contain',
+              WebkitMaskSize: 'contain',
+            }}
+          />
+          <Wortmarke className="text-ink" />
+        </div>
 
         <nav className="flex flex-wrap justify-center gap-x-8 gap-y-3">
           <Link href="/preise" className="transition-colors hover:text-ink">Preise</Link>
@@ -95,7 +124,7 @@ export function SiteFooter() {
           ))}
         </div>
 
-        <span>© {new Date().getFullYear()} Anprobierer</span>
+        <span>© {new Date().getFullYear()} Wearify</span>
       </div>
     </footer>
   );

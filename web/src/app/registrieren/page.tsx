@@ -32,7 +32,7 @@ export default async function RegistrierenPage() {
     return (
       <AuthShell
         title="Noch geschlossen"
-        subtitle="Anprobierer befindet sich in einer geschlossenen Testphase."
+        subtitle="Wearify befindet sich in einer geschlossenen Testphase."
         footer={
           <>
             Du hast bereits einen Testzugang?{" "}

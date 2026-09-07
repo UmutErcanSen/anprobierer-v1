@@ -316,7 +316,7 @@ export default async function HomePage(props: PageProps<"/">) {
             <Reveal className="mt-14 flex flex-col items-center gap-4 text-center sm:flex-row sm:items-center sm:text-left">
               {BETA_AKTIV ? (
                 <span className="text-sm text-muted">
-                  Anprobierer ist derzeit in einer geschlossenen Testphase. Der öffentliche Start folgt in Kürze.
+                  Wearify ist derzeit in einer geschlossenen Testphase. Der öffentliche Start folgt in Kürze.
                 </span>
               ) : (
                 <>

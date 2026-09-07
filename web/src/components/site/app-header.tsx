@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Wortmarke } from "@/components/site/wortmarke";
 import { signOutAction } from "@/lib/auth/actions";
 import { ThemeToggle } from "@/components/site/theme-toggle";
 import { MobileNav } from "@/components/site/mobile-nav";
@@ -18,8 +19,8 @@ export function AppHeader({ credits, plan }: { credits?: number; plan?: PlanKey 
   return (
     <header className="sticky top-[var(--chrome-oben)] z-50 border-b border-line bg-paper/85 backdrop-blur-md">
       <div className="mx-auto flex h-16 w-full max-w-5xl items-center justify-between px-6">
-        <Link href="/" className="text-[15px] font-medium uppercase tracking-[0.16em] text-ink">
-          Anprobierer
+        <Link href="/" className="text-[15px] text-ink" aria-label="Wearify — zur Startseite">
+          <Wortmarke />
         </Link>
 
         <div className="flex items-center gap-3 sm:gap-4">

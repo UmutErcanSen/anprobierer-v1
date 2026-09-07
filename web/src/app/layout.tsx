@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
+import { Geist, Geist_Mono, Instrument_Serif, Jost } from "next/font/google";
 import { Toaster } from "sonner";
 import { BetaBanner } from "@/components/site/beta-banner";
 import { ChromeOben } from "@/components/site/chrome-oben";
@@ -11,6 +11,17 @@ const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 // Serifen-Kursive nur als Display-Akzent in grossen Ueberschriften.
+/*
+  Schrift der Wortmarke. Laut Markenhandbuch: Jost Light, Tracking 340.
+  Deshalb nur Schnitt 300 -- jedes weitere Gewicht waere ungenutzte Ladezeit.
+
+  Bewusst als Schrift statt als Bilddatei: Die mitgelieferten PNG-Sperrsaetze
+  enthalten zusaetzlich den Claim ("Dein Kleid. Dein Look."), der bei 15px
+  Kopfzeilenhoehe unlesbar waere. Als Text bleibt die Marke in jeder Groesse
+  scharf, folgt dem Farbschema, ist markierbar und wird vorgelesen.
+*/
+const jost = Jost({ variable: "--font-marke-jost", subsets: ["latin"], weight: "300" });
+
 const instrumentSerif = Instrument_Serif({
   variable: "--font-instrument-serif",
   subsets: ["latin"],
@@ -20,8 +31,8 @@ const instrumentSerif = Instrument_Serif({
 
 export const metadata: Metadata = {
   title: {
-    default: "Anprobierer — KI-Anprobebilder für Vinted und Kleinanzeigen",
-    template: "%s · Anprobierer",
+    default: "Wearify — KI-Anprobebilder für Vinted und Kleinanzeigen",
+    template: "%s · Wearify",
   },
   description:
     "Lade ein Foto von dir und ein Kleidungsstück hoch und erhalte realistische Anprobebilder samt fertigem Verkaufstext — in unter einer Minute.",
@@ -67,7 +78,7 @@ export default function RootLayout({
       lang="de"
       data-theme="light"
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} ${instrumentSerif.variable} h-full`}
+      className={`${geistSans.variable} ${geistMono.variable} ${instrumentSerif.variable} ${jost.variable} h-full`}
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />

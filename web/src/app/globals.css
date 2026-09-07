@@ -27,7 +27,7 @@
   --line: #e9e9e9;         /* Haarlinie */
   --line-strong: #d4d4d4;  /* betonte Trennung */
   --on-ink: #ffffff;       /* Text auf dunkler Vollflaeche */
-  --accent: #c2410c;       /* Terrakotta — einziger Farbakzent, nur auf Display-Kursive */
+  --accent: #C4471C;       /* Terrakotta — einziger Farbakzent, nur auf Display-Kursive */
   /* Salbei-Gruen statt des vorherigen satten Waldgruens (#15803d): das kaempfte
      als zweite kraeftige Farbe sichtbar mit dem Terrakotta-Akzent. Dieser Ton
      ist entsaettigt und waermer -- er ordnet sich unter, bleibt aber eindeutig
@@ -56,7 +56,7 @@
   --line: #29271f;
   --line-strong: #38352b;
   --on-ink: #151412;
-  --accent: #ea7a4f;       /* auf dunklem Grund etwas heller, damit der Kontrast stimmt */
+  --accent: #E4713D;       /* auf dunklem Grund etwas heller, damit der Kontrast stimmt */
   /* Vorher #5cc98f -- ein kuehles Mintgruen, das auf dem jetzt warmen
      Dunkelgrund wie ein Fremdkoerper wirkte. Dieser Salbeiton teilt die
      Waerme des Hintergrunds und der Akzentfarbe. */
@@ -83,6 +83,8 @@
   --font-sans: var(--font-geist-sans);
   --font-display: var(--font-instrument-serif);
   --font-mono: var(--font-geist-mono);
+  /* Wortmarke -- ausschliesslich fuer "Wearify", nirgends im Fliesstext. */
+  --font-marke: var(--font-marke-jost);
 }
 
 html {

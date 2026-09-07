@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="10 6 180 132" width="180" height="132" role="img" aria-label="Wearify" xmlns:c2pa="http://c2pa.org/manifest">
+  <title>Wearify</title>
+  <g color="#F5F2EF">
+  <g fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round">
+    <path d="M100,52 C100,44 96.5,39 92.5,34 C86.5,26 91.5,13 100.5,14 C108.5,15 112,24 105,28"></path>
+    <path d="M100,52 C88,68 62,70 40,76 C25,80 17,90 25,93 C32,95 41,88 44,81"></path>
+    <path d="M100,52 C112,68 138,70 160,76 C175,80 183,90 175,93 C168,95 159,88 156,81"></path>
+  </g>
+  <g fill="currentColor">
+    <path d="M52,68 Q57.6,102 79,130 Q73.4,94 52,68Z"></path>
+    <path d="M79,130 Q92.6,106.6 100,80 Q86.4,105.4 79,130Z"></path>
+    <path d="M100,80 Q102.4,107.6 121,130 Q118.6,101.4 100,80Z"></path>
+    <path d="M121,130 Q137.4,99.4 148,68 Q131.6,96.6 121,130Z"></path>
+  </g>
+  </g>
+</svg>

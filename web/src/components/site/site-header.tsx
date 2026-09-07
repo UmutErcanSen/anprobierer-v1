@@ -2,6 +2,7 @@ import Link from "next/link";
 import { LinkButton } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/site/theme-toggle";
 import { MobileNav } from "@/components/site/mobile-nav";
+import { Wortmarke } from "@/components/site/wortmarke";
 import { createClient } from "@/lib/supabase/server";
 import { signOutAction } from "@/lib/auth/actions";
 import { BETA_AKTIV } from "@/lib/beta/config";
@@ -59,8 +60,8 @@ export async function SiteHeader() {
   return (
     <header className="sticky top-[var(--chrome-oben)] z-50 border-b border-line bg-paper/85 backdrop-blur-md">
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-6">
-        <Link href="/" className="text-[15px] font-medium uppercase tracking-[0.16em] text-ink">
-          Anprobierer
+        <Link href="/" className="text-[15px] text-ink" aria-label="Wearify — zur Startseite">
+          <Wortmarke />
         </Link>
 
         <nav className="hidden items-center gap-8 text-sm text-muted md:flex">

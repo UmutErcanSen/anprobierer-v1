@@ -53,14 +53,18 @@ export async function tarifAbgleichen(userId: string): Promise<PlanKey | null> {
 
   try {
     const subscription = await stripe.subscriptions.retrieve(data!.stripe_subscription_id!);
-    const plan = await spiegleAbo(admin, subscription);
+    const ergebnis = await spiegleAbo(admin, subscription);
+    if (!ergebnis.ok) {
+      console.error('[stripe/abgleich] Abo nicht zuzuordnen', userId, ergebnis.grund);
+      return null;
+    }
     console.warn(
       '[stripe/abgleich] Abo nachgezogen -- ein Webhook-Ereignis ist offenbar verloren gegangen.',
       userId,
       'neuer Tarif:',
-      plan,
+      ergebnis.plan,
     );
-    return plan;
+    return ergebnis.plan;
   } catch (err) {
     console.error('[stripe/abgleich] Abgleich mit Stripe fehlgeschlagen', userId, err);
     return null;

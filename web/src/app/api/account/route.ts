@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { stripe } from '@/lib/stripe/client';
-import { lockedImagePath } from '@/lib/generation/lock';
+import { alleDateienZuBildern } from '@/lib/generation/dateipfade';
 
 /*
   Loescht das eigene Konto vollstaendig und unwiderruflich (DSGVO Art. 17).
@@ -76,7 +76,7 @@ export async function DELETE() {
     for (const c of (g.cards ?? []) as CardRow[]) if (c.imagePath) paths.add(c.imagePath);
     for (const p of g.result_paths ?? []) paths.add(p);
   }
-  const allPaths = [...paths].flatMap((p) => [p, lockedImagePath(p)]);
+  const allPaths = alleDateienZuBildern(paths);
 
   // 3) Der Punkt ohne Ruecknahme.
   const { error: deleteError } = await admin.auth.admin.deleteUser(user.id);

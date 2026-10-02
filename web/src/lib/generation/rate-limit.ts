@@ -14,8 +14,19 @@ import type { SupabaseClient } from '@supabase/supabase-js';
  * Werte sind ein erster Schaetzwert, keine gemessene Grenze -- bei Bedarf
  * (echte Nutzung, Support-Rueckmeldungen) anpassen.
  */
-export const HOURLY_LIMIT = 10;
-export const DAILY_LIMIT = 30;
+/*
+  Ueber Umgebungsvariablen anhebbar -- gleiche Begruendung wie beim
+  Tagesbudget weiter unten: Die Werte sind Schaetzungen, und sie muessen sich
+  ohne Deploy nachziehen lassen.
+
+  Der zweite Grund kam aus der Praxis: Die E2E-Tests der Generierung erzeugen
+  echte Zeilen und liefen nach zehn Durchlaeufen in genau dieses Limit. Ab da
+  scheiterten sie mit 429 -- und sahen dabei aus wie ein Produktfehler, obwohl
+  die Sperre korrekt arbeitete. Eine Testumgebung darf andere Grenzen haben
+  als die Produktion; die Standardwerte bleiben davon unberuehrt.
+*/
+export const HOURLY_LIMIT = Number(process.env.GENERIERUNG_STUNDENLIMIT ?? 10);
+export const DAILY_LIMIT = Number(process.env.GENERIERUNG_TAGESLIMIT ?? 30);
 
 /**
  * NOTBREMSE ueber ALLE Nutzer hinweg — in Credits pro Tag.
@@ -108,12 +119,28 @@ export async function rateLimitError(supabase: SupabaseClient, userId: string): 
     waere damit gar nicht ermittelbar.
   */
   const { createAdminClient } = await import('@/lib/supabase/admin');
-  const { data: heute } = await createAdminClient()
-    .from('generations')
-    .select('credits_charged')
-    .gte('created_at', dayAgo);
+  const { data: verbrauchtRoh, error: budgetFehler } = await createAdminClient().rpc('tagesverbrauch_credits');
 
-  const verbraucht = (heute ?? []).reduce((summe, zeile) => summe + (zeile.credits_charged ?? 0), 0);
+  /*
+    Die Summe bildet Postgres, nicht wir. Vorher wurden ALLE Zeilen der letzten
+    24 Stunden geladen und hier addiert -- bei einem Testnutzer unauffaellig,
+    bei tausend aktiven Nutzern zehntausende Zeilen pro Generierungsanfrage,
+    nur um eine einzige Zahl zu bekommen. Die Bremse gegen hohe Kosten waere
+    damit selbst zum Kostentreiber geworden (siehe Migration
+    20261002090000_tagesverbrauch_aggregat.sql).
+  */
+  if (budgetFehler) {
+    /*
+      Bewusst DURCHLASSEN, wenn die Abfrage scheitert: Diese Pruefung schuetzt
+      das Budget des Betreibers, nicht den Nutzer. Sie bei einem Datenbank-
+      huepfer zur Komplettsperre zu machen, waere die teurere Fehlentscheidung
+      -- die nutzereigenen Limits oben haben ohnehin schon gegriffen.
+    */
+    console.error('[rate-limit] Tagesverbrauch nicht ermittelbar, Notbremse uebersprungen', budgetFehler);
+    return null;
+  }
+
+  const verbraucht = verbrauchtRoh ?? 0;
 
   if (verbraucht >= DAILY_CREDIT_BUDGET) {
     // Bewusst ohne Zahlen: Das Tagesbudget des BETREIBERS geht den Nutzer

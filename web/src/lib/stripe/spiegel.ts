@@ -102,25 +102,76 @@ export async function readScheduledChange(
 }
 
 /**
+ * Ergebnis von spiegleAbo.
+ *
+ * `ok: false` heisst ausdruecklich: dauerhaft nicht zuzuordnen, ein erneuter
+ * Versuch braechte nichts. Alles, was sich durch Wiederholen HEILEN kann,
+ * wirft stattdessen -- siehe dort.
+ */
+export type SpiegelErgebnis = { ok: true; plan: PlanKey } | { ok: false; grund: string };
+
+/**
+ * Zu welchem Nutzer gehoert diese Subscription?
+ *
+ * Erste Quelle sind die Metadaten, die unser Checkout setzt. Faellt die weg
+ * (Abo von Hand im Stripe-Dashboard angelegt, oder ein Altbestand von vor der
+ * Einfuehrung), hilft der Kunde weiter: Zu ihm steht die Zuordnung bereits in
+ * unserer Tabelle. Ohne diesen Rueckfall waere so ein Abo unrettbar, obwohl
+ * wir den Nutzer sehr wohl kennen.
+ */
+async function findeNutzer(admin: Admin, subscription: Stripe.Subscription): Promise<string | null> {
+  const ausMetadaten = subscription.metadata?.user_id;
+  if (ausMetadaten) return ausMetadaten;
+
+  const kunde = customerId(subscription.customer);
+  const { data } = await admin
+    .from('subscriptions')
+    .select('user_id')
+    .eq('stripe_customer_id', kunde)
+    .maybeSingle();
+
+  if (data?.user_id) {
+    console.warn('[stripe/spiegel] user_id fehlte in den Metadaten, ueber den Kunden zugeordnet', subscription.id);
+    return data.user_id as string;
+  }
+  return null;
+}
+
+/**
  * Schreibt den Stand einer Stripe-Subscription in unsere Tabellen.
  *
- * Wirft bei einem Datenbankfehler. Der Webhook antwortet daraufhin mit 500
- * und Stripe wiederholt das Ereignis. Frueher wurde der Fehler nur
- * protokolliert und trotzdem 200 zurueckgegeben -- Stripe hielt das fuer
- * erfolgreich, wiederholte nie, und der Abo-Zustand blieb dauerhaft falsch.
+ * WIRFT bei allem, was sich durch Wiederholen heilen kann -- Datenbankfehler
+ * und unbekannte Price-ID. Der Webhook antwortet daraufhin mit 500 und Stripe
+ * wiederholt ueber rund drei Tage.
+ *
+ * Dass die unbekannte Price-ID dazugehoert, ist der Punkt: Sie bedeutet fast
+ * immer eine fehlende oder falsche STRIPE_PRICE_*-Variable. Vorher wurde das
+ * nur protokolliert und 200 zurueckgegeben -- Stripe hielt das Ereignis fuer
+ * zugestellt, wiederholte nie, und ein zahlender Kunde bekam dauerhaft keinen
+ * Tarif, ohne dass irgendetwas Alarm schlug. Mit dem Wurf bleibt das Ereignis
+ * in der Wiederholung haengen, bis die Variable stimmt.
+ *
+ * Gibt `ok: false` nur zurueck, wenn sich das NICHT heilen kann: Die
+ * Subscription laesst sich keinem Nutzer zuordnen, auch nicht ueber den
+ * Kunden. Dann gehoert sie schlicht nicht zu uns, und eine Endlosschleife
+ * braechte nichts -- der Webhook vermerkt sie als 'failed' und sie faellt in
+ * admin.webhook_fehler auf.
  */
-export async function spiegleAbo(admin: Admin, subscription: Stripe.Subscription): Promise<PlanKey | null> {
-  const userId = subscription.metadata?.user_id;
+export async function spiegleAbo(admin: Admin, subscription: Stripe.Subscription): Promise<SpiegelErgebnis> {
+  const userId = await findeNutzer(admin, subscription);
   if (!userId) {
-    console.error('[stripe/spiegel] Subscription ohne user_id-Metadata', subscription.id);
-    return null;
+    console.error('[stripe/spiegel] Subscription keinem Nutzer zuzuordnen', subscription.id);
+    return { ok: false, grund: `Subscription ohne zuordenbaren Nutzer (${subscription.id})` };
   }
 
   const item = subscription.items.data[0];
   const mapped = item?.price?.id ? planForPriceId(item.price.id) : null;
   if (!mapped) {
     console.error('[stripe/spiegel] Unbekannte Price-ID auf Subscription', item?.price?.id, subscription.id);
-    return null;
+    throw new Error(
+      `Unbekannte Price-ID ${item?.price?.id} auf ${subscription.id} — ` +
+        'STRIPE_PRICE_*-Variablen pruefen. Stripe wiederholt das Ereignis.',
+    );
   }
 
   const geplant = await readScheduledChange(subscription, item?.price?.id);
@@ -138,5 +189,5 @@ export async function spiegleAbo(admin: Admin, subscription: Stripe.Subscription
   });
   if (error) throw new Error(`upsert_subscription fehlgeschlagen: ${error.message}`);
 
-  return mapped.plan;
+  return { ok: true, plan: mapped.plan };
 }

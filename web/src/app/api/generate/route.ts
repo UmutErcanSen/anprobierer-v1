@@ -8,7 +8,7 @@ import { pruefeInhalte, PruefungNichtMoeglich, type PruefEingabe } from '@/lib/o
 import { processGeneration, type PreparedImage } from '@/lib/generation/process';
 import { rateLimitError } from '@/lib/generation/rate-limit';
 import { tarifAbgleichen } from '@/lib/stripe/abgleich';
-import { lockedImagePath } from '@/lib/generation/lock';
+import { alleDateienZuBildern } from '@/lib/generation/dateipfade';
 import {
   CREDITS_PER_QUALITY,
   MAX_UPLOAD_BYTES,
@@ -320,7 +320,7 @@ export async function DELETE() {
     for (const c of (g.cards ?? []) as CardRow[]) if (c.imagePath) paths.add(c.imagePath);
     for (const p of g.result_paths ?? []) paths.add(p);
   }
-  const allPaths = [...paths].flatMap((p) => [p, lockedImagePath(p)]);
+  const allPaths = alleDateienZuBildern(paths);
 
   if (allPaths.length > 0) {
     const { error: removeError } = await admin.storage.from('results').remove(allPaths);

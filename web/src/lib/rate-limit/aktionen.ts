@@ -34,6 +34,14 @@ export const LIMITS = {
   /* Analog fuers Kundenportal. Etwas hoeher, weil man dort legitim mehrfach
      hin- und herwechselt (Tarif ansehen, kuendigen, doch nicht). */
   portal: { aktion: 'stripe_portal', proStunde: 15 },
+  /* Der einzige Endpunkt ausser der Generierung, der ECHTE OpenAI-Kosten
+     ausloest. Der Zwischenspeicher je Karte und Plattform begrenzt den
+     Schaden bereits (jede Kombination kostet genau einmal), aber die
+     Begrenzung war bisher ein Nebeneffekt des Zwischenspeichers, keine
+     Absicht -- und damit genau die Art Schutz, die bei der naechsten
+     Aenderung still wegfaellt. 40 pro Stunde decken selbst neun Stuecke mal
+     drei Plattformen samt Wiederholungen ab. */
+  plattformtext: { aktion: 'plattform_text', proStunde: 40 },
 } as const;
 
 type LimitKey = keyof typeof LIMITS;

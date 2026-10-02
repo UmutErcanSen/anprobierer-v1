@@ -15,31 +15,32 @@ import { test, expect } from '@playwright/test';
   tot, ohne dass ein Fehler im Protokoll steht).
 */
 
-type Zeile = { credits_charged: number | null };
+/*
+  WAS SICH GEAENDERT HAT: Die Summierung lief frueher in JavaScript ueber alle
+  Zeilen der letzten 24 Stunden. Sie bildet jetzt Postgres
+  (public.tagesverbrauch_credits, Migration 20261002090000) -- die alten Tests
+  dafuer pruefen deshalb keinen App-Code mehr und sind entfallen.
 
-/** Dieselbe Summierung wie in rate-limit.ts. */
-function verbrauchteCredits(zeilen: Zeile[]): number {
-  return zeilen.reduce((summe, z) => summe + (z.credits_charged ?? 0), 0);
-}
+  Was Postgres garantiert, muss hier nicht nachgetestet werden: coalesce fuer
+  fehlende Werte und eine leere Menge als 0 sind Eigenschaften von sum(), nicht
+  unsere Logik. Was BLEIBT, ist die Entscheidung auf Basis der Zahl -- und die
+  ist der Teil, der still falsch sein kann.
+*/
 
 const gesperrt = (verbraucht: number, budget: number) => verbraucht >= budget;
 
 test.describe('Tagesbudget', () => {
-  test('summiert über alle Zeilen, nicht nur die erste', () => {
-    expect(verbrauchteCredits([{ credits_charged: 4 }, { credits_charged: 1 }, { credits_charged: 4 }])).toBe(9);
-  });
+  /** Dieselbe Umwandlung wie in rate-limit.ts: `verbrauchtRoh ?? 0`. */
+  const ausRpc = (wert: number | null | undefined) => wert ?? 0;
 
-  test('behandelt fehlende Werte als null Credits', () => {
-    // credits_charged ist in der Datenbank nullable -- ein null darf die
-    // ganze Summe nicht zu NaN machen, sonst wäre jeder Vergleich false und
-    // die Bremse damit wirkungslos.
-    const summe = verbrauchteCredits([{ credits_charged: 4 }, { credits_charged: null }]);
-    expect(Number.isNaN(summe)).toBe(false);
-    expect(summe).toBe(4);
-  });
-
-  test('leerer Tag ergibt null', () => {
-    expect(verbrauchteCredits([])).toBe(0);
+  test('ein nicht ermittelbarer Verbrauch wird als 0 behandelt, nicht als NaN', () => {
+    // Waere das Ergebnis stattdessen undefined oder NaN, waere jeder Vergleich
+    // false und die Bremse damit wirkungslos -- und zwar lautlos.
+    for (const roh of [undefined, null]) {
+      expect(Number.isNaN(ausRpc(roh))).toBe(false);
+      expect(gesperrt(ausRpc(roh), 1500)).toBe(false);
+    }
+    expect(ausRpc(1500)).toBe(1500);
   });
 
   test('sperrt genau ab Erreichen des Budgets, nicht erst darüber', () => {

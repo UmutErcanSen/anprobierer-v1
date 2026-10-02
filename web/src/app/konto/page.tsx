@@ -205,11 +205,21 @@ export default async function KontoPage() {
 
         {/* Guthaben als grosses Display-Element statt einer von drei
             gleichwertigen Kacheln -- es ist der Wert, den der Nutzer hier
-            eigentlich nachschauen kommt. Bewusst KEIN "von X Credits"/
-            "erneuert in Y Tagen": das wuerde eine monatliche Kontingent-
-            Rueckerstattung und ein Abrechnungsdatum vortaeuschen, die es
-            technisch noch nicht gibt (Stripe/Abo-Webhooks stehen noch aus,
-            siehe Aufgabe #5/#6) -- also nur Werte zeigen, die wirklich stimmen. */}
+            eigentlich nachschauen kommt.
+
+            Bewusst KEIN "von X Credits": Das setzt ein monatliches Kontingent
+            voraus, das zurueckgesetzt wird. Unser Preismodell funktioniert
+            anders -- Credits werden gutgeschrieben und verfallen NIE (siehe
+            lib/stripe/plans.ts). Ein Nenner waere damit schlicht erfunden, und
+            ein Nutzer mit angesammeltem Guthaben saehe "250 von 60".
+
+            Der naechste Abrechnungstermin fehlt hier nicht: Er steht weiter
+            unten in der Nutzungsuebersicht (periodEnd), wo er neben dem
+            Verbrauch auch etwas aussagt.
+
+            (Fruehere Fassung dieses Kommentars begruendete das damit, dass die
+            Stripe-Webhooks "noch ausstehen" -- die gibt es laengst. Die
+            Entscheidung stimmt weiterhin, nur die Begruendung war veraltet.) */}
         {/* items-center statt items-baseline: bei so unterschiedlichen
             Schriftgroessen (48px vs. 12-14px) liegt die Baseline der kleinen
             Zeilen naeher an ihrer eigenen Boxmitte als an der Baseline der

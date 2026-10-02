@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { limitUeberschritten } from '@/lib/rate-limit/aktionen';
 import { rewriteSaleTextForPlatform, type RewritablePlatform } from '@/lib/openai/platform-text';
 import { isGenerationLocked } from '@/lib/generation/lock';
 import { resolveCardRows } from '@/lib/generation/cards';
@@ -55,6 +56,12 @@ export async function POST(request: Request, ctx: { params: Promise<{ id: string
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Nicht angemeldet.' }, { status: 401 });
+
+  // Einziger Endpunkt ausser der Generierung mit echten OpenAI-Kosten --
+  // siehe lib/rate-limit/aktionen.ts, warum der Zwischenspeicher allein als
+  // Schutz nicht genuegt.
+  const limit = await limitUeberschritten(user.id, 'plattformtext');
+  if (limit) return NextResponse.json({ error: limit }, { status: 429 });
 
   const parsed = bodySchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: 'Ungültige Anfrage.' }, { status: 400 });
@@ -115,14 +122,34 @@ export async function POST(request: Request, ctx: { params: Promise<{ id: string
     return NextResponse.json({ error: 'Text konnte nicht erstellt werden.' }, { status: 502 });
   }
 
-  // Kosten nachtragen -- ein realer OpenAI-Aufruf ist gerade passiert.
-  const newCostUsd = (generation.cost_usd ?? 0) + (costUsd ?? 0);
+  /*
+    Atomar schreiben statt Lesen-Aendern-Zurueckschreiben.
 
-  // Immer schreiben: Bei Legacy-Zeilen materialisiert das zusaetzlich die
-  // abgeleiteten Karten, sodass jeder weitere Aufruf aus dem Cache bedient
-  // wird statt erneut zu kosten.
-  cards[cardPos] = { ...card, platformTexts: { ...card.platformTexts, [platform]: text } };
-  await admin.from('generations').update({ cards, cost_usd: newCostUsd }).eq('id', id);
+    Vorher wurde hier das komplette cards-Array neu gesetzt. Zwei gleichzeitige
+    Anfragen -- etwa beim zuegigen Wechsel zwischen den Plattform-Reitern --
+    lasen beide denselben Stand, und die zweite ueberschrieb den Text der
+    ersten. Der verlorene Text wurde beim naechsten Aufruf erneut
+    kostenpflichtig erzeugt.
+
+    Die Funktion sperrt die Zeile fuer die Dauer ihrer Transaktion, sodass
+    gleichzeitige Aufrufe sich einreihen (Migration 20261002093000). Die
+    Karten werden ihr als Rueckfallwert mitgegeben, damit Altzeilen ohne
+    cards-Spalte dabei zugleich materialisiert werden.
+  */
+  const { error: schreibFehler } = await admin.rpc('setze_plattformtext', {
+    p_generation_id: id,
+    p_item_index: itemIndex,
+    p_platform: platform,
+    p_text: text,
+    p_cost_usd: costUsd ?? 0,
+    p_fallback_cards: cards,
+  });
+  if (schreibFehler) {
+    // Den erzeugten Text trotzdem ausliefern: Er ist bereits bezahlt, und der
+    // Nutzer soll ihn bekommen. Nur der Zwischenspeicher fehlt dann, der
+    // naechste Aufruf kostet also erneut -- aergerlich, aber kein Datenverlust.
+    console.error('[platform-text] Zwischenspeichern fehlgeschlagen', id, itemIndex, platform, schreibFehler);
+  }
 
   return NextResponse.json({ text });
 }

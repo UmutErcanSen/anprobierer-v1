@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { CREDITS_PER_QUALITY, type PlanKey, type Quality } from '@/lib/generation/constants';
 import { isGenerationLocked, lockedImagePath, redactSaleText } from '@/lib/generation/lock';
+import { alleDateienZuBildern } from '@/lib/generation/dateipfade';
 
 /*
   Status-Endpunkt fuer eine laufende oder abgeschlossene Generierung. Der
@@ -137,7 +138,7 @@ export async function DELETE(_request: Request, ctx: { params: Promise<{ id: str
   const paths = new Set<string>();
   for (const c of cards) if (c.imagePath) paths.add(c.imagePath);
   for (const p of generation.result_paths ?? []) paths.add(p);
-  const allPaths = [...paths].flatMap((p) => [p, lockedImagePath(p)]);
+  const allPaths = alleDateienZuBildern(paths);
 
   if (allPaths.length > 0) {
     const { error: removeError } = await admin.storage.from('results').remove(allPaths);

@@ -80,7 +80,14 @@ export async function POST(request: Request) {
     switch (event.type) {
       case 'customer.subscription.created':
       case 'customer.subscription.updated': {
-        await spiegleAbo(admin, event.data.object);
+        const ergebnis = await spiegleAbo(admin, event.data.object);
+        if (!ergebnis.ok) {
+          // Kein Wiederholen: Eine Subscription, die zu keinem Nutzer gehoert,
+          // wird das auch beim zehnten Versuch nicht. Alles Heilbare (falsche
+          // Price-ID, DB-Fehler) wirft stattdessen und landet unten im catch.
+          verarbeitet = false;
+          await protokolliere('failed', ergebnis.grund);
+        }
         break;
       }
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useSyncExternalStore } from 'react';
 import { SunMoon } from 'lucide-react';
 
 /*
@@ -14,12 +14,33 @@ import { SunMoon } from 'lucide-react';
   entfernt sein). Eigener Rahmen statt reinem Ghost-Icon, damit er neben den
   Textlinks im Header als eigenstaendiger Knopf erkennbar bleibt.
 */
-export function ThemeToggle() {
-  const [dark, setDark] = useState(false);
+/*
+  Das data-theme-Attribut am <html> ist die einzige Wahrheit ueber das Theme --
+  gesetzt vom Inline-Skript vor dem ersten Paint (siehe layout.tsx) und hier
+  beim Umschalten.
 
-  useEffect(() => {
-    setDark(document.documentElement.getAttribute('data-theme') === 'dark');
-  }, []);
+  Frueher wurde es zusaetzlich in React-State gespiegelt und per Effekt beim
+  Mounten nachgezogen. Das war doppelte Buchfuehrung: Zwei Quellen fuer
+  dieselbe Aussage, die auseinanderlaufen koennen, plus eine ueberfluessige
+  zweite Renderrunde nach jedem Mounten.
+
+  useSyncExternalStore ist fuer genau diesen Fall gebaut -- ein Wert, der
+  ausserhalb von React lebt. Der dritte Parameter liefert den Serverwert:
+  Dort gibt es kein DOM, und der Server kennt die Wahl des Nutzers ohnehin
+  nicht. React weiss dadurch, dass die beiden Staende abweichen DUERFEN, und
+  meldet keinen Hydration-Fehler. Sichtbar ist der Unterschied nicht -- der
+  Wert steuert ausschliesslich das aria-label.
+*/
+function themeAbonnieren(beiAenderung: () => void) {
+  const beobachter = new MutationObserver(beiAenderung);
+  beobachter.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  return () => beobachter.disconnect();
+}
+
+const istDunkel = () => document.documentElement.getAttribute('data-theme') === 'dark';
+
+export function ThemeToggle() {
+  const dark = useSyncExternalStore(themeAbonnieren, istDunkel, () => false);
 
   /* Dauer muss zur .theme-wechselt-Regel in globals.css passen. */
   const UEBERGANG_MS = 320;
@@ -28,7 +49,8 @@ export function ThemeToggle() {
 
   function toggle() {
     const next = !dark;
-    setDark(next);
+    // Kein setState noetig: Das Setzen des Attributs weiter unten meldet der
+    // MutationObserver, und React rendert daraufhin neu.
 
     /*
       Uebergangsklasse nur waehrend des Wechsels: Damit fahren alle Farben

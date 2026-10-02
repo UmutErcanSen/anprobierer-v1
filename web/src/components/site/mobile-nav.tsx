@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { Marke } from "@/components/site/wortmarke";
 import { Menu, X } from 'lucide-react';
 import { useFocusTrap } from '@/lib/a11y/use-focus-trap';
+import { useIstClient } from '@/lib/a11y/use-ist-client';
 
 /*
   Mobiles Navigationsmenue. Ohne das war "Anmelden" auf dem Handy nur ueber
@@ -27,8 +28,7 @@ export function MobileNav({ items, children }: { items: Item[]; children?: React
   // per Transform ausserhalb des Bildschirms) -- erst das ermoeglicht die
   // Slide-in-Animation beim Oeffnen, statt dass das Menue schlagartig
   // erscheint/verschwindet.
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const mounted = useIstClient();
 
   // Das Menue verdeckt die ganze Seite, bleibt aber (wegen der
   // Slide-Animation) dauerhaft im DOM. Ohne Fokusfalle wanderte man per Tab

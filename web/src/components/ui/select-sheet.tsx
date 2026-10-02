@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import { Check, ChevronDown, X } from 'lucide-react';
 import { inputClasses } from '@/components/ui/field';
 import { useFocusTrap } from '@/lib/a11y/use-focus-trap';
+import { useIstClient } from '@/lib/a11y/use-ist-client';
 
 export type SelectOption = { value: string; label: string };
 
@@ -47,8 +48,7 @@ export function MobilePickerSheet({
   onClose: () => void;
   children: ReactNode;
 }) {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const mounted = useIstClient();
 
   // Selbstgebautes Overlay statt nativem <dialog> (das kann keine
   // Slide-Animation aus dem geschlossenen Zustand heraus) -- die Fokusfalle,

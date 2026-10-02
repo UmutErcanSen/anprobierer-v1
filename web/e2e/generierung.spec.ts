@@ -36,6 +36,21 @@ async function guthaben(page: Page): Promise<number> {
 }
 
 test.describe('Generierung @lokal', () => {
+  /*
+    Eigener Zeitrahmen statt Playwrights Standard von 30 Sekunden.
+
+    Die Zusicherungen weiter unten raeumen sich bewusst 60 bzw. 90 Sekunden
+    ein -- eine Generierung durchlaeuft Bildaufbereitung, Inhaltspruefung,
+    Wasserzeichen, Vorschau, Thumbnail und mehrere Uploads zu Supabase. Der
+    TEST brach aber schon nach 30 Sekunden ab, also bevor seine eigene
+    Wartezeit ueberhaupt greifen konnte.
+
+    Aufgefallen ist das erst, als der Mock ein realistisch grosses Bild
+    lieferte: Mit dem fruehereren 1x1-Pixel war der Ablauf praktisch sofort
+    fertig und blieb zufaellig unter der Grenze.
+  */
+  test.describe.configure({ timeout: 150_000 });
+
   test.beforeEach(async ({ page }) => {
     /*
       KOSTENSPERRE — muss VOR jedem Upload greifen.
@@ -69,8 +84,18 @@ test.describe('Generierung @lokal', () => {
     await dateifelder.nth(0).setInputFiles(bild('person.png'));
     await dateifelder.nth(1).setInputFiles(bild('kleidung.png'));
 
-    await page.getByLabel('Kleidungstyp').selectOption({ index: 1 });
-    await page.getByLabel('Größe').selectOption({ index: 1 });
+    /*
+      getByRole('combobox') statt getByLabel: SelectSheet rendert BEIDE
+      Varianten gleichzeitig ins DOM -- das native <select> fuer Desktop
+      (hidden sm:block) und den Knopf samt Bottom-Sheet fuer Mobil (sm:hidden).
+      getByLabel('Kleidungstyp') traf dadurch vier Elemente (Select, Knopf,
+      Dialog, Schliessen-Knopf) und scheiterte an Playwrights Strict Mode.
+
+      Seit dem Umbau auf das Bottom-Sheet waren diese beiden Tests deshalb rot.
+      Gemerkt hat es niemand, weil die Suite nicht automatisch laeuft.
+    */
+    await page.getByRole('combobox', { name: 'Kleidungstyp' }).selectOption({ index: 1 });
+    await page.getByRole('combobox', { name: 'Größe' }).selectOption({ index: 1 });
 
     // Ausdrueckliche Einwilligung zur Datenverarbeitung -- ohne das bleibt
     // der Generieren-Knopf deaktiviert (siehe generate-flow.tsx).
@@ -164,7 +189,7 @@ test.describe('Generierung @lokal', () => {
 
     // Zurueck im Formular -- und die Angaben stehen noch. Genau das ist der
     // Gewinn: Der naechste Versuch ist ein Klick, keine neue Eingabe.
-    await expect(page.getByLabel('Kleidungstyp')).not.toHaveValue('');
+    await expect(page.getByRole('combobox', { name: 'Kleidungstyp' })).not.toHaveValue('');
     await expect(page.getByRole('button', { name: /^Generieren/ })).toBeVisible();
 
     // Der entscheidende Punkt: Das Guthaben muss wieder auf dem Ausgangswert

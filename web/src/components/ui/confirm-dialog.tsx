@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useFocusTrap } from '@/lib/a11y/use-focus-trap';
+import { useIstClient } from '@/lib/a11y/use-ist-client';
 
 /*
   Generisches Bestaetigungs-Modal fuer destruktive, nicht umkehrbare
@@ -56,8 +57,7 @@ export function ConfirmDialog({
   variant?: 'accent' | 'danger';
   confirmWord?: string;
 }) {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const mounted = useIstClient();
 
   // Ohne das war aria-modal="true" unten ein leeres Versprechen: Der Fokus
   // blieb hinter dem Overlay, Tab lief durch die verdeckte Seite.
@@ -65,12 +65,22 @@ export function ConfirmDialog({
   useFocusTrap(open, dialogRef);
 
   const [eingabe, setEingabe] = useState('');
-  // Eingabe zuruecksetzen, wenn der Dialog erneut geoeffnet wird -- sonst
-  // bliebe ein zweiter Aufruf (z.B. nach einem fehlgeschlagenen ersten
-  // Versuch) faelschlich schon bestaetigt.
-  useEffect(() => {
+  /*
+    Eingabe zuruecksetzen, wenn der Dialog erneut geoeffnet wird -- sonst
+    bliebe ein zweiter Aufruf (z.B. nach einem fehlgeschlagenen ersten
+    Versuch) faelschlich schon bestaetigt.
+
+    Waehrend des Renderns statt in einem Effekt: React erlaubt das
+    ausdruecklich fuer "Zustand an eine geaenderte Eigenschaft anpassen" und
+    verarbeitet es noch vor dem Zeichnen. Im Effekt waere der Dialog dagegen
+    fuer einen Wimpernschlag mit der ALTEN Eingabe sichtbar, bevor die zweite
+    Renderrunde sie leert.
+  */
+  const [vorherOffen, setVorherOffen] = useState(open);
+  if (open !== vorherOffen) {
+    setVorherOffen(open);
     if (open) setEingabe('');
-  }, [open]);
+  }
 
   useEffect(() => {
     document.body.style.overflow = open ? 'hidden' : '';

@@ -85,15 +85,26 @@ const SIZE_OPTIONS = SIZES.map((s) => ({ value: s, label: s }));
 
 const emptyItem = (id: number): ClothingItem => ({ id, file: null, type: '', size: '', color: '' });
 
-function usePreview(file: File | null) {
-  const [url, setUrl] = useState<string | null>(null);
-  useEffect(() => {
-    if (!file) return setUrl(null);
-    const objectUrl = URL.createObjectURL(file);
-    setUrl(objectUrl);
-    return () => URL.revokeObjectURL(objectUrl);
-  }, [file]);
-  return url;
+/**
+ * Haengt die Vorschau einer lokalen Datei an ein <img>.
+ *
+ * Frueher lag die Objekt-URL in React-State und wurde per Effekt gesetzt. Das
+ * hiess: eine zweite Renderrunde pro Dateiwahl, und zwischen Dateiwahl und
+ * Effekt war die Vorschau fuer einen Moment leer.
+ *
+ * React 19 erlaubt Aufraeumfunktionen in ref-Rueckrufen -- damit entfaellt der
+ * Zustand komplett. Die URL entsteht genau dann, wenn das Bild im DOM landet,
+ * und wird freigegeben, sobald es verschwindet oder die Datei wechselt. Ein
+ * vergessenes revokeObjectURL (Speicherleck) ist damit strukturell
+ * ausgeschlossen statt nur sorgfaeltig vermieden.
+ */
+function vorschauRef(file: File) {
+  return (el: HTMLImageElement | null) => {
+    if (!el) return;
+    const url = URL.createObjectURL(file);
+    el.src = url;
+    return () => URL.revokeObjectURL(url);
+  };
 }
 
 /**
@@ -124,7 +135,6 @@ function PhotoField({
   className?: string;
   panelOverlay?: boolean;
 }) {
-  const preview = usePreview(file);
   const [over, setOver] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -164,10 +174,15 @@ function PhotoField({
         </span>
       )}
 
-      {preview ? (
+      {file ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          src={preview}
+          // Kein src hier: Die Objekt-URL setzt der ref-Rueckruf und gibt sie
+          // beim Entfernen wieder frei (siehe vorschauRef). key erzwingt ein
+          // frisches Element pro Datei -- sonst liefe beim Wechsel nur der
+          // alte Rueckruf aufraeumend durch, ohne einen neuen zu starten.
+          key={`${file.name}-${file.size}-${file.lastModified}`}
+          ref={vorschauRef(file)}
           alt={label}
           className={`h-full w-full object-cover ${panelOverlay ? 'rounded-lg md:rounded-none' : 'rounded-lg'}`}
         />
@@ -182,7 +197,7 @@ function PhotoField({
         </>
       )}
 
-      {panelOverlay && preview && (
+      {panelOverlay && file && (
         <span className="pointer-events-none absolute bottom-6 left-6 hidden rounded-full bg-ink px-4 py-2 text-xs font-medium text-on-ink md:inline-block">
           Foto ändern
         </span>
@@ -314,9 +329,21 @@ export function GenerateFlow({ credits, plan }: { credits: number; plan: PlanKey
     </div>
   );
 
+  /*
+    Zuruecksetzen gehoert zum STATUSWECHSEL, nicht in den Effekt: React
+    erlaubt eine Zustandsanpassung waehrend des Renderns ausdruecklich und
+    verarbeitet sie noch vor dem Zeichnen. Im Effekt war fuer einen
+    Wimpernschlag noch der letzte Schritt der VORIGEN Generierung zu sehen,
+    bevor die zweite Renderrunde ihn auf 0 zog.
+  */
+  const [vorigerStatus, setVorigerStatus] = useState(status);
+  if (status !== vorigerStatus) {
+    setVorigerStatus(status);
+    if (status === 'generating') setProgressIdx(0);
+  }
+
   useEffect(() => {
     if (status !== 'generating') return;
-    setProgressIdx(0);
     const t = setInterval(() => setProgressIdx((i) => Math.min(i + 1, PROGRESS.length - 1)), 7000);
     return () => clearInterval(t);
   }, [status]);

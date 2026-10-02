@@ -164,7 +164,33 @@ export default defineConfig({
             auszugeben. Fuer diese Tests den Dev-Server also von Playwright
             starten lassen oder selbst mit gesetzter Variable starten.
           */
-          env: { OPENAI_BASE_URL: 'http://127.0.0.1:4010/v1' },
+          /*
+            NEXT_PUBLIC_BETA=false: Die E2E-Suite prueft das OEFFENTLICHE
+            Produkt, nicht die geschlossene Beta.
+
+            Mit aktiver Beta gibt es auf /registrieren kein Formular (siehe
+            registrieren/page.tsx), und vier Tests der serverseitigen
+            Passwort-/E-Mail-Validierung liefen deshalb ins Leere. Diese
+            Validierung ist Sicherheitsverhalten -- sie fuer die gesamte
+            Beta-Dauer zu ueberspringen waere die falsche Antwort. Die
+            Beta-Sperre selbst ist stattdessen per Unit-Test abgedeckt
+            (unit/beta-zugang.test.ts): Sie sitzt in einer reinen Funktion und
+            braucht dafuer keinen Server.
+          */
+          env: {
+            OPENAI_BASE_URL: 'http://127.0.0.1:4010/v1',
+            NEXT_PUBLIC_BETA: 'false',
+            /*
+              Hoehere Generierungs-Limits NUR fuer den Testlauf. Die
+              Generierungstests legen echte Zeilen an und liefen nach zehn
+              Durchlaeufen in das Stundenlimit der Produktion -- ab da
+              scheiterten sie mit 429 und sahen aus wie ein Produktfehler.
+              Die Produktionswerte (10/Stunde, 30/Tag) bleiben unveraendert,
+              sie stehen als Standard in lib/generation/rate-limit.ts.
+            */
+            GENERIERUNG_STUNDENLIMIT: '500',
+            GENERIERUNG_TAGESLIMIT: '2000',
+          },
         },
       ],
 });

@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Check, ChevronDown, ChevronLeft, ChevronRight, Loader2, SlidersHorizontal, Star, X } from 'lucide-react';
 import { CLOTHING_TYPES, SIZES, COLORS, COLOR_SWATCH } from '@/lib/generation/constants';
+import { useIstClient } from '@/lib/a11y/use-ist-client';
 
 /*
   Filter fuer den Anproben-Verlauf. Aendert die URL-Query statt lokalen State
@@ -78,8 +79,7 @@ function SingleSelect({
   const ref = useRef<HTMLDetailsElement>(null);
   useCloseOnOutsideClick(ref);
 
-  const [local, setLocal] = useState(value);
-  useEffect(() => setLocal(value), [value]);
+  const [local, setLocal] = useOptimistic(value);
 
   const current = options.find((o) => o.value === local);
   const isDefault = local === 'all';
@@ -144,8 +144,7 @@ function MultiSelect({
   // Optimistischer lokaler State: eine Checkbox schaltet sofort um, auch
   // waehrend die (debouncte) Navigation noch unterwegs ist. Synct sich mit
   // der URL, sobald diese sich aendert (Filter zuruecksetzen, Browser-Zurueck).
-  const [local, setLocal] = useState(selected);
-  useEffect(() => setLocal(selected), [selected]);
+  const [local, setLocal] = useOptimistic(selected);
 
   function toggle(value: string) {
     const next = local.includes(value) ? local.filter((v) => v !== value) : [...local, value];
@@ -208,8 +207,38 @@ function MultiSelect({
  * (Zeilen-Zusammenfassung UND Unterseite muessen beide sofort reagieren). */
 function useOptimistic<T>(value: T) {
   const [local, setLocal] = useState(value);
-  useEffect(() => setLocal(value), [value]);
+
+  /*
+    Anpassung WAEHREND des Renderns statt in einem Effekt.
+
+    React erlaubt das ausdruecklich fuer den Fall "Zustand an eine geaenderte
+    Eigenschaft anpassen" und verarbeitet es noch vor dem Zeichnen. Im Effekt
+    zeigte die Leiste dagegen fuer einen Wimpernschlag den ALTEN Filterwert,
+    bevor die zweite Renderrunde ihn korrigierte -- sichtbar etwa beim
+    Browser-Zurueck.
+
+    Verglichen wird bewusst INHALTLICH und nicht per Referenz: Die
+    Mehrfachauswahl bekommt ein frisch aus der URL geparstes Array. Bei einem
+    reinen Referenzvergleich waere es bei jedem Rendern "neu", der Zustand
+    wuerde jedes Mal zurueckgesetzt -- und die Komponente liefe im Kreis.
+  */
+  const [vorher, setVorher] = useState(value);
+  if (!istGleich(value, vorher)) {
+    setVorher(value);
+    setLocal(value);
+  }
+
   return [local, setLocal] as const;
+}
+
+/** Referenzgleich, oder bei Arrays elementweise gleich. Mehr braucht es hier
+ *  nicht: Die Filterwerte sind Zeichenketten und Zeichenketten-Arrays. */
+function istGleich(a: unknown, b: unknown): boolean {
+  if (Object.is(a, b)) return true;
+  if (Array.isArray(a) && Array.isArray(b)) {
+    return a.length === b.length && a.every((v, i) => Object.is(v, b[i]));
+  }
+  return false;
 }
 
 /** Eine Zeile in der obersten Mobil-Filter-Ebene: Name links, aktueller Wert
@@ -325,8 +354,7 @@ export function HistoryFilters({
   // Portal braucht `document` -- erst nach dem Client-Mount verfuegbar,
   // sonst wuerde createPortal(..., document.body) beim Server-Render
   // abstuerzen (siehe MobileNav fuer dasselbe Muster).
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const mounted = useIstClient();
 
   useEffect(() => {
     document.body.style.overflow = sheetOpen ? 'hidden' : '';

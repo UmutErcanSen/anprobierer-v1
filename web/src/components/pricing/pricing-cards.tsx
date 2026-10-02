@@ -41,7 +41,10 @@ export function PricingCards({ currentPlan }: PricingCardsProps) {
 
       const data = (await res.json()) as { url?: string; error?: string };
       if (data.url) {
-        window.location.href = data.url;
+        // assign() statt Zuweisung an window.location.href: Letzteres ist
+        // eine Zuweisung an fremdes, nicht veraenderbares Objekt -- der
+        // React-Compiler beanstandet sie zu Recht. Die Wirkung ist dieselbe.
+        window.location.assign(data.url);
         return;
       }
       setError(data.error ?? "Der Checkout konnte nicht gestartet werden.");
@@ -59,7 +62,10 @@ export function PricingCards({ currentPlan }: PricingCardsProps) {
       const res = await fetch("/api/stripe/portal", { method: "POST" });
       const data = (await res.json()) as { url?: string; error?: string };
       if (data.url) {
-        window.location.href = data.url;
+        // assign() statt Zuweisung an window.location.href: Letzteres ist
+        // eine Zuweisung an fremdes, nicht veraenderbares Objekt -- der
+        // React-Compiler beanstandet sie zu Recht. Die Wirkung ist dieselbe.
+        window.location.assign(data.url);
         return;
       }
       setError(data.error ?? "Konnte nicht geöffnet werden.");

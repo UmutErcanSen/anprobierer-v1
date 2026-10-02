@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 
 /*
   Validierung der Anmeldung und Registrierung.
@@ -17,9 +17,41 @@ import { test, expect } from '@playwright/test';
   ueber aria-invalid am Feld selbst.
 */
 
+/*
+  Oeffnet eine Seite und wartet, bis der Client-Code wirklich laeuft.
+
+  Warum das noetig ist: Die Formulare haengen an `useActionState`. Vor der
+  Hydration ist der Absende-Knopf zwar sichtbar und anklickbar, der Klick
+  loest aber noch nichts aus. Playwright wartet von sich aus nur darauf, dass
+  ein Element sichtbar und stabil ist -- von React weiss es nichts. Auf
+  Chromium war die Hydration schnell genug, auf WebKit nicht: Dort klickten
+  die Tests ins Leere und warteten danach fuenf Sekunden auf eine Meldung,
+  die nie kommen konnte.
+
+  Als Signal dient die CSS-Variable --chrome-oben. Die setzt ChromeOben per
+  Effekt (siehe components/site/chrome-oben.tsx), also erst nachdem React im
+  Browser uebernommen hat. Ein Zeitpuffer ("warte 500ms") waere die
+  schlechtere Loesung: auf schnellen Rechnern verschenkt er Zeit, auf
+  langsamen reicht er trotzdem nicht.
+*/
+async function seiteBereit(page: Page, pfad: string) {
+  await page.goto(pfad);
+  await page.waitForFunction(
+    () => document.documentElement.style.getPropertyValue('--chrome-oben') !== '',
+    // Eigene, knappe Frist: Laedt das Client-Bundle gar nicht, soll der Test
+    // schnell und mit erkennbarer Ursache scheitern statt in den vollen
+    // Test-Zeitrahmen zu laufen. Genau das passiert derzeit unter WebKit auf
+    // diesem Rechner -- dort schlagen alle Skript-Abrufe mit "SSL connect
+    // error" fehl, React uebernimmt nie, und ohne diese Frist sieht es nach
+    // einem Anwendungsfehler aus statt nach einer kaputten Testumgebung.
+    undefined,
+    { timeout: 10_000 },
+  );
+}
+
 test.describe('Registrierung', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/registrieren');
+    await seiteBereit(page, '/registrieren');
   });
 
   test('zu kurzes Passwort wird abgelehnt', async ({ page }) => {
@@ -79,7 +111,7 @@ test.describe('Anmeldung', () => {
     */
     const meldung = 'E-Mail-Adresse oder Passwort stimmt nicht.';
 
-    await page.goto('/anmelden');
+    await seiteBereit(page, '/anmelden');
     await page.getByLabel('E-Mail-Adresse').fill(`gibtesnicht-${Date.now()}@example.test`);
     await page.getByLabel('Passwort').fill('irgendwas123');
     await page.getByRole('button', { name: 'Anmelden' }).click();
@@ -89,7 +121,7 @@ test.describe('Anmeldung', () => {
     const bekannt = process.env.TEST_USER_EMAIL;
     test.skip(!bekannt, 'TEST_USER_EMAIL nicht gesetzt — zweite Hälfte übersprungen.');
 
-    await page.goto('/anmelden');
+    await seiteBereit(page, '/anmelden');
     await page.getByLabel('E-Mail-Adresse').fill(bekannt!);
     await page.getByLabel('Passwort').fill('definitiv-falsch-999');
     await page.getByRole('button', { name: 'Anmelden' }).click();
@@ -97,7 +129,7 @@ test.describe('Anmeldung', () => {
   });
 
   test('leeres Passwort wird abgelehnt', async ({ page }) => {
-    await page.goto('/anmelden');
+    await seiteBereit(page, '/anmelden');
     await page.getByLabel('E-Mail-Adresse').fill('jemand@example.de');
     await page.getByRole('button', { name: 'Anmelden' }).click();
 
